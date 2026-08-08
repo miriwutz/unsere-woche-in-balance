@@ -728,12 +728,27 @@ const eventMeta = {
 const eventIcon = eventMeta.icon;
 const eventLabel = eventMeta.label;
 const isYearly = t.recurrence === "yearly";
+        const currentKey = dateKey(date);
+const startKey = t.date || "";
+const endKey = t.endDate || startKey;
+
+let displayTime = "";
+
+if (startKey === endKey) {
+  if (t.time) {
+    displayTime = t.time + (t.endTime ? "–" + t.endTime : "");
+  }
+} else if (currentKey === startKey) {
+  displayTime = t.time || "";
+} else if (currentKey === endKey) {
+  displayTime = t.endTime ? "bis " + t.endTime : "";
+}
 
         return `
           <div class="event-mini event-display family-frame ${isYearly ? "yearly-event" : ""} ${t.superImportant ? "super-important" : ""}" style="${familyBorderStyle(t.family || [])}">
             <span class="event-symbol">${eventIcon}</span>
             <span class="event-copy">
-${t.time ? `<strong>${escapeHtml(t.time)}${t.endTime ? "–" + escapeHtml(t.endTime) : ""}</strong>` : ""}
+${displayTime ? `<strong>${escapeHtml(displayTime)}</strong>` : ""}
 ${eventLabel ? `<span class="event-kind">${eventLabel}</span>` : ""}
 ${t.superImportant ? `<span class="tiny-star">★</span>` : ""}
 ${escapeHtml(t.text)}
