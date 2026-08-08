@@ -1470,7 +1470,20 @@ const periodField = document.querySelector("#todoPeriod")?.closest("label, .fiel
 if (periodField) {
   periodField.classList.toggle("hidden", isEvent);
 }
-  const recurrence = document.querySelector("#recurrence").value;
+ 
+const priorityField = document.querySelector("#todoPriority")?.closest("label, .field, .form-field");
+const areaField = document.querySelector("#todoArea")?.closest("label, .field, .form-field");
+
+if (priorityField) {
+  priorityField.classList.toggle("hidden", isEvent);
+}
+
+if (areaField) {
+  areaField.classList.toggle("hidden", isEvent);
+}
+
+const recurrence = document.querySelector("#recurrence").value;
+
   document.querySelector("#schoolHolidayHint").classList.toggle(
     "hidden",
     recurrence !== "schoolyear-no"
