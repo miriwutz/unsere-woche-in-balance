@@ -996,11 +996,11 @@ function renderTodos() {
     document.querySelector("#todoArea").value = item.area;
     document.querySelector("#todoPeriod").value = item.period;
     document.querySelector("#todoDay").value = item.day || "";
-    document.querySelector("#eventDate").value = item.date || "";
-    document.querySelector("#eventTime").value = item.time || "";
-    document.querySelector("#eventEndDate").value = item.endDate || "";
+  document.querySelector("#eventDate").value = item.date || "";
+document.querySelector("#eventEndDate").value = item.endDate || "";
+document.querySelector("#eventTime").value = item.time || "";
 document.querySelector("#eventEndTime").value = item.endTime || "";
-    document.querySelector("#eventCategory").value = item.eventCategory || "normal";
+document.querySelector("#eventCategory").value = item.eventCategory || "normal";
     document.querySelector("#recurrence").value = item.recurrence || "none";
     setSelectedFamilyMembers(item.family || []);
     updateEntryTypeUI();
