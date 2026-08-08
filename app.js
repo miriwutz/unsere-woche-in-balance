@@ -118,12 +118,13 @@ function setSelectedFamilyMembers(members = []) {
 }
 
 function familyBorderStyle(members = []) {
+  const borderWidth = document.querySelector("#familyBorderWidth")?.value || "3";
   const valid = [...new Set(members)].filter(m => state.familySettings[m]);
   if (!valid.length) return "";
 
   if (valid.length === 1) {
     const color = familyColor(valid[0]);
-    return `--family-border:${color}; --family-gradient:linear-gradient(${color}, ${color});`;
+return `--family-border:${color}; --family-gradient:linear-gradient(${color}, ${color}); --family-border-width:${borderWidth}px;`;
   }
 
   // Gemeinsame Aufgaben: ein weicher Farbrahmen aus genau den beteiligten Personenfarben.
@@ -134,7 +135,7 @@ function familyBorderStyle(members = []) {
     return `${color} ${pos}%`;
   }).join(", ");
 
-  return `--family-border:transparent; --family-gradient:linear-gradient(110deg, ${stops});`;
+ return `--family-border:transparent; --family-gradient:linear-gradient(110deg, ${stops}); --family-border-width:${borderWidth}px;`;
 }
 
 function escapeHtml(text="") {
