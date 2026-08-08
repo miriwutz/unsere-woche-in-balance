@@ -1522,6 +1522,7 @@ document.querySelector("#addTodoBtn").addEventListener("click", () => {
   const recurrence = document.querySelector("#recurrence").value;
   const eventDate = document.querySelector("#eventDate").value;
   const eventTime = document.querySelector("#eventTime").value;
+  const eventCategory = document.querySelector("#eventCategory")?.value || "normal";
   const superImportant = document.querySelector("#superImportant").checked;
 
   const activeMonday = new Date(currentWeekMonday);
@@ -1556,6 +1557,7 @@ document.querySelector("#addTodoBtn").addEventListener("click", () => {
     item.weekKey = type === "event" ? null : newWeekKey;
     item.date = type === "event" ? eventDate : null;
     item.time = type === "event" ? eventTime : "";
+    item.eventCategory = type === "event" ? eventCategory : "normal";
     item.recurrence = recurrence;
     item.anchorDate = anchorDate;
     item.completedOccurrences = Array.isArray(item.completedOccurrences) ? item.completedOccurrences : [];
@@ -1575,6 +1577,7 @@ document.querySelector("#addTodoBtn").addEventListener("click", () => {
       weekKey: type === "event" ? null : newWeekKey,
       date: type === "event" ? eventDate : null,
       time: type === "event" ? eventTime : "",
+      eventCategory: type === "event" ? eventCategory : "normal",
       recurrence,
       anchorDate,
       completedOccurrences: [],
