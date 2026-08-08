@@ -1,0 +1,2278 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Playfair+Display:wght@500;600&display=swap');
+
+:root{
+  --bg:#f6f1ee;
+  --paper:#fffdfb;
+  --ink:#4f4a48;
+  --muted:#8f8580;
+  --line:#e7ddd8;
+  --rose:#d8b4ad;
+  --rose-soft:#f1ded9;
+  --sage:#bfcbbd;
+  --sage-soft:#e9efe7;
+  --lavender:#c9c1d7;
+  --lavender-soft:#efebf4;
+  --sand:#dfcfb9;
+  --shadow:0 12px 30px rgba(89,72,66,.07);
+}
+
+*{box-sizing:border-box}
+
+body{
+  margin:0;
+  background:
+    radial-gradient(circle at top left, rgba(216,180,173,.18), transparent 28%),
+    radial-gradient(circle at top right, rgba(201,193,215,.18), transparent 26%),
+    var(--bg);
+  color:var(--ink);
+  font-family:"DM Sans",system-ui,sans-serif;
+}
+
+button,input,select{font:inherit}
+
+button{cursor:pointer}
+
+.page-shell{
+  width:min(1500px,calc(100% - 32px));
+  margin:0 auto;
+  padding:46px 0 70px;
+}
+
+.hero{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:24px;
+  margin-bottom:24px;
+}
+
+.eyebrow,.small-label{
+  margin:0 0 8px;
+  letter-spacing:.18em;
+  font-size:.75rem;
+  color:var(--muted);
+  font-weight:600;
+}
+
+h1,h2{
+  font-family:"Playfair Display",serif;
+  font-weight:500;
+}
+
+h1{
+  margin:0;
+  font-size:clamp(2.4rem,5vw,4.3rem);
+  line-height:1;
+}
+
+h2{
+  margin:0;
+  font-size:1.7rem;
+}
+
+.subtitle{
+  max-width:680px;
+  color:var(--muted);
+  font-size:1.02rem;
+  line-height:1.6;
+  margin:14px 0 0;
+}
+
+.celestial-mark{
+  flex:0 0 auto;
+  width:205px;
+  margin-top:-18px;
+  margin-right:14px;
+  opacity:.98;
+}
+
+.celestial-mark svg{
+  display:block;
+  width:100%;
+  height:auto;
+  filter:drop-shadow(0 8px 18px rgba(184,132,43,.08));
+}
+
+
+.tabs{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  margin:18px 0 34px;
+  padding-bottom:12px;
+  border-bottom:1px solid var(--line);
+}
+
+.tab,.filter,.archive-filter{
+  border:0;
+  background:transparent;
+  color:var(--muted);
+  padding:9px 14px;
+  border-radius:999px;
+}
+
+.tab.active,.filter.active,.archive-filter.active{
+  background:var(--lavender-soft);
+  color:var(--ink);
+}
+
+.view{display:none}
+.view.active{display:block}
+
+.section-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-end;
+  gap:16px;
+  margin-bottom:18px;
+}
+
+.primary-btn,.secondary-btn,.icon-btn{
+  border-radius:999px;
+  border:1px solid var(--line);
+  padding:10px 16px;
+}
+
+.primary-btn{
+  background:var(--ink);
+  color:#fff;
+  border-color:var(--ink);
+}
+
+.secondary-btn,.icon-btn{
+  background:var(--paper);
+  color:var(--ink);
+}
+
+.week-grid{
+  display:grid;
+  grid-template-columns:repeat(7,minmax(0,1fr));
+  gap:10px;
+}
+
+.day{
+  min-height:360px;
+  background:rgba(255,253,251,.82);
+  border:1px solid var(--line);
+  border-radius:20px;
+  padding:16px 13px;
+}
+
+.day:nth-child(3n+1){border-top:4px solid var(--rose)}
+.day:nth-child(3n+2){border-top:4px solid var(--sage)}
+.day:nth-child(3n){border-top:4px solid var(--lavender)}
+
+.day h3{
+  margin:0 0 13px;
+  font-family:"Playfair Display",serif;
+  font-weight:500;
+}
+
+.video-item{
+  padding:11px;
+  border-radius:14px;
+  background:var(--paper);
+  border:1px solid var(--line);
+  margin-bottom:9px;
+}
+
+.video-item.done{opacity:.58}
+
+.video-top,.todo-mini{
+  display:flex;
+  gap:8px;
+  align-items:flex-start;
+}
+
+.video-link{
+  color:var(--ink);
+  text-decoration:none;
+  line-height:1.35;
+  font-size:.93rem;
+}
+
+.video-link:hover{text-decoration:underline}
+
+.check{
+  margin-top:2px;
+}
+
+.day-todos{
+  margin-top:18px;
+  padding-top:12px;
+  border-top:1px dashed var(--line);
+}
+
+.day-todos-title{
+  font-size:.72rem;
+  color:var(--muted);
+  text-transform:uppercase;
+  letter-spacing:.12em;
+  margin-bottom:8px;
+}
+
+.todo-mini{
+  font-size:.78rem;
+  color:#706865;
+  margin:7px 0;
+}
+
+.card{
+  background:rgba(255,253,251,.82);
+  border:1px solid var(--line);
+  border-radius:22px;
+  padding:18px;
+}
+
+.todo-form{
+  display:grid;
+  gap:15px;
+}
+
+label{
+  display:grid;
+  gap:6px;
+  color:#6f6662;
+  font-size:.9rem;
+}
+
+input,select{
+  width:100%;
+  padding:11px 12px;
+  border:1px solid var(--line);
+  border-radius:12px;
+  background:var(--paper);
+  color:var(--ink);
+  outline:none;
+}
+
+input:focus,select:focus{
+  border-color:#b7a7c6;
+  box-shadow:0 0 0 3px rgba(201,193,215,.22);
+}
+
+.form-row{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:10px;
+}
+
+.filters{
+  display:flex;
+  flex-wrap:wrap;
+  gap:7px;
+  margin:18px 0;
+}
+
+.todo-list,.archive-grid{
+  display:grid;
+  gap:10px;
+}
+
+.todo-card,.archive-card{
+  background:rgba(255,253,251,.84);
+  border:1px solid var(--line);
+  border-radius:18px;
+  padding:14px 16px;
+}
+
+.todo-card{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:14px;
+}
+
+.todo-main{
+  display:flex;
+  gap:10px;
+}
+
+.todo-card.done{
+  opacity:.55;
+}
+
+.todo-card.done .todo-text{
+  text-decoration:line-through;
+}
+
+.todo-meta{
+  display:flex;
+  flex-wrap:wrap;
+  gap:6px;
+  margin-top:7px;
+}
+
+.pill{
+  font-size:.72rem;
+  padding:4px 8px;
+  border-radius:999px;
+  background:var(--sage-soft);
+  color:#657064;
+}
+
+.pill.important{background:var(--rose-soft)}
+.pill.low{background:#f2eee8}
+.pill.private{background:var(--lavender-soft)}
+
+.todo-actions{
+  display:flex;
+  gap:6px;
+}
+
+.text-btn{
+  border:0;
+  background:transparent;
+  color:var(--muted);
+  padding:4px 6px;
+}
+
+.archive-grid{
+  grid-template-columns:repeat(3,minmax(0,1fr));
+}
+
+.archive-card h3{
+  margin:0 0 8px;
+  font-size:1rem;
+  font-weight:600;
+}
+
+.archive-card p{
+  margin:5px 0;
+  color:var(--muted);
+  font-size:.86rem;
+}
+
+.archive-actions{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  margin-top:10px;
+}
+
+dialog{
+  border:0;
+  border-radius:24px;
+  padding:0;
+  width:min(500px,calc(100% - 28px));
+  background:var(--paper);
+  color:var(--ink);
+  box-shadow:var(--shadow);
+}
+
+dialog::backdrop{
+  background:rgba(65,58,55,.26);
+  backdrop-filter:blur(3px);
+}
+
+.dialog-card{
+  display:grid;
+  gap:15px;
+  padding:22px;
+}
+
+.dialog-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+}
+
+.icon-btn{
+  padding:4px 11px;
+  font-size:1.3rem;
+}
+
+.dialog-actions{
+  display:flex;
+  justify-content:flex-end;
+  gap:8px;
+  margin-top:4px;
+}
+
+.empty{
+  color:var(--muted);
+  font-size:.9rem;
+  padding:18px 4px;
+}
+
+@media(max-width:1100px){
+  .week-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .archive-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+
+@media(max-width:760px){
+  .page-shell{width:min(100% - 20px,1500px);padding-top:26px}
+  .week-grid{grid-template-columns:1fr}
+  .day{min-height:auto}
+  .form-row{grid-template-columns:1fr 1fr}
+  .archive-grid{grid-template-columns:1fr}
+  .section-head{align-items:flex-start;flex-direction:column}
+}
+
+@media(max-width:500px){
+  .form-row{grid-template-columns:1fr}
+  .hero{align-items:center}
+  }
+
+
+.week-nav{
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+
+.week-arrow{
+  width:38px;
+  height:38px;
+  border-radius:50%;
+  border:1px solid var(--line);
+  background:var(--paper);
+  color:var(--ink);
+  font-size:1.6rem;
+  line-height:1;
+  display:grid;
+  place-items:center;
+}
+
+.week-arrow:hover{
+  background:var(--lavender-soft);
+}
+
+.today-link{
+  margin-top:4px;
+  padding:0;
+  border:0;
+  background:transparent;
+  color:var(--muted);
+  font-size:.78rem;
+}
+
+.today-link:hover{
+  color:var(--ink);
+  text-decoration:underline;
+}
+
+.day-date{
+  display:block;
+  margin-top:3px;
+  font-family:"DM Sans",system-ui,sans-serif;
+  font-size:.75rem;
+  color:var(--muted);
+  font-weight:400;
+}
+
+@media(max-width:760px){
+  .week-section-head{
+    gap:18px;
+  }
+  .week-nav{
+    gap:8px;
+  }
+}
+
+
+.video-item{
+  padding:0;
+  overflow:hidden;
+  background:rgba(255,253,251,.94);
+}
+
+.video-card{
+  display:grid;
+  grid-template-columns:72px minmax(0,1fr) auto;
+  gap:10px;
+  align-items:center;
+  padding:8px;
+}
+
+.video-thumb{
+  width:72px;
+  aspect-ratio:16/9;
+  object-fit:cover;
+  border-radius:10px;
+  display:block;
+  background:var(--lavender-soft);
+}
+
+.video-info{
+  min-width:0;
+}
+
+.video-title{
+  display:block;
+  color:var(--ink);
+  text-decoration:none;
+  line-height:1.3;
+  font-size:.88rem;
+  font-weight:500;
+  overflow:hidden;
+  display:-webkit-box;
+  -webkit-line-clamp:2;
+  -webkit-box-orient:vertical;
+}
+
+.video-title:hover{
+  text-decoration:underline;
+}
+
+.video-source{
+  margin-top:4px;
+  color:var(--muted);
+  font-size:.7rem;
+}
+
+.video-check-wrap{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.video-rating{
+  display:flex;
+  gap:2px;
+  padding:0 8px 7px 89px;
+}
+
+.video-rating .text-btn{
+  font-size:1rem;
+  padding:2px 4px;
+}
+
+.video-preview{
+  display:grid;
+  grid-template-columns:128px minmax(0,1fr);
+  gap:12px;
+  align-items:center;
+  padding:10px;
+  border:1px solid var(--line);
+  border-radius:15px;
+  background:rgba(255,253,251,.78);
+}
+
+.video-preview img{
+  width:128px;
+  aspect-ratio:16/9;
+  object-fit:cover;
+  border-radius:11px;
+  display:block;
+}
+
+.video-preview strong{
+  display:block;
+  font-size:.9rem;
+  line-height:1.35;
+}
+
+.video-preview p{
+  margin:4px 0 0;
+  color:var(--muted);
+  font-size:.78rem;
+  line-height:1.4;
+}
+
+.preview-placeholder{
+  width:128px;
+  aspect-ratio:16/9;
+  display:grid;
+  place-items:center;
+  border-radius:11px;
+  background:var(--lavender-soft);
+  color:#988da6;
+  font-size:1.5rem;
+}
+
+.optional-note{
+  font-size:.75rem;
+  color:var(--muted);
+  font-weight:400;
+}
+
+.preview-loading{
+  opacity:.72;
+}
+
+@media(max-width:500px){
+  .video-card{
+    grid-template-columns:84px minmax(0,1fr) auto;
+  }
+
+  .video-thumb{
+    width:84px;
+  }
+
+  .video-rating{
+    padding-left:101px;
+  }
+
+  .video-preview{
+    grid-template-columns:96px minmax(0,1fr);
+  }
+
+  .video-preview img,
+  .preview-placeholder{
+    width:96px;
+  }
+}
+
+
+.archive-thumb{
+  width:100%;
+  aspect-ratio:16/9;
+  object-fit:cover;
+  border-radius:12px;
+  margin-bottom:10px;
+  display:block;
+}
+
+
+/* Version 6 – Checkboxen bewusst klein und ruhig */
+input[type="checkbox"]{
+  width:18px !important;
+  height:18px !important;
+  min-width:18px;
+  flex:0 0 18px;
+  padding:0;
+  margin:1px 0 0;
+  accent-color:#8fa28b;
+  box-shadow:none;
+}
+
+.todo-mini{
+  display:flex;
+  align-items:flex-start;
+  justify-content:flex-start;
+  gap:8px;
+  width:100%;
+}
+
+.todo-mini span{
+  flex:1;
+  min-width:0;
+  line-height:1.35;
+}
+
+.todo-main{
+  align-items:flex-start;
+}
+
+.todo-form-actions{
+  display:flex;
+  justify-content:flex-end;
+  gap:8px;
+}
+
+.hidden{
+  display:none !important;
+}
+
+/* Kompaktere Übungsbibliothek */
+.archive-grid{
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:10px;
+}
+
+.archive-card{
+  display:grid;
+  grid-template-columns:112px minmax(0,1fr);
+  gap:12px;
+  align-items:center;
+  padding:10px 12px;
+}
+
+.archive-thumb{
+  width:112px;
+  aspect-ratio:16/9;
+  object-fit:cover;
+  border-radius:10px;
+  margin:0;
+  grid-row:1 / span 3;
+}
+
+.archive-card h3{
+  margin:0;
+  font-size:.92rem;
+  line-height:1.3;
+}
+
+.archive-card p{
+  margin:3px 0 0;
+  font-size:.76rem;
+}
+
+.archive-actions{
+  margin-top:4px;
+  gap:4px;
+}
+
+.archive-actions .text-btn,
+.archive-actions .video-link{
+  font-size:.75rem;
+}
+
+.todo-actions{
+  align-items:center;
+}
+
+.edit-todo{
+  font-size:.92rem;
+}
+
+@media(max-width:900px){
+  .archive-grid{
+    grid-template-columns:1fr;
+  }
+}
+
+@media(max-width:560px){
+  .archive-card{
+    grid-template-columns:90px minmax(0,1fr);
+  }
+
+  .archive-thumb{
+    width:90px;
+  }
+}
+
+
+/* Version 7 */
+input[type="checkbox"]{
+  appearance:none;
+  -webkit-appearance:none;
+  width:15px !important;
+  height:15px !important;
+  min-width:15px;
+  flex:0 0 15px;
+  border:1.4px solid #73806d;
+  border-radius:5px;
+  background:#fffdfb;
+  display:grid;
+  place-content:center;
+  cursor:pointer;
+}
+
+input[type="checkbox"]::before{
+  content:"";
+  width:7px;
+  height:4px;
+  border-left:1.8px solid #fffdfb;
+  border-bottom:1.8px solid #fffdfb;
+  transform:rotate(-45deg) scale(0);
+  transform-origin:center;
+  margin-top:-1px;
+}
+
+input[type="checkbox"]:checked{
+  background:#5f7059;
+  border-color:#5f7059;
+}
+
+input[type="checkbox"]:checked::before{
+  transform:rotate(-45deg) scale(1);
+}
+
+.archive-columns{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:14px;
+  align-items:start;
+}
+
+.archive-column{
+  min-width:0;
+}
+
+.archive-column-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin:0 2px 9px;
+  padding-bottom:7px;
+  border-bottom:1px solid var(--line);
+  font-size:.86rem;
+  font-weight:500;
+}
+
+.archive-column-head span{
+  color:var(--muted);
+  font-size:.72rem;
+  font-weight:400;
+}
+
+.archive-column-list{
+  display:grid;
+  gap:8px;
+}
+
+.archive-columns .archive-card{
+  grid-template-columns:92px minmax(0,1fr);
+  padding:8px;
+  gap:10px;
+}
+
+.archive-columns .archive-thumb{
+  width:92px;
+}
+
+.archive-content{
+  min-width:0;
+}
+
+.column-empty{
+  padding:18px 10px;
+  border:1px dashed var(--line);
+  border-radius:12px;
+  color:var(--muted);
+  font-size:.78rem;
+  text-align:center;
+}
+
+@media(max-width:900px){
+  .archive-columns{
+    grid-template-columns:1fr;
+  }
+}
+
+
+/* Version 8 – ruhige Motivationsmeldung */
+.motivation-toast{
+  position:fixed;
+  left:50%;
+  bottom:28px;
+  transform:translate(-50%, 18px);
+  max-width:min(520px, calc(100% - 32px));
+  padding:13px 18px;
+  border:1px solid #d9d2c7;
+  border-radius:18px;
+  background:rgba(255,253,249,.97);
+  color:#4d5549;
+  box-shadow:0 12px 34px rgba(74,66,58,.12);
+  text-align:center;
+  font-size:.94rem;
+  line-height:1.45;
+  opacity:0;
+  pointer-events:none;
+  transition:opacity .22s ease, transform .22s ease;
+  z-index:9999;
+}
+
+.motivation-toast.show{
+  opacity:1;
+  transform:translate(-50%, 0);
+}
+
+@media(max-width:600px){
+  .motivation-toast{
+    bottom:18px;
+    font-size:.9rem;
+  }
+}
+
+
+/* Version 9 – Most wanted Kennzeichnung */
+.most-wanted-badge{
+  display:inline-flex;
+  align-items:center;
+  margin-left:5px;
+  padding:2px 5px;
+  border-radius:999px;
+  background:#f4ebe0;
+  color:#8a6540;
+  font-size:.64rem;
+  white-space:nowrap;
+}
+
+
+.archive-hint{
+  margin:-8px 0 16px;
+  color:var(--muted);
+  font-size:.78rem;
+  line-height:1.45;
+}
+
+
+/* Version 11 – Löschfunktionen */
+.danger-soft{
+  color:#8a5d57;
+  border-color:#dfcbc6;
+  background:#fffaf8;
+}
+
+.danger-soft:hover{
+  background:#f7ebe8;
+}
+
+.remove-week-video{
+  margin-left:4px;
+  padding:0 4px;
+  border:0;
+  background:transparent;
+  color:var(--muted);
+  font-size:.8rem;
+  line-height:1;
+  vertical-align:middle;
+}
+
+.remove-week-video:hover,
+.delete-exercise-btn:hover{
+  color:#8a5d57;
+}
+
+
+/* Version 12 – Motivation größer, wärmer und länger präsent */
+.motivation-toast{
+  position:fixed;
+  left:50%;
+  bottom:30px;
+  transform:translate(-50%, 24px);
+  display:grid;
+  grid-template-columns:54px minmax(0,1fr);
+  align-items:center;
+  gap:14px;
+  width:min(620px, calc(100% - 36px));
+  max-width:620px;
+  padding:18px 22px;
+  border:1px solid #d8d0c4;
+  border-radius:24px;
+  background:rgba(255,253,249,.98);
+  color:#465044;
+  box-shadow:0 18px 46px rgba(71,63,55,.15);
+  text-align:left;
+  opacity:0;
+  pointer-events:none;
+  transition:opacity .26s ease, transform .26s ease;
+  z-index:9999;
+}
+
+.motivation-toast.show{
+  opacity:1;
+  transform:translate(-50%, 0);
+}
+
+.motivation-icon{
+  width:54px;
+  height:54px;
+  display:grid;
+  place-items:center;
+  border-radius:50%;
+  background:#eef1e9;
+  font-size:1.65rem;
+}
+
+.motivation-kicker{
+  margin-bottom:3px;
+  color:#788172;
+  font-size:.74rem;
+  text-transform:uppercase;
+  letter-spacing:.12em;
+  font-weight:600;
+}
+
+.motivation-text{
+  font-family:"Playfair Display",serif;
+  font-size:1.18rem;
+  line-height:1.35;
+  color:#4f4a48;
+}
+
+.video-item{
+  position:relative;
+}
+
+.remove-week-video{
+  position:absolute;
+  top:5px;
+  right:6px;
+  z-index:4;
+  width:20px;
+  height:20px;
+  display:grid;
+  place-items:center;
+  margin:0;
+  padding:0;
+  border:0;
+  border-radius:50%;
+  background:rgba(255,253,251,.88);
+  color:#9a8f89;
+  font-size:.85rem;
+  line-height:1;
+  opacity:.78;
+}
+
+.remove-week-video:hover{
+  background:#f1e7e3;
+  color:#7f5d56;
+  opacity:1;
+}
+
+.video-info{
+  padding-right:12px;
+}
+
+@media(max-width:600px){
+  .motivation-toast{
+    bottom:18px;
+    grid-template-columns:46px minmax(0,1fr);
+    gap:12px;
+    padding:15px 17px;
+    border-radius:20px;
+  }
+
+  .motivation-icon{
+    width:46px;
+    height:46px;
+    font-size:1.4rem;
+  }
+
+  .motivation-text{
+    font-size:1.05rem;
+  }
+}
+
+
+/* Version 13 – klare Bewertungsrückmeldung */
+.video-rating{
+  align-items:center;
+}
+
+.video-rating .rate-btn{
+  width:28px;
+  height:28px;
+  display:grid;
+  place-items:center;
+  border-radius:50%;
+  opacity:.55;
+  transition:background .18s ease, opacity .18s ease, transform .18s ease;
+}
+
+.video-rating .rate-btn:hover{
+  opacity:.9;
+}
+
+.video-rating .rate-btn.selected{
+  opacity:1;
+  background:#e5eee1;
+  transform:scale(1.08);
+}
+
+.video-rating .rate-btn.selected[data-rating="okay"]{
+  background:#f1eadc;
+}
+
+.video-rating .rate-btn.selected[data-rating="nope"]{
+  background:#efe3df;
+}
+
+
+/* Version 15 – Familien-To-dos */
+.family-picker{
+  display:grid;
+  gap:8px;
+}
+
+.family-picker-label{
+  color:#6f6662;
+  font-size:.9rem;
+}
+
+.family-options{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+}
+
+.family-chip{
+  position:relative;
+  display:inline-flex;
+  align-items:center;
+  gap:7px;
+  padding:7px 11px;
+  border:1px solid var(--line);
+  border-radius:999px;
+  background:var(--paper);
+  cursor:pointer;
+  font-size:.84rem;
+}
+
+.family-chip input{
+  position:absolute;
+  opacity:0;
+  pointer-events:none;
+}
+
+.family-chip::before{
+  content:"";
+  width:10px;
+  height:10px;
+  border-radius:50%;
+  background:var(--member-color);
+  box-shadow:0 0 0 2px rgba(255,255,255,.9), 0 0 0 3px var(--member-color);
+}
+
+.family-chip:has(input:checked){
+  background:color-mix(in srgb, var(--member-color) 12%, white);
+  border-color:color-mix(in srgb, var(--member-color) 55%, var(--line));
+}
+
+.family-a{--member-color:#cfa89f}
+.family-b{--member-color:#9eaf98}
+.family-c{--member-color:#b8a9ca}
+.family-d{--member-color:#d6b678}
+
+.family-frame{
+  position:relative;
+  border-color:transparent !important;
+  background:
+    linear-gradient(var(--paper), var(--paper)) padding-box,
+    var(--family-gradient, linear-gradient(var(--line), var(--line))) border-box;
+  border:1.6px solid transparent !important;
+}
+
+.todo-mini.family-frame{
+  border-radius:10px;
+  padding:6px 7px;
+  margin:6px 0;
+}
+
+.todo-card.family-frame{
+  border-width:1.7px !important;
+}
+
+@supports not (background: color-mix(in srgb, white 50%, black)){
+  .family-chip:has(input:checked){
+    background:#f4f0eb;
+  }
+}
+
+
+/* Version 16 – To-do / Termin / Wiederholung */
+.entry-top-row{
+  display:grid;
+  grid-template-columns:minmax(180px, 260px) auto;
+  gap:14px;
+  align-items:end;
+}
+
+.super-important-control{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  min-height:44px;
+  padding:9px 12px;
+  border:1px solid var(--line);
+  border-radius:13px;
+  background:var(--paper);
+  color:#6f6662;
+}
+
+.super-important-control input{
+  margin:0;
+}
+
+.event-fields{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+}
+
+.date-control-wrap{
+  width:100%;
+  border:1px solid var(--line);
+  border-radius:12px;
+  background:var(--paper);
+  padding:11px 12px;
+}
+
+.date-control-wrap input{
+  display:block;
+  width:100%;
+  min-width:0;
+  padding:0;
+  border:0;
+  border-radius:0;
+  background:transparent;
+  box-shadow:none;
+}
+
+.recurrence-row{
+  display:grid;
+  grid-template-columns:minmax(220px, 360px) 1fr;
+  gap:12px;
+  align-items:end;
+}
+
+.school-holiday-hint{
+  padding:10px 12px;
+  border-radius:12px;
+  background:var(--sage-soft);
+  color:#657064;
+  font-size:.78rem;
+  line-height:1.45;
+}
+
+.event-mini{
+  display:flex;
+  align-items:flex-start;
+  gap:8px;
+  width:100%;
+  padding:7px 8px;
+  margin:6px 0;
+  border-radius:10px;
+  font-size:.78rem;
+  color:#655d59;
+}
+
+.event-mini span{
+  flex:1;
+  min-width:0;
+  line-height:1.35;
+}
+
+.day-events{
+  margin-top:16px;
+  padding-top:12px;
+  border-top:1px dashed var(--line);
+}
+
+.super-important{
+  box-shadow:inset 0 0 0 1px rgba(172,132,65,.18);
+}
+
+.tiny-star,
+.super-star{
+  color:#b48737;
+}
+
+.super-star{
+  font-size:.9em;
+}
+
+.series-icon{
+  display:grid;
+  place-items:center;
+  width:18px;
+  height:18px;
+  flex:0 0 18px;
+  color:#74816e;
+  font-size:1rem;
+}
+
+.entry-type{
+  background:var(--lavender-soft);
+}
+
+.event-pill{
+  background:#eee4d7;
+}
+
+.repeat-pill{
+  background:#edf0e8;
+}
+
+.super-pill{
+  background:#f5ead7;
+  color:#866a38;
+}
+
+@media(max-width:760px){
+  .entry-top-row,
+  .event-fields,
+  .recurrence-row{
+    grid-template-columns:1fr;
+  }
+}
+
+.school-intro{color:var(--muted);max-width:700px}.school-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}.school-card{overflow:hidden}.school-head{display:flex;justify-content:space-between;gap:12px;margin-bottom:14px}.school-name{padding:2px 0!important;border:0!important;background:transparent!important;box-shadow:none!important;font-family:"Playfair Display",serif;font-size:1.4rem}.school-icon{color:#b29358;font-size:1.4rem}.school-add{display:grid;grid-template-columns:1.5fr .65fr 1fr 1.05fr auto;gap:7px}.school-add input,.school-add select,.school-link-add input{min-width:0;font-size:.78rem}.school-tasks{display:grid;gap:7px;margin:14px 0 20px}.school-task{display:grid;grid-template-columns:auto 1fr auto;gap:9px;padding:10px;border:1px solid var(--line);border-radius:13px;background:rgba(255,255,255,.45)}.school-task.done{opacity:.55}.school-task.done .school-task-text{text-decoration:line-through}.school-meta{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px;color:var(--muted);font-size:.7rem}.school-meta span:first-child{padding:1px 6px;border-radius:999px;background:#edf0e8}.school-del{border:0;background:transparent;color:#a19791}.school-links-title{display:flex;justify-content:space-between;align-items:baseline}.school-links-title span,.school-empty,.school-empty-inline{color:var(--muted);font-size:.75rem}.school-link-add{display:grid;grid-template-columns:.8fr 1.5fr auto;gap:7px;margin:8px 0}.school-links{display:flex;flex-wrap:wrap;gap:7px}.school-link{display:flex;align-items:center;gap:4px;padding:6px 8px;border:1px solid var(--line);border-radius:999px}.school-link a{color:#667260;text-decoration:none;font-size:.78rem}.school-empty{padding:12px;text-align:center;border:1px dashed var(--line);border-radius:12px}@media(max-width:1050px){.school-grid{grid-template-columns:1fr}}@media(max-width:720px){.school-add{grid-template-columns:1fr 1fr}.school-add>:first-child{grid-column:1/-1}.school-link-add{grid-template-columns:1fr}}
+
+
+/* Version 18 – kinderfreundlicher Schulbereich */
+.school-kind-note{
+  margin:-2px 0 16px;
+  padding:11px 14px;
+  border-radius:16px;
+  background:linear-gradient(90deg,#f7efe4,#eef3ea,#f2edf6);
+  color:#756c67;
+  font-size:.86rem;
+}
+
+.school-card{
+  background:rgba(255,253,251,.9);
+}
+
+.school-card:first-child{
+  border-top:4px solid #b9a9cf;
+}
+
+.school-card:last-child{
+  border-top:4px solid #dfb7a8;
+}
+
+.school-head{
+  padding-bottom:10px;
+  border-bottom:1px dashed var(--line);
+}
+
+.school-name{
+  color:#5d5653 !important;
+}
+
+.school-add{
+  margin-top:4px;
+  padding:12px;
+  border-radius:16px;
+  background:rgba(246,241,238,.58);
+}
+
+.school-add select{
+  min-width:0;
+}
+
+.school-subject-other{
+  grid-column:2 / span 1;
+}
+
+.school-task{
+  background:rgba(255,255,255,.7);
+  transition:transform .15s ease, opacity .15s ease;
+}
+
+.school-task:hover{
+  transform:translateY(-1px);
+}
+
+.school-link{
+  background:#fffdfb;
+}
+
+.school-link a::before{
+  content:"↗ ";
+  color:#a39183;
+}
+
+.day-school{
+  margin-top:16px;
+  padding-top:12px;
+  border-top:1px dashed var(--line);
+}
+
+.school-week-item{
+  display:flex;
+  align-items:flex-start;
+  gap:6px;
+  margin:6px 0;
+  padding:7px 8px;
+  border:1.5px solid;
+  border-radius:10px;
+  font-size:.76rem;
+  line-height:1.3;
+  background:rgba(255,253,251,.9);
+}
+
+.school-week-item.child-1{
+  border-color:#b9a9cf;
+  background:rgba(239,235,244,.55);
+}
+
+.school-week-item.child-2{
+  border-color:#dfb7a8;
+  background:rgba(247,235,230,.55);
+}
+
+.school-week-item.done{
+  opacity:.5;
+}
+
+.school-week-item small{
+  display:inline-block;
+  color:var(--muted);
+  font-size:.68rem;
+}
+
+.school-week-icon{
+  flex:0 0 auto;
+}
+
+@media(max-width:720px){
+  .school-subject-other{
+    grid-column:auto;
+  }
+}
+
+/* Version 19 – klarere Familienfarben */
+.family-a{--member-color:var(--family-a-color,#c8897e)}   /* Mama */
+.family-b{--member-color:var(--family-b-color,#6f8c68)}   /* Papa */
+.family-c{--member-color:var(--family-c-color,#8f78b8)}   /* Lou */
+.family-d{--member-color:var(--family-d-color,#d58c9b)}   /* Fina */
+
+.school-child-badge{
+  flex:0 0 24px;
+  width:24px;
+  height:24px;
+  display:grid;
+  place-items:center;
+  border-radius:50%;
+  font-size:.72rem;
+  font-weight:700;
+  color:white;
+  box-shadow:0 2px 7px rgba(80,65,60,.12);
+}
+.school-child-badge.child-1{background:var(--family-c-color,#8f78b8)}
+.school-child-badge.child-2{background:var(--family-d-color,#d58c9b)}
+
+.school-week-item.child-1{
+  border-color:var(--family-c-color,#8f78b8);
+  background:rgba(143,120,184,.10);
+}
+.school-week-item.child-2{
+  border-color:var(--family-d-color,#d58c9b);
+  background:rgba(213,140,155,.10);
+}
+
+.person-todo-group{
+  margin-top:9px;
+}
+.person-todo-group-title{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  margin:2px 0 5px;
+  font-size:.68rem;
+  font-weight:600;
+  letter-spacing:.06em;
+  color:#756d68;
+}
+.person-todo-group-title::before{
+  content:"";
+  width:8px;
+  height:8px;
+  border-radius:50%;
+  background:#b8ada7;
+}
+.person-group-a .person-todo-group-title::before,
+.person-group-a .todo-person-heading::before{background:var(--family-a-color,#c8897e)}
+.person-group-b .person-todo-group-title::before,
+.person-group-b .todo-person-heading::before{background:var(--family-b-color,#6f8c68)}
+.person-group-c .person-todo-group-title::before,
+.person-group-c .todo-person-heading::before{background:var(--family-c-color,#8f78b8)}
+.person-group-d .person-todo-group-title::before,
+.person-group-d .todo-person-heading::before{background:var(--family-d-color,#d58c9b)}
+.person-group-shared .person-todo-group-title::before,
+.person-group-shared .todo-person-heading::before{
+  background:linear-gradient(135deg,var(--family-a-color,#c8897e) 0 25%,var(--family-b-color,#6f8c68) 25% 50%,var(--family-c-color,#8f78b8) 50% 75%,var(--family-d-color,#d58c9b) 75%);
+}
+.person-group-general .person-todo-group-title::before,
+.person-group-general .todo-person-heading::before{background:#aaa29c}
+
+.todo-person-section{
+  margin-bottom:16px;
+}
+.todo-person-heading{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  margin:0 2px 7px;
+  color:#5f5854;
+  font-size:.86rem;
+  font-weight:600;
+}
+.todo-person-heading::before{
+  content:"";
+  width:10px;
+  height:10px;
+  border-radius:50%;
+  background:#aaa29c;
+}
+.todo-person-heading small{
+  margin-left:auto;
+  color:var(--muted);
+  font-size:.7rem;
+  font-weight:400;
+}
+.todo-person-items{
+  display:grid;
+  gap:8px;
+}
+
+/* v20 – freundlichere Schulbereiche */
+.school-head>div{display:flex;flex-direction:column;gap:2px}
+.school-question{font-size:.78rem;color:var(--muted)}
+.school-add{
+  grid-template-columns:1fr .8fr 1fr auto;
+  padding:12px;
+}
+.school-add > #schoolTask1,.school-add > #schoolTask2{
+  grid-column:1/-1;
+  font-size:.86rem;
+}
+.school-add > .school-subject-other{grid-column:1/-1}
+.school-type-icon{font-size:.82rem}
+.timetable-box{margin-top:18px;padding-top:14px;border-top:1px dashed var(--line);display:flex;justify-content:space-between;gap:14px;align-items:center}
+.timetable-box>div:first-child{display:flex;flex-direction:column;gap:2px}
+.timetable-box span{font-size:.72rem;color:var(--muted)}
+.timetable-actions{display:flex;gap:7px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
+.timetable-actions input{min-width:190px;font-size:.76rem}
+.timetable-open{text-decoration:none;white-space:nowrap}
+@media(max-width:900px){
+ .school-grid{grid-template-columns:1fr}
+ .school-add{grid-template-columns:1fr 1fr}
+ .school-add > #schoolTask1,.school-add > #schoolTask2{grid-column:1/-1}
+ .school-add .add-school-task{grid-column:1/-1}
+ .timetable-box{align-items:flex-start;flex-direction:column}
+ .timetable-actions{justify-content:flex-start;width:100%}
+ .timetable-actions input{flex:1;min-width:180px}
+}
+
+
+/* Version 21 – frei wählbare Familienfarben */
+:root{
+  --family-a-color:#c8897e;
+  --family-b-color:#c84d4d;
+  --family-c-color:#8f78b8;
+  --family-d-color:#d58c9b;
+}
+
+.family-a{--member-color:var(--family-a-color)}
+.family-b{--member-color:var(--family-b-color)}
+.family-c{--member-color:var(--family-c-color)}
+.family-d{--member-color:var(--family-d-color)}
+
+.person-group-a .person-todo-group-title::before,
+.person-group-a .todo-person-heading::before{background:var(--family-a-color)}
+.person-group-b .person-todo-group-title::before,
+.person-group-b .todo-person-heading::before{background:var(--family-b-color)}
+.person-group-c .person-todo-group-title::before,
+.person-group-c .todo-person-heading::before{background:var(--family-c-color)}
+.person-group-d .person-todo-group-title::before,
+.person-group-d .todo-person-heading::before{background:var(--family-d-color)}
+
+.person-group-shared .person-todo-group-title::before,
+.person-group-shared .todo-person-heading::before{
+  background:linear-gradient(
+    135deg,
+    var(--family-a-color) 0 25%,
+    var(--family-b-color) 25% 50%,
+    var(--family-c-color) 50% 75%,
+    var(--family-d-color) 75%
+  );
+}
+
+.family-settings{
+  margin-bottom:14px;
+  padding:0;
+  overflow:hidden;
+}
+
+.family-settings summary{
+  cursor:pointer;
+  padding:14px 16px;
+  font-weight:500;
+  color:#625b57;
+}
+
+.family-settings[open] summary{
+  border-bottom:1px solid var(--line);
+}
+
+.family-settings-hint{
+  margin:12px 16px 4px;
+  color:var(--muted);
+  font-size:.78rem;
+}
+
+.family-settings-grid{
+  display:grid;
+  grid-template-columns:1.3fr .7fr 1.3fr .7fr;
+  gap:10px;
+  padding:12px 16px 16px;
+}
+
+.family-settings-grid label{
+  display:grid;
+  gap:5px;
+  font-size:.76rem;
+  color:var(--muted);
+}
+
+.family-settings-grid input[type="text"]{
+  width:100%;
+}
+
+.family-settings-grid input[type="color"]{
+  width:100%;
+  min-height:42px;
+  padding:4px;
+  border:1px solid var(--line);
+  border-radius:12px;
+  background:var(--paper);
+}
+
+@media(max-width:760px){
+  .family-settings-grid{
+    grid-template-columns:1fr 1fr;
+  }
+}
+
+
+/* Version 22 – Schulaufgaben direkt im Wochenplan abhaken */
+.school-week-item{
+  grid-template-columns:auto auto minmax(0,1fr);
+  display:grid;
+  align-items:start;
+  cursor:pointer;
+}
+
+.school-week-item .school-week-check{
+  margin-top:4px;
+}
+
+.school-week-copy{
+  min-width:0;
+}
+
+.school-week-item.done{
+  opacity:.58;
+  background:rgba(239,239,235,.62);
+}
+
+.school-week-item.done .school-week-copy{
+  text-decoration:line-through;
+  text-decoration-thickness:1px;
+}
+
+.school-week-done{
+  display:block;
+  margin-top:3px;
+  color:#6e7d69;
+  font-size:.68rem;
+  font-style:normal;
+  text-decoration:none;
+}
+
+.school-week-item.done .school-week-done{
+  text-decoration:none;
+}
+
+.school-week-item.done .school-child-badge{
+  filter:saturate(.65);
+}
+
+
+/* Version 24 – reparierte Familienfarben und persönlicher Regenbogen */
+.person-group-shared .person-todo-group-title::before,
+.person-group-shared .todo-person-heading::before{
+  background:var(
+    --shared-group-gradient,
+    linear-gradient(110deg,
+      var(--family-a-color),
+      var(--family-b-color),
+      var(--family-c-color),
+      var(--family-d-color)
+    )
+  ) !important;
+}
+
+.person-group-shared .person-todo-group-title::before,
+.person-group-shared .todo-person-heading::before{
+  width:12px;
+  height:12px;
+  border-radius:50%;
+}
+
+/* Mehrfarbige Rahmen dürfen etwas deutlicher sichtbar sein */
+.family-frame{
+  border-width:1.8px !important;
+}
+
+
+/* FINAL – ein Rahmen pro Familienblock */
+.grouped-family-block{
+  margin-top:10px;
+  padding:8px;
+  border:2px solid transparent;
+  border-radius:13px;
+  background:
+    linear-gradient(var(--paper),var(--paper)) padding-box,
+    var(--group-border, #c8c0ba) border-box;
+}
+
+.grouped-family-block.person-group-shared{
+  border-width:3px;
+}
+
+.grouped-family-block .person-todo-group-title{
+  margin:0 0 7px;
+}
+
+.grouped-todo-row{
+  display:flex;
+  align-items:flex-start;
+  gap:7px;
+  padding:5px 3px;
+  margin:0;
+  border:0 !important;
+  background:transparent !important;
+  border-radius:0;
+}
+
+.grouped-todo-row + .grouped-todo-row{
+  border-top:1px solid rgba(130,120,113,.12) !important;
+}
+
+.grouped-family-section{
+  padding:12px;
+  border:2px solid transparent;
+  border-radius:16px;
+  background:
+    linear-gradient(var(--paper),var(--paper)) padding-box,
+    var(--group-border,#c8c0ba) border-box;
+}
+
+.grouped-family-section.person-group-shared{
+  border-width:3px;
+}
+
+.grouped-family-section .todo-person-heading{
+  margin-bottom:8px;
+}
+
+.grouped-family-section .todo-person-items{
+  gap:0;
+}
+
+.grouped-main-todo{
+  border:0 !important;
+  border-radius:0 !important;
+  background:transparent !important;
+  padding:9px 2px !important;
+}
+
+.grouped-main-todo + .grouped-main-todo{
+  border-top:1px solid rgba(130,120,113,.12) !important;
+}
+
+.school-week-item{
+  display:grid;
+  grid-template-columns:auto auto minmax(0,1fr);
+  align-items:start;
+  gap:6px;
+  cursor:pointer;
+}
+.school-week-copy{min-width:0}
+.school-week-item.done{
+  opacity:.58;
+  background:rgba(239,239,235,.62);
+}
+.school-week-item.done .school-week-copy{
+  text-decoration:line-through;
+}
+.school-week-done{
+  display:block;
+  margin-top:3px;
+  color:#6e7d69;
+  font-size:.67rem;
+  font-style:normal;
+  text-decoration:none !important;
+}
+
+.schoolyear-setting{
+  display:grid;
+  grid-template-columns:auto 130px 1fr;
+  align-items:center;
+  gap:9px;
+  margin:10px 16px 2px;
+  padding:10px 12px;
+  border-radius:13px;
+  background:#f6f2ec;
+}
+.schoolyear-setting label{font-size:.82rem;color:#625b57}
+.schoolyear-setting select{min-width:0}
+.schoolyear-setting span{font-size:.72rem;color:var(--muted)}
+@media(max-width:700px){
+  .schoolyear-setting{grid-template-columns:1fr}
+}
+
+
+/* FINAL v25 – manueller Stundenplan für beide Kinder */
+.manual-timetable-section{
+  margin-top:10px;
+}
+
+.manual-timetable-wrap{
+  margin-top:10px;
+  padding:12px;
+  border:1px solid var(--line);
+  border-radius:16px;
+  background:rgba(255,253,251,.8);
+}
+
+.manual-timetable-hint{
+  margin:0 0 10px;
+  color:var(--muted);
+  font-size:.76rem;
+  line-height:1.45;
+}
+
+.manual-timetable-grid{
+  display:grid;
+  grid-template-columns:repeat(5,minmax(0,1fr));
+  gap:8px;
+}
+
+.manual-day{
+  display:grid;
+  gap:6px;
+}
+
+.manual-day strong{
+  font-size:.76rem;
+  color:#655e59;
+}
+
+.manual-day textarea{
+  width:100%;
+  resize:vertical;
+  min-height:120px;
+  padding:9px;
+  border:1px solid var(--line);
+  border-radius:11px;
+  background:var(--paper);
+  color:var(--ink);
+  font:inherit;
+  font-size:.76rem;
+  line-height:1.45;
+}
+
+.manual-timetable-actions{
+  display:flex;
+  justify-content:flex-end;
+  gap:8px;
+  margin-top:10px;
+}
+
+.timetable-view-btn{
+  margin-top:8px;
+  padding:8px 12px;
+  border:1px solid var(--line);
+  border-radius:999px;
+  background:#fffdfb;
+  color:#6f665f;
+  cursor:pointer;
+}
+
+.manual-timetable-display{
+  display:grid;
+  grid-template-columns:repeat(5,minmax(0,1fr));
+  gap:8px;
+}
+
+.manual-display-day{
+  padding:10px;
+  border:1px solid var(--line);
+  border-radius:13px;
+  background:#fffdfb;
+}
+
+.manual-display-day h3{
+  margin:0 0 8px;
+  font-size:.85rem;
+  font-family:"Playfair Display",serif;
+}
+
+.manual-subject-list{
+  display:grid;
+  gap:4px;
+  font-size:.78rem;
+}
+
+.manual-subject-list div{
+  padding:4px 6px;
+  border-radius:8px;
+  background:#f5f1ec;
+}
+
+.manual-empty-day{
+  color:var(--muted);
+  font-size:.7rem;
+  line-height:1.4;
+}
+
+.timetable-dialog-card{
+  width:min(900px,calc(100vw - 30px));
+}
+
+@media(max-width:900px){
+  .manual-timetable-grid,
+  .manual-timetable-display{
+    grid-template-columns:1fr;
+  }
+
+  .manual-day textarea{
+    min-height:80px;
+  }
+}
+
+
+/* FINAL v26 – strukturierter Stundenplan mit von/bis + Fach */
+.manual-timetable-grid{
+  display:grid;
+  grid-template-columns:repeat(5,minmax(0,1fr));
+  gap:10px;
+}
+
+.manual-day-card{
+  min-width:0;
+  padding:10px;
+  border:1px solid var(--line);
+  border-radius:14px;
+  background:#fffdfb;
+}
+
+.manual-day-card > strong{
+  display:block;
+  margin-bottom:8px;
+  color:#625b57;
+  font-size:.8rem;
+}
+
+.tt-entry-list{
+  display:flex;
+  flex-wrap:wrap;
+  gap:6px;
+  min-height:28px;
+  margin-bottom:9px;
+}
+
+.tt-chip{
+  display:inline-flex;
+  align-items:center;
+  gap:5px;
+  max-width:100%;
+  padding:6px 8px 6px 10px;
+  border:1px solid #d8cec7;
+  border-radius:999px;
+  background:#f8f3ef;
+  color:#625a55;
+  font-size:.72rem;
+  line-height:1.2;
+}
+
+.tt-chip span{
+  overflow-wrap:anywhere;
+}
+
+.tt-delete-btn{
+  width:18px;
+  height:18px;
+  display:grid;
+  place-items:center;
+  flex:0 0 18px;
+  padding:0;
+  border:0;
+  border-radius:50%;
+  background:transparent;
+  color:#9c8f87;
+  cursor:pointer;
+}
+
+.tt-entry-form{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:6px;
+}
+
+.tt-entry-form input[type="time"]{
+  min-width:0;
+  width:100%;
+  padding:7px 5px;
+  border:1px solid var(--line);
+  border-radius:10px;
+  background:var(--paper);
+  font-size:.72rem;
+}
+
+.tt-entry-form select,
+.tt-entry-form .tt-other{
+  grid-column:1/-1;
+  min-width:0;
+  width:100%;
+  font-size:.72rem;
+}
+
+.tt-add-btn{
+  grid-column:1/-1;
+  padding:7px 9px;
+  border:1px solid var(--line);
+  border-radius:999px;
+  background:#fffaf6;
+  color:#665d58;
+  cursor:pointer;
+  font-size:.72rem;
+}
+
+.tt-empty{
+  color:var(--muted);
+  font-size:.68rem;
+}
+
+.manual-subject-row{
+  display:grid !important;
+  grid-template-columns:auto minmax(0,1fr);
+  gap:7px;
+  align-items:center;
+}
+
+.manual-time{
+  color:#89786d;
+  font-size:.7rem;
+  white-space:nowrap;
+}
+
+@media(max-width:1100px){
+  .manual-timetable-grid{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+  }
+}
+
+@media(max-width:650px){
+  .manual-timetable-grid{
+    grid-template-columns:1fr;
+  }
+}
+
+.tt-table-wrap{overflow-x:auto}.tt-table{width:100%;border-collapse:collapse;font-size:.74rem}.tt-table th,.tt-table td{padding:7px;border:1px solid var(--line);text-align:center}.tt-table thead th{background:#f5f1ed}.tt-time-cell{white-space:nowrap;min-width:145px}.tt-time-text,.tt-home-input{width:55px;padding:5px;border:1px solid var(--line);border-radius:8px;text-align:center;font:inherit;background:#fff}.tt-subject-cell{width:100%;min-width:90px;padding:6px;border:1px solid var(--line);border-radius:8px;background:#fff}.tt-home-row th,.tt-home-row td{background:#faf8f5;color:#756d68}.tt-home-input{width:62px}
+.home-by-strip{margin:7px 0 2px;padding:5px 7px;display:flex;flex-wrap:wrap;gap:7px;border-top:1px solid rgba(120,110,103,.13);color:#817872;font-size:.66rem;line-height:1.25}.home-by-label{font-size:.62rem;color:#9a918b}.home-by-strip b{font-weight:600;color:#756d68}.print-week-btn{margin-right:7px}
+@media print{@page{size:A4 landscape;margin:8mm}body{background:#fff!important}header,.topbar,.nav-tabs,.tabs,.controls,.week-controls,button,dialog,details{display:none!important}main{max-width:none!important;margin:0!important;padding:0!important}.week-grid{display:grid!important;grid-template-columns:repeat(7,1fr)!important;gap:4px!important}.day-card,.week-day{break-inside:avoid;box-shadow:none!important;min-width:0!important}}
+
+/* FINAL v27 – Druckbutton + robuste Stundenplan-Anzeige */
+.week-head-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+#manualTimetableDialog .manual-timetable-display{display:block;min-height:120px}
+#manualTimetableDialog .tt-table-wrap{width:100%;overflow-x:auto}
+@media(max-width:700px){.week-head-actions{width:100%;justify-content:flex-end}.print-week-btn{font-size:.78rem}}
+
+
+/* FINAL CLEAN – Druckansicht ohne private Übungen/Videos */
+@media print {
+  .video-item,
+  .week-video,
+  .day-videos,
+  .video-card,
+  [data-video-id],
+  .video-top,
+  .video-thumb,
+  .video-actions,
+  .rate-btn,
+  .archive-video,
+  #openAdd,
+  .print-week-btn {
+    display:none !important;
+  }
+}
+
+
+/* FINAL CLEAN – Stundenplan-Ansicht */
+#manualTimetableDialog{
+  border:0;
+  padding:0;
+  background:transparent;
+}
+
+#manualTimetableDialog::backdrop{
+  background:rgba(72,64,60,.30);
+  backdrop-filter:blur(2px);
+}
+
+#manualTimetableDialog .timetable-dialog-card{
+  width:min(1180px, calc(100vw - 48px));
+  max-width:1180px;
+  padding:24px;
+  border:1px solid var(--line);
+  border-radius:24px;
+  background:var(--paper);
+  box-shadow:0 20px 60px rgba(74,63,57,.16);
+  overflow:hidden;
+}
+
+#manualTimetableDialog .dialog-head{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:16px;
+  margin-bottom:18px;
+}
+
+#manualTimetableDialog .dialog-head h2{
+  margin:.2rem 0 0;
+  font-size:1.55rem;
+}
+
+#manualTimetableDialog .icon-btn{
+  flex:0 0 38px;
+  width:38px;
+  height:38px;
+  display:grid;
+  place-items:center;
+  border:1px solid var(--line);
+  border-radius:50%;
+  background:#fffdfb;
+  color:#6c625d;
+  cursor:pointer;
+}
+
+#manualTimetableDisplay{
+  width:100%;
+  overflow:visible;
+}
+
+#manualTimetableDisplay .tt-table-wrap{
+  overflow:visible;
+}
+
+#manualTimetableDisplay .tt-table{
+  width:100%;
+  table-layout:fixed;
+  border-collapse:separate;
+  border-spacing:0;
+  font-size:.80rem;
+}
+
+#manualTimetableDisplay .tt-table th,
+#manualTimetableDisplay .tt-table td{
+  padding:11px 8px;
+  border-right:1px solid var(--line);
+  border-bottom:1px solid var(--line);
+  text-align:center;
+  vertical-align:middle;
+}
+
+#manualTimetableDisplay .tt-table th:first-child{
+  width:150px;
+}
+
+#manualTimetableDisplay .tt-table thead th{
+  background:#f4f0eb;
+  color:#5f5753;
+  font-weight:600;
+}
+
+#manualTimetableDisplay .tt-table tbody th{
+  background:#faf7f3;
+  color:#6f665f;
+  font-weight:500;
+  white-space:nowrap;
+}
+
+#manualTimetableDisplay .tt-table td{
+  background:#fffdfb;
+  color:#5f5753;
+}
+
+#manualTimetableDisplay .tt-home-row th,
+#manualTimetableDisplay .tt-home-row td{
+  background:#f8f5f1;
+  color:#756c66;
+  font-weight:500;
+}
+
+#manualTimetableDialog .dialog-actions{
+  display:flex;
+  justify-content:flex-end;
+  margin-top:18px;
+}
+
+@media(max-width:900px){
+  #manualTimetableDialog .timetable-dialog-card{
+    width:min(96vw, 760px);
+    padding:16px;
+  }
+
+  #manualTimetableDisplay .tt-table{
+    font-size:.72rem;
+  }
+
+  #manualTimetableDisplay .tt-table th,
+  #manualTimetableDisplay .tt-table td{
+    padding:8px 5px;
+  }
+
+  #manualTimetableDisplay .tt-table th:first-child{
+    width:110px;
+  }
+}
+
+
+/* FINAL v28 – Stundenplan vollständig sichtbar, Heimkehrzeit ganz oben */
+#manualTimetableDialog{
+  width:min(1240px, calc(100vw - 40px)) !important;
+  max-width:none !important;
+  min-width:0 !important;
+  padding:0 !important;
+  border:0 !important;
+  background:transparent !important;
+}
+#manualTimetableDialog .dialog-card,
+#manualTimetableDialog .timetable-dialog-card{
+  width:100% !important;
+  max-width:none !important;
+  min-width:0 !important;
+  box-sizing:border-box !important;
+  overflow:hidden !important;
+}
+#manualTimetableDisplay,
+#manualTimetableDisplay .tt-table-wrap{
+  width:100% !important;
+  max-width:100% !important;
+  overflow:hidden !important;
+}
+#manualTimetableDisplay .tt-table{
+  width:100% !important;
+  table-layout:fixed !important;
+  border-collapse:separate !important;
+  border-spacing:0 !important;
+}
+#manualTimetableDisplay .tt-table th:first-child{
+  width:145px !important;
+}
+#manualTimetableDisplay .tt-table th,
+#manualTimetableDisplay .tt-table td{
+  overflow:hidden;
+  white-space:normal;
+  text-overflow:ellipsis;
+}
+.tt-home-row-top th,
+.tt-home-row-top td{
+  background:#f4f1ec !important;
+  font-weight:600 !important;
+}
+.home-by-top{
+  margin:4px 0 10px !important;
+  padding:5px 7px 7px !important;
+  border-top:0 !important;
+  border-bottom:1px solid rgba(120,110,103,.13);
+}
+@media print{
+  .print-hide-empty,
+  .empty{
+    display:none !important;
+  }
+  .home-by-strip{
+    display:flex !important;
+  }
+}
+@media(max-width:900px){
+  #manualTimetableDialog{
+    width:calc(100vw - 20px) !important;
+  }
+  #manualTimetableDialog .dialog-card,
+  #manualTimetableDialog .timetable-dialog-card{
+    padding:14px !important;
+  }
+  #manualTimetableDisplay .tt-table{
+    font-size:.68rem !important;
+  }
+  #manualTimetableDisplay .tt-table th:first-child{
+    width:100px !important;
+  }
+  #manualTimetableDisplay .tt-table th,
+  #manualTimetableDisplay .tt-table td{
+    padding:7px 4px !important;
+  }
+}
