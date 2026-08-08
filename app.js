@@ -25,7 +25,11 @@ const days = ["Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag","S
 const state = {
   videos: JSON.parse(localStorage.getItem("balanceProd.videos") || "[]"),
   todos: JSON.parse(localStorage.getItem("balanceProd.todos") || "[]"),
-  archive: JSON.parse(localStorage.getItem("balanceProd.archive") || "[]")
+  archive: JSON.parse(localStorage.getItem("balanceProd.archive") || "[]"),
+  settings: {
+    schoolYear: localStorage.getItem("balanceProd.schoolYear") || "2026-27",
+    familyBorderWidth: localStorage.getItem("balanceProd.familyBorderWidth") || "3"
+  }
 };
 
 let cloudReady = false;
@@ -40,6 +44,7 @@ function saveLocal() {
   localStorage.setItem("balanceProd.school", JSON.stringify(state.school));
   localStorage.setItem("balanceProd.familySettings", JSON.stringify(state.familySettings));
   localStorage.setItem("balanceProd.schoolYear", state.settings?.schoolYear || "2026-27");
+  localStorage.setItem("balanceProd.familyBorderWidth", state.settings?.familyBorderWidth || "3");
 }
 
 function cloudPayload() {
