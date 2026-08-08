@@ -2385,3 +2385,8 @@ border:var(--family-border-width, 3px) solid transparent !important;
     width:100%;
   }
 }
+/* Allgemein-Überschrift bei Terminen ausblenden */
+.person-group-general .person-todo-group-title,
+.person-group-general .todo-person-heading {
+    display: none !important;
+}
