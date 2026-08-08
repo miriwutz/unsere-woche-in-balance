@@ -713,50 +713,63 @@ function renderWeek() {
 const eventHtml = events.length ? `
   <div class="day-events">
     <div class="day-todos-title">Termine</div>
-    ${events
-      .sort((a,b) => (a.time || "").localeCompare(b.time || ""))
-      .map(t => {
-const eventCategory = t.eventCategory || "normal";
 
-const eventMeta = {
-  normal:      { icon: "✦", label: "" },
-  birthday:    { icon: "🎂", label: "Geburtstag" },
-  nameday:     { icon: "🌷", label: "Namenstag" },
-  anniversary: { icon: "♡", label: "Jahrestag" },
-  holiday:     { icon: "✦", label: "Feiertag" }
-}[eventCategory] || { icon: "✦", label: "" };
+    ${groupTodosByPerson(events).map(([groupKey, groupItems]) => `
+      <div class="person-todo-group grouped-family-block ${groupAccentClass(groupKey)}"
+           style="${groupKey === "shared"
+             ? `--group-border:${sharedGroupGradient(groupItems)}`
+             : `--group-border:${familyColor(groupKey) || "#c8c0ba"}`}">
 
-const eventIcon = eventMeta.icon;
-const eventLabel = eventMeta.label;
-const isYearly = t.recurrence === "yearly";
-        const currentKey = dateKey(date);
-const startKey = t.date || "";
-const endKey = t.endDate || startKey;
+        <div class="person-todo-group-title">${todoGroupLabel(groupKey)}</div>
 
-let displayTime = "";
+        ${groupItems
+          .sort((a,b) => (a.time || "").localeCompare(b.time || ""))
+          .map(t => {
+            const eventCategory = t.eventCategory || "normal";
 
-if (startKey === endKey) {
-  if (t.time) {
-    displayTime = t.time + (t.endTime ? "–" + t.endTime : "");
-  }
-} else if (currentKey === startKey) {
-  displayTime = t.time || "";
-} else if (currentKey === endKey) {
-  displayTime = t.endTime ? "bis " + t.endTime : "";
-}
+            const eventMeta = {
+              normal:      { icon: "✦", label: "" },
+              birthday:    { icon: "🎂", label: "Geburtstag" },
+              nameday:     { icon: "🌷", label: "Namenstag" },
+              anniversary: { icon: "♡", label: "Jahrestag" },
+              holiday:     { icon: "✦", label: "Feiertag" }
+            }[eventCategory] || { icon: "✦", label: "" };
 
-        return `
-          <div class="event-mini event-display family-frame ${isYearly ? "yearly-event" : ""} ${t.superImportant ? "super-important" : ""}" style="${familyBorderStyle(t.family || [])}">
-            <span class="event-symbol">${eventIcon}</span>
-            <span class="event-copy">
-${displayTime ? `<strong>${escapeHtml(displayTime)}</strong>` : ""}
-${eventLabel ? `<span class="event-kind">${eventLabel}</span>` : ""}
-${t.superImportant ? `<span class="tiny-star">★</span>` : ""}
-${escapeHtml(t.text)}
-            </span>
-          </div>
-        `;
-      }).join("")}
+            const eventIcon = eventMeta.icon;
+            const eventLabel = eventMeta.label;
+
+            const currentKey = dateKey(date);
+            const startKey = t.date || "";
+            const endKey = t.endDate || startKey;
+
+            let displayTime = "";
+
+            if (startKey === endKey) {
+              if (t.time) {
+                displayTime = t.time + (t.endTime ? "–" + t.endTime : "");
+              }
+            } else if (currentKey === startKey) {
+              displayTime = t.time || "";
+            } else if (currentKey === endKey) {
+              displayTime = t.endTime ? "bis " + t.endTime : "";
+            }
+
+            return `
+              <div class="event-mini event-display grouped-todo-row ${t.superImportant ? "super-important" : ""}">
+                <span class="event-symbol">${eventIcon}</span>
+                <span class="event-copy">
+                  ${displayTime ? `<strong>${escapeHtml(displayTime)}</strong>` : ""}
+                  ${eventLabel ? `<span class="event-kind">${eventLabel}</span>` : ""}
+                  ${t.superImportant ? `<span class="tiny-star">★</span>` : ""}
+                  ${escapeHtml(t.text)}
+                </span>
+              </div>
+            `;
+          }).join("")}
+
+      </div>
+    `).join("")}
+
   </div>
 ` : "";
 
