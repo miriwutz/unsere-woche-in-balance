@@ -730,9 +730,10 @@ const isYearly = t.recurrence === "yearly";
           <div class="event-mini event-display family-frame ${isYearly ? "yearly-event" : ""} ${t.superImportant ? "super-important" : ""}" style="${familyBorderStyle(t.family || [])}">
             <span class="event-symbol">${eventIcon}</span>
             <span class="event-copy">
-              ${t.time ? `<strong>${escapeHtml(t.time)}</strong>` : ""}
-              ${t.superImportant ? `<span class="tiny-star">★</span>` : ""}
-              ${escapeHtml(t.text)}
+            ${t.time ? `<strong>${escapeHtml(t.time)}</strong>` : ""}
+${eventLabel ? `<span class="event-kind">${eventLabel}</span>` : ""}
+${t.superImportant ? `<span class="tiny-star">★</span>` : ""}
+${escapeHtml(t.text)}
             </span>
           </div>
         `;
