@@ -138,6 +138,12 @@ return `--family-border:${color}; --family-gradient:linear-gradient(${color}, ${
  return `--family-border:transparent; --family-gradient:linear-gradient(110deg, ${stops}); --family-border-width:${borderWidth}px;`;
 }
 document.querySelector("#applyFamilyBorderWidth")?.addEventListener("click", () => {
+  const width = document.querySelector("#familyBorderWidth")?.value || "3";
+
+  state.settings = state.settings || {};
+  state.settings.familyBorderWidth = width;
+
+  save();
   renderAll();
 });
 
