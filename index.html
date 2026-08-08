@@ -234,31 +234,48 @@
           </div>
         </div>
 
-        <div id="eventFields" class="event-fields hidden">
-          <label>
-            Datum
-            <div class="date-control-wrap">
-              <input id="eventDate" type="date">
-            </div>
-          </label>
-          <label>
-            Uhrzeit
-            <div class="date-control-wrap">
-              <input id="eventTime" type="time">
-            </div>
-          </label>
-        
-<label>
-  Terminart
-  <select id="eventCategory">
-    <option value="normal">Termin</option>
-    <option value="birthday">🎂 Geburtstag</option>
-    <option value="nameday">🌷 Namenstag</option>
-    <option value="anniversary">♡ Jahrestag</option>
-    <option value="holiday">✦ Feiertag / besonderer Tag</option>
-  </select>
-</label>
-          </div>
+      <div id="eventFields" class="event-fields hidden">
+
+  <label>
+    Startdatum
+    <div class="date-control-wrap">
+      <input id="eventDate" type="date">
+    </div>
+  </label>
+
+  <label>
+    Enddatum
+    <div class="date-control-wrap">
+      <input id="eventEndDate" type="date">
+    </div>
+  </label>
+
+  <label>
+    Von
+    <div class="date-control-wrap">
+      <input id="eventTime" type="time">
+    </div>
+  </label>
+
+  <label>
+    Bis
+    <div class="date-control-wrap">
+      <input id="eventEndTime" type="time">
+    </div>
+  </label>
+
+  <label>
+    Terminart
+    <select id="eventCategory">
+      <option value="normal">Termin</option>
+      <option value="birthday">🎂 Geburtstag</option>
+      <option value="nameday">🌷 Namenstag</option>
+      <option value="anniversary">♡ Jahrestag</option>
+      <option value="holiday">✦ Feiertag / besonderer Tag</option>
+    </select>
+  </label>
+
+</div>
   
         <div class="recurrence-row">
           <label>
