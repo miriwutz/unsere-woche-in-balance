@@ -1451,6 +1451,7 @@ function resetTodoEditor() {
   document.querySelector("#todoDay").value = "";
   document.querySelector("#eventDate").value = "";
   document.querySelector("#eventTime").value = "";
+  document.querySelector("#eventCategory").value = "normal";
   document.querySelector("#recurrence").value = "none";
   setSelectedFamilyMembers([]);
   updateEntryTypeUI();
