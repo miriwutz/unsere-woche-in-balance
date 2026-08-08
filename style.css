@@ -1212,7 +1212,7 @@ input[type="checkbox"]:checked::before{
 .event-mini{
   display:flex;
   align-items:flex-start;
-  gap:8px;
+  gap:5px;
   width:100%;
   padding:7px 8px;
   margin:6px 0;
@@ -1222,7 +1222,6 @@ input[type="checkbox"]:checked::before{
 }
 
 .event-mini span{
-  flex:1;
   min-width:0;
   line-height:1.35;
 }
