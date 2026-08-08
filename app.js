@@ -706,23 +706,28 @@ function renderWeek() {
       </div>
     ` : "";
 
-    const eventHtml = events.length ? `
-      <div class="day-events">
-        <div class="day-todos-title">Termine</div>
-        ${events
-          .sort((a,b) => (a.time || "").localeCompare(b.time || ""))
-          .map(t => `
-            <label class="event-mini family-frame ${t.superImportant ? "super-important" : ""}" style="${familyBorderStyle(t.family || [])}">
-              <input class="check mini-todo-check" data-id="${t.id}" data-date="${dateKey(date)}" type="checkbox" ${isOccurrenceDone(t, date) ? "checked":""}>
-              <span>
-                ${t.time ? `<strong>${escapeHtml(t.time)}</strong> · ` : ""}
-                ${t.superImportant ? '<span class="tiny-star">★</span> ' : ''}
-                ${escapeHtml(t.text)}
-              </span>
-            </label>
-          `).join("")}
-      </div>
-    ` : "";
+const eventHtml = events.length ? `
+  <div class="day-events">
+    <div class="day-todos-title">Termine</div>
+    ${events
+      .sort((a,b) => (a.time || "").localeCompare(b.time || ""))
+      .map(t => {
+        const isYearly = t.recurrence === "yearly";
+        const eventIcon = isYearly ? "♡" : "✦";
+
+        return `
+          <div class="event-mini event-display family-frame ${isYearly ? "yearly-event" : ""} ${t.superImportant ? "super-important" : ""}" style="${familyBorderStyle(t.family || [])}">
+            <span class="event-symbol">${eventIcon}</span>
+            <span class="event-copy">
+              ${t.time ? `<strong>${escapeHtml(t.time)}</strong>` : ""}
+              ${t.superImportant ? `<span class="tiny-star">★</span>` : ""}
+              ${escapeHtml(t.text)}
+            </span>
+          </div>
+        `;
+      }).join("")}
+  </div>
+` : "";
 
 
     const schoolTasksForDate = [];
