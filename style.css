@@ -1699,9 +1699,6 @@ border:var(--family-border-width, 3px) solid transparent !important;
     var(--group-border, #c8c0ba) border-box;
 }
 
-.grouped-family-block.person-group-shared{
-  border-width:3px;
-}
 
 .grouped-family-block .person-todo-group-title{
   margin:0 0 7px;
