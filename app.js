@@ -1460,8 +1460,25 @@ function updateEntryTypeUI() {
     ? "z. B. Musikschule, Elternabend, Training"
     : "z. B. Elternbrief fertigstellen";
 
+  // Button passend zur gewählten Art beschriften
+  const addBtn = document.querySelector("#addTodoBtn");
+  if (addBtn) {
+    addBtn.textContent = isEvent ? "Termin hinzufügen" : "To-do hinzufügen";
+  }
+
   const recurrence = document.querySelector("#recurrence").value;
-  document.querySelector("#schoolHolidayHint").classList.toggle("hidden", recurrence !== "schoolyear-noe");
+  document.querySelector("#schoolHolidayHint").classList.toggle(
+    "hidden",
+    recurrence !== "schoolyear-no"
+  );
+
+  // Wochentag bei To-dos nur für "Diese Woche" anzeigen
+  const period = document.querySelector("#todoPeriod")?.value;
+  const todoDayField = document.querySelector("#todoDay")?.closest("label, .field, .form-field");
+
+  if (todoDayField) {
+    todoDayField.classList.toggle("hidden", isEvent || period !== "week");
+  }
 }
 
 document.querySelector("#entryType").addEventListener("change", updateEntryTypeUI);
