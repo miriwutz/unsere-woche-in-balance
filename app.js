@@ -1476,7 +1476,15 @@ function resetTodoEditor() {
 function updateEntryTypeUI() {
   const type = document.querySelector("#entryType").value;
   const isEvent = type === "event";
+const eventCategory = document.querySelector("#eventCategory")?.value || "normal";
+const recurrenceSelect = document.querySelector("#recurrence");
 
+if (
+  isEvent &&
+  ["birthday", "nameday", "anniversary", "holiday"].includes(eventCategory)
+) {
+  recurrenceSelect.value = "yearly";
+}
   document.querySelector("#eventFields").classList.toggle("hidden", !isEvent);
   document.querySelector("#entryTextLabel").textContent = isEvent ? "Termin" : "Aufgabe";
   document.querySelector("#todoText").placeholder = isEvent
@@ -1523,6 +1531,7 @@ const recurrence = document.querySelector("#recurrence").value;
 
 document.querySelector("#entryType").addEventListener("change", updateEntryTypeUI);
 document.querySelector("#recurrence").addEventListener("change", updateEntryTypeUI);
+document.querySelector("#eventCategory").addEventListener("change", updateEntryTypeUI);
 
 document.querySelector("#cancelTodoEditBtn").addEventListener("click", resetTodoEditor);
 
