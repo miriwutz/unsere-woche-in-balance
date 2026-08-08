@@ -344,7 +344,10 @@ function occursOnDate(item, date) {
   if (recurrence === "monthly") {
     return date.getDate() === anchor.getDate();
   }
-
+if (recurrence === "yearly") {
+  return date.getMonth() === anchor.getMonth()
+    && date.getDate() === anchor.getDate();
+}
   if (recurrence === "schoolyear-noe") {
     const sy = activeSchoolYear();
     if (!sy.start || !sy.end) return false;
@@ -363,6 +366,7 @@ function recurrenceLabel(value) {
     weekly: "Wöchentlich",
     biweekly: "Alle 2 Wochen",
     monthly: "Monatlich",
+     yearly: "Jährlich",
     "schoolyear-noe": "Schuljahr NÖ"
   };
   return labels[value || "none"];
