@@ -123,7 +123,10 @@ function setSelectedFamilyMembers(members = []) {
 }
 
 function familyBorderStyle(members = []) {
-  const borderWidth = document.querySelector("#familyBorderWidth")?.value || "3";
+const borderWidth =
+  state.settings?.familyBorderWidth ||
+  document.querySelector("#familyBorderWidth")?.value ||
+  "3";
   const valid = [...new Set(members)].filter(m => state.familySettings[m]);
   if (!valid.length) return "";
 
@@ -151,6 +154,13 @@ document.querySelector("#applyFamilyBorderWidth")?.addEventListener("click", () 
   save();
   renderAll();
 });
+
+const familyBorderWidthSelect = document.querySelector("#familyBorderWidth");
+
+if (familyBorderWidthSelect) {
+  familyBorderWidthSelect.value =
+    state.settings?.familyBorderWidth || "3";
+}
 
 function escapeHtml(text="") {
   return String(text).replace(/[&<>"']/g, ch => ({
