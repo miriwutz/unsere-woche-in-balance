@@ -323,9 +323,12 @@ function occursOnDate(item, date) {
   const recurrence = item.recurrence || "none";
   const anchor = itemAnchorDate(item);
 
-  if (item.type === "event" && recurrence === "none") {
-    return item.date === key;
-  }
+if (item.type === "event" && recurrence === "none") {
+  const startKey = item.date;
+  const endKey = item.endDate || item.date;
+
+  return key >= startKey && key <= endKey;
+}
 
   if (item.type !== "event" && recurrence === "none") {
     return item.weekKey === dateKey(getMonday(date)) && item.day === weekdayNameForDate(date);
@@ -995,6 +998,8 @@ function renderTodos() {
     document.querySelector("#todoDay").value = item.day || "";
     document.querySelector("#eventDate").value = item.date || "";
     document.querySelector("#eventTime").value = item.time || "";
+    document.querySelector("#eventEndDate").value = item.endDate || "";
+document.querySelector("#eventEndTime").value = item.endTime || "";
     document.querySelector("#eventCategory").value = item.eventCategory || "normal";
     document.querySelector("#recurrence").value = item.recurrence || "none";
     setSelectedFamilyMembers(item.family || []);
@@ -1463,7 +1468,9 @@ function resetTodoEditor() {
   document.querySelector("#todoPeriod").value = "week";
   document.querySelector("#todoDay").value = "";
   document.querySelector("#eventDate").value = "";
+  document.querySelector("#eventEndDate").value = "";
   document.querySelector("#eventTime").value = "";
+  document.querySelector("#eventEndTime").value = "";
   document.querySelector("#eventCategory").value = "normal";
   document.querySelector("#recurrence").value = "none";
   setSelectedFamilyMembers([]);
@@ -1582,6 +1589,8 @@ const eventEndTime = document.querySelector("#eventEndTime")?.value || "";
     item.weekKey = type === "event" ? null : newWeekKey;
     item.date = type === "event" ? eventDate : null;
     item.time = type === "event" ? eventTime : "";
+    item.endDate = type === "event" ? eventEndDate : null;
+item.endTime = type === "event" ? eventEndTime : "";
     item.eventCategory = type === "event" ? eventCategory : "normal";
     item.recurrence = recurrence;
     item.anchorDate = anchorDate;
@@ -1602,6 +1611,8 @@ const eventEndTime = document.querySelector("#eventEndTime")?.value || "";
       weekKey: type === "event" ? null : newWeekKey,
       date: type === "event" ? eventDate : null,
       time: type === "event" ? eventTime : "",
+      endDate: type === "event" ? eventEndDate : null,
+endTime: type === "event" ? eventEndTime : "",
       eventCategory: type === "event" ? eventCategory : "normal",
       recurrence,
       anchorDate,
