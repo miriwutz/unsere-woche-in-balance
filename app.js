@@ -137,6 +137,9 @@ return `--family-border:${color}; --family-gradient:linear-gradient(${color}, ${
 
  return `--family-border:transparent; --family-gradient:linear-gradient(110deg, ${stops}); --family-border-width:${borderWidth}px;`;
 }
+document.querySelector("#applyFamilyBorderWidth")?.addEventListener("click", () => {
+  renderAll();
+});
 
 function escapeHtml(text="") {
   return String(text).replace(/[&<>"']/g, ch => ({
