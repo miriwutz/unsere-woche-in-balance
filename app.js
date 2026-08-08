@@ -712,8 +712,19 @@ const eventHtml = events.length ? `
     ${events
       .sort((a,b) => (a.time || "").localeCompare(b.time || ""))
       .map(t => {
-        const isYearly = t.recurrence === "yearly";
-        const eventIcon = isYearly ? "♡" : "✦";
+const eventCategory = t.eventCategory || "normal";
+
+const eventMeta = {
+  normal:      { icon: "✦", label: "" },
+  birthday:    { icon: "🎂", label: "Geburtstag" },
+  nameday:     { icon: "🌷", label: "Namenstag" },
+  anniversary: { icon: "♡", label: "Jahrestag" },
+  holiday:     { icon: "✦", label: "Feiertag" }
+}[eventCategory] || { icon: "✦", label: "" };
+
+const eventIcon = eventMeta.icon;
+const eventLabel = eventMeta.label;
+const isYearly = t.recurrence === "yearly";
 
         return `
           <div class="event-mini event-display family-frame ${isYearly ? "yearly-event" : ""} ${t.superImportant ? "super-important" : ""}" style="${familyBorderStyle(t.family || [])}">
