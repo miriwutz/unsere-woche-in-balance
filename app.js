@@ -1543,8 +1543,10 @@ document.querySelector("#addTodoBtn").addEventListener("click", () => {
   const selectedDay = document.querySelector("#todoDay").value;
   const selectedFamily = selectedFamilyMembers();
   const recurrence = document.querySelector("#recurrence").value;
-  const eventDate = document.querySelector("#eventDate").value;
-  const eventTime = document.querySelector("#eventTime").value;
+ const eventDate = document.querySelector("#eventDate").value;
+const eventEndDate = document.querySelector("#eventEndDate")?.value || "";
+const eventTime = document.querySelector("#eventTime").value;
+const eventEndTime = document.querySelector("#eventEndTime")?.value || "";
   const eventCategory = document.querySelector("#eventCategory")?.value || "normal";
   const superImportant = document.querySelector("#superImportant").checked;
 
