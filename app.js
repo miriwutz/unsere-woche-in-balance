@@ -151,6 +151,11 @@ document.querySelector("#applyFamilyBorderWidth")?.addEventListener("click", () 
   state.settings = state.settings || {};
   state.settings.familyBorderWidth = width;
 
+  document.documentElement.style.setProperty(
+    "--family-border-width",
+    `${width}px`
+  );
+
   save();
   renderAll();
 });
@@ -158,8 +163,15 @@ document.querySelector("#applyFamilyBorderWidth")?.addEventListener("click", () 
 const familyBorderWidthSelect = document.querySelector("#familyBorderWidth");
 
 if (familyBorderWidthSelect) {
-  familyBorderWidthSelect.value =
+  const savedBorderWidth =
     state.settings?.familyBorderWidth || "3";
+
+  familyBorderWidthSelect.value = savedBorderWidth;
+
+  document.documentElement.style.setProperty(
+    "--family-border-width",
+    `${savedBorderWidth}px`
+  );
 }
 
 function escapeHtml(text="") {
