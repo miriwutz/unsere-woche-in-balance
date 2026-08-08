@@ -1124,7 +1124,7 @@ input[type="checkbox"]:checked::before{
   background:
     linear-gradient(var(--paper), var(--paper)) padding-box,
     var(--family-gradient, linear-gradient(var(--line), var(--line))) border-box;
-  border:1.6px solid transparent !important;
+border:var(--family-border-width, 3px) solid transparent !important;
 }
 
 .todo-mini.family-frame{
@@ -1133,9 +1133,6 @@ input[type="checkbox"]:checked::before{
   margin:6px 0;
 }
 
-.todo-card.family-frame{
-  border-width:1.7px !important;
-}
 
 @supports not (background: color-mix(in srgb, white 50%, black)){
   .family-chip:has(input:checked){
