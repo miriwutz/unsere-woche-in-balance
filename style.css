@@ -1425,6 +1425,19 @@ border:var(--family-border-width, 3px) solid transparent !important;
 
 .person-todo-group{
   margin-top:9px;
+  padding:7px 8px;
+  border-radius:12px;
+  border:var(--family-border-width, 3px) solid transparent;
+  background:
+    linear-gradient(var(--paper), var(--paper)) padding-box,
+    var(--family-gradient, linear-gradient(var(--line), var(--line))) border-box;
+}
+.person-todo-group .grouped-todo-row{
+  border:none !important;
+  background:transparent !important;
+  margin:2px 0;
+  padding:5px 2px;
+  border-radius:0;
 }
 .person-todo-group-title{
   display:flex;
