@@ -1465,7 +1465,11 @@ function updateEntryTypeUI() {
   if (addBtn) {
     addBtn.textContent = isEvent ? "Termin hinzufügen" : "To-do hinzufügen";
   }
+const periodField = document.querySelector("#todoPeriod")?.closest("label, .field, .form-field");
 
+if (periodField) {
+  periodField.classList.toggle("hidden", isEvent);
+}
   const recurrence = document.querySelector("#recurrence").value;
   document.querySelector("#schoolHolidayHint").classList.toggle(
     "hidden",
