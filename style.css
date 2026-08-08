@@ -2276,3 +2276,50 @@ input[type="checkbox"]:checked::before{
     padding:7px 4px !important;
   }
 }
+
+
+/* FIREBASE – geschützter Familienzugang */
+.login-gate{
+  position:fixed;
+  inset:0;
+  z-index:10000;
+  display:grid;
+  place-items:center;
+  padding:22px;
+  background:rgba(246,241,238,.96);
+  backdrop-filter:blur(8px);
+}
+.login-gate.hidden{display:none}
+.login-card{
+  width:min(430px,100%);
+  padding:30px;
+  border:1px solid var(--line);
+  border-radius:24px;
+  background:#fffdfb;
+  box-shadow:0 24px 70px rgba(79,68,61,.12);
+}
+.login-mark{
+  width:48px;height:48px;display:grid;place-items:center;
+  margin-bottom:14px;border-radius:50%;
+  background:#f4eee4;color:#c7973e;font-size:1.4rem;
+}
+.login-card h2{margin:.25rem 0 .55rem;font-size:2rem}
+.login-copy{margin:0 0 20px;color:var(--muted);line-height:1.5}
+#familyLoginForm{display:grid;gap:13px}
+#familyLoginForm label{display:grid;gap:6px;color:#655c57;font-size:.82rem}
+#familyLoginForm input{
+  width:100%;box-sizing:border-box;padding:12px 13px;
+  border:1px solid var(--line);border-radius:12px;background:#fff;
+  color:var(--ink);font:inherit;
+}
+.login-submit{margin-top:4px;width:100%}
+.login-error{min-height:1.2em;margin:11px 0 0;color:#a15353;font-size:.78rem}
+.logout-btn{
+  position:fixed;right:18px;bottom:18px;z-index:8000;
+  padding:8px 12px;border:1px solid var(--line);border-radius:999px;
+  background:rgba(255,253,251,.92);color:#81756e;font:inherit;font-size:.72rem;
+  cursor:pointer;box-shadow:0 6px 20px rgba(70,60,55,.08);
+}
+@media print{
+  .login-gate,.logout-btn{display:none!important}
+}

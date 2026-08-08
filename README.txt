@@ -211,3 +211,10 @@ FINAL LEER:
 - Lou und Fina bleiben als Kinder voreingestellt.
 - Familienmitglieder/Farben und die vorhandenen Funktionen bleiben erhalten.
 - Danach werden alle neu eingetragenen Daten wieder normal gespeichert.
+
+FIREBASE VERSION:
+- Firebase Authentication (E-Mail/Passwort) schützt die Familienseite.
+- Firestore synchronisiert eine gemeinsame Familienwoche über families/shared.
+- Änderungen werden zusätzlich lokal gespeichert und automatisch in Firestore geschrieben.
+- Live-Synchronisierung: Änderungen auf einem Gerät erscheinen auf den anderen Geräten.
+- GitHub Pages bleibt das Hosting; Firebase Hosting wird nicht benötigt.

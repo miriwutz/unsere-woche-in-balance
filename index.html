@@ -8,6 +8,27 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
+
+  <div id="loginGate" class="login-gate">
+    <section class="login-card" aria-labelledby="loginTitle">
+      <div class="login-mark">☀</div>
+      <p class="eyebrow">UNSERE WOCHE IN BALANCE</p>
+      <h2 id="loginTitle">Willkommen zu Hause</h2>
+      <p class="login-copy">Melde dich an, damit eure gemeinsame Woche auf allen Geräten gleich bleibt.</p>
+      <form id="familyLoginForm">
+        <label>E-Mail
+          <input id="familyLoginEmail" type="email" autocomplete="email" required>
+        </label>
+        <label>Passwort
+          <input id="familyLoginPassword" type="password" autocomplete="current-password" required>
+        </label>
+        <button class="primary-btn login-submit" type="submit">Anmelden</button>
+      </form>
+      <p id="loginError" class="login-error" role="alert"></p>
+    </section>
+  </div>
+  <button id="logoutBtn" class="logout-btn hidden" type="button">Abmelden</button>
+
   <main class="page-shell">
     <header class="hero">
       <div>
@@ -509,6 +530,22 @@
       </div>
     </div>
   </dialog>
+
+
+  <script src="https://www.gstatic.com/firebasejs/12.17.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/12.17.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore-compat.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyAvL88BN9jov4S9oWwYAEpQHUl-d-zqG4Y",
+      authDomain: "meine-woche-in-balance.firebaseapp.com",
+      projectId: "meine-woche-in-balance",
+      storageBucket: "meine-woche-in-balance.firebasestorage.app",
+      messagingSenderId: "441032237922",
+      appId: "1:441032237922:web:c15fba8ed5f6b3ec13423b"
+    };
+    firebase.initializeApp(firebaseConfig);
+  </script>
 
   <script src="app.js"></script>
 </body>

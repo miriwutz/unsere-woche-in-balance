@@ -28,12 +28,49 @@ const state = {
   archive: JSON.parse(localStorage.getItem("balanceProd.archive") || "[]")
 };
 
-function save() {
+let cloudReady = false;
+let cloudApplying = false;
+let cloudSaveTimer = null;
+let cloudUnsubscribe = null;
+
+function saveLocal() {
   localStorage.setItem("balanceProd.videos", JSON.stringify(state.videos));
   localStorage.setItem("balanceProd.todos", JSON.stringify(state.todos));
   localStorage.setItem("balanceProd.archive", JSON.stringify(state.archive));
   localStorage.setItem("balanceProd.school", JSON.stringify(state.school));
   localStorage.setItem("balanceProd.familySettings", JSON.stringify(state.familySettings));
+  localStorage.setItem("balanceProd.schoolYear", state.settings?.schoolYear || "2026-27");
+}
+
+function cloudPayload() {
+  // JSON round-trip removes values Firestore cannot store (e.g. undefined).
+  return JSON.parse(JSON.stringify({
+    videos: state.videos,
+    todos: state.todos,
+    archive: state.archive,
+    school: state.school,
+    familySettings: state.familySettings,
+    settings: state.settings || {}
+  }));
+}
+
+function scheduleCloudSave() {
+  if (!cloudReady || cloudApplying || !firebase.auth().currentUser) return;
+  clearTimeout(cloudSaveTimer);
+  cloudSaveTimer = setTimeout(async () => {
+    try {
+      const payload = cloudPayload();
+      payload.updatedAt = firebase.firestore.FieldValue.serverTimestamp();
+      await firebase.firestore().collection("families").doc("shared").set(payload);
+    } catch (err) {
+      console.error("Firestore save failed:", err);
+    }
+  }, 300);
+}
+
+function save() {
+  saveLocal();
+  scheduleCloudSave();
 }
 
 function uid() {
@@ -1623,10 +1660,101 @@ function setRandomDailySubtitle() {
   sessionStorage.setItem("myWeek.lastSubtitleIndex", String(index));
 }
 
+
+function setLoginMessage(message="") {
+  const el = document.querySelector("#loginError");
+  if (el) el.textContent = message;
+}
+
+function showLoginGate(show) {
+  document.querySelector("#loginGate")?.classList.toggle("hidden", !show);
+  document.querySelector("#logoutBtn")?.classList.toggle("hidden", show);
+}
+
+function applyCloudData(data) {
+  cloudApplying = true;
+  try {
+    state.videos = Array.isArray(data.videos) ? data.videos : [];
+    state.todos = Array.isArray(data.todos) ? data.todos : [];
+    state.archive = Array.isArray(data.archive) ? data.archive : [];
+    if (data.school?.children) state.school = data.school;
+    if (data.familySettings) state.familySettings = data.familySettings;
+    state.settings = {...(state.settings || {}), ...(data.settings || {})};
+    saveLocal();
+    renderAll();
+  } finally {
+    cloudApplying = false;
+  }
+}
+
+function startCloudSync() {
+  if (cloudUnsubscribe) cloudUnsubscribe();
+
+  const ref = firebase.firestore().collection("families").doc("shared");
+  let firstSnapshot = true;
+
+  cloudUnsubscribe = ref.onSnapshot(async snap => {
+    if (!snap.exists) {
+      if (firstSnapshot) {
+        cloudReady = true;
+        firstSnapshot = false;
+        // First family login: create the shared document from the clean local state.
+        scheduleCloudSave();
+      }
+      return;
+    }
+
+    applyCloudData(snap.data());
+    cloudReady = true;
+    firstSnapshot = false;
+  }, err => {
+    console.error("Firestore sync failed:", err);
+    cloudReady = false;
+    setLoginMessage("Die Verbindung zur gemeinsamen Familienwoche ist fehlgeschlagen.");
+  });
+}
+
+document.querySelector("#familyLoginForm")?.addEventListener("submit", async e => {
+  e.preventDefault();
+  setLoginMessage("");
+  const email = document.querySelector("#familyLoginEmail")?.value.trim();
+  const password = document.querySelector("#familyLoginPassword")?.value || "";
+
+  try {
+    await firebase.auth().signInWithEmailAndPassword(email, password);
+  } catch (err) {
+    console.error("Login failed:", err);
+    const friendly = {
+      "auth/invalid-credential":"E-Mail oder Passwort stimmt nicht.",
+      "auth/invalid-email":"Bitte prüfe die E-Mail-Adresse.",
+      "auth/too-many-requests":"Zu viele Versuche. Bitte später noch einmal probieren."
+    };
+    setLoginMessage(friendly[err.code] || "Anmeldung nicht möglich. Bitte Zugangsdaten prüfen.");
+  }
+});
+
+document.querySelector("#logoutBtn")?.addEventListener("click", () => firebase.auth().signOut());
+
+firebase.auth().onAuthStateChanged(user => {
+  if (user) {
+    setLoginMessage("");
+    showLoginGate(false);
+    startCloudSync();
+  } else {
+    cloudReady = false;
+    if (cloudUnsubscribe) {
+      cloudUnsubscribe();
+      cloudUnsubscribe = null;
+    }
+    showLoginGate(true);
+  }
+});
+
 setRandomDailySubtitle();
 updateEntryTypeUI();
 migrateOldData();
 renderAll();
+
 
 
 document.addEventListener("click", (e) => {
