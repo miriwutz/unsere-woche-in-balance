@@ -1515,9 +1515,11 @@ document.querySelectorAll(".family-timetable-person").forEach(btn => {
       return;
     }
 
-    if (person === "mama") {
-      showMotivation("Mamas Stundenplan bauen wir als Nächstes ein. ♡");
-    }
+   if (person === "mama") {
+  renderTTMatrix("mama");
+  document.querySelector("#manualTimetableWrapmama")?.classList.remove("hidden");
+  return;
+}
   });
 });
 const manualTimetableDialog = document.querySelector("#manualTimetableDialog");
