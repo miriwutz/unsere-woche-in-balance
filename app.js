@@ -1313,6 +1313,19 @@ function subjectOptionsFor(id){
  const sel=document.querySelector("#schoolSubject1"),v=sel?[...sel.options].map(o=>o.value).filter(Boolean):[];
  return v.length?["",...new Set(v),"Anderes"]:["","Deutsch","Mathematik","Englisch","Biologie","Geografie","Geschichte","Physik","Chemie","Informatik","Religion","Bewegung & Sport","Werken","Musik","Kunst","Anderes"];
 }
+function timetablePerson(id) {
+  if (id === "mama") {
+    state.school.mama = state.school.mama || {
+      name: familyName("a") || "Mama",
+      timetableByYear: {}
+    };
+
+    state.school.mama.name = familyName("a") || "Mama";
+    return state.school.mama;
+  }
+
+  return state.school.children[id];
+}
 function ensureManualTimetable(c){
  c.timetableByYear=c.timetableByYear||{};const y=state.settings?.schoolYear||"2026-27";
  if(!c.timetableByYear[y])c.timetableByYear[y]={times:defaultLessonTimes.map(x=>({from:x[0],to:x[1]})),subjects:Object.fromEntries(manualTimetableDayKeys.map(d=>[d,Array(6).fill("")])),homeBy:Object.fromEntries(manualTimetableDayKeys.map(d=>[d,""]))};
@@ -1321,7 +1334,7 @@ function ensureManualTimetable(c){
 function hasManualTimetable(c){const t=ensureManualTimetable(c);return manualTimetableDayKeys.some(d=>t.subjects[d].some(Boolean)||t.homeBy[d])}
 function ttOpts(id,cur){return subjectOptionsFor(id).map(v=>`<option value="${escapeHtml(v)}" ${v===cur?"selected":""}>${escapeHtml(v||"–")}</option>`).join("")}
 function renderTTMatrix(id){
-  const c=state.school.children[id],t=ensureManualTimetable(c),h=document.querySelector(`#ttMatrix${id}`);
+ const c=timetablePerson(id),t=ensureManualTimetable(c),h=document.querySelector(`#ttMatrix${id}`);
   if(!h)return;
   h.innerHTML=`<div class="tt-table-wrap"><table class="tt-table">
     <thead><tr><th>Zeit</th>${manualTimetableDayNames.map(x=>`<th>${x}</th>`).join("")}</tr></thead>
