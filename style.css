@@ -2457,13 +2457,29 @@ border:var(--family-border-width, 3px) solid transparent !important;
 }
 
 .timetable-switcher{
-  display:flex;
-  gap:8px;
+  display:grid;
+  grid-template-columns:repeat(3, minmax(0, 1fr));
+  gap:14px;
+  width:100%;
   margin:0 0 18px;
 }
 
 .timetable-switch{
-  min-width:100px;
+  width:100%;
+  min-width:0;
+  min-height:64px;
+}
+.family-timetable-buttons{
+  display:grid;
+  grid-template-columns:repeat(3, minmax(0, 1fr));
+  gap:14px;
+  width:100%;
+}
+
+.family-timetable-person{
+  width:100%;
+  min-width:0;
+  min-height:64px;
 }
 /* Mama-Stundenplan breiter */
 #familyTimetableDialog{
