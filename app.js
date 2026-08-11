@@ -982,7 +982,54 @@ function renderTodos() {
   let todos = state.todos.filter(t => !t.archived);
   if (todoFilter === "work" || todoFilter === "private") todos = todos.filter(t => t.area === todoFilter);
   if (todoFilter === "todo" || todoFilter === "event") todos = todos.filter(t => (t.type || "todo") === todoFilter);
+todos.sort((a, b) => {
+  const now = new Date();
 
+  function sortInfo(item) {
+    const type = item.type || "todo";
+
+    if (type === "todo") {
+      const ranks = {
+        today: 1,
+        week: 2,
+        month: 4,
+        later: 5
+      };
+
+      return {
+        rank: ranks[item.period] || 5,
+        time: 0
+      };
+    }
+
+    if (type === "event") {
+      if (!item.date) {
+        return { rank: 5, time: Number.MAX_SAFE_INTEGER };
+      }
+
+      const d = new Date(
+        item.date + "T" + (item.time || "23:59")
+      );
+
+      if (d >= now) {
+        return { rank: 3, time: d.getTime() };
+      }
+
+      return { rank: 6, time: -d.getTime() };
+    }
+
+    return { rank: 5, time: 0 };
+  }
+
+  const aa = sortInfo(a);
+  const bb = sortInfo(b);
+
+  if (aa.rank !== bb.rank) {
+    return aa.rank - bb.rank;
+  }
+
+  return aa.time - bb.time;
+});
   if (!todos.length) {
     list.innerHTML = '<div class="empty">Hier ist gerade angenehm wenig los.</div>';
     return;
@@ -1006,8 +1053,8 @@ function renderTodos() {
         <small>${groupItems.length} ${groupItems.length === 1 ? "Eintrag" : "Einträge"}</small>
       </div>
       <div class="todo-person-items">
-        ${groupItems.map(t => `
-          <div class="todo-card grouped-main-todo ${t.superImportant ? "super-important" : ""} ${(!t.recurrence || t.recurrence === "none") && t.done ? "done":""}">
+       ${groupItems.map((t, index) => `
+         <div class="todo-card grouped-main-todo ${index >= 6 ? "todo-extra hidden" : ""} ${t.superImportant ? "super-important" : ""} ${(t.recurrence || t.recurrence === "none") && t.done ? "done":""}">
             <div class="todo-main">
               ${(!t.recurrence || t.recurrence === "none")
                 ? `<input class="check todo-check" data-id="${t.id}" type="checkbox" ${t.done ? "checked":""}>`
