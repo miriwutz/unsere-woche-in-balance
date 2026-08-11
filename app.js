@@ -1126,7 +1126,24 @@ todos.sort((a, b) => {
       </div>
     </section>
   `).join("");
+document.querySelectorAll(".show-more-todos").forEach(btn => {
+  btn.addEventListener("click", () => {
+    const container = btn.closest(".todo-person-items");
+    if (!container) return;
 
+    const extraItems = container.querySelectorAll(".todo-extra");
+    const isExpanded = btn.dataset.expanded === "true";
+
+    extraItems.forEach(item => {
+      item.classList.toggle("hidden", isExpanded);
+    });
+
+    btn.dataset.expanded = isExpanded ? "false" : "true";
+    btn.textContent = isExpanded
+      ? `Weitere anzeigen (${extraItems.length})`
+      : "Weniger anzeigen";
+  });
+});
   document.querySelectorAll(".todo-check").forEach(el => el.addEventListener("change", e => {
     const item = state.todos.find(t => t.id === e.target.dataset.id);
     if (!item) return;
