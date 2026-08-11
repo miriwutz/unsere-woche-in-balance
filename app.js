@@ -1357,7 +1357,7 @@ function ttOpts(id,cur){return subjectOptionsFor(id).map(v=>`<option value="${es
 function renderTTMatrix(id){
  const c=timetablePerson(id),t=ensureManualTimetable(c),h=document.querySelector(`#ttMatrix${id}`);
   if(!h)return;
-  h.innerHTML=`<div class="tt-table-wrap"><table class="tt-table">
+ h.innerHTML=`<div class="tt-table-wrap"><table class="tt-table ${id === "mama" ? "tt-mama" : ""}">
     <thead><tr><th>Zeit</th>${manualTimetableDayNames.map(x=>`<th>${x}</th>`).join("")}</tr></thead>
     <tbody>
       <tr class="tt-home-row tt-home-row-top"><th>⌂ Zu Hause bis</th>${manualTimetableDayKeys.map(d=>`<td><input class="tt-home-input" data-child="${id}" data-day="${d}" value="${escapeHtml(t.homeBy[d]||"")}" placeholder="13:30"></td>`).join("")}</tr>
@@ -1376,7 +1376,7 @@ function showManualTimetable(id){
   if(!d||!out)return;
 
   title.textContent=`${c.name||id} – Stundenplan`;
-  out.innerHTML=`<div class="tt-table-wrap"><table class="tt-table tt-view-table">
+out.innerHTML=`<div class="tt-table-wrap"><table class="tt-table tt-view-table ${id === "mama" ? "tt-mama" : ""}">
     <thead><tr><th>Zeit</th>${manualTimetableDayNames.map(x=>`<th>${x}</th>`).join("")}</tr></thead>
     <tbody>
       <tr class="tt-home-row tt-home-row-top"><th>⌂ Zu Hause bis</th>${manualTimetableDayKeys.map(day=>`<td>${escapeHtml(t.homeBy[day]||"–")}</td>`).join("")}</tr>
