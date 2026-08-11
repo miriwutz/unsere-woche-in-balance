@@ -1509,14 +1509,14 @@ document.querySelectorAll(".family-timetable-person").forEach(btn => {
   btn.addEventListener("click", () => {
     const person = btn.dataset.person;
 
+           
+ if (person === "1" || person === "2") {
     familyTimetableDialog?.close();
+    showManualTimetable(person);
+    return;
+}
 
-    if (person === "1" || person === "2") {
-      showManualTimetable(person);
-      return;
-    }
-
-   if (person === "mama") {
+       if (person === "mama") {
   renderTTMatrix("mama");
   document.querySelector("#manualTimetableWrapmama")?.classList.remove("hidden");
   return;
