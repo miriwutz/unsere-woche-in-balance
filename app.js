@@ -1346,9 +1346,9 @@ function renderTTMatrix(id){
 }
 function openManualTimetableEditor(id){renderTTMatrix(id);document.querySelector(`#manualTimetableWrap${id}`)?.classList.remove("hidden")}
 function closeManualTimetableEditor(id){document.querySelector(`#manualTimetableWrap${id}`)?.classList.add("hidden")}
-function saveTTMatrix(id){const c=state.school.children[id],t=ensureManualTimetable(c);document.querySelectorAll(`.tt-time-text[data-child="${id}"]`).forEach(x=>t.times[+x.dataset.row][x.dataset.part]=x.value.trim());document.querySelectorAll(`.tt-subject-cell[data-child="${id}"]`).forEach(x=>t.subjects[x.dataset.day][+x.dataset.row]=x.value);document.querySelectorAll(`.tt-home-input[data-child="${id}"]`).forEach(x=>t.homeBy[x.dataset.day]=x.value.trim());save();renderAll();closeManualTimetableEditor(id);showMotivation("Stundenplan gespeichert ✨")}
+function saveTTMatrix(id){const c=timetablePerson(id),t=ensureManualTimetable(c);document.querySelectorAll(`.tt-time-text[data-child="${id}"]`).forEach(x=>t.times[+x.dataset.row][x.dataset.part]=x.value.trim());document.querySelectorAll(`.tt-subject-cell[data-child="${id}"]`).forEach(x=>t.subjects[x.dataset.day][+x.dataset.row]=x.value);document.querySelectorAll(`.tt-home-input[data-child="${id}"]`).forEach(x=>t.homeBy[x.dataset.day]=x.value.trim());save();renderAll();closeManualTimetableEditor(id);showMotivation("Stundenplan gespeichert ✨")}
 function showManualTimetable(id){
-  const c=state.school.children[id],t=ensureManualTimetable(c),
+ const c=timetablePerson(id),t=ensureManualTimetable(c),
     d=document.querySelector("#manualTimetableDialog"),
     title=document.querySelector("#manualTimetableDialogTitle"),
     out=document.querySelector("#manualTimetableDisplay");
@@ -1365,7 +1365,7 @@ function showManualTimetable(id){
   d.showModal();
 }
 function bindManualTimetableControls(){document.querySelectorAll(".save-tt-matrix").forEach(b=>{if(b.dataset.bound)return;b.dataset.bound="1";b.addEventListener("click",e=>saveTTMatrix(e.currentTarget.dataset.child))})}
-function homeByForDate(id,date){const c=state.school.children[id];if(!c)return"";const t=ensureManualTimetable(c),day=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"][date.getDay()];return t.homeBy[day]||""}
+function homeByForDate(id,date){const c=timetablePerson(id);if(!c)return"";const t=ensureManualTimetable(c),day=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"][date.getDay()];return t.homeBy[day]||""}
 
 function renderSchool(){
   ["1","2"].forEach(id=>{
