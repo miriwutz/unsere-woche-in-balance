@@ -1497,6 +1497,7 @@ document.querySelectorAll(".timetable-view-btn").forEach(btn => btn.addEventList
 const familyTimetableDialog = document.querySelector("#familyTimetableDialog");
 
 document.querySelector("#openFamilyTimetableBtn")?.addEventListener("click", () => {
+  document.querySelector("#manualTimetableWrapmama")?.classList.add("hidden");
   familyTimetableDialog?.showModal();
 });
 
