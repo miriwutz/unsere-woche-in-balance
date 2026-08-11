@@ -587,7 +587,35 @@
       </div>
     </div>
   </dialog>
+<dialog id="familyTimetableDialog" class="family-timetable-dialog">
+  <div class="family-timetable-chooser">
+    <div class="dialog-head">
+      <div>
+        <p class="small-label">STUNDENPLAN</p>
+        <h2>Wessen Stundenplan?</h2>
+      </div>
 
+      <button id="closeFamilyTimetableDialog"
+              class="text-btn"
+              type="button"
+              aria-label="Schließen">×</button>
+    </div>
+
+    <div class="family-timetable-buttons">
+      <button class="secondary-btn family-timetable-person"
+              data-person="1"
+              type="button">Lou</button>
+
+      <button class="secondary-btn family-timetable-person"
+              data-person="2"
+              type="button">Fina</button>
+
+      <button class="secondary-btn family-timetable-person"
+              data-person="mama"
+              type="button">Mama</button>
+    </div>
+  </div>
+</dialog>
 
   <script src="https://www.gstatic.com/firebasejs/12.17.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/12.17.1/firebase-auth-compat.js"></script>
