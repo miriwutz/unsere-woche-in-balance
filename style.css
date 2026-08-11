@@ -2503,3 +2503,7 @@ border:var(--family-border-width, 3px) solid transparent !important;
 .week-head-actions > button{
   margin:0 !important;
 }
+/* Mama braucht keine "Zu Hause bis"-Zeile */
+.tt-mama .tt-home-row{
+  display:none;
+}
