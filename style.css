@@ -2465,3 +2465,17 @@ border:var(--family-border-width, 3px) solid transparent !important;
 .timetable-switch{
   min-width:100px;
 }
+/* Mama-Stundenplan breiter */
+#familyTimetableDialog{
+  width:min(1180px, 96vw);
+  max-width:none;
+}
+
+#manualTimetableWrapmama{
+  width:100%;
+}
+
+#ttMatrixmama .tt-table{
+  width:100%;
+  min-width:0;
+}
