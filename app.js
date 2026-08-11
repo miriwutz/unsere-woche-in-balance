@@ -1480,7 +1480,33 @@ document.querySelectorAll(".close-manual-timetable").forEach(btn => btn.addEvent
 document.querySelectorAll(".timetable-view-btn").forEach(btn => btn.addEventListener("click", e => {
   showManualTimetable(e.currentTarget.dataset.child);
 }));
+// Stundenplan-Auswahl auf der Wochenplan-Seite
+const familyTimetableDialog = document.querySelector("#familyTimetableDialog");
 
+document.querySelector("#openFamilyTimetableBtn")?.addEventListener("click", () => {
+  familyTimetableDialog?.showModal();
+});
+
+document.querySelector("#closeFamilyTimetableDialog")?.addEventListener("click", () => {
+  familyTimetableDialog?.close();
+});
+
+document.querySelectorAll(".family-timetable-person").forEach(btn => {
+  btn.addEventListener("click", () => {
+    const person = btn.dataset.person;
+
+    familyTimetableDialog?.close();
+
+    if (person === "1" || person === "2") {
+      showManualTimetable(person);
+      return;
+    }
+
+    if (person === "mama") {
+      showMotivation("Mamas Stundenplan bauen wir als Nächstes ein. ♡");
+    }
+  });
+});
 const manualTimetableDialog = document.querySelector("#manualTimetableDialog");
 document.querySelector("#closeManualTimetableDialog")?.addEventListener("click", () => manualTimetableDialog?.close());
 document.querySelector("#closeManualTimetableDialog2")?.addEventListener("click", () => manualTimetableDialog?.close());
