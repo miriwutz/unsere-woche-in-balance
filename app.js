@@ -1309,9 +1309,30 @@ function childHasNoOpenHomework(child) {
 const manualTimetableDayKeys=["Mon","Tue","Wed","Thu","Fri"],manualTimetableDayNames=["Montag","Dienstag","Mittwoch","Donnerstag","Freitag"];
 const defaultLessonTimes=[["07:45","08:35"],["08:35","09:25"],["09:45","10:35"],["10:35","11:25"],["11:35","12:25"],["12:25","13:15"]];
 function subjectOptionsFor(id){
- if(id==="2")return ["","GU","REL","Bewegung & Sport","Werken","Anderes"];
- const sel=document.querySelector("#schoolSubject1"),v=sel?[...sel.options].map(o=>o.value).filter(Boolean):[];
- return v.length?["",...new Set(v),"Anderes"]:["","Deutsch","Mathematik","Englisch","Biologie","Geografie","Geschichte","Physik","Chemie","Informatik","Religion","Bewegung & Sport","Werken","Musik","Kunst","Anderes"];
+  if(id==="mama"){
+    return [
+      "",
+      "Technisch Werken",
+      "GLZ",
+      "Deutsch",
+      "Mathematik",
+      "Sachunterricht",
+      "Bewegung & Sport",
+      "Religion",
+      "Anderes"
+    ];
+  }
+
+  if(id==="2"){
+    return ["","GU","REL","Bewegung & Sport","Werken","Anderes"];
+  }
+
+  const sel=document.querySelector("#schoolSubject1");
+  const v=sel?[...sel.options].map(o=>o.value).filter(Boolean):[];
+
+  return v.length
+    ? ["",...new Set(v),"Anderes"]
+    : ["","Deutsch","Mathematik","Englisch","Biologie","Geografie","Geschichte","Physik","Chemie","Informatik","Religion","Bewegung & Sport","Werken","Anderes"];
 }
 function timetablePerson(id) {
   if (id === "mama") {
