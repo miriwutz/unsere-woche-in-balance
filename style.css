@@ -2450,3 +2450,18 @@ border:var(--family-border-width, 3px) solid transparent !important;
     min-height:64px;
   }
 }
+/* Stundenplan-Fenster breiter */
+#manualTimetableDialog .timetable-dialog-card{
+  width:min(1180px, 95vw);
+  max-width:none;
+}
+
+.timetable-switcher{
+  display:flex;
+  gap:8px;
+  margin:0 0 18px;
+}
+
+.timetable-switch{
+  min-width:100px;
+}
