@@ -1493,6 +1493,11 @@ document.querySelectorAll(".close-manual-timetable").forEach(btn => btn.addEvent
 document.querySelectorAll(".timetable-view-btn").forEach(btn => btn.addEventListener("click", e => {
   showManualTimetable(e.currentTarget.dataset.child);
 }));
+document.querySelectorAll(".timetable-switch").forEach(btn => {
+  btn.addEventListener("click", () => {
+    showManualTimetable(btn.dataset.person);
+  });
+});
 // Stundenplan-Auswahl auf der Wochenplan-Seite
 const familyTimetableDialog = document.querySelector("#familyTimetableDialog");
 
