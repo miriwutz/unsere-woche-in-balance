@@ -985,26 +985,50 @@ function renderTodos() {
 todos.sort((a, b) => {
   const now = new Date();
 
+  const weekdayOrder = {
+    Montag: 1,
+    Dienstag: 2,
+    Mittwoch: 3,
+    Donnerstag: 4,
+    Freitag: 5,
+    Samstag: 6,
+    Sonntag: 7
+  };
+
   function sortInfo(item) {
     const type = item.type || "todo";
 
     if (type === "todo") {
-      const ranks = {
-        today: 1,
-        week: 2,
-        month: 4,
-        later: 5
-      };
+      if (item.period === "today") {
+        return { rank: 1, sub: 0, time: 0 };
+      }
 
-      return {
-        rank: ranks[item.period] || 5,
-        time: 0
-      };
+      if (item.period === "week") {
+        return {
+          rank: 2,
+          sub: weekdayOrder[item.day] || 99,
+          time: 0
+        };
+      }
+
+      if (item.period === "month") {
+        return { rank: 4, sub: 0, time: 0 };
+      }
+
+      if (item.period === "later") {
+        return { rank: 5, sub: 0, time: 0 };
+      }
+
+      return { rank: 5, sub: 0, time: 0 };
     }
 
     if (type === "event") {
       if (!item.date) {
-        return { rank: 5, time: Number.MAX_SAFE_INTEGER };
+        return {
+          rank: 5,
+          sub: 0,
+          time: Number.MAX_SAFE_INTEGER
+        };
       }
 
       const d = new Date(
@@ -1012,13 +1036,21 @@ todos.sort((a, b) => {
       );
 
       if (d >= now) {
-        return { rank: 3, time: d.getTime() };
+        return {
+          rank: 3,
+          sub: 0,
+          time: d.getTime()
+        };
       }
 
-      return { rank: 6, time: -d.getTime() };
+      return {
+        rank: 6,
+        sub: 0,
+        time: -d.getTime()
+      };
     }
 
-    return { rank: 5, time: 0 };
+    return { rank: 5, sub: 0, time: 0 };
   }
 
   const aa = sortInfo(a);
@@ -1026,6 +1058,10 @@ todos.sort((a, b) => {
 
   if (aa.rank !== bb.rank) {
     return aa.rank - bb.rank;
+  }
+
+  if (aa.sub !== bb.sub) {
+    return aa.sub - bb.sub;
   }
 
   return aa.time - bb.time;
