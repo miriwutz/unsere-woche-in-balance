@@ -1082,6 +1082,11 @@ todos.sort((a, b) => {
             </div>
           </div>
         `).join("")}
+        ${groupItems.length > 6 ? `
+  <button class="secondary-btn show-more-todos" type="button">
+    Weitere anzeigen (${groupItems.length - 6})
+  </button>
+` : ""}
       </div>
     </section>
   `).join("");
