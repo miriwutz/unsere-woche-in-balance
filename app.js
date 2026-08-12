@@ -986,12 +986,7 @@ function isNewEntry(item) {
 function renderTodos() {
   const list = document.querySelector("#todoList");
   let todos = state.todos.filter(t => !t.archived); 
-  function isNewEntry(item) {
-  if (!item.createdAt) return false;
-
-  const threeDays = 3 * 24 * 60 * 60 * 1000;
-  return Date.now() - item.createdAt < threeDays;
-}
+ 
   if (todoFilter === "work" || todoFilter === "private") todos = todos.filter(t => t.area === todoFilter);
   if (todoFilter === "todo" || todoFilter === "event") todos = todos.filter(t => (t.type || "todo") === todoFilter);
 todos.sort((a, b) => {
