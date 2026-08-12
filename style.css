@@ -2507,3 +2507,15 @@ border:var(--family-border-width, 3px) solid transparent !important;
 .tt-mama .tt-home-row{
   display:none;
 }
+.new-entry-badge {
+  display: inline-block;
+  margin-left: 7px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: #8a6844;
+  background: #f7eee1;
+  vertical-align: middle;
+}
