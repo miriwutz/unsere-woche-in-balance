@@ -696,7 +696,27 @@ function renderWeek() {
 
     const videos = state.videos.filter(v => v.day === day && v.weekKey === weekKey);
     const occurrences = state.todos.filter(t => occursOnDate(t, date));
-    const todos = occurrences.filter(t => (t.type || "todo") === "todo");
+ const todos = occurrences.filter(t => {
+  if ((t.type || "todo") !== "todo") return false;
+
+  // Wiederkehrende To-dos werden weiterhin über ihre einzelnen Vorkommen behandelt
+  if (t.recurrence && t.recurrence !== "none") return true;
+
+  // Nicht erledigt → ganz normal anzeigen
+  if (!t.done) return true;
+
+  // Alte erledigte To-dos ohne completedAt vorerst weiterhin anzeigen
+  if (!t.completedAt) return true;
+
+  // Erledigt: nur am Tag der Erledigung noch anzeigen
+  const completedDay = new Date(t.completedAt);
+  completedDay.setHours(0, 0, 0, 0);
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  return completedDay.getTime() === today.getTime();
+});
     const events = occurrences.filter(t => t.type === "event");
 
     const videoHtml = videos.map(v => `
