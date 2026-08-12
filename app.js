@@ -1312,13 +1312,8 @@ function subjectOptionsFor(id){
   if(id==="mama"){
     return [
       "",
-      "Technisch Werken",
+      "TW",
       "GLZ",
-      "Deutsch",
-      "Mathematik",
-      "Sachunterricht",
-      "Bewegung & Sport",
-      "Religion",
       "Anderes"
     ];
   }
