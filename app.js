@@ -1105,7 +1105,7 @@ todos.sort((a, b) => {
       </div>
       <div class="todo-person-items">
        ${groupItems.map((t, index) => `
-         <div class="todo-card grouped-main-todo ${index >= 6 ? "todo-extra hidden" : ""} ${t.superImportant ? "super-important" : ""} ${(t.recurrence || t.recurrence === "none") && t.done ? "done":""}">
+         <div class="todo-card grouped-main-todo ${index >= 6 && !expandedTodoGroups.has(groupKey) ? "todo-extra hidden" : (index >= 6 ? "todo-extra" : "")} ${t.superImportant ? "super-important" : ""} ${(t.recurrence || t.recurrence === "none") && t.done ? "done":""}">
             <div class="todo-main">
               ${(!t.recurrence || t.recurrence === "none")
                 ? `<input class="check todo-check" data-id="${t.id}" type="checkbox" ${t.done ? "checked":""}>`
