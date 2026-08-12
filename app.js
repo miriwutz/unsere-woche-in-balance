@@ -1390,16 +1390,107 @@ function ensureManualTimetable(c){
 }
 function hasManualTimetable(c){const t=ensureManualTimetable(c);return manualTimetableDayKeys.some(d=>t.subjects[d].some(Boolean)||t.homeBy[d])}
 function ttOpts(id,cur){return subjectOptionsFor(id).map(v=>`<option value="${escapeHtml(v)}" ${v===cur?"selected":""}>${escapeHtml(v||"–")}</option>`).join("")}
-function renderTTMatrix(id){
- const c=timetablePerson(id),t=ensureManualTimetable(c),h=document.querySelector(`#ttMatrix${id}`);
-  if(!h)return;
- h.innerHTML=`<div class="tt-table-wrap"><table class="tt-table ${id === "mama" ? "tt-mama" : ""}">
-    <thead><tr><th>Zeit</th>${manualTimetableDayNames.map(x=>`<th>${x}</th>`).join("")}</tr></thead>
-    <tbody>
-      <tr class="tt-home-row tt-home-row-top"><th>⌂ Zu Hause bis</th>${manualTimetableDayKeys.map(d=>`<td><input class="tt-home-input" data-child="${id}" data-day="${d}" value="${escapeHtml(t.homeBy[d]||"")}" placeholder="13:30"></td>`).join("")}</tr>
-      ${t.times.map((tm,r)=>`<tr><th class="tt-time-cell"><input class="tt-time-text" data-child="${id}" data-row="${r}" data-part="from" value="${escapeHtml(tm.from)}"><span>–</span><input class="tt-time-text" data-child="${id}" data-row="${r}" data-part="to" value="${escapeHtml(tm.to)}"></th>${manualTimetableDayKeys.map(d=>`<td><select class="tt-subject-cell" data-child="${id}" data-day="${d}" data-row="${r}">${ttOpts(id,t.subjects[d][r]||"")}</select></td>`).join("")}</tr>`).join("")}
-    </tbody>
-  </table></div>`;
+function renderTTMatrix(id) {
+    const c = timetablePerson(id);
+    const t = ensureManualTimetable(c);
+    const h = document.querySelector(`#ttMatrix${id}`);
+
+    if (!h) return;
+
+    h.innerHTML = `
+        <div class="tt-table-wrap">
+            <table class="tt-table ${id === "mama" ? "tt-mama" : ""}">
+                <thead>
+                    <tr>
+                        <th>Zeit</th>
+                        ${manualTimetableDayNames.map(x => `<th>${x}</th>`).join("")}
+                    </tr>
+                </thead>
+
+                <tbody>
+                    <tr class="tt-home-row tt-home-row-top">
+                        <th>⌂ Zu Hause bis</th>
+                        ${manualTimetableDayKeys.map(d => `
+                            <td>
+                                <input
+                                    class="tt-home-input"
+                                    data-child="${id}"
+                                    data-day="${d}"
+                                    value="${escapeHtml(t.homeBy[d] || "")}"
+                                    placeholder="13:30">
+                            </td>
+                        `).join("")}
+                    </tr>
+
+                    ${t.times.map((tm, r) => `
+                        <tr>
+                            <th>
+                                <input
+                                    class="tt-time-text"
+                                    data-child="${id}"
+                                    data-row="${r}"
+                                    data-part="from"
+                                    value="${escapeHtml(tm.from)}">
+                                –
+                                <input
+                                    class="tt-time-text"
+                                    data-child="${id}"
+                                    data-row="${r}"
+                                    data-part="to"
+                                    value="${escapeHtml(tm.to)}">
+                            </th>
+
+                            ${manualTimetableDayKeys.map(day => {
+                                const current = t.subjects[day][r] || "";
+                                const options = subjectOptionsFor(id);
+                                const isCustom =
+                                    current !== "" &&
+                                    !options.includes(current);
+
+                                return `
+                                    <td>
+                                        <select
+                                            class="tt-subject-cell"
+                                            data-child="${id}"
+                                            data-day="${day}"
+                                            data-row="${r}">
+                                            ${ttOpts(
+                                                id,
+                                                isCustom ? "Anderes" : current
+                                            )}
+                                        </select>
+
+                                        <input
+                                            class="tt-custom-subject ${isCustom ? "" : "hidden"}"
+                                            data-child="${id}"
+                                            data-day="${day}"
+                                            data-row="${r}"
+                                            value="${isCustom ? escapeHtml(current) : ""}"
+                                            placeholder="Fach eingeben">
+                                    </td>
+                                `;
+                            }).join("")}
+                        </tr>
+                    `).join("")}
+                </tbody>
+            </table>
+        </div>
+    `;
+
+    h.querySelectorAll(".tt-subject-cell").forEach(select => {
+        select.addEventListener("change", () => {
+            const cell = select.closest("td");
+            const custom = cell.querySelector(".tt-custom-subject");
+
+            if (select.value === "Anderes") {
+                custom.classList.remove("hidden");
+                custom.focus();
+            } else {
+                custom.classList.add("hidden");
+                custom.value = "";
+            }
+        });
+    });
 }
 function openManualTimetableEditor(id){renderTTMatrix(id);document.querySelector(`#manualTimetableWrap${id}`)?.classList.remove("hidden")}
 function closeManualTimetableEditor(id){document.querySelector(`#manualTimetableWrap${id}`)?.classList.add("hidden")}
