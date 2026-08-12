@@ -993,6 +993,9 @@ function renderTodos() {
  
   if (todoFilter === "work" || todoFilter === "private") todos = todos.filter(t => t.area === todoFilter);
   if (todoFilter === "todo" || todoFilter === "event") todos = todos.filter(t => (t.type || "todo") === todoFilter);
+  if (todoFilter === "latest") {
+  todos = todos.filter(t => isNewEntry(t));
+}
 todos.sort((a, b) => {
   const now = new Date();
 
