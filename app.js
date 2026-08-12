@@ -1155,7 +1155,13 @@ document.querySelectorAll(".show-more-todos").forEach(btn => {
 
     const extraItems = container.querySelectorAll(".todo-extra");
     const isExpanded = btn.dataset.expanded === "true";
+const groupKey = btn.dataset.group;
 
+if (isExpanded) {
+  expandedTodoGroups.delete(groupKey);
+} else {
+  expandedTodoGroups.add(groupKey);
+}
     extraItems.forEach(item => {
       item.classList.toggle("hidden", isExpanded);
     });
