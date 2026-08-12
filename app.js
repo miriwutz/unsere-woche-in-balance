@@ -897,7 +897,9 @@ ${isNewEntry(t) ? `<span class="new-entry-badge">NEU</span>` : ""}
 
     const wasDone = isOccurrenceDone(item, occDate);
     setOccurrenceDone(item, occDate, e.target.checked);
-
+if (!item.recurrence || item.recurrence === "none") {
+  item.completedAt = e.target.checked ? Date.now() : null;
+}
     save();
     renderAll();
 
