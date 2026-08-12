@@ -1422,6 +1422,45 @@ out.innerHTML=`<div class="tt-table-wrap"><table class="tt-table tt-view-table $
   d.showModal();
 }
 function bindManualTimetableControls(){document.querySelectorAll(".save-tt-matrix").forEach(b=>{if(b.dataset.bound)return;b.dataset.bound="1";b.addEventListener("click",e=>saveTTMatrix(e.currentTarget.dataset.child))})}
+document.querySelectorAll(".add-tt-row").forEach(btn => {
+  btn.addEventListener("click", () => {
+    const id = btn.dataset.child;
+    const c = timetablePerson(id);
+    const t = ensureManualTimetable(c);
+
+    const last = t.times[t.times.length - 1];
+    t.times.push({
+      from: last ? last.to : "",
+      to: ""
+    });
+
+    manualTimetableDayKeys.forEach(day => {
+      t.subjects[day].push("");
+    });
+
+    save();
+    renderTTMatrix(id);
+  });
+});
+
+document.querySelectorAll(".remove-tt-row").forEach(btn => {
+  btn.addEventListener("click", () => {
+    const id = btn.dataset.child;
+    const c = timetablePerson(id);
+    const t = ensureManualTimetable(c);
+
+    if (t.times.length <= 1) return;
+
+    t.times.pop();
+
+    manualTimetableDayKeys.forEach(day => {
+      t.subjects[day].pop();
+    });
+
+    save();
+    renderTTMatrix(id);
+  });
+});
 function homeByForDate(id,date){const c=timetablePerson(id);if(!c)return"";const t=ensureManualTimetable(c),day=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"][date.getDay()];return t.homeBy[day]||""}
 
 function renderSchool(){
