@@ -516,34 +516,125 @@
     ✨ Hier sammle ich, was ich für meinen Schulalltag brauche.
   </div>
 
-  <div class="workroom-grid">
+ <div class="workroom-grid">
 
-    <article class="card">
-      <h3>✓ Schul-To-dos</h3>
-      <p>Vorbereiten, organisieren und nichts vergessen.</p>
-    </article>
+  <!-- SCHUL-TO-DOS -->
+  <article class="card workroom-main-card">
+    <div class="workroom-card-head">
+      <div>
+        <h3>✓ Schul-To-dos</h3>
+        <p>Was möchte ich für die Schule erledigen?</p>
+      </div>
+    </div>
 
-    <article class="card">
-      <h3>🖨 Drucken</h3>
-      <p>Was ich in der Schule noch ausdrucken möchte.</p>
-    </article>
+    <div class="workroom-quick-add">
+      <input id="schoolWorkTodoInput"
+             type="text"
+             placeholder="Neue Schulaufgabe eintragen …">
+      <button id="addSchoolWorkTodoBtn"
+              class="secondary-btn"
+              type="button">+ Eintragen</button>
+    </div>
 
-    <article class="card">
-      <h3>🔗 Linksammlung</h3>
-      <p>Ideen und Fundstücke schnell wiederfinden.</p>
-    </article>
+    <div id="schoolWorkTodoList" class="workroom-list">
+      <div class="workroom-empty">Noch keine Schul-To-dos eingetragen.</div>
+    </div>
+  </article>
 
-    <article class="card">
+
+  <!-- DRUCKEN -->
+  <article class="card workroom-main-card">
+    <div class="workroom-card-head">
+      <div>
+        <h3>🖨 Drucken</h3>
+        <p>Was möchte ich in der Schule noch ausdrucken?</p>
+      </div>
+    </div>
+
+    <div class="workroom-quick-add">
+      <input id="schoolPrintInput"
+             type="text"
+             placeholder="Was muss ich drucken?">
+      <button id="addSchoolPrintBtn"
+              class="secondary-btn"
+              type="button">+ Eintragen</button>
+    </div>
+
+    <div id="schoolPrintList" class="workroom-list">
+      <div class="workroom-empty">Im Moment steht nichts auf der Druckliste.</div>
+    </div>
+  </article>
+
+
+  <!-- LINKSAMMLUNG -->
+  <article class="card workroom-main-card workroom-links-card">
+    <div class="workroom-card-head">
+      <div>
+        <h3>🔗 Linksammlung</h3>
+        <p>Ideen und Fundstücke speichern, statt Tabs offen zu lassen.</p>
+      </div>
+    </div>
+
+    <div class="workroom-link-add">
+
+      <input id="workroomLinkTitle"
+             type="text"
+             placeholder="Kurzer Titel">
+
+      <input id="workroomLinkUrl"
+             type="url"
+             placeholder="https://…">
+
+      <select id="workroomLinkCategory">
+        <option value="wood">Holz</option>
+        <option value="paper">Papier</option>
+        <option value="free">Freies Arbeiten</option>
+        <option value="experiment">Experimentieren</option>
+        <option value="other">Sonstiges</option>
+      </select>
+
+      <button id="addWorkroomLinkBtn"
+              class="secondary-btn"
+              type="button">+ Speichern</button>
+
+    </div>
+
+    <div class="workroom-link-filters">
+      <button type="button" class="workroom-link-filter active" data-category="all">Alle</button>
+      <button type="button" class="workroom-link-filter" data-category="wood">Holz</button>
+      <button type="button" class="workroom-link-filter" data-category="paper">Papier</button>
+      <button type="button" class="workroom-link-filter" data-category="free">Freies Arbeiten</button>
+      <button type="button" class="workroom-link-filter" data-category="experiment">Experimentieren</button>
+    </div>
+
+    <div id="workroomLinkList" class="workroom-link-list">
+      <div class="workroom-empty">Noch keine Links gespeichert.</div>
+    </div>
+  </article>
+
+
+  <!-- SELTENER BENÖTIGTE BEREICHE -->
+  <div class="workroom-small-grid">
+
+    <article class="card workroom-small-card">
       <h3>↻ Supplierungen</h3>
       <p>Gehaltene Supplierstunden übersichtlich erfassen.</p>
+      <button id="openSubstitutionBtn"
+              class="secondary-btn"
+              type="button">+ Supplierung erfassen</button>
     </article>
 
-    <article class="card">
-      <h3>🗓 Mein Stundenplan</h3>
+    <article class="card workroom-small-card">
+      <h3>▣ Mein Stundenplan</h3>
       <p>Meinen Stundenplan ansehen und bearbeiten.</p>
+      <button id="openWorkTimetableBtn"
+              class="secondary-btn"
+              type="button">Stundenplan öffnen</button>
     </article>
 
   </div>
+
+</div>
 </section>
     <section id="archive" class="view">
       <div class="section-head">
