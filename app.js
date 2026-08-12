@@ -1104,7 +1104,8 @@ todos.sort((a, b) => {
               <div>
                 <div class="todo-text">
                   ${t.superImportant ? '<span class="super-star">★</span> ' : ''}
-                  ${escapeHtml(t.text)}
+                 ${escapeHtml(t.text)}
+${isNewEntry(t) ? `<span class="new-entry-badge">NEU</span>` : ""}
                 </div>
                 <div class="todo-meta">
                   <span class="pill entry-type ${t.type === "event" ? "event-pill" : ""}">${labels[t.type || "todo"]}</span>
