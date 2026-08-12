@@ -1348,9 +1348,45 @@ function timetablePerson(id) {
   return state.school.children[id];
 }
 function ensureManualTimetable(c){
- c.timetableByYear=c.timetableByYear||{};const y=state.settings?.schoolYear||"2026-27";
- if(!c.timetableByYear[y])c.timetableByYear[y]={times:defaultLessonTimes.map(x=>({from:x[0],to:x[1]})),subjects:Object.fromEntries(manualTimetableDayKeys.map(d=>[d,Array(6).fill("")])),homeBy:Object.fromEntries(manualTimetableDayKeys.map(d=>[d,""]))};
- return c.timetableByYear[y];
+  c.timetableByYear = c.timetableByYear || {};
+  const y = state.settings?.schoolYear || "2026-27";
+
+  if (!c.timetableByYear[y]) {
+    const times = defaultLessonTimes.map(x => ({
+      from: x[0],
+      to: x[1]
+    }));
+
+    c.timetableByYear[y] = {
+      times,
+      subjects: Object.fromEntries(
+        manualTimetableDayKeys.map(d => [d, Array(times.length).fill("")])
+      ),
+      homeBy: Object.fromEntries(
+        manualTimetableDayKeys.map(d => [d, ""])
+      )
+    };
+  }
+
+  const t = c.timetableByYear[y];
+
+  // Falls später Stunden hinzugefügt oder entfernt werden,
+  // die Fächerlisten automatisch auf dieselbe Länge bringen.
+  manualTimetableDayKeys.forEach(day => {
+    if (!Array.isArray(t.subjects[day])) {
+      t.subjects[day] = [];
+    }
+
+    while (t.subjects[day].length < t.times.length) {
+      t.subjects[day].push("");
+    }
+
+    if (t.subjects[day].length > t.times.length) {
+      t.subjects[day] = t.subjects[day].slice(0, t.times.length);
+    }
+  });
+
+  return t;
 }
 function hasManualTimetable(c){const t=ensureManualTimetable(c);return manualTimetableDayKeys.some(d=>t.subjects[d].some(Boolean)||t.homeBy[d])}
 function ttOpts(id,cur){return subjectOptionsFor(id).map(v=>`<option value="${escapeHtml(v)}" ${v===cur?"selected":""}>${escapeHtml(v||"–")}</option>`).join("")}
