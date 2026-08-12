@@ -738,7 +738,11 @@ function renderWeek() {
             ${groupItems.map(t => `
               <label class="todo-mini grouped-todo-row ${t.superImportant ? "super-important" : ""}">
                 <input class="check mini-todo-check" data-id="${t.id}" data-date="${dateKey(date)}" type="checkbox" ${isOccurrenceDone(t, date) ? "checked":""}>
-                <span>${t.superImportant ? '<span class="tiny-star">★</span> ' : ''}${escapeHtml(t.text)}</span>
+               <span>
+  ${t.superImportant ? `<span class="tiny-star">★</span>` : ''}
+  ${escapeHtml(t.text)}
+  ${isNewEntry(t) ? `<span class="new-entry-badge">NEU</span>` : ""}
+</span>
               </label>
             `).join("")}
           </div>
