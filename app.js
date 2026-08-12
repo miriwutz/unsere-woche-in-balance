@@ -1323,7 +1323,12 @@ function subjectOptionsFor(id){
   }
 
   const sel=document.querySelector("#schoolSubject1");
-  const v=sel?[...sel.options].map(o=>o.value).filter(Boolean):[];
+const v=sel
+  ? [...sel.options]
+      .map(o => o.value)
+      .filter(Boolean)
+      .filter(v => v !== "Sachunterricht")
+  : [];
 
   return v.length
     ? ["",...new Set(v),"Anderes"]
