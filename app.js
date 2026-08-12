@@ -2076,7 +2076,7 @@ endTime: type === "event" ? eventEndTime : "",
       done: false,
       archived: false
     });
-
+showMotivation(type === "event" ? "Termin hinzugefügt ✓" : "To-do hinzugefügt ✓");
     resetTodoEditor();
   }
 
