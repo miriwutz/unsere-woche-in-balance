@@ -1135,9 +1135,15 @@ ${isNewEntry(t) ? `<span class="new-entry-badge">NEU</span>` : ""}
           </div>
         `).join("")}
         ${groupItems.length > 6 ? `
-  <button class="secondary-btn show-more-todos" type="button">
-    Weitere anzeigen (${groupItems.length - 6})
-  </button>
+<button
+  class="secondary-btn show-more-todos"
+  type="button"
+  data-group="${groupKey}"
+  data-expanded="${expandedTodoGroups.has(groupKey) ? "true" : "false"}">
+  ${expandedTodoGroups.has(groupKey)
+    ? "Weniger anzeigen"
+    : `Weitere anzeigen (${groupItems.length - 6})`}
+</button>
 ` : ""}
       </div>
     </section>
