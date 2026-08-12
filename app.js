@@ -797,7 +797,8 @@ const eventHtml = events.length ? `
                   ${displayTime ? `<strong>${escapeHtml(displayTime)}</strong>` : ""}
                   ${eventLabel ? `<span class="event-kind">${eventLabel}</span>` : ""}
                   ${t.superImportant ? `<span class="tiny-star">★</span>` : ""}
-                  ${escapeHtml(t.text)}
+                 ${escapeHtml(t.text)}
+${isNewEntry(t) ? `<span class="new-entry-badge">NEU</span>` : ""}
                 </span>
               </div>
             `;
