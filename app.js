@@ -2040,6 +2040,7 @@ item.endTime = type === "event" ? eventEndTime : "";
   } else {
     state.todos.push({
       id: uid(),
+      createdAt: Date.now(),
       type,
       superImportant,
       text,
