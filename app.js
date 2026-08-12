@@ -1494,7 +1494,43 @@ function renderTTMatrix(id) {
 }
 function openManualTimetableEditor(id){renderTTMatrix(id);document.querySelector(`#manualTimetableWrap${id}`)?.classList.remove("hidden")}
 function closeManualTimetableEditor(id){document.querySelector(`#manualTimetableWrap${id}`)?.classList.add("hidden")}
-function saveTTMatrix(id){const c=timetablePerson(id),t=ensureManualTimetable(c);document.querySelectorAll(`.tt-time-text[data-child="${id}"]`).forEach(x=>t.times[+x.dataset.row][x.dataset.part]=x.value.trim());document.querySelectorAll(`.tt-subject-cell[data-child="${id}"]`).forEach(x=>t.subjects[x.dataset.day][+x.dataset.row]=x.value);document.querySelectorAll(`.tt-home-input[data-child="${id}"]`).forEach(x=>t.homeBy[x.dataset.day]=x.value.trim());save();renderAll();closeManualTimetableEditor(id);showMotivation("Stundenplan gespeichert ✨")}
+function saveTTMatrix(id) {
+  const c = timetablePerson(id);
+  const t = ensureManualTimetable(c);
+
+  document
+    .querySelectorAll(`.tt-time-text[data-child="${id}"]`)
+    .forEach(x => {
+      t.times[+x.dataset.row][x.dataset.part] = x.value.trim();
+    });
+
+  document
+    .querySelectorAll(`.tt-subject-cell[data-child="${id}"]`)
+    .forEach(select => {
+      const day = select.dataset.day;
+      const row = +select.dataset.row;
+
+      if (select.value === "Anderes") {
+        const customInput =
+          select.closest("td")?.querySelector(".tt-custom-subject");
+
+        t.subjects[day][row] =
+          (customInput?.value || "").trim();
+      } else {
+        t.subjects[day][row] = select.value;
+      }
+    });
+
+  document
+    .querySelectorAll(`.tt-home-input[data-child="${id}"]`)
+    .forEach(x => {
+      t.homeBy[x.dataset.day] = x.value.trim();
+    });
+
+  save();
+  renderAll();
+  closeManualTimetableEditor(id);
+}
 function showManualTimetable(id){
  const c=timetablePerson(id),t=ensureManualTimetable(c),
     d=document.querySelector("#manualTimetableDialog"),
