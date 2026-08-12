@@ -2519,3 +2519,183 @@ border:var(--family-border-width, 3px) solid transparent !important;
   background: #f7eee1;
   vertical-align: middle;
 }
+/* =========================================
+   WERKRAUM
+   ========================================= */
+
+.workroom-grid{
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+}
+
+/* Hauptkarten */
+.workroom-main-card{
+  padding:20px;
+}
+
+.workroom-card-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  margin-bottom:14px;
+}
+
+.workroom-card-head h3,
+.workroom-small-card h3{
+  margin:0 0 6px;
+}
+
+.workroom-card-head p,
+.workroom-small-card p{
+  margin:0;
+  opacity:.72;
+  font-size:.9rem;
+}
+
+
+/* SCHUL-TO-DOS + DRUCKEN
+   Eingabe und Button nebeneinander */
+
+.workroom-quick-add{
+  display:grid;
+  grid-template-columns:minmax(0, 1fr) auto;
+  gap:10px;
+  align-items:center;
+  margin-top:14px;
+}
+
+.workroom-quick-add input{
+  width:100%;
+  min-width:0;
+}
+
+.workroom-quick-add button{
+  white-space:nowrap;
+}
+
+
+/* Leere Listen */
+
+.workroom-list,
+.workroom-link-list{
+  margin-top:12px;
+}
+
+.workroom-empty{
+  padding:10px 12px;
+  border-top:1px dashed rgba(120,95,80,.18);
+  font-size:.82rem;
+  opacity:.58;
+}
+
+
+/* =========================================
+   LINKSAMMLUNG
+   ========================================= */
+
+.workroom-links-card{
+  padding-bottom:20px;
+}
+
+.workroom-link-add{
+  display:grid;
+  grid-template-columns:
+    minmax(130px,.8fr)
+    minmax(220px,1.7fr)
+    minmax(150px,.8fr)
+    auto;
+  gap:8px;
+  align-items:center;
+  margin-top:14px;
+}
+
+.workroom-link-add input,
+.workroom-link-add select{
+  width:100%;
+  min-width:0;
+}
+
+.workroom-link-add button{
+  white-space:nowrap;
+}
+
+
+/* Filter-Pills */
+
+.workroom-link-filters{
+  display:flex;
+  flex-wrap:wrap;
+  gap:7px;
+  margin-top:13px;
+}
+
+.workroom-link-filter{
+  border:1px solid rgba(120,95,80,.14);
+  background:rgba(244,239,235,.75);
+  color:inherit;
+  border-radius:999px;
+  padding:6px 11px;
+  font:inherit;
+  font-size:.78rem;
+  cursor:pointer;
+}
+
+.workroom-link-filter:hover{
+  background:rgba(235,227,221,.9);
+}
+
+.workroom-link-filter.active{
+  background:#f1edf8;
+  border-color:#e5dff0;
+}
+
+
+/* =========================================
+   SUPPLIERUNGEN + STUNDENPLAN
+   ========================================= */
+
+.workroom-small-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:14px;
+}
+
+.workroom-small-card{
+  padding:18px 20px;
+}
+
+.workroom-small-card .secondary-btn{
+  margin-top:14px;
+}
+
+
+/* =========================================
+   TABLET / HANDY
+   ========================================= */
+
+@media (max-width:800px){
+
+  .workroom-link-add{
+    grid-template-columns:1fr 1fr;
+  }
+
+  .workroom-small-grid{
+    grid-template-columns:1fr;
+  }
+}
+
+@media (max-width:560px){
+
+  .workroom-quick-add{
+    grid-template-columns:1fr;
+  }
+
+  .workroom-link-add{
+    grid-template-columns:1fr;
+  }
+
+  .workroom-main-card{
+    padding:16px;
+  }
+}
