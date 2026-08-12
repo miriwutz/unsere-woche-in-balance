@@ -987,6 +987,7 @@ function isNewEntry(item) {
   const threeDays = 3 * 24 * 60 * 60 * 1000;
   return Date.now() - item.createdAt < threeDays;
 }
+const expandedTodoGroups = new Set();
 function renderTodos() {
   const list = document.querySelector("#todoList");
   let todos = state.todos.filter(t => !t.archived); 
