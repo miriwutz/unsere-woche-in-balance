@@ -1177,6 +1177,11 @@ if (isExpanded) {
     if (!item) return;
     const wasDone = !!item.done;
     item.done = e.target.checked;
+    if (item.done) {
+  item.completedAt = Date.now();
+} else {
+  item.completedAt = null;
+}
     save();
     renderAll();
     if (!wasDone && item.done) showMotivation(todoMotivationalMessage());
