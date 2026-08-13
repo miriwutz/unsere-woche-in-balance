@@ -527,14 +527,29 @@
       </div>
     </div>
 
-    <div class="workroom-quick-add">
-      <input id="schoolWorkTodoInput"
-             type="text"
-             placeholder="Neue Schulaufgabe eintragen …">
-      <button id="addSchoolWorkTodoBtn"
-              class="secondary-btn"
-              type="button">+ Eintragen</button>
-    </div>
+<div class="workroom-quick-add school-work-todo-add">
+
+    <input id="schoolWorkTodoInput"
+           type="text"
+           placeholder="Neue Schulaufgabe eintragen …">
+
+    <select id="schoolWorkTodoType" aria-label="Art der Vorbereitung">
+        <option value="">Art – optional</option>
+        <option value="draw">✏️ Vorzeichnen</option>
+        <option value="prepare">🛠 Vorbereiten</option>
+        <option value="create">📄 Erstellen</option>
+        <option value="print">🖨 Drucken</option>
+    </select>
+
+    <input id="schoolWorkTodoLink"
+           type="url"
+           placeholder="Link – optional">
+
+    <button id="addSchoolWorkTodoBtn"
+            class="secondary-btn"
+            type="button">+ Eintragen</button>
+
+</div>
 
     <div id="schoolWorkTodoList" class="workroom-list">
       <div class="workroom-empty">Noch keine Schul-To-dos eingetragen.</div>
