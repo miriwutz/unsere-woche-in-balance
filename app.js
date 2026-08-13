@@ -1991,6 +1991,59 @@ function renderSchoolWorkTodos() {
       save();
       renderSchoolWorkTodos();
     });
+    function moveSchoolWorkTodo(id, direction) {
+  const sorted = [...state.workroom.todos]
+    .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+
+  const index = sorted.findIndex(t => t.id === id);
+  if (index === -1) return;
+
+  let newIndex = index;
+
+  if (direction === "top") newIndex = 0;
+  if (direction === "up") newIndex = Math.max(0, index - 1);
+  if (direction === "down") newIndex = Math.min(sorted.length - 1, index + 1);
+  if (direction === "bottom") newIndex = sorted.length - 1;
+
+  if (newIndex === index) return;
+
+  const [moved] = sorted.splice(index, 1);
+  sorted.splice(newIndex, 0, moved);
+
+  sorted.forEach((todo, i) => {
+    todo.order = i;
+  });
+
+  state.workroom.todos = sorted;
+
+  save();
+  renderSchoolWorkTodos();
+}
+
+
+document.querySelectorAll(".workroom-move-top").forEach(btn => {
+  btn.addEventListener("click", e => {
+    moveSchoolWorkTodo(e.currentTarget.dataset.id, "top");
+  });
+});
+
+document.querySelectorAll(".workroom-move-up").forEach(btn => {
+  btn.addEventListener("click", e => {
+    moveSchoolWorkTodo(e.currentTarget.dataset.id, "up");
+  });
+});
+
+document.querySelectorAll(".workroom-move-down").forEach(btn => {
+  btn.addEventListener("click", e => {
+    moveSchoolWorkTodo(e.currentTarget.dataset.id, "down");
+  });
+});
+
+document.querySelectorAll(".workroom-move-bottom").forEach(btn => {
+  btn.addEventListener("click", e => {
+    moveSchoolWorkTodo(e.currentTarget.dataset.id, "bottom");
+  });
+});
   });
   document.querySelectorAll(".workroom-todo-delete").forEach(btn => {
   btn.addEventListener("click", e => {
