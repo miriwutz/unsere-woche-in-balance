@@ -2263,6 +2263,14 @@ function applyCloudData(data) {
     state.videos = Array.isArray(data.videos) ? data.videos : [];
     state.todos = Array.isArray(data.todos) ? data.todos : [];
     state.archive = Array.isArray(data.archive) ? data.archive : [];
+    state.workroom = data.workroom && typeof data.workroom === "object"
+  ? {
+      todos: Array.isArray(data.workroom.todos) ? data.workroom.todos : [],
+      prints: Array.isArray(data.workroom.prints) ? data.workroom.prints : [],
+      links: Array.isArray(data.workroom.links) ? data.workroom.links : [],
+      substitutions: Array.isArray(data.workroom.substitutions) ? data.workroom.substitutions : []
+    }
+  : state.workroom;
     if (data.school?.children) state.school = data.school;
     if (data.familySettings) state.familySettings = data.familySettings;
     state.settings = {...(state.settings || {}), ...(data.settings || {})};
