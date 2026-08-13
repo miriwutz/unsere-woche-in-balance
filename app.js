@@ -2744,55 +2744,49 @@ function renderShoppingGroup(title, items, muted = false) {
     grouped[category].push(item);
   });
 
-  const categoryKeys = Object.keys(grouped).sort((a, b) => {
-    const orderA = shoppingCategories[a]?.order || 99;
-    const orderB = shoppingCategories[b]?.order || 99;
+const categoryKeys = Object.keys(grouped).sort((a, b) => {
+  const orderA = shoppingCategories[a]?.order || 99;
+  const orderB = shoppingCategories[b]?.order || 99;
 
-    return orderA - orderB;
-  });
+  return orderA - orderB;
+});
 
-  return `
-    <section class="shopping-section ${muted ? "shopping-section-muted" : ""}">
-      <h3 class="shopping-section-title">${title}</h3>
+return `
+  <section class="shopping-section ${muted ? "shopping-section-muted" : ""}">
+    <h3 class="shopping-section-title">${title}</h3>
 
-      ${categoryKeys.map(categoryKey => {
-        const category =
-          shoppingCategories[categoryKey] ||
-          shoppingCategories.other;
+    ${categoryKeys.map(categoryKey => {
+      return `
+        <div class="shopping-category-items">
+          ${grouped[categoryKey].map(item => `
+            <div class="shopping-item">
 
-    return `
-  <div class="shopping-category-items">
-    ${grouped[categoryKey].map(item => `
-      <div class="shopping-item">
+              <span class="shopping-item-name">
+                ${escapeHtml(item.name)}
 
-        <span class="shopping-item-name">
-          ${escapeHtml(item.name)}
+                ${
+                  item.createdAt &&
+                  Date.now() - item.createdAt < 2 * 60 * 60 * 1000
+                    ? `<span class="shopping-new">NEU</span>`
+                    : ""
+                }
+              </span>
 
-          ${
-            item.createdAt &&
-            Date.now() - item.createdAt < 2 * 60 * 60 * 1000
-              ? `<span class="shopping-new">NEU</span>`
-              : ""
-          }
-        </span>
+              ${
+                item.store
+                  ? `<span class="shopping-tag">${escapeHtml(item.store)}</span>`
+                  : ""
+              }
 
-        ${
-          item.store
-            ? `<span class="shopping-tag">${escapeHtml(item.store)}</span>`
-            : ""
-        }
-
-      </div>
-    `).join("")}
-  </div>
-        `;
+            </div>
+          `).join("")}
+        </div>
+      `;
     }).join("")}
 
   </section>
 `;
 }
-`;
-
 function renderShopping() {
   const list = document.querySelector("#shoppingList");
   if (!list) return;
