@@ -2079,6 +2079,47 @@ forceFallback: false,
 }
 }
 
+// Werkraum: Schul-To-dos mit Pfeilen verschieben
+document.addEventListener("click", e => {
+  const btn = e.target.closest(".workroom-move-btn");
+  if (!btn) return;
+
+  const id = btn.dataset.id;
+
+  const sorted = [...state.workroom.todos]
+    .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+
+  const index = sorted.findIndex(t => t.id === id);
+  if (index === -1) return;
+
+  let newIndex = index;
+
+  if (btn.classList.contains("workroom-move-top")) {
+    newIndex = 0;
+  } else if (btn.classList.contains("workroom-move-up")) {
+    newIndex = Math.max(0, index - 1);
+  } else if (btn.classList.contains("workroom-move-down")) {
+    newIndex = Math.min(sorted.length - 1, index + 1);
+  } else if (btn.classList.contains("workroom-move-bottom")) {
+    newIndex = sorted.length - 1;
+  } else {
+    return;
+  }
+
+  if (newIndex === index) return;
+
+  const [moved] = sorted.splice(index, 1);
+  sorted.splice(newIndex, 0, moved);
+
+  sorted.forEach((todo, i) => {
+    todo.order = i;
+  });
+
+  state.workroom.todos = sorted;
+
+  save();
+  renderSchoolWorkTodos();
+});
 
 document.querySelector("#addSchoolWorkTodoBtn")?.addEventListener("click", () => {
   const textInput = document.querySelector("#schoolWorkTodoInput");
