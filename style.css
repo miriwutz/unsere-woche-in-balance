@@ -3218,3 +3218,35 @@ border:var(--family-border-width, 3px) solid transparent !important;
   padding-top:7px;
   border-top:1px solid rgba(130,120,113,.12);
 }
+/* EINKAUF – Liste noch kompakter */
+
+.shopping-item{
+  padding:2px 2px;
+  min-height:24px;
+}
+
+.shopping-category-items{
+  gap:0;
+}
+
+.shopping-category-items + .shopping-category-items{
+  margin-top:3px;
+  padding-top:5px;
+}
+
+.shopping-item-name{
+  line-height:1.2;
+}
+
+.shopping-new{
+  margin-left:3px;
+  padding:0 3px;
+  font-size:.48rem;
+  opacity:.72;
+}
+
+.shopping-tag{
+  margin-left:4px;
+  padding:1px 5px;
+  font-size:.61rem;
+}
