@@ -2096,6 +2096,51 @@ forceFallback: false,
   });
 }
 }
+function renderSchoolWorkTodoArchive() {
+  const archive = document.querySelector("#schoolWorkTodoArchive");
+  if (!archive) return;
+
+  const completed = state.workroom.todos
+    .filter(t => t.done && t.completedAt)
+    .sort((a, b) => b.completedAt - a.completedAt);
+
+  if (!completed.length) {
+    archive.innerHTML = `
+      <div class="workroom-empty">
+        Noch keine erledigten Schul-To-dos im Archiv.
+      </div>
+    `;
+    return;
+  }
+
+  const groups = {};
+
+  completed.forEach(todo => {
+    const date = new Date(todo.completedAt);
+
+    const key = date.toLocaleDateString("de-AT", {
+      weekday: "long",
+      day: "numeric",
+      month: "long",
+      year: "numeric"
+    });
+
+    if (!groups[key]) groups[key] = [];
+    groups[key].push(todo);
+  });
+
+  archive.innerHTML = Object.entries(groups).map(([date, todos]) => `
+    <div class="workroom-archive-group">
+      <div class="workroom-archive-date">${escapeHtml(date)}</div>
+
+      ${todos.map(todo => `
+        <div class="workroom-archive-item">
+          <span>✓ ${escapeHtml(todo.text)}</span>
+        </div>
+      `).join("")}
+    </div>
+  `).join("");
+}
 
 // Werkraum: Schul-To-dos mit Pfeilen verschieben
 document.addEventListener("click", e => {
