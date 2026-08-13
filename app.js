@@ -47,6 +47,7 @@ function saveLocal() {
   localStorage.setItem("balanceProd.videos", JSON.stringify(state.videos));
   localStorage.setItem("balanceProd.todos", JSON.stringify(state.todos));
   localStorage.setItem("balanceProd.archive", JSON.stringify(state.archive));
+  localStorage.setItem("balanceProd.workroom", JSON.stringify(state.workroom));
   localStorage.setItem("balanceProd.school", JSON.stringify(state.school));
   localStorage.setItem("balanceProd.familySettings", JSON.stringify(state.familySettings));
   localStorage.setItem("balanceProd.schoolYear", state.settings?.schoolYear || "2026-27");
