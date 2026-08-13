@@ -1897,8 +1897,18 @@ function renderSchoolWorkTodos() {
   const list = document.querySelector("#schoolWorkTodoList");
   if (!list) return;
 
-  const todos = [...state.workroom.todos]
-    .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+const startOfToday = new Date();
+startOfToday.setHours(0, 0, 0, 0);
+
+const todos = [...state.workroom.todos]
+  .filter(t => {
+    if (!t.done) return true;
+
+    if (!t.completedAt) return true;
+
+    return t.completedAt >= startOfToday.getTime();
+  })
+  .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 
   if (!todos.length) {
     list.innerHTML = `<div class="workroom-empty">Noch keine Schul-To-dos eingetragen.</div>`;
