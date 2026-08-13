@@ -2021,22 +2021,6 @@ function renderSchoolWorkTodos() {
 }
  });
 
-document.querySelector("#schoolWorkTodoList").onclick = e => {
-  const btn = e.target.closest(".workroom-move-btn");
-  if (!btn) return;
-
-  const id = btn.dataset.id;
-
-  if (btn.classList.contains("workroom-move-top")) {
-    moveSchoolWorkTodo(id, "top");
-  } else if (btn.classList.contains("workroom-move-up")) {
-    moveSchoolWorkTodo(id, "up");
-  } else if (btn.classList.contains("workroom-move-down")) {
-    moveSchoolWorkTodo(id, "down");
-  } else if (btn.classList.contains("workroom-move-bottom")) {
-    moveSchoolWorkTodo(id, "bottom");
-  }
-};
 
   document.querySelectorAll(".workroom-todo-delete").forEach(btn => {
   btn.addEventListener("click", e => {
