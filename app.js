@@ -1948,9 +1948,36 @@ function renderSchoolWorkTodos() {
   data-id="${t.id}"
   title="Löschen">×</button>
 
-  <span class="workroom-drag-handle"
-      title="Verschieben"
-      aria-label="Verschieben">⋮⋮</span>
+<div class="workroom-move-controls">
+  <button
+    class="workroom-move-btn workroom-move-top"
+    type="button"
+    data-id="${t.id}"
+    title="Ganz nach oben">⇈</button>
+
+  <button
+    class="workroom-move-btn workroom-move-up"
+    type="button"
+    data-id="${t.id}"
+    title="Eine Position nach oben">↑</button>
+
+  <button
+    class="workroom-move-btn workroom-move-down"
+    type="button"
+    data-id="${t.id}"
+    title="Eine Position nach unten">↓</button>
+
+  <button
+    class="workroom-move-btn workroom-move-bottom"
+    type="button"
+    data-id="${t.id}"
+    title="Ganz nach unten">⇊</button>
+
+  <span
+    class="workroom-drag-handle"
+    title="Ziehen"
+    aria-label="Ziehen">⋮⋮</span>
+</div>
       </div>
     </div>
   `).join("");
