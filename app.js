@@ -2758,25 +2758,44 @@ return `
     ${categoryKeys.map(categoryKey => {
       return `
         <div class="shopping-category-items">
-          ${grouped[categoryKey].map(item => `
-            <div class="shopping-item">
+       ${grouped[categoryKey].map(item => `
+  <div class="shopping-item ${item.done ? "shopping-item-done" : ""}" data-id="${item.id}">
 
-              <span class="shopping-item-name">
-                ${escapeHtml(item.name)}
+    <input
+      class="shopping-check"
+      type="checkbox"
+      data-id="${item.id}"
+      ${item.done ? "checked" : ""}
+      aria-label="${escapeHtml(item.name)} gekauft"
+    >
 
-                ${
-                  item.createdAt &&
-                  Date.now() - item.createdAt < 2 * 60 * 60 * 1000
-                    ? `<span class="shopping-new">NEU</span>`
-                    : ""
-                }
-              </span>
+    <span class="shopping-item-name">
+      ${escapeHtml(item.name)}
 
-              ${
-                item.store
-                  ? `<span class="shopping-tag">${escapeHtml(item.store)}</span>`
-                  : ""
-              }
+      ${
+        item.createdAt &&
+        Date.now() - item.createdAt < 2 * 60 * 60 * 1000
+          ? `<span class="shopping-new">NEU</span>`
+          : ""
+      }
+
+      ${
+        item.store
+          ? `<span class="shopping-tag">${escapeHtml(item.store)}</span>`
+          : ""
+      }
+    </span>
+
+    <button
+      class="shopping-delete"
+      type="button"
+      data-id="${item.id}"
+      aria-label="${escapeHtml(item.name)} löschen"
+      title="Löschen"
+    >×</button>
+
+  </div>
+`).join("")}
 
             </div>
           `).join("")}
