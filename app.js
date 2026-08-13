@@ -2559,6 +2559,12 @@ function applyCloudData(data) {
     state.videos = Array.isArray(data.videos) ? data.videos : [];
     state.todos = Array.isArray(data.todos) ? data.todos : [];
     state.archive = Array.isArray(data.archive) ? data.archive : [];
+    state.shopping = Array.isArray(data.shopping)
+  ? data.shopping
+  : (Array.isArray(state.shopping) ? state.shopping : []);
+
+shoppingItems = state.shopping;
+    
     state.workroom = data.workroom && typeof data.workroom === "object"
   ? {
       todos: Array.isArray(data.workroom.todos) ? data.workroom.todos : [],
@@ -2657,7 +2663,7 @@ document.addEventListener("click", (e) => {
 // EINKAUF – Grundfunktion
 // ==============================
 
-const shoppingItems = [];
+let shoppingItems = state.shopping;
 
 const shoppingCategories = {
   fruit: {
