@@ -3005,7 +3005,7 @@ border:var(--family-border-width, 3px) solid transparent !important;
   justify-content:space-between;
   align-items:center;
   gap:12px;
-  padding:9px 2px;
+ padding: 4px 2px;
   border-top:1px solid rgba(130,120,113,.10);
 }
 
