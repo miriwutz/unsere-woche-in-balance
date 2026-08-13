@@ -2848,15 +2848,6 @@ border:var(--family-border-width, 3px) solid transparent !important;
   opacity:.85;
 }
 
-/* Ziehen visuell etwas verständlicher */
-.workroom-todo-row::after{
-  content:"⋮⋮";
-  letter-spacing:-3px;
-  font-size:1rem;
-  opacity:.22;
-  padding-left:4px;
-}
-
 /* Handy */
 @media (max-width:620px){
   #schoolWorkTodoList{
