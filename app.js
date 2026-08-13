@@ -39,6 +39,7 @@ const state = {
   }
 };
 
+let shoppingItems = state.shopping;
 let cloudReady = false;
 let cloudApplying = false;
 let cloudSaveTimer = null;
@@ -2663,8 +2664,6 @@ document.addEventListener("click", (e) => {
 // ==============================
 // EINKAUF – Grundfunktion
 // ==============================
-
-let shoppingItems = state.shopping;
 
 const shoppingCategories = {
   fruit: {
