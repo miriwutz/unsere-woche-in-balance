@@ -1916,7 +1916,6 @@ function renderSchoolWorkTodos() {
   <div
   class="workroom-todo-row ${t.done ? "done" : ""}"
   data-id="${t.id}"
-  draggable="true">
       <input
         class="workroom-todo-check"
         type="checkbox"
@@ -1987,53 +1986,7 @@ document.querySelectorAll(".workroom-todo-edit").forEach(btn => {
     document.querySelector("#addSchoolWorkTodoBtn").textContent = "Änderung speichern";
   });
 });
-  let draggedTodoId = null;
 
-document.querySelectorAll(".workroom-todo-row").forEach(row => {
-
-  row.addEventListener("dragstart", e => {
-    draggedTodoId = e.currentTarget.dataset.id;
-    e.currentTarget.classList.add("dragging");
-  });
-
-  row.addEventListener("dragend", e => {
-    e.currentTarget.classList.remove("dragging");
-    draggedTodoId = null;
-  });
-
-  row.addEventListener("dragover", e => {
-    e.preventDefault();
-  });
-
-  row.addEventListener("drop", e => {
-    e.preventDefault();
-
-    const targetId = e.currentTarget.dataset.id;
-
-    if (!draggedTodoId || draggedTodoId === targetId) return;
-
-    const sorted = [...state.workroom.todos]
-      .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
-
-    const fromIndex = sorted.findIndex(t => t.id === draggedTodoId);
-    const toIndex = sorted.findIndex(t => t.id === targetId);
-
-    if (fromIndex === -1 || toIndex === -1) return;
-
-    const [moved] = sorted.splice(fromIndex, 1);
-    sorted.splice(toIndex, 0, moved);
-
-    sorted.forEach((todo, index) => {
-      todo.order = index;
-    });
-
-    state.workroom.todos = sorted;
-
-    save();
-    renderSchoolWorkTodos();
-  });
-
-});
 }
 
 
