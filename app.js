@@ -2044,7 +2044,7 @@ document.querySelectorAll(".workroom-move-bottom").forEach(btn => {
     moveSchoolWorkTodo(e.currentTarget.dataset.id, "bottom");
   });
 });
- 
+ });
   document.querySelectorAll(".workroom-todo-delete").forEach(btn => {
   btn.addEventListener("click", e => {
     const id = e.currentTarget.dataset.id;
