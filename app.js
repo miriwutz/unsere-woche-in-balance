@@ -2760,12 +2760,32 @@ function renderShoppingGroup(title, items, muted = false) {
           shoppingCategories[categoryKey] ||
           shoppingCategories.other;
 
-        return `
-          <div class="shopping-category">
-            <div class="shopping-category-title">
-              <span>${category.icon}</span>
-              <strong>${category.label}</strong>
-            </div>
+    return `
+  <div class="shopping-category-items">
+    ${grouped[categoryKey].map(item => `
+      <div class="shopping-item">
+
+        <span class="shopping-item-name">
+          ${escapeHtml(item.name)}
+
+          ${
+            item.createdAt &&
+            Date.now() - item.createdAt < 2 * 60 * 60 * 1000
+              ? `<span class="shopping-new">NEU</span>`
+              : ""
+          }
+        </span>
+
+        ${
+          item.store
+            ? `<span class="shopping-tag">${escapeHtml(item.store)}</span>`
+            : ""
+        }
+
+      </div>
+    `).join("")}
+  </div>
+`;
 
             <div class="shopping-category-items">
               ${grouped[categoryKey].map(item => `
@@ -2838,15 +2858,19 @@ document.querySelector("#addShoppingItemBtn")
 
     if (!name) return;
 
-    shoppingItems.push({
-      id: uid(),
-      name,
-      category: category?.value || "other",
-      when: when?.value || "now",
-      store: store?.value || ""
-    });
+  shoppingItems.push({
+  id: uid(),
+  name,
+  category: category?.value || "other",
+  when: when?.value || "now",
+  store: store?.value || "",
+  createdAt: Date.now()
+});
 
-    input.value = "";
+  input.value = "";
+category.value = "";
+when.value = "now";
+store.value = "";
 
     renderShopping();
   });
