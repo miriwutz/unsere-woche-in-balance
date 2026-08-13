@@ -1986,7 +1986,34 @@ document.querySelectorAll(".workroom-todo-edit").forEach(btn => {
     document.querySelector("#addSchoolWorkTodoBtn").textContent = "Änderung speichern";
   });
 });
+// Schul-To-dos per Maus oder Touch sortieren
+const todoList = document.querySelector("#schoolWorkTodoList");
 
+if (todoList && typeof Sortable !== "undefined") {
+  new Sortable(todoList, {
+    animation: 180,
+    handle: ".workroom-drag-handle",
+    ghostClass: "workroom-sort-ghost",
+    chosenClass: "workroom-sort-chosen",
+    dragClass: "workroom-sort-drag",
+    delay: 120,
+    delayOnTouchOnly: true,
+    touchStartThreshold: 4,
+
+    onEnd: function () {
+      const ids = [...todoList.querySelectorAll(".workroom-todo-row")]
+        .map(row => row.dataset.id);
+
+      ids.forEach((id, index) => {
+        const todo = state.workroom.todos.find(t => t.id === id);
+        if (todo) todo.order = index;
+      });
+
+      save();
+      renderSchoolWorkTodos();
+    }
+  });
+}
 }
 
 
