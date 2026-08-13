@@ -26,6 +26,7 @@ const state = {
   videos: JSON.parse(localStorage.getItem("balanceProd.videos") || "[]"),
   todos: JSON.parse(localStorage.getItem("balanceProd.todos") || "[]"),
   archive: JSON.parse(localStorage.getItem("balanceProd.archive") || "[]"),
+  shopping: JSON.parse(localStorage.getItem("balanceProd.shopping") || "[]"),
 
   workroom: JSON.parse(
     localStorage.getItem("balanceProd.workroom") ||
@@ -47,6 +48,7 @@ function saveLocal() {
   localStorage.setItem("balanceProd.videos", JSON.stringify(state.videos));
   localStorage.setItem("balanceProd.todos", JSON.stringify(state.todos));
   localStorage.setItem("balanceProd.archive", JSON.stringify(state.archive));
+  localStorage.setItem("balanceProd.shopping", JSON.stringify(state.shopping));
   localStorage.setItem("balanceProd.workroom", JSON.stringify(state.workroom));
   localStorage.setItem("balanceProd.school", JSON.stringify(state.school));
   localStorage.setItem("balanceProd.familySettings", JSON.stringify(state.familySettings));
@@ -60,6 +62,7 @@ function cloudPayload() {
     videos: state.videos,
     todos: state.todos,
     archive: state.archive,
+    shopping: state.shopping,
     workroom: state.workroom,
     school: state.school,
     familySettings: state.familySettings,
