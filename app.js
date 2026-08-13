@@ -2918,7 +2918,9 @@ document.querySelector("#addShoppingItemBtn")
   store: store?.value || "",
   createdAt: Date.now()
 });
-
+    
+save();
+    
   input.value = "";
 category.value = "";
 when.value = "now";
