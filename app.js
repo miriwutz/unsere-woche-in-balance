@@ -1832,6 +1832,7 @@ function renderAll() {
   renderArchive();
   renderSchool();
   renderSchoolWorkTodos();
+renderShopping();
 }
 
 async function updateVideoPreview() {
