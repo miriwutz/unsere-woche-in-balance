@@ -2903,3 +2903,23 @@ border:var(--family-border-width, 3px) solid transparent !important;
   flex:0 0 auto;
   margin-left:3px;
 }
+/* =========================================
+   WERKRAUM – EINFÜGEPOSITION BEIM ZIEHEN
+   ========================================= */
+
+.workroom-todo-row.drag-over-before{
+  box-shadow:
+    0 -3px 0 rgba(183, 163, 201, .75),
+    0 2px 8px rgba(93,75,67,.035);
+}
+
+.workroom-todo-row.drag-over-after{
+  box-shadow:
+    0 3px 0 rgba(183, 163, 201, .75),
+    0 2px 8px rgba(93,75,67,.035);
+}
+
+/* gezogene Aufgabe etwas zurücknehmen */
+.workroom-todo-row.dragging{
+  opacity:.38;
+}
