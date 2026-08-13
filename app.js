@@ -2885,6 +2885,7 @@ function renderShopping() {
       if (index === -1) return;
 
       shoppingItems.splice(index, 1);
+      save();
       renderShopping();
     });
   });
