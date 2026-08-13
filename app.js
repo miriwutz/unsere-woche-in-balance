@@ -1828,6 +1828,7 @@ function renderAll() {
   renderTodos();
   renderArchive();
   renderSchool();
+  renderSchoolWorkTodos();
 }
 
 async function updateVideoPreview() {
