@@ -2728,10 +2728,15 @@ const shoppingCategories = {
     icon: "🏠",
     order: 13
   },
+  textile: {
+  label: "Textil",
+  icon: "🧺",
+  order: 14
+},
   other: {
     label: "Sonstiges",
     icon: "📦",
-    order: 14
+    order: 15
   }
 };
 
