@@ -953,6 +953,10 @@
       appId: "1:441032237922:web:c15fba8ed5f6b3ec13423b"
     };
     firebase.initializeApp(firebaseConfig);
+    firebase.firestore().enablePersistence()
+  .catch((err) => {
+    console.warn("Firestore Offline-Speicherung konnte nicht aktiviert werden:", err.code);
+  });
   </script>
 
   <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.6/Sortable.min.js"></script>
