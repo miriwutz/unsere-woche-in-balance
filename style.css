@@ -3040,3 +3040,128 @@ border:var(--family-border-width, 3px) solid transparent !important;
   color:var(--muted);
   font-size:1rem;
 }
+/* ==================================
+   EINKAUF – kompakte Eingabe
+   ================================== */
+
+.shopping-card{
+  display:flex;
+  flex-direction:column;
+  gap:22px;
+}
+
+.shopping-add{
+  display:grid;
+  grid-template-columns:minmax(0,2fr) auto;
+  gap:10px;
+  padding-top:18px;
+  border-top:1px dashed var(--line);
+}
+
+.shopping-add > #shoppingItemInput{
+  grid-column:1 / 2;
+  min-height:46px;
+  font-size:.96rem;
+}
+
+.shopping-add > #addShoppingItemBtn{
+  grid-column:2 / 3;
+  grid-row:1;
+  align-self:stretch;
+  white-space:nowrap;
+  padding-inline:20px;
+}
+
+.shopping-add > #shoppingCategory,
+.shopping-add > #shoppingWhen,
+.shopping-add > #shoppingSaleStore{
+  min-height:40px;
+  font-size:.78rem;
+  color:#746b66;
+  background:rgba(255,253,251,.72);
+}
+
+.shopping-add > #shoppingCategory{
+  grid-column:1 / 2;
+}
+
+.shopping-add > #shoppingWhen{
+  grid-column:1 / 2;
+}
+
+.shopping-add > #shoppingSaleStore{
+  grid-column:1 / 2;
+}
+
+.shopping-add::before{
+  content:"Etwas hinzufügen";
+  grid-column:1 / -1;
+  color:var(--muted);
+  font-size:.72rem;
+  font-weight:600;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  margin-bottom:-2px;
+}
+
+@media(min-width:760px){
+  .shopping-add{
+    grid-template-columns:minmax(0,2fr) minmax(150px,.75fr) minmax(150px,.75fr) minmax(150px,.75fr) auto;
+    align-items:end;
+  }
+
+  .shopping-add::before{
+    grid-column:1 / -1;
+  }
+
+  .shopping-add > #shoppingItemInput{
+    grid-column:1 / 2;
+    grid-row:2;
+  }
+
+  .shopping-add > #shoppingCategory{
+    grid-column:2 / 3;
+    grid-row:2;
+  }
+
+  .shopping-add > #shoppingWhen{
+    grid-column:3 / 4;
+    grid-row:2;
+  }
+
+  .shopping-add > #shoppingSaleStore{
+    grid-column:4 / 5;
+    grid-row:2;
+  }
+
+  .shopping-add > #addShoppingItemBtn{
+    grid-column:5 / 6;
+    grid-row:2;
+  }
+}
+
+@media(max-width:759px){
+  .shopping-add{
+    grid-template-columns:1fr auto;
+  }
+
+  .shopping-add::before{
+    grid-column:1 / -1;
+  }
+
+  .shopping-add > #shoppingItemInput{
+    grid-column:1 / 2;
+    grid-row:2;
+  }
+
+  .shopping-add > #addShoppingItemBtn{
+    grid-column:2 / 3;
+    grid-row:2;
+  }
+
+  .shopping-add > #shoppingCategory,
+  .shopping-add > #shoppingWhen,
+  .shopping-add > #shoppingSaleStore{
+    grid-column:1 / -1;
+  }
+}
