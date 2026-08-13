@@ -2729,3 +2729,145 @@ border:var(--family-border-width, 3px) solid transparent !important;
   flex: 1;
   min-width: 0;
 }
+/* =========================================
+   WERKRAUM – SCHUL-TO-DOS FEINSCHLIFF
+   ========================================= */
+
+#schoolWorkTodoList{
+  width:min(760px, 100%);
+}
+
+/* einzelne Aufgabe */
+.workroom-todo-row{
+  display:grid;
+  grid-template-columns:auto minmax(0,1fr) auto;
+  align-items:center;
+  gap:10px;
+
+  margin:7px 0;
+  padding:9px 12px;
+
+  border:1px solid rgba(169,149,139,.22);
+  border-radius:12px;
+  background:rgba(255,255,255,.62);
+
+  box-shadow:0 2px 8px rgba(93,75,67,.035);
+
+  cursor:grab;
+  transition:
+    transform .15s ease,
+    opacity .15s ease,
+    border-color .15s ease,
+    background .15s ease;
+}
+
+.workroom-todo-row:hover{
+  border-color:rgba(169,149,139,.34);
+  background:rgba(255,255,255,.8);
+}
+
+.workroom-todo-row:active{
+  cursor:grabbing;
+}
+
+.workroom-todo-row.dragging{
+  opacity:.42;
+  transform:scale(.99);
+}
+
+/* Checkbox */
+.workroom-todo-check{
+  margin:0;
+}
+
+/* Inhalt */
+.workroom-todo-content{
+  display:flex;
+  align-items:center;
+  flex-wrap:wrap;
+  gap:7px;
+  min-width:0;
+}
+
+.workroom-todo-text{
+  min-width:0;
+  line-height:1.35;
+}
+
+/* erledigt */
+.workroom-todo-row.done .workroom-todo-text{
+  opacity:.55;
+  text-decoration:line-through;
+}
+
+/* Vorbereitungs-Art als sanfter Tag */
+.workroom-todo-type{
+  display:inline-flex;
+  align-items:center;
+
+  padding:3px 8px;
+  border-radius:999px;
+
+  font-size:.72rem;
+  line-height:1.2;
+
+  background:#f4efe9;
+  color:#78685f;
+}
+
+/* Link */
+.workroom-todo-link{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+
+  text-decoration:none;
+  opacity:.68;
+  font-size:.88rem;
+}
+
+.workroom-todo-link:hover{
+  opacity:1;
+}
+
+/* Bearbeiten/Löschen vorerst dezenter */
+.workroom-todo-edit,
+.workroom-todo-delete{
+  border:0;
+  background:transparent;
+  padding:3px 5px;
+
+  font:inherit;
+  font-size:.82rem;
+  opacity:.42;
+  cursor:pointer;
+}
+
+.workroom-todo-edit:hover,
+.workroom-todo-delete:hover{
+  opacity:.85;
+}
+
+/* Ziehen visuell etwas verständlicher */
+.workroom-todo-row::after{
+  content:"⋮⋮";
+  letter-spacing:-3px;
+  font-size:1rem;
+  opacity:.22;
+  padding-left:4px;
+}
+
+/* Handy */
+@media (max-width:620px){
+  #schoolWorkTodoList{
+    width:100%;
+  }
+
+  .workroom-todo-row{
+    padding:9px 10px;
+  }
+
+  .workroom-todo-content{
+    gap:5px;
+  }
+}
