@@ -1894,6 +1894,7 @@ document.querySelector("#todayWeekBtn").addEventListener("click", () => {
   renderWeek();
 });
 function renderSchoolWorkTodos() {
+  renderSchoolWorkTodoArchive();
   const list = document.querySelector("#schoolWorkTodoList");
   if (!list) return;
 
