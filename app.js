@@ -2651,9 +2651,6 @@ firebase.auth().onAuthStateChanged(user => {
 setRandomDailySubtitle();
 updateEntryTypeUI();
 migrateOldData();
-renderAll();
-
-
 
 document.addEventListener("click", (e) => {
   if (e.target?.id === "closeManualTimetableDialog" || e.target?.id === "closeManualTimetableDialog2") {
@@ -2931,3 +2928,4 @@ store.value = "";
 
     renderShopping();
   });
+renderAll();
