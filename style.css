@@ -2699,3 +2699,33 @@ border:var(--family-border-width, 3px) solid transparent !important;
     padding:16px;
   }
 }
+/* Werkraum – Schul-To-dos als verschiebbare Karten */
+.workroom-todo-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  margin: 7px 0;
+  padding: 9px 11px;
+
+  border: 1px solid #e8ddd7;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.55);
+
+  cursor: grab;
+  transition: transform 0.15s ease, opacity 0.15s ease;
+}
+
+.workroom-todo-row:active {
+  cursor: grabbing;
+}
+
+.workroom-todo-row.dragging {
+  opacity: 0.45;
+  transform: scale(0.99);
+}
+
+.workroom-todo-content {
+  flex: 1;
+  min-width: 0;
+}
