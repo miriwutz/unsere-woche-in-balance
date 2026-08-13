@@ -378,10 +378,7 @@
         <button class="filter" data-filter="latest">Neueste</button>
       </div>
 
-      <div id="todoList" class="todo-list"></div>
-    </section>
-
-    <section id="shopping" class="view">
+<section id="shopping" class="view">
   <div class="section-head">
     <div>
       <p class="small-label">EINKAUF</p>
@@ -389,6 +386,70 @@
       <p>Alles, was wir brauchen – übersichtlich sortiert und schnell abgehakt.</p>
     </div>
   </div>
+
+  <article class="card shopping-card">
+
+    <div class="shopping-add">
+
+      <input
+        id="shoppingItemInput"
+        type="text"
+        placeholder="Was brauchen wir?"
+      >
+
+      <select id="shoppingCategory">
+        <option value="">Kategorie wählen</option>
+        <option value="fruit">🥕 Obst & Gemüse</option>
+        <option value="bakery">🥐 Brot & Gebäck</option>
+        <option value="cooling">🥛 Milch & Kühlung</option>
+        <option value="frozen">🧊 Tiefgekühltes</option>
+        <option value="pantry">🍝 Vorrat & Beilagen</option>
+        <option value="seasoning">🫙 Öle, Essig & Würzen</option>
+        <option value="breakfast">🥣 Frühstück & Aufstriche</option>
+        <option value="baking">🧁 Backen</option>
+        <option value="snacks">🍫 Süßes & Snacks</option>
+        <option value="drinks">🥤 Getränke</option>
+        <option value="beauty">🧴 Pflege & Schönheit</option>
+        <option value="cleaning">🧽 Putzen & Waschen</option>
+        <option value="household">🏠 Haushalt</option>
+        <option value="other">📦 Sonstiges</option>
+      </select>
+
+      <select id="shoppingWhen">
+        <option value="now">Jetzt kaufen</option>
+        <option value="later">Später kaufen</option>
+        <option value="sale">Erst in Aktion kaufen</option>
+      </select>
+
+      <select id="shoppingSaleStore">
+        <option value="">Keine Aktion</option>
+        <option value="Billa">Billa</option>
+        <option value="Spar">Spar</option>
+        <option value="Hofer">Hofer</option>
+        <option value="Lidl">Lidl</option>
+        <option value="Bipa">Bipa</option>
+        <option value="dm">dm</option>
+        <option value="Müller">Müller</option>
+        <option value="Penny">Penny</option>
+      </select>
+
+      <button
+        id="addShoppingItemBtn"
+        class="secondary-btn"
+        type="button"
+      >
+        + Eintragen
+      </button>
+
+    </div>
+
+    <div id="shoppingList" class="shopping-list">
+      <div class="workroom-empty">
+        Noch nichts auf der Einkaufsliste.
+      </div>
+    </div>
+
+  </article>
 </section>
     
     <section id="school" class="view">
