@@ -1934,6 +1934,17 @@ function renderSchoolWorkTodos() {
                 rel="noopener"
                 title="Link öffnen">🔗</a>`
           : ""}
+          <button
+  class="workroom-todo-edit"
+  type="button"
+  data-id="${t.id}"
+  title="Bearbeiten">✎</button>
+
+<button
+  class="workroom-todo-delete"
+  type="button"
+  data-id="${t.id}"
+  title="Löschen">×</button>
       </div>
     </div>
   `).join("");
@@ -1948,6 +1959,31 @@ function renderSchoolWorkTodos() {
       renderSchoolWorkTodos();
     });
   });
+  document.querySelectorAll(".workroom-todo-delete").forEach(btn => {
+  btn.addEventListener("click", e => {
+    const id = e.currentTarget.dataset.id;
+
+    state.workroom.todos = state.workroom.todos.filter(t => t.id !== id);
+
+    save();
+    renderSchoolWorkTodos();
+  });
+});
+
+document.querySelectorAll(".workroom-todo-edit").forEach(btn => {
+  btn.addEventListener("click", e => {
+    const id = e.currentTarget.dataset.id;
+    const item = state.workroom.todos.find(t => t.id === id);
+    if (!item) return;
+
+    document.querySelector("#schoolWorkTodoInput").value = item.text || "";
+    document.querySelector("#schoolWorkTodoType").value = item.type || "";
+    document.querySelector("#schoolWorkTodoLink").value = item.url || "";
+
+    document.querySelector("#addSchoolWorkTodoBtn").dataset.editId = item.id;
+    document.querySelector("#addSchoolWorkTodoBtn").textContent = "Änderung speichern";
+  });
+});
 }
 
 
@@ -1955,21 +1991,41 @@ document.querySelector("#addSchoolWorkTodoBtn")?.addEventListener("click", () =>
   const textInput = document.querySelector("#schoolWorkTodoInput");
   const typeInput = document.querySelector("#schoolWorkTodoType");
   const linkInput = document.querySelector("#schoolWorkTodoLink");
+  const button = document.querySelector("#addSchoolWorkTodoBtn");
 
   const text = textInput.value.trim();
   if (!text) return;
 
   const url = linkInput.value.trim();
+  const editId = button.dataset.editId;
 
-  state.workroom.todos.push({
-    id: uid(),
-    text,
-    type: typeInput.value || "",
-    url,
-    order: state.workroom.todos.length,
-    done: false,
-    createdAt: Date.now()
-  });
+  if (editId) {
+    const item = state.workroom.todos.find(t => t.id === editId);
+
+    if (item) {
+      item.text = text;
+      item.type = typeInput.value || "";
+      item.url = url;
+    }
+
+    delete button.dataset.editId;
+    button.textContent = "+ Eintragen";
+
+    showMotivation("Schul-To-do geändert ✓");
+
+  } else {
+    state.workroom.todos.push({
+      id: uid(),
+      text,
+      type: typeInput.value || "",
+      url,
+      order: state.workroom.todos.length,
+      done: false,
+      createdAt: Date.now()
+    });
+
+    showMotivation("Schul-To-do hinzugefügt ✓");
+  }
 
   textInput.value = "";
   typeInput.value = "";
@@ -1977,8 +2033,6 @@ document.querySelector("#addSchoolWorkTodoBtn")?.addEventListener("click", () =>
 
   save();
   renderSchoolWorkTodos();
-
-  showMotivation("Schul-To-do hinzugefügt ✓");
 });
 document.querySelector("#addVideoBtn").addEventListener("click", () => {
   detectedVideoTitle = "";
