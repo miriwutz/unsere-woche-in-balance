@@ -2037,7 +2037,6 @@ document.querySelectorAll(".workroom-todo-check").forEach(box => {
   save();
   renderSchoolWorkTodos();
 }
- });
 
 
   document.querySelectorAll(".workroom-todo-delete").forEach(btn => {
