@@ -2850,6 +2850,8 @@ function renderShopping() {
 
       item.done = e.currentTarget.checked;
 
+      save();
+      
       // Sofort neu zeichnen:
       // erledigter Artikel wird heller/durchgestrichen
       renderShopping();
@@ -2867,6 +2869,7 @@ function renderShopping() {
 
           if (index !== -1) {
             shoppingItems.splice(index, 1);
+            save();
             renderShopping();
           }
         }, 10000);
