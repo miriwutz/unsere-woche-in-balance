@@ -2969,7 +2969,7 @@ border:var(--family-border-width, 3px) solid transparent !important;
 
 .shopping-section{
   display:grid;
-  gap:14px;
+  gap:6px;
 }
 
 .shopping-section-title{
@@ -3029,7 +3029,7 @@ border:var(--family-border-width, 3px) solid transparent !important;
 }
 
 .shopping-section-muted{
-  opacity:.58;
+  opacity:.45;
 }
 
 .shopping-section-muted .shopping-category{
