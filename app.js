@@ -2649,11 +2649,146 @@ document.addEventListener("click", (e) => {
     document.querySelector("#manualTimetableDialog")?.close();
   }
 });
+
 // ==============================
 // EINKAUF – Grundfunktion
 // ==============================
 
 const shoppingItems = [];
+
+const shoppingCategories = {
+  fruit: {
+    label: "Obst & Gemüse",
+    icon: "🥕",
+    order: 1
+  },
+  bakery: {
+    label: "Brot & Gebäck",
+    icon: "🥐",
+    order: 2
+  },
+  cooling: {
+    label: "Milch & Kühlung",
+    icon: "🥛",
+    order: 3
+  },
+  frozen: {
+    label: "Tiefgekühltes",
+    icon: "🧊",
+    order: 4
+  },
+  pantry: {
+    label: "Vorrat & Beilagen",
+    icon: "🍝",
+    order: 5
+  },
+  seasoning: {
+    label: "Öle, Essig & Würzen",
+    icon: "🫙",
+    order: 6
+  },
+  breakfast: {
+    label: "Frühstück & Aufstriche",
+    icon: "🥣",
+    order: 7
+  },
+  baking: {
+    label: "Backen",
+    icon: "🧁",
+    order: 8
+  },
+  snacks: {
+    label: "Süßes & Snacks",
+    icon: "🍫",
+    order: 9
+  },
+  drinks: {
+    label: "Getränke",
+    icon: "🥤",
+    order: 10
+  },
+  beauty: {
+    label: "Pflege & Schönheit",
+    icon: "🧴",
+    order: 11
+  },
+  cleaning: {
+    label: "Putzen & Waschen",
+    icon: "🧽",
+    order: 12
+  },
+  household: {
+    label: "Haushalt",
+    icon: "🏠",
+    order: 13
+  },
+  other: {
+    label: "Sonstiges",
+    icon: "📦",
+    order: 14
+  }
+};
+
+function renderShoppingGroup(title, items, muted = false) {
+  if (!items.length) return "";
+
+  const grouped = {};
+
+  items.forEach(item => {
+    const category = item.category || "other";
+
+    if (!grouped[category]) {
+      grouped[category] = [];
+    }
+
+    grouped[category].push(item);
+  });
+
+  const categoryKeys = Object.keys(grouped).sort((a, b) => {
+    const orderA = shoppingCategories[a]?.order || 99;
+    const orderB = shoppingCategories[b]?.order || 99;
+
+    return orderA - orderB;
+  });
+
+  return `
+    <section class="shopping-section ${muted ? "shopping-section-muted" : ""}">
+      <h3 class="shopping-section-title">${title}</h3>
+
+      ${categoryKeys.map(categoryKey => {
+        const category =
+          shoppingCategories[categoryKey] ||
+          shoppingCategories.other;
+
+        return `
+          <div class="shopping-category">
+            <div class="shopping-category-title">
+              <span>${category.icon}</span>
+              <strong>${category.label}</strong>
+            </div>
+
+            <div class="shopping-category-items">
+              ${grouped[categoryKey].map(item => `
+                <div class="shopping-item">
+                  <span class="shopping-item-name">
+                    ${escapeHtml(item.name)}
+                  </span>
+
+                  ${item.store
+                    ? `<span class="shopping-tag">
+                        Aktion: ${escapeHtml(item.store)}
+                       </span>`
+                    : ""
+                  }
+                </div>
+              `).join("")}
+            </div>
+          </div>
+        `;
+      }).join("")}
+    </section>
+  `;
+}
 
 function renderShopping() {
   const list = document.querySelector("#shoppingList");
@@ -2668,39 +2803,50 @@ function renderShopping() {
     return;
   }
 
-  list.innerHTML = shoppingItems.map(item => `
-    <div class="shopping-item">
-      <div class="shopping-item-main">
-        <strong>${escapeHtml(item.name)}</strong>
+  const nowItems =
+    shoppingItems.filter(item => item.when === "now");
 
-        <div class="shopping-item-meta">
-          ${item.category ? `<span>${escapeHtml(item.category)}</span>` : ""}
-          ${item.store ? `<span>Aktion: ${escapeHtml(item.store)}</span>` : ""}
-        </div>
-      </div>
-    </div>
-  `).join("");
+  const laterItems =
+    shoppingItems.filter(item => item.when === "later");
+
+  const saleItems =
+    shoppingItems.filter(item => item.when === "sale");
+
+  list.innerHTML = `
+    ${renderShoppingGroup("Jetzt einkaufen", nowItems)}
+    ${renderShoppingGroup("Später kaufen", laterItems, true)}
+    ${renderShoppingGroup("Erst in Aktion kaufen", saleItems, true)}
+  `;
 }
 
-document.querySelector("#addShoppingItemBtn")?.addEventListener("click", () => {
-  const input = document.querySelector("#shoppingItemInput");
-  const category = document.querySelector("#shoppingCategory");
-  const when = document.querySelector("#shoppingWhen");
-  const store = document.querySelector("#shoppingSaleStore");
+document.querySelector("#addShoppingItemBtn")
+  ?.addEventListener("click", () => {
 
-  const name = input?.value.trim();
+    const input =
+      document.querySelector("#shoppingItemInput");
 
-  if (!name) return;
+    const category =
+      document.querySelector("#shoppingCategory");
 
-  shoppingItems.push({
-    id: uid(),
-    name,
-    category: category?.value || "",
-    when: when?.value || "now",
-    store: store?.value || ""
+    const when =
+      document.querySelector("#shoppingWhen");
+
+    const store =
+      document.querySelector("#shoppingSaleStore");
+
+    const name = input?.value.trim();
+
+    if (!name) return;
+
+    shoppingItems.push({
+      id: uid(),
+      name,
+      category: category?.value || "other",
+      when: when?.value || "now",
+      store: store?.value || ""
+    });
+
+    input.value = "";
+
+    renderShopping();
   });
-
-  input.value = "";
-
-  renderShopping();
-});
