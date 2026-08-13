@@ -1892,7 +1892,93 @@ document.querySelector("#todayWeekBtn").addEventListener("click", () => {
   currentWeekMonday = getMonday(new Date());
   renderWeek();
 });
+function renderSchoolWorkTodos() {
+  const list = document.querySelector("#schoolWorkTodoList");
+  if (!list) return;
 
+  const todos = [...state.workroom.todos]
+    .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+
+  if (!todos.length) {
+    list.innerHTML = `<div class="workroom-empty">Noch keine Schul-To-dos eingetragen.</div>`;
+    return;
+  }
+
+  const typeLabels = {
+    draw: "✏️ Vorzeichnen",
+    prepare: "🛠 Vorbereiten",
+    create: "📄 Erstellen",
+    print: "🖨 Drucken"
+  };
+
+  list.innerHTML = todos.map(t => `
+    <div class="workroom-todo-row ${t.done ? "done" : ""}" data-id="${t.id}">
+      <input
+        class="workroom-todo-check"
+        type="checkbox"
+        data-id="${t.id}"
+        ${t.done ? "checked" : ""}>
+
+      <div class="workroom-todo-content">
+        <span class="workroom-todo-text">${escapeHtml(t.text)}</span>
+
+        ${t.type
+          ? `<span class="workroom-todo-type">${typeLabels[t.type] || ""}</span>`
+          : ""}
+
+        ${t.url
+          ? `<a class="workroom-todo-link"
+                href="${escapeHtml(t.url)}"
+                target="_blank"
+                rel="noopener"
+                title="Link öffnen">🔗</a>`
+          : ""}
+      </div>
+    </div>
+  `).join("");
+
+  document.querySelectorAll(".workroom-todo-check").forEach(box => {
+    box.addEventListener("change", e => {
+      const item = state.workroom.todos.find(t => t.id === e.currentTarget.dataset.id);
+      if (!item) return;
+
+      item.done = e.currentTarget.checked;
+      save();
+      renderSchoolWorkTodos();
+    });
+  });
+}
+
+
+document.querySelector("#addSchoolWorkTodoBtn")?.addEventListener("click", () => {
+  const textInput = document.querySelector("#schoolWorkTodoInput");
+  const typeInput = document.querySelector("#schoolWorkTodoType");
+  const linkInput = document.querySelector("#schoolWorkTodoLink");
+
+  const text = textInput.value.trim();
+  if (!text) return;
+
+  const url = linkInput.value.trim();
+
+  state.workroom.todos.push({
+    id: uid(),
+    text,
+    type: typeInput.value || "",
+    url,
+    order: state.workroom.todos.length,
+    done: false,
+    createdAt: Date.now()
+  });
+
+  textInput.value = "";
+  typeInput.value = "";
+  linkInput.value = "";
+
+  save();
+  renderSchoolWorkTodos();
+
+  showMotivation("Schul-To-do hinzugefügt ✓");
+});
 document.querySelector("#addVideoBtn").addEventListener("click", () => {
   detectedVideoTitle = "";
   document.querySelector("#videoPreview").className = "video-preview empty-preview";
