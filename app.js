@@ -2649,3 +2649,58 @@ document.addEventListener("click", (e) => {
     document.querySelector("#manualTimetableDialog")?.close();
   }
 });
+// ==============================
+// EINKAUF – Grundfunktion
+// ==============================
+
+const shoppingItems = [];
+
+function renderShopping() {
+  const list = document.querySelector("#shoppingList");
+  if (!list) return;
+
+  if (!shoppingItems.length) {
+    list.innerHTML = `
+      <div class="workroom-empty">
+        Noch nichts auf der Einkaufsliste.
+      </div>
+    `;
+    return;
+  }
+
+  list.innerHTML = shoppingItems.map(item => `
+    <div class="shopping-item">
+      <div class="shopping-item-main">
+        <strong>${escapeHtml(item.name)}</strong>
+
+        <div class="shopping-item-meta">
+          ${item.category ? `<span>${escapeHtml(item.category)}</span>` : ""}
+          ${item.store ? `<span>Aktion: ${escapeHtml(item.store)}</span>` : ""}
+        </div>
+      </div>
+    </div>
+  `).join("");
+}
+
+document.querySelector("#addShoppingItemBtn")?.addEventListener("click", () => {
+  const input = document.querySelector("#shoppingItemInput");
+  const category = document.querySelector("#shoppingCategory");
+  const when = document.querySelector("#shoppingWhen");
+  const store = document.querySelector("#shoppingSaleStore");
+
+  const name = input?.value.trim();
+
+  if (!name) return;
+
+  shoppingItems.push({
+    id: uid(),
+    name,
+    category: category?.value || "",
+    when: when?.value || "now",
+    store: store?.value || ""
+  });
+
+  input.value = "";
+
+  renderShopping();
+});
