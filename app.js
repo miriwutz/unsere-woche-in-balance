@@ -2021,29 +2021,22 @@ function renderSchoolWorkTodos() {
 }
 
 
-document.querySelectorAll(".workroom-move-top").forEach(btn => {
-  btn.addEventListener("click", e => {
-    moveSchoolWorkTodo(e.currentTarget.dataset.id, "top");
-  });
-});
+document.querySelector("#schoolWorkTodoList").onclick = e => {
+  const btn = e.target.closest(".workroom-move-btn");
+  if (!btn) return;
 
-document.querySelectorAll(".workroom-move-up").forEach(btn => {
-  btn.addEventListener("click", e => {
-    moveSchoolWorkTodo(e.currentTarget.dataset.id, "up");
-  });
-});
+  const id = btn.dataset.id;
 
-document.querySelectorAll(".workroom-move-down").forEach(btn => {
-  btn.addEventListener("click", e => {
-    moveSchoolWorkTodo(e.currentTarget.dataset.id, "down");
-  });
-});
-
-document.querySelectorAll(".workroom-move-bottom").forEach(btn => {
-  btn.addEventListener("click", e => {
-    moveSchoolWorkTodo(e.currentTarget.dataset.id, "bottom");
-  });
-});
+  if (btn.classList.contains("workroom-move-top")) {
+    moveSchoolWorkTodo(id, "top");
+  } else if (btn.classList.contains("workroom-move-up")) {
+    moveSchoolWorkTodo(id, "up");
+  } else if (btn.classList.contains("workroom-move-down")) {
+    moveSchoolWorkTodo(id, "down");
+  } else if (btn.classList.contains("workroom-move-bottom")) {
+    moveSchoolWorkTodo(id, "bottom");
+  }
+};
  });
   document.querySelectorAll(".workroom-todo-delete").forEach(btn => {
   btn.addEventListener("click", e => {
