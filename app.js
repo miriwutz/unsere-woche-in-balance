@@ -1947,6 +1947,10 @@ function renderSchoolWorkTodos() {
   type="button"
   data-id="${t.id}"
   title="Löschen">×</button>
+
+  <span class="workroom-drag-handle"
+      title="Verschieben"
+      aria-label="Verschieben">⋮⋮</span>
       </div>
     </div>
   `).join("");
