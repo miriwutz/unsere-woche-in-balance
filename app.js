@@ -26,6 +26,12 @@ const state = {
   videos: JSON.parse(localStorage.getItem("balanceProd.videos") || "[]"),
   todos: JSON.parse(localStorage.getItem("balanceProd.todos") || "[]"),
   archive: JSON.parse(localStorage.getItem("balanceProd.archive") || "[]"),
+
+  workroom: JSON.parse(
+    localStorage.getItem("balanceProd.workroom") ||
+    '{"todos":[],"prints":[],"links":[],"substitutions":[]}'
+  ),
+
   settings: {
     schoolYear: localStorage.getItem("balanceProd.schoolYear") || "2026-27",
     familyBorderWidth: localStorage.getItem("balanceProd.familyBorderWidth") || "3"
