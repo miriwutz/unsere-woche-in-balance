@@ -2000,14 +2000,12 @@ if (todoList && typeof Sortable !== "undefined") {
     ghostClass: "workroom-sort-ghost",
     chosenClass: "workroom-sort-chosen",
     dragClass: "workroom-sort-drag",
-delay: 180,
-delayOnTouchOnly: true,
-touchStartThreshold: 3,
+delay: 0,
+delayOnTouchOnly: false,
+touchStartThreshold: 5,
 
-forceFallback: true,
-fallbackOnBody: true,
-fallbackTolerance: 5,
-
+forceFallback: false,
+    
     onEnd: function () {
       const ids = [...todoList.querySelectorAll(".workroom-todo-row")]
         .map(row => row.dataset.id);
