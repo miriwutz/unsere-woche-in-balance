@@ -2000,9 +2000,13 @@ if (todoList && typeof Sortable !== "undefined") {
     ghostClass: "workroom-sort-ghost",
     chosenClass: "workroom-sort-chosen",
     dragClass: "workroom-sort-drag",
-    delay: 120,
-    delayOnTouchOnly: true,
-    touchStartThreshold: 4,
+delay: 180,
+delayOnTouchOnly: true,
+touchStartThreshold: 3,
+
+forceFallback: true,
+fallbackOnBody: true,
+fallbackTolerance: 5,
 
     onEnd: function () {
       const ids = [...todoList.querySelectorAll(".workroom-todo-row")]
