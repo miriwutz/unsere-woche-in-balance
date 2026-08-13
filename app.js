@@ -2785,30 +2785,13 @@ function renderShoppingGroup(title, items, muted = false) {
       </div>
     `).join("")}
   </div>
-`;
-
-            <div class="shopping-category-items">
-              ${grouped[categoryKey].map(item => `
-                <div class="shopping-item">
-                  <span class="shopping-item-name">
-                    ${escapeHtml(item.name)}
-                  </span>
-
-                  ${item.store
-                    ? `<span class="shopping-tag">
-                        Aktion: ${escapeHtml(item.store)}
-                       </span>`
-                    : ""
-                  }
-                </div>
-              `).join("")}
-            </div>
-          </div>
         `;
-      }).join("")}
-    </section>
-  `;
+    }).join("")}
+
+  </section>
+`;
 }
+`;
 
 function renderShopping() {
   const list = document.querySelector("#shoppingList");
