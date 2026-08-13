@@ -3250,3 +3250,30 @@ border:var(--family-border-width, 3px) solid transparent !important;
   padding:1px 5px;
   font-size:.61rem;
 }
+/* EINKAUF – erledigt + dezentes Löschen */
+
+.shopping-item-done{
+  opacity:.45;
+}
+
+.shopping-item-done .shopping-item-name{
+  text-decoration:line-through;
+  text-decoration-thickness:1px;
+}
+
+.shopping-delete{
+  margin-left:2px;
+  padding:0 3px;
+  border:0;
+  background:transparent;
+  color:#b7ada7;
+  font-size:.72rem;
+  line-height:1;
+  opacity:.45;
+  cursor:pointer;
+}
+
+.shopping-delete:hover{
+  color:#8f8580;
+  opacity:.9;
+}
