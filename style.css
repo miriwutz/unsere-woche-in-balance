@@ -2871,3 +2871,35 @@ border:var(--family-border-width, 3px) solid transparent !important;
     gap:5px;
   }
 }
+/* Werkraum: Aktionen rechts anordnen */
+
+.workroom-todo-row{
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+
+.workroom-todo-check{
+  flex:0 0 auto;
+}
+
+.workroom-todo-content{
+  flex:1;
+  min-width:0;
+}
+
+/* Bearbeiten + Löschen nach rechts */
+.workroom-todo-edit{
+  margin-left:auto;
+}
+
+.workroom-todo-edit,
+.workroom-todo-delete{
+  flex:0 0 auto;
+}
+
+/* Ziehgriff bleibt ganz außen */
+.workroom-todo-row::after{
+  flex:0 0 auto;
+  margin-left:3px;
+}
