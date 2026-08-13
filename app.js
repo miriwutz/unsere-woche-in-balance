@@ -2019,7 +2019,7 @@ function renderSchoolWorkTodos() {
   save();
   renderSchoolWorkTodos();
 }
-
+ });
 
 document.querySelector("#schoolWorkTodoList").onclick = e => {
   const btn = e.target.closest(".workroom-move-btn");
@@ -2037,7 +2037,7 @@ document.querySelector("#schoolWorkTodoList").onclick = e => {
     moveSchoolWorkTodo(id, "bottom");
   }
 };
- });
+
   document.querySelectorAll(".workroom-todo-delete").forEach(btn => {
   btn.addEventListener("click", e => {
     const id = e.currentTarget.dataset.id;
