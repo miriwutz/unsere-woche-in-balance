@@ -60,6 +60,7 @@ function cloudPayload() {
     videos: state.videos,
     todos: state.todos,
     archive: state.archive,
+    workroom: state.workroom,
     school: state.school,
     familySettings: state.familySettings,
     settings: state.settings || {}
