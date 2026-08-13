@@ -2957,3 +2957,86 @@ border:var(--family-border-width, 3px) solid transparent !important;
 .workroom-sort-drag{
   opacity:.9;
 }
+/* ==================================
+   EINKAUF – ruhige Listenansicht
+   ================================== */
+
+.shopping-list{
+  display:grid;
+  gap:24px;
+  margin-top:18px;
+}
+
+.shopping-section{
+  display:grid;
+  gap:14px;
+}
+
+.shopping-section-title{
+  margin:0 0 2px;
+  font-family:"Playfair Display",serif;
+  font-size:1.15rem;
+  font-weight:500;
+  color:var(--ink);
+}
+
+.shopping-category{
+  padding:14px 16px;
+  border:1px solid var(--line);
+  border-radius:18px;
+  background:rgba(255,253,251,.78);
+}
+
+.shopping-category-title{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  margin-bottom:9px;
+  color:#625b57;
+  font-size:.88rem;
+}
+
+.shopping-category-items{
+  display:grid;
+}
+
+.shopping-item{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:12px;
+  padding:9px 2px;
+  border-top:1px solid rgba(130,120,113,.10);
+}
+
+.shopping-item:first-child{
+  border-top:0;
+}
+
+.shopping-item-name{
+  min-width:0;
+  color:#514b48;
+  font-size:.92rem;
+}
+
+.shopping-tag{
+  flex:0 0 auto;
+  padding:4px 8px;
+  border-radius:999px;
+  background:var(--sage-soft);
+  color:#687166;
+  font-size:.7rem;
+}
+
+.shopping-section-muted{
+  opacity:.58;
+}
+
+.shopping-section-muted .shopping-category{
+  background:rgba(255,253,251,.48);
+}
+
+.shopping-section-muted .shopping-section-title{
+  color:var(--muted);
+  font-size:1rem;
+}
