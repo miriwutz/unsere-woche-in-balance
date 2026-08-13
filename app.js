@@ -2830,6 +2830,55 @@ function renderShopping() {
     ${renderShoppingGroup("Später kaufen", laterItems, true)}
     ${renderShoppingGroup("Erst in Aktion kaufen", saleItems, true)}
   `;
+
+  // Artikel abhaken
+  document.querySelectorAll(".shopping-check").forEach(check => {
+    check.addEventListener("change", e => {
+      const id = e.currentTarget.dataset.id;
+      const item = shoppingItems.find(item => item.id === id);
+
+      if (!item) return;
+
+      item.done = e.currentTarget.checked;
+
+      // Sofort neu zeichnen:
+      // erledigter Artikel wird heller/durchgestrichen
+      renderShopping();
+
+      // Nach 10 Sekunden aus der Liste entfernen
+      if (item.done) {
+        setTimeout(() => {
+          const currentItem =
+            shoppingItems.find(item => item.id === id);
+
+          if (!currentItem || !currentItem.done) return;
+
+          const index =
+            shoppingItems.findIndex(item => item.id === id);
+
+          if (index !== -1) {
+            shoppingItems.splice(index, 1);
+            renderShopping();
+          }
+        }, 10000);
+      }
+    });
+  });
+
+  // Artikel bewusst löschen
+  document.querySelectorAll(".shopping-delete").forEach(button => {
+    button.addEventListener("click", e => {
+      const id = e.currentTarget.dataset.id;
+
+      const index =
+        shoppingItems.findIndex(item => item.id === id);
+
+      if (index === -1) return;
+
+      shoppingItems.splice(index, 1);
+      renderShopping();
+    });
+  });
 }
 
 document.querySelector("#addShoppingItemBtn")
