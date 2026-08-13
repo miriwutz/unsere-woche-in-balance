@@ -2914,3 +2914,46 @@ border:var(--family-border-width, 3px) solid transparent !important;
 .workroom-todo-row.dragging{
   opacity:.38;
 }
+/* Werkraum – echter Verschiebegriff */
+.workroom-drag-handle{
+  flex:0 0 auto;
+  padding:4px 6px;
+  margin-left:2px;
+
+  font-size:1rem;
+  letter-spacing:-3px;
+
+  color:#a99bad;
+  opacity:.5;
+
+  cursor:grab;
+  user-select:none;
+
+  /* wichtig für Tablet/Touch */
+  touch-action:none;
+  -webkit-user-select:none;
+  -webkit-touch-callout:none;
+}
+
+.workroom-drag-handle:hover{
+  opacity:.9;
+}
+
+.workroom-drag-handle:active{
+  cursor:grabbing;
+}
+
+/* SortableJS – sichtbare Zielposition */
+.workroom-sort-ghost{
+  opacity:.35;
+  border:1.5px dashed #b9a7c7 !important;
+  background:#f5f0f7 !important;
+}
+
+.workroom-sort-chosen{
+  box-shadow:0 5px 16px rgba(100,80,110,.10);
+}
+
+.workroom-sort-drag{
+  opacity:.9;
+}
