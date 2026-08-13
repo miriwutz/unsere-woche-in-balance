@@ -2794,14 +2794,11 @@ return `
       title="Löschen"
     >×</button>
 
+      </div>
+    `).join("")}
   </div>
-`).join("")}
-
-            </div>
-          `).join("")}
-        </div>
-      `;
-    }).join("")}
+`;
+}).join("")}
 
   </section>
 `;
