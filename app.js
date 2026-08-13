@@ -1982,15 +1982,23 @@ function renderSchoolWorkTodos() {
     </div>
   `).join("");
 
-  document.querySelectorAll(".workroom-todo-check").forEach(box => {
-    box.addEventListener("change", e => {
-      const item = state.workroom.todos.find(t => t.id === e.currentTarget.dataset.id);
-      if (!item) return;
+document.querySelectorAll(".workroom-todo-check").forEach(box => {
+  box.addEventListener("change", e => {
+    const item = state.workroom.todos.find(t => t.id === e.currentTarget.dataset.id);
+    if (!item) return;
 
-      item.done = e.currentTarget.checked;
-      save();
-      renderSchoolWorkTodos();
-    });
+    item.done = e.currentTarget.checked;
+
+    if (item.done) {
+      item.completedAt = Date.now();
+    } else {
+      item.completedAt = null;
+    }
+
+    save();
+    renderSchoolWorkTodos();
+  });
+});
     function moveSchoolWorkTodo(id, direction) {
   const sorted = [...state.workroom.todos]
     .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
