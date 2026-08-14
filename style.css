@@ -2976,13 +2976,13 @@ border:var(--family-border-width, 3px) solid transparent !important;
 
 .shopping-list{
   display:grid;
-  gap:24px;
-  margin-top:18px;
+  gap:8px;
+  margin-top:8px;
 }
 
 .shopping-section{
   display:grid;
-  gap:6px;
+  gap:3px;
 }
 
 .shopping-section-title{
@@ -3245,7 +3245,7 @@ border:var(--family-border-width, 3px) solid transparent !important;
 .shopping-category-items + .shopping-category-items{
   margin-top:2px;
   padding-top:2px;
-  border-top:1px solid rgba(104,118,82,.28);
+ border-top:1px solid rgba(104,118,82,.42);
 }
 
 .shopping-item-name{
