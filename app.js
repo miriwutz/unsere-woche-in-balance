@@ -2691,11 +2691,15 @@ document.querySelector("#familyLoginForm")?.addEventListener("submit", async e =
 
 document.querySelector("#logoutBtn")?.addEventListener("click", () => firebase.auth().signOut());
 
-firebase.auth().onAuthStateChanged(user => {
+firebase.auth().onAuthStateChanged(async user => {
   if (user) {
     setLoginMessage("");
     showLoginGate(false);
     startCloudSync();
+    
+    await migrateShoppingToCollection();
+startShoppingSync();
+    
   } else {
     cloudReady = false;
     if (cloudUnsubscribe) {
