@@ -2594,6 +2594,33 @@ shoppingItems = state.shopping;
   }
 }
 
+// ===== EINKAUF – eigene Live-Synchronisation =====
+
+let shoppingUnsubscribe = null;
+
+function startShoppingSync() {
+  if (shoppingUnsubscribe) shoppingUnsubscribe();
+
+  shoppingUnsubscribe = shoppingCollection().onSnapshot(snapshot => {
+    const items = [];
+
+    snapshot.forEach(doc => {
+      items.push({
+        id: doc.id,
+        ...doc.data()
+      });
+    });
+
+    shoppingItems = items;
+    state.shopping = items;
+
+    saveLocal();
+    renderShopping();
+  }, err => {
+    console.error("Shopping sync failed:", err);
+  });
+}
+
 function startCloudSync() {
   if (cloudUnsubscribe) cloudUnsubscribe();
 
