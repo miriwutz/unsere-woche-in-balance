@@ -4153,3 +4153,34 @@ border:var(--family-border-width, 3px) solid transparent !important;
 .workroom-link-title:hover::after{
   opacity:1;
 }
+/* Werkraum – große Bereiche ein-/ausklappen */
+
+.workroom-fold-head{
+  cursor:pointer;
+  user-select:none;
+}
+
+.workroom-fold-head > div{
+  display:flex;
+  align-items:center;
+  flex-wrap:wrap;
+  column-gap:8px;
+}
+
+.workroom-fold-head p{
+  flex-basis:100%;
+}
+
+.workroom-fold-arrow{
+  font-size:.75rem;
+  color:#9a8e87;
+  transition:transform .2s ease;
+}
+
+.workroom-fold-card:not(.open) > *:not(.workroom-fold-head){
+  display:none;
+}
+
+.workroom-fold-card:not(.open) .workroom-fold-arrow{
+  transform:rotate(-90deg);
+}
