@@ -1809,15 +1809,130 @@ document.querySelector("#closeFamilyTimetableDialog")?.addEventListener("click",
   familyTimetableDialog?.close();
 });
 
-// Papa-Übersicht öffnen / schließen
+// ===== PAPA – Alles auf einen Blick =====
+
 const papaOverviewDialog = document.querySelector("#papaOverviewDialog");
 
+function papaEntryIsRelevant(t) {
+  const family = Array.isArray(t.family) ? t.family : [];
+
+  // Alles anzeigen, bei dem Papa beteiligt ist.
+  return family.includes("b");
+}
+
+function papaTodoIsVisible(t) {
+  if ((t.type || "todo") !== "todo") return true;
+
+  // Wiederkehrende To-dos werden wie im normalen Wochenplan behandelt.
+  if (t.recurrence && t.recurrence !== "none") return true;
+
+  if (!t.done) return true;
+  if (!t.completedAt) return true;
+
+  // Erledigte To-dos am Erledigungstag noch anzeigen.
+  const completedDay = new Date(t.completedAt);
+  completedDay.setHours(0, 0, 0, 0);
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  return completedDay.getTime() === today.getTime();
+}
+
+function renderPapaOverview(weekOffset = 0) {
+  const list = document.querySelector("#papaOverviewList");
+  if (!list) return;
+
+  const monday = new Date(currentWeekMonday);
+  monday.setDate(monday.getDate() + (weekOffset * 7));
+
+  const weekEntries = [];
+
+  days.forEach((dayName, index) => {
+    const date = dayDate(monday, index);
+
+    const entries = state.todos
+      .filter(t => occursOnDate(t, date))
+      .filter(papaEntryIsRelevant)
+      .filter(papaTodoIsVisible);
+
+    if (!entries.length) return;
+
+    weekEntries.push({
+      dayName,
+      date,
+      entries
+    });
+  });
+
+  if (!weekEntries.length) {
+    list.innerHTML = `
+      <div class="papa-overview-empty">
+        In dieser Woche ist für Papa nichts eingetragen.
+      </div>
+    `;
+    return;
+  }
+
+  list.innerHTML = weekEntries.map(day => {
+    const dateLabel = day.date.toLocaleDateString("de-AT", {
+      day: "2-digit",
+      month: "2-digit"
+    });
+
+    return `
+      <section class="papa-overview-day">
+        <div class="papa-overview-day-head">
+          <strong>${day.dayName}</strong>
+          <span>${dateLabel}</span>
+        </div>
+
+        ${day.entries.map(t => {
+          const isEvent = t.type === "event";
+
+          let time = "";
+          if (isEvent) {
+            if (t.time && t.endTime) {
+              time = `${t.time}–${t.endTime}`;
+            } else if (t.time) {
+              time = t.time;
+            } else if (t.endTime) {
+              time = `bis ${t.endTime}`;
+            }
+          }
+
+          return `
+            <div class="papa-overview-entry ${isEvent ? "event" : "todo"}">
+              <span class="papa-overview-entry-kind">
+                ${isEvent ? "Termin" : "To-do"}
+              </span>
+
+              <span class="papa-overview-entry-text">
+                ${time ? `<strong>${escapeHtml(time)}</strong> ` : ""}
+                ${escapeHtml(t.text || "")}
+              </span>
+            </div>
+          `;
+        }).join("")}
+      </section>
+    `;
+  }).join("");
+}
+
 document.querySelector("#openPapaOverviewBtn")?.addEventListener("click", () => {
+  renderPapaOverview(0);
   papaOverviewDialog?.showModal();
 });
 
 document.querySelector("#closePapaOverviewBtn")?.addEventListener("click", () => {
   papaOverviewDialog?.close();
+});
+
+document.querySelectorAll(".papa-tab").forEach(btn => {
+  btn.addEventListener("click", () => {
+    const offset = Number(btn.dataset.weekOffset || 0);
+    renderPapaOverview(offset);
+  });
 });
 
 document.querySelectorAll(".family-timetable-person").forEach(btn => {
