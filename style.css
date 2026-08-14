@@ -3704,3 +3704,10 @@ border:var(--family-border-width, 3px) solid transparent !important;
   color:var(--muted);
   text-align:center;
 }
+.papa-triquetra-knot{
+  fill:none;
+  stroke:#bd8b38;
+  stroke-width:5;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+}
