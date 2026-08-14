@@ -3747,14 +3747,3 @@ border:var(--family-border-width, 3px) solid transparent !important;
   line-height:1.5;
   color:#4b4039;
 }
-
-.papa-quote-star{
-  flex:0 0 auto;
-  color:#bd8b38;
-  font-size:1.05rem;
-  line-height:1.75;
-}
-
-.papa-quote-text{
-  display:block;
-}
