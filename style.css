@@ -3376,16 +3376,16 @@ border:var(--family-border-width, 3px) solid transparent !important;
     background:#dfeadb;
   }
 
-  .shopping-delete{
-    margin-left:3px;
-    width:38px;
-    height:38px;
-    flex:0 0 38px;
-    font-size:1.35rem;
-    line-height:38px;
-    color:#806d69;
-    opacity:.85;
-  }
+.shopping-delete{
+  margin-left:3px;
+  width:26px;
+  height:26px;
+  flex:0 0 26px;
+  font-size:1.35rem;
+  line-height:26px;
+  color:#806d69;
+  opacity:.85;
+}
 }
 /* ABMELDEN – ruhig rechts oben */
 
