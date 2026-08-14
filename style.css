@@ -3723,3 +3723,17 @@ border:var(--family-border-width, 3px) solid transparent !important;
   height:100%;
   object-fit:contain;
 }
+/* Papa – Abstand zwischen Triquetra und Spruch */
+.papa-quote-panel{
+  grid-template-columns:130px minmax(0,1fr);
+  column-gap:32px;
+}
+
+/* Wechselnder Spruch */
+.papa-quote{
+  font-family:Georgia, "Times New Roman", serif;
+  font-size:1.18rem;
+  line-height:1.5;
+  letter-spacing:.01em;
+  color:#4b4039;
+}
