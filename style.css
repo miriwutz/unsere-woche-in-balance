@@ -2986,7 +2986,7 @@ border:var(--family-border-width, 3px) solid transparent !important;
 }
 
 .shopping-section-title{
-  margin:0 0 6px;
+  margin:0 0 12px;
   font-family:"Playfair Display",serif;
   font-size:1.15rem;
   font-weight:500;
