@@ -3711,3 +3711,15 @@ border:var(--family-border-width, 3px) solid transparent !important;
   stroke-linecap:round;
   stroke-linejoin:round;
 }
+.papa-triquetra-ring{
+  width:130px;
+  height:130px;
+  flex:0 0 130px;
+}
+
+.papa-triquetra-image{
+  display:block;
+  width:100%;
+  height:100%;
+  object-fit:contain;
+}
