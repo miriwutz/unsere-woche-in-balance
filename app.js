@@ -1812,50 +1812,44 @@ document.querySelector("#closeFamilyTimetableDialog")?.addEventListener("click",
 // ===== PAPA – Alles auf einen Blick =====
 
 const papaQuotes = [
-  `🛡️ „Der Feige stirbt schon vielmal, eh’ er stirbt, die Tapfern kosten einmal nur den Tod.“ — Shakespeare`,
-  `🌱 Ich kann mein Leben nicht dadurch schützen, dass ich es vorsorglich mit Angst verbringe.`,
-  `👁️ Wachsamkeit ist wertvoll, wenn sie mir dient. Dauerwachsamkeit darf ich auf ihren Nutzen prüfen.`,
-  `🔍 Nicht jede denkbare Gefahr verdient meine dauernde Aufmerksamkeit.`,
-  `⚖️ Wie viel zusätzliche Sicherheit bekomme ich tatsächlich für die Energie, die ich gerade investiere?`,
-  `🔄 Wenn eine Strategie mich niemals „genug“ sagen lässt, lohnt es sich, nicht nur die Gefahr, sondern auch die Strategie zu überprüfen.`,
-  `💎 Gesundheit ist kostbar. Aber auch die Zeit, in der ich gesund bin, ist kostbar.`,
+  `🌿 „Der Feige stirbt schon vielmal, eh’ er stirbt, die Tapfern kosten einmal nur den Tod.“ — Shakespeare`,
+  `🌿 Ich kann mein Leben nicht dadurch schützen, dass ich es vorsorglich mit Angst verbringe.`,
+  `🌿 Wachsamkeit ist wertvoll, wenn sie mir dient. Dauerwachsamkeit darf ich auf ihren Nutzen prüfen.`,
+  `🌿 Nicht jede denkbare Gefahr verdient meine dauernde Aufmerksamkeit.`,
+  `🌿 Wie viel zusätzliche Sicherheit bekomme ich tatsächlich für die Energie, die ich gerade investiere?`,
+  `🌿Wenn eine Strategie mich niemals „genug“ sagen lässt, lohnt es sich, nicht nur die Gefahr, sondern auch die Strategie zu überprüfen.`,
+  `🌿 Gesundheit ist kostbar. Aber auch die Zeit, in der ich gesund bin, ist kostbar.`,
   `🌿 Ich möchte meine Gesundheit schützen, ohne dafür mein gegenwärtiges Leben zu opfern.`,
-  `☁️ Eine Möglichkeit ist noch kein Ereignis.`,
-  `🚨 Mein Warnsystem darf mich informieren. Es muss nicht mein Leben führen.`,
-  `🎛️ Mehr Kontrolle bedeutet nicht automatisch mehr Sicherheit.`,
-  `🩺 Ich darf zwischen sinnvoller Vorsorge und endloser Rückversicherung unterscheiden.`,
-  `📉 Die erste vernünftige Kontrolle kann sehr wertvoll sein. Die hundertste muss deshalb nicht hundertmal wertvoller sein.`,
+  `✦ Eine Möglichkeit ist noch kein Ereignis.`,
+  `✦ Mein Warnsystem darf mich informieren. Es muss nicht mein Leben führen.`,
+  `✦ Mehr Kontrolle bedeutet nicht automatisch mehr Sicherheit.`,
+  `✦ Ich darf zwischen sinnvoller Vorsorge und endloser Rückversicherung unterscheiden.`,
+  `✦ Die erste vernünftige Kontrolle kann sehr wertvoll sein. Die hundertste muss deshalb nicht hundertmal wertvoller sein.`,
   `⚖️ Was kostet mich meine Wachsamkeit – und welchen messbaren Nutzen bekomme ich dafür zurück?`,
-  `🧭 Mein Ziel ist nicht möglichst wenig Angst, sondern ein möglichst vernünftiger Umgang mit tatsächlichen Risiken.`,
-  `🔐 Absolute Sicherheit ist kein realistisches Ziel. Angemessene Vorsorge ist eines.`,
-  `🌞 Ich muss nicht jede Gefahr ausschließen, bevor ich leben darf.`,
-  `🟢 Wenn ich heute keine konkreten Hinweise auf Gefahr habe, darf auch das eine relevante Information sein.`,
-  `👐 Nicht kontrollierbar bedeutet nicht automatisch ausgeliefert.`,
-  `🛡️ Ich bin verletzlich – aber ich bin nicht wehrlos.`,
-  `⏳ Früher konnte Wachsamkeit notwendig sein. Heute darf ich neu berechnen, wie viel davon ich tatsächlich brauche.`,
-  `🧮 Eine Strategie, die früher geschützt hat, muss heute nicht mehr denselben Nutzen haben.`,
-  `🌅 Ich darf meinem Warnsystem die Gegenwart zeigen, statt ihm die Vergangenheit vorzuwerfen.`,
-  `🍃 Nicht alles im Blick zu behalten ist nicht dasselbe wie verantwortungslos zu sein.`,
-  `👀 Ich kann aufmerksam sein, ohne ständig Alarmbereitschaft zu halten.`,
-  `🛠️ Wenn etwas wirklich zu tun ist, möchte ich handeln. Wenn nichts zu tun ist, möchte ich nicht künstlich eine Aufgabe erzeugen.`,
-  `🎯 Die Frage lautet nicht nur: „Was könnte passieren?“ Sondern auch: „Wie wahrscheinlich ist es, und was ist jetzt sinnvoll zu tun?“`,
-  `💰 Wenn ich meine gesamte Lebensqualität für die Vermeidung eines möglichen Verlustes ausgebe, gehört auch dieser Preis in meine Rechnung.`,
+  `🌿 Mein Ziel ist nicht möglichst wenig Angst, sondern ein möglichst vernünftiger Umgang mit tatsächlichen Risiken.`,
+  `🌿 Absolute Sicherheit ist kein realistisches Ziel. Angemessene Vorsorge ist eines.`,
+  `🌿 Ich muss nicht jede Gefahr ausschließen, bevor ich leben darf.`,
+  `🌿 Wenn ich heute keine konkreten Hinweise auf Gefahr habe, darf auch das eine relevante Information sein.`,
+  `🌿 Nicht kontrollierbar bedeutet nicht automatisch ausgeliefert.`,
+  `🌿 Ich bin verletzlich – aber ich bin nicht wehrlos.`,
+  `🌿 Früher konnte Wachsamkeit notwendig sein. Heute darf ich neu berechnen, wie viel davon ich tatsächlich brauche.`,
+  `❤️ Eine Strategie, die früher geschützt hat, muss heute nicht mehr denselben Nutzen haben.`,
+  `❤️ Ich darf meinem Warnsystem die Gegenwart zeigen, statt ihm die Vergangenheit vorzuwerfen.`,
+  `❤️ Nicht alles im Blick zu behalten ist nicht dasselbe wie verantwortungslos zu sein.`,
+  `❤️ Ich kann aufmerksam sein, ohne ständig Alarmbereitschaft zu halten.`,
+  `❤️ Wenn etwas wirklich zu tun ist, möchte ich handeln. Wenn nichts zu tun ist, möchte ich nicht künstlich eine Aufgabe erzeugen.`,
+  `❤️ Die Frage lautet nicht nur: „Was könnte passieren?“ Sondern auch: „Wie wahrscheinlich ist es, und was ist jetzt sinnvoll zu tun?“`,
+  `✦ Wenn ich meine gesamte Lebensqualität für die Vermeidung eines möglichen Verlustes ausgebe, gehört auch dieser Preis in meine Rechnung.`,
   `❤️ Gesundheit soll meinem Leben dienen – mein Leben muss nicht vollständig der Überwachung meiner Gesundheit dienen.`,
-  `🌻 Ich brauche keine Garantie für die Zukunft, um eine vernünftige Entscheidung für heute treffen zu können.`
+  `✦ Ich brauche keine Garantie für die Zukunft, um eine vernünftige Entscheidung für heute treffen zu können.`
 ];
 
 function setRandomPapaQuote() {
   const quote = document.querySelector("#papaQuote");
   if (!quote) return;
 
-  const text =
-    papaQuotes[Math.floor(Math.random() * papaQuotes.length)]
-      .replace(/^✦\s*/, "");
-
-  quote.innerHTML = `
-    <span class="papa-quote-star">✦</span>
-    <span class="papa-quote-text">${escapeHtml(text)}</span>
-  `;
+  quote.textContent =
+    papaQuotes[Math.floor(Math.random() * papaQuotes.length)];
 }
 
 const papaOverviewDialog = document.querySelector("#papaOverviewDialog");
