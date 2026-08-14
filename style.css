@@ -281,11 +281,22 @@ input:focus,select:focus{
   justify-content:space-between;
   align-items:flex-start;
   gap:14px;
+  min-width:0;
 }
 
 .todo-main{
   display:flex;
   gap:10px;
+  min-width:0;
+}
+
+.todo-main > div{
+  min-width:0;
+}
+
+.todo-text{
+  overflow-wrap:anywhere;
+  word-break:break-word;
 }
 
 .todo-card.done{
