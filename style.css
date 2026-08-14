@@ -3330,3 +3330,46 @@ border:var(--family-border-width, 3px) solid transparent !important;
   cursor:pointer;
   flex:0 0 32px;
 }
+/* EINKAUF – bessere Lesbarkeit auf Handy */
+@media (max-width: 600px){
+
+  .shopping-item{
+    font-size:1rem;
+    min-height:36px;
+  }
+
+  .shopping-check{
+    width:19px;
+    height:19px;
+    flex:0 0 19px;
+  }
+
+  .shopping-new{
+    margin-left:6px;
+    padding:3px 6px;
+    font-size:.72rem;
+    font-weight:700;
+    color:#695966;
+    background:#eee6ef;
+  }
+
+  .shopping-tag{
+    margin-left:7px;
+    padding:3px 8px;
+    font-size:.76rem;
+    font-weight:700;
+    color:#4f654d;
+    background:#dfeadb;
+  }
+
+  .shopping-delete{
+    margin-left:3px;
+    width:38px;
+    height:38px;
+    flex:0 0 38px;
+    font-size:1.35rem;
+    line-height:38px;
+    color:#806d69;
+    opacity:.85;
+  }
+}
