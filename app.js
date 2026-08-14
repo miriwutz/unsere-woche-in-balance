@@ -71,6 +71,15 @@ function cloudPayload() {
   }));
 }
 
+// ===== EINKAUF – eigener Firestore-Bereich =====
+
+function shoppingCollection() {
+  return firebase.firestore()
+    .collection("families")
+    .doc("shared")
+    .collection("shoppingItems");
+}
+
 function scheduleCloudSave() {
   if (!cloudReady || cloudApplying || !firebase.auth().currentUser) return;
   clearTimeout(cloudSaveTimer);
