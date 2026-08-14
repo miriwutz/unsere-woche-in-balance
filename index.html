@@ -682,53 +682,78 @@
 </article>
 
 
-  <!-- LINKSAMMLUNG -->
-  <article class="card workroom-main-card workroom-links-card">
-    <div class="workroom-card-head">
-      <div>
-        <h3>🔗 Linksammlung</h3>
-        <p>Ideen und Fundstücke speichern, statt Tabs offen zu lassen.</p>
-      </div>
+<!-- LINKSAMMLUNG -->
+<article class="card workroom-main-card workroom-links-card">
+
+  <div class="workroom-card-head">
+    <div>
+      <h3>🔗 Linksammlung</h3>
+      <p>Ideen und Fundstücke für später aufbewahren.</p>
     </div>
+  </div>
 
-    <div class="workroom-link-add">
+  <!-- Kategorien -->
+  <div class="workroom-link-filters">
+    <button type="button"
+            class="workroom-link-filter active"
+            data-category="all">Alle</button>
 
-      <input id="workroomLinkTitle"
-             type="text"
-             placeholder="Kurzer Titel">
+    <button type="button"
+            class="workroom-link-filter"
+            data-category="wood">🪵 Holz</button>
 
-      <input id="workroomLinkUrl"
-             type="url"
-             placeholder="https://…">
+    <button type="button"
+            class="workroom-link-filter"
+            data-category="paper">📄 Papier</button>
 
-      <select id="workroomLinkCategory">
-        <option value="wood">Holz</option>
-        <option value="paper">Papier</option>
-        <option value="free">Freies Arbeiten</option>
-        <option value="experiment">Experimentieren</option>
-        <option value="other">Sonstiges</option>
-      </select>
+    <button type="button"
+            class="workroom-link-filter"
+            data-category="free">✂️ Freies Arbeiten</button>
 
-      <button id="addWorkroomLinkBtn"
-              class="secondary-btn"
-              type="button">+ Speichern</button>
+    <button type="button"
+            class="workroom-link-filter"
+            data-category="experiment">🧪 Experimentieren</button>
 
+    <button type="button"
+            class="workroom-link-filter"
+            data-category="other">✨ Sonstiges</button>
+  </div>
+
+  <!-- gespeicherte Links -->
+  <div id="workroomLinkList" class="workroom-link-list">
+    <div class="workroom-empty">
+      Noch keine Links gespeichert.
     </div>
+  </div>
 
-    <div class="workroom-link-filters">
-      <button type="button" class="workroom-link-filter active" data-category="all">Alle</button>
-      <button type="button" class="workroom-link-filter" data-category="wood">Holz</button>
-      <button type="button" class="workroom-link-filter" data-category="paper">Papier</button>
-      <button type="button" class="workroom-link-filter" data-category="free">Freies Arbeiten</button>
-      <button type="button" class="workroom-link-filter" data-category="experiment">Experimentieren</button>
-      <button type="button" class="workroom-link-filter" data-category="other">Sonstiges</button>
-    </div>
+  <!-- neuen Link eintragen -->
+  <div class="workroom-link-add">
 
-    <div id="workroomLinkList" class="workroom-link-list">
-      <div class="workroom-empty">Noch keine Links gespeichert.</div>
-    </div>
-  </article>
+    <input id="workroomLinkTitle"
+           type="text"
+           placeholder="Kurzer Titel …">
 
+    <input id="workroomLinkUrl"
+           type="url"
+           placeholder="Link einfügen …">
+
+    <select id="workroomLinkCategory">
+      <option value="wood">🪵 Holz</option>
+      <option value="paper">📄 Papier</option>
+      <option value="free">✂️ Freies Arbeiten</option>
+      <option value="experiment">🧪 Experimentieren</option>
+      <option value="other">✨ Sonstiges</option>
+    </select>
+
+    <button id="addWorkroomLinkBtn"
+            class="secondary-btn"
+            type="button">
+      + Speichern
+    </button>
+
+  </div>
+
+</article>
 
   <!-- SELTENER BENÖTIGTE BEREICHE -->
   <div class="workroom-small-grid">
