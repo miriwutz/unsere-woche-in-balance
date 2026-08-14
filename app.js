@@ -2696,19 +2696,27 @@ function renderWorkroomLinks() {
   list.innerHTML = links.map(link => `
     <div class="workroom-link-item" data-id="${link.id}">
 
-      <div class="workroom-link-main">
-        <a
-          href="${escapeHtml(link.url)}"
-          target="_blank"
-          rel="noopener"
-          class="workroom-link-title">
-          ${escapeHtml(link.title)}
-        </a>
+ <div class="workroom-link-main">
 
-        <span class="workroom-link-category">
-          ${categoryLabels[link.category] || "✨ Sonstiges"}
-        </span>
-      </div>
+  <div class="workroom-link-texts">
+    <a
+      href="${escapeHtml(link.url)}"
+      target="_blank"
+      rel="noopener"
+      class="workroom-link-title">
+      ${escapeHtml(link.title)}
+    </a>
+
+    ${link.note
+      ? `<div class="workroom-link-note">${escapeHtml(link.note)}</div>`
+      : ""}
+  </div>
+
+  <span class="workroom-link-category">
+    ${categoryLabels[link.category] || "✨ Sonstiges"}
+  </span>
+
+</div>
 
       <div class="workroom-link-actions">
         <button
