@@ -3577,13 +3577,59 @@ border:var(--family-border-width, 3px) solid transparent !important;
   font-size:1.1rem;
 }
 
-.papa-quote{
+.papa-quote-panel{
+  display:grid;
+  grid-template-columns:110px minmax(0,1fr);
+  gap:18px;
+  align-items:center;
   margin:8px 26px 18px;
-  padding:14px 16px;
-  line-height:1.45;
-  background:rgba(213,140,155,.08);
-  border-left:3px solid rgba(213,140,155,.45);
-  border-radius:0 14px 14px 0;
+  padding:16px 18px;
+  border-radius:18px;
+  background:linear-gradient(
+    135deg,
+    rgba(245,236,219,.82),
+    rgba(255,253,249,.96)
+  );
+}
+
+.papa-triquetra-wrap{
+  display:grid;
+  justify-items:center;
+  gap:6px;
+}
+
+.papa-triquetra-ring{
+  width:76px;
+  height:76px;
+  display:grid;
+  place-items:center;
+  border:1px solid rgba(190,145,70,.34);
+  border-radius:50%;
+}
+
+.papa-triquetra{
+  color:#b98a3f;
+  font-size:2.3rem;
+  line-height:1;
+}
+
+.papa-triquetra-text{
+  display:grid;
+  gap:1px;
+  text-align:center;
+  color:#a67b3a;
+  font-size:.62rem;
+  line-height:1.2;
+  text-transform:uppercase;
+  letter-spacing:.08em;
+}
+
+.papa-quote{
+  margin:0;
+  padding:0;
+  line-height:1.5;
+  color:#514b48;
+  font-size:.95rem;
 }
 
 .papa-overview-tabs{
