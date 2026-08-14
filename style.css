@@ -3862,3 +3862,98 @@ border:var(--family-border-width, 3px) solid transparent !important;
   font-weight:600;
   color:#b9852d;
 }
+/* ===== WERKRAUM – ruhige Bedienung ===== */
+
+/* Checkbox */
+.workroom-todo-check{
+  appearance:none !important;
+  -webkit-appearance:none !important;
+
+  width:18px !important;
+  height:18px !important;
+  min-width:18px !important;
+
+  border:1.5px solid #b8aaa0 !important;
+  border-radius:50% !important;
+  background:#fffdfb !important;
+
+  display:grid !important;
+  place-content:center !important;
+  cursor:pointer;
+}
+
+.workroom-todo-check:checked{
+  background:#c49a4a !important;
+  border-color:#c49a4a !important;
+}
+
+.workroom-todo-check:checked::before{
+  content:"✓";
+  color:#fff;
+  font-size:12px;
+  font-weight:700;
+  line-height:1;
+  transform:none;
+  border:0;
+  width:auto;
+  height:auto;
+  margin:0;
+}
+
+
+/* Sortiergruppe */
+.workroom-move-controls{
+  display:flex;
+  align-items:center;
+  gap:1px;
+
+  margin-left:6px;
+  padding-left:7px;
+
+  border-left:1px solid rgba(169,149,139,.18);
+}
+
+
+/* Pfeile – Funktion bleibt, Kästchen verschwinden */
+.workroom-move-btn{
+  width:25px;
+  height:28px;
+
+  padding:0 !important;
+  border:0 !important;
+  border-radius:8px;
+
+  background:transparent !important;
+  box-shadow:none !important;
+
+  color:#81766f;
+  font-size:1rem;
+  line-height:1;
+
+  display:grid;
+  place-items:center;
+
+  cursor:pointer;
+}
+
+.workroom-move-btn:hover{
+  background:rgba(183,163,201,.12) !important;
+  color:#554b46;
+}
+
+
+/* Bearbeiten / Löschen ebenso ruhig */
+.workroom-todo-edit,
+.workroom-todo-delete{
+  background:transparent !important;
+  border:0 !important;
+  box-shadow:none !important;
+}
+
+
+/* Ziehgriff */
+.workroom-drag-handle{
+  margin-left:3px;
+  opacity:.32;
+  cursor:grab;
+}
