@@ -215,6 +215,19 @@ h2{
   font-size:.78rem;
   color:#706865;
   margin:7px 0;
+  min-width:0;
+  width:100%;
+}
+
+.todo-mini > span{
+  min-width:0;
+  max-width:100%;
+  overflow-wrap:anywhere;
+  word-break:break-word;
+}
+
+.todo-mini > input{
+  flex-shrink:0;
 }
 
 .card{
