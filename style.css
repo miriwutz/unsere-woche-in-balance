@@ -3239,16 +3239,25 @@ border:var(--family-border-width, 3px) solid transparent !important;
 }
 
 .shopping-new{
-  margin-left:3px;
-  padding:0 3px;
-  font-size:.48rem;
-  opacity:.72;
+  margin-left:4px;
+  padding:1px 4px;
+  font-size:.58rem;
+  font-weight:600;
+  color:#806f7d;
+  background:rgba(239,235,244,.85);
+  border-radius:999px;
+  opacity:1;
+  letter-spacing:.03em;
 }
 
 .shopping-tag{
-  margin-left:4px;
-  padding:1px 5px;
-  font-size:.61rem;
+  margin-left:5px;
+  padding:2px 6px;
+  font-size:.68rem;
+  font-weight:600;
+  color:#61745f;
+  background:rgba(225,235,222,.9);
+  border-radius:999px;
 }
 /* EINKAUF – erledigt + dezentes Löschen */
 
@@ -3262,15 +3271,19 @@ border:var(--family-border-width, 3px) solid transparent !important;
 }
 
 .shopping-delete{
-  margin-left:2px;
-  padding:0 3px;
+  margin-left:3px;
+  width:30px;
+  height:30px;
+  padding:0;
   border:0;
   background:transparent;
-  color:#b7ada7;
-  font-size:.72rem;
-  line-height:1;
-  opacity:.45;
+  color:#9b8580;
+  font-size:1rem;
+  line-height:30px;
+  text-align:center;
+  opacity:.7;
   cursor:pointer;
+  flex:0 0 30px;
 }
 
 .shopping-delete:hover{
