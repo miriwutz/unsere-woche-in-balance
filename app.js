@@ -1921,32 +1921,34 @@ function renderPapaOverview(weekOffset = 0) {
       month: "2-digit"
     });
 
-    return `
-      <section class="papa-overview-day">
-        <div class="papa-overview-day-head">
-          <strong>${day.dayName}</strong>
-          <span>${dateLabel}</span>
-        </div>
+return `
+  <section class="papa-overview-day">
 
-        ${day.entries.map(t => {
-          const isEvent = t.type === "event";
+    <div class="papa-overview-day-head">
+      <strong>${day.dayName}</strong>
+      <span> · ${dateLabel}</span>
+    </div>
 
-          let time = "";
-          if (isEvent) {
-            if (t.time && t.endTime) {
-              time = `${t.time}–${t.endTime}`;
-            } else if (t.time) {
-              time = t.time;
-            } else if (t.endTime) {
-              time = `bis ${t.endTime}`;
-            }
+    <div class="papa-overview-day-entries">
+      ${day.entries.map(t => {
+        const isEvent = t.type === "event";
+
+        let time = "";
+
+        if (isEvent) {
+          if (t.time && t.endTime) {
+            time = `${t.time}–${t.endTime}`;
+          } else if (t.time) {
+            time = t.time;
+          } else if (t.endTime) {
+            time = `bis ${t.endTime}`;
           }
+        }
 
+        if (isEvent) {
           return `
-            <div class="papa-overview-entry ${isEvent ? "event" : "todo"}">
-              <span class="papa-overview-entry-kind">
-                ${isEvent ? "Termin" : "To-do"}
-              </span>
+            <div class="papa-overview-entry event">
+              <span class="papa-overview-symbol">✦</span>
 
               <span class="papa-overview-entry-text">
                 ${time ? `<strong>${escapeHtml(time)}</strong> ` : ""}
@@ -1954,9 +1956,22 @@ function renderPapaOverview(weekOffset = 0) {
               </span>
             </div>
           `;
-        }).join("")}
-      </section>
-    `;
+        }
+
+        return `
+          <div class="papa-overview-entry todo">
+            <span class="papa-overview-symbol">☐</span>
+
+            <span class="papa-overview-entry-text">
+              ${escapeHtml(t.text || "")}
+            </span>
+          </div>
+        `;
+      }).join("")}
+    </div>
+
+  </section>
+`;
   }).join("");
 }
 
