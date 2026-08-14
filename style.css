@@ -2777,7 +2777,7 @@ border:var(--family-border-width, 3px) solid transparent !important;
 /* einzelne Aufgabe */
 .workroom-todo-row{
   display:grid;
-  grid-template-columns:auto minmax(0,1fr) auto;
+  grid-template-columns:22px minmax(0,1fr) auto;
   align-items:center;
   gap:10px;
 
@@ -2796,6 +2796,16 @@ border:var(--family-border-width, 3px) solid transparent !important;
     opacity .15s ease,
     border-color .15s ease,
     background .15s ease;
+}
+
+.workroom-todo-check{
+  width:18px !important;
+  height:18px !important;
+  min-width:18px;
+  display:block !important;
+  opacity:1 !important;
+  visibility:visible !important;
+  justify-self:center;
 }
 
 .workroom-todo-row:hover{
