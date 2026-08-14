@@ -1961,6 +1961,7 @@ function renderPapaOverview(weekOffset = 0) {
 }
 
 document.querySelector("#openPapaOverviewBtn")?.addEventListener("click", () => {
+  setRandomPapaQuote();
   renderPapaOverview(0);
   papaOverviewDialog?.showModal();
 });
