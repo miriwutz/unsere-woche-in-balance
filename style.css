@@ -3548,3 +3548,110 @@ border:var(--family-border-width, 3px) solid transparent !important;
   background:rgba(200,68,77,.16);
   border-color:rgba(200,68,77,.38);
 }
+/* ===== PAPA – Alles auf einen Blick ===== */
+
+.papa-overview-dialog{
+  width:min(620px, calc(100vw - 32px));
+  max-height:85vh;
+  padding:0;
+  border:0;
+  border-radius:24px;
+  background:var(--paper);
+  overflow:auto;
+}
+
+.papa-overview-dialog .papa-overview-header{
+  position:relative;
+  padding:24px 26px 10px;
+}
+
+.papa-overview-dialog .papa-overview-header h2{
+  margin:3px 40px 0 0;
+}
+
+#closePapaOverviewBtn{
+  position:absolute;
+  top:18px;
+  right:20px;
+  margin:0;
+  font-size:1.1rem;
+}
+
+.papa-quote{
+  margin:8px 26px 18px;
+  padding:14px 16px;
+  line-height:1.45;
+  background:rgba(213,140,155,.08);
+  border-left:3px solid rgba(213,140,155,.45);
+  border-radius:0 14px 14px 0;
+}
+
+.papa-overview-tabs{
+  display:flex;
+  flex-wrap:wrap;
+  gap:7px;
+  padding:0 26px 18px;
+  border-bottom:1px solid var(--line);
+}
+
+.papa-overview-tabs .papa-tab{
+  white-space:nowrap;
+}
+
+.papa-overview-list{
+  padding:10px 26px 26px;
+}
+
+.papa-overview-day{
+  padding:13px 0;
+  border-bottom:1px solid var(--line);
+}
+
+.papa-overview-day:last-child{
+  border-bottom:0;
+}
+
+.papa-overview-day-head{
+  display:flex;
+  align-items:baseline;
+  gap:3px;
+  margin-bottom:7px;
+}
+
+.papa-overview-day-head strong{
+  font-family:var(--serif);
+  font-size:1.05rem;
+}
+
+.papa-overview-day-head span{
+  color:var(--muted);
+  font-size:.82rem;
+}
+
+.papa-overview-day-entries{
+  display:grid;
+  gap:5px;
+}
+
+.papa-overview-entry{
+  display:grid;
+  grid-template-columns:18px minmax(0,1fr);
+  align-items:start;
+  gap:7px;
+  line-height:1.35;
+}
+
+.papa-overview-symbol{
+  text-align:center;
+  color:#756d68;
+}
+
+.papa-overview-entry-text{
+  min-width:0;
+}
+
+.papa-overview-empty{
+  padding:24px 0;
+  color:var(--muted);
+  text-align:center;
+}
