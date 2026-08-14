@@ -2941,21 +2941,29 @@ function renderShopping() {
     });
   });
 
-  // Artikel bewusst löschen
-  document.querySelectorAll(".shopping-delete").forEach(button => {
-    button.addEventListener("click", e => {
-      const id = e.currentTarget.dataset.id;
+// Artikel bewusst löschen
+document.querySelectorAll(".shopping-delete").forEach(button => {
+  button.addEventListener("click", e => {
+    const id = e.currentTarget.dataset.id;
 
-      const index =
-        shoppingItems.findIndex(item => item.id === id);
+    const index =
+      shoppingItems.findIndex(item => item.id === id);
 
-      if (index === -1) return;
+    if (index === -1) return;
 
-      shoppingItems.splice(index, 1);
-      save();
-      renderShopping();
-    });
+    shoppingItems.splice(index, 1);
+    state.shopping = shoppingItems;
+    saveLocal();
+    renderShopping();
+
+    shoppingCollection()
+      .doc(id)
+      .delete()
+      .catch(err => {
+        console.error("Shopping item delete failed:", err);
+      });
   });
+});
 }
 
 document.querySelector("#addShoppingItemBtn")
