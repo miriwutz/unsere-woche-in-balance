@@ -3983,3 +3983,31 @@ border:var(--family-border-width, 3px) solid transparent !important;
   background:rgba(183,163,201,.12) !important;
   color:#554b46;
 }
+/* Schul-To-dos – Checkbox wie bei Drucken */
+.workroom-todo-check{
+  appearance:auto !important;
+  -webkit-appearance:checkbox !important;
+
+  width:16px !important;
+  height:16px !important;
+  min-width:16px !important;
+
+  margin:0 !important;
+  padding:0 !important;
+
+  accent-color:#7f8f78 !important;
+  background:transparent !important;
+
+  border:0 !important;
+  border-radius:0 !important;
+
+  box-shadow:none !important;
+
+  display:block !important;
+  place-content:initial !important;
+}
+
+.workroom-todo-check::before,
+.workroom-todo-check::after{
+  content:none !important;
+}
