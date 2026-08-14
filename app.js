@@ -2747,6 +2747,7 @@ function renderWorkroomLinks() {
       if (!link) return;
 
       document.querySelector("#workroomLinkTitle").value = link.title || "";
+      document.querySelector("#workroomLinkNote").value = link.note || "";
       document.querySelector("#workroomLinkUrl").value = link.url || "";
       document.querySelector("#workroomLinkCategory").value =
         link.category || "other";
