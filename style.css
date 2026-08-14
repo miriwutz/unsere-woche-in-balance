@@ -3503,4 +3503,15 @@ border:var(--family-border-width, 3px) solid transparent !important;
    effektive Viewport-Breite des iPads feststeht. So wird das funktionierende
    Android-/Tablet-Layout nicht erneut versehentlich verändert.
 */
+/* iPad quer – Wochenplan mit 7 Tagen nebeneinander */
+@media (min-width:768px) and (max-width:1366px) and (orientation:landscape){
+  .week-grid{
+    grid-template-columns:repeat(7,minmax(0,1fr));
+  }
 
+  .day{
+    min-width:0;
+    padding-left:9px;
+    padding-right:9px;
+  }
+}
