@@ -2137,20 +2137,23 @@ const todos = [...state.workroom.todos]
     data-id="${t.id}"
     ${t.done ? "checked" : ""}>
 
-      <div class="workroom-todo-content">
-        <span class="workroom-todo-text">${escapeHtml(t.text)}</span>
+ <div class="workroom-todo-content">
+  <span class="workroom-todo-text">${escapeHtml(t.text)}</span>
+</div>
 
-        ${t.type
-          ? `<span class="workroom-todo-type">${typeLabels[t.type] || ""}</span>`
-          : ""}
+<div class="workroom-todo-actions">
 
-        ${t.url
-          ? `<a class="workroom-todo-link"
-                href="${escapeHtml(t.url)}"
-                target="_blank"
-                rel="noopener"
-                title="Link öffnen">🔗</a>`
-          : ""}
+  ${t.type
+    ? `<span class="workroom-todo-type">${typeLabels[t.type] || ""}</span>`
+    : ""}
+
+  ${t.url
+    ? `<a class="workroom-todo-link"
+        href="${escapeHtml(t.url)}"
+        target="_blank"
+        rel="noopener"
+        title="Link öffnen">🔗</a>`
+    : ""}
           <button
   class="workroom-todo-edit"
   type="button"
