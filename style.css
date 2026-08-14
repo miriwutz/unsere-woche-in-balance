@@ -3599,29 +3599,32 @@ border:var(--family-border-width, 3px) solid transparent !important;
 }
 
 .papa-triquetra-ring{
-  width:76px;
-  height:76px;
-  display:grid;
-  place-items:center;
-  border:1px solid rgba(190,145,70,.34);
-  border-radius:50%;
+  width:100px;
+  height:100px;
 }
 
-.papa-triquetra{
-  color:#b98a3f;
-  font-size:2.3rem;
-  line-height:1;
+.papa-triquetra-svg{
+  display:block;
+  width:100%;
+  height:100%;
+  color:#b9893e;
+  overflow:visible;
 }
 
-.papa-triquetra-text{
-  display:grid;
-  gap:1px;
-  text-align:center;
-  color:#a67b3a;
-  font-size:.62rem;
-  line-height:1.2;
-  text-transform:uppercase;
-  letter-spacing:.08em;
+.papa-triquetra-ring-text{
+  fill:#a87932;
+  font-family:"DM Sans",sans-serif;
+  font-size:7px;
+  font-weight:600;
+  letter-spacing:1.15px;
+}
+
+.papa-triquetra-knot{
+  fill:none;
+  stroke:#bd8b38;
+  stroke-width:5;
+  stroke-linecap:round;
+  stroke-linejoin:round;
 }
 
 .papa-quote{
