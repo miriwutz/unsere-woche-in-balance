@@ -2977,16 +2977,31 @@ document.querySelector("#addShoppingItemBtn")
 
     if (!name) return;
 
-  shoppingItems.push({
+const newItem = {
   id: uid(),
   name,
   category: category?.value || "other",
   when: when?.value || "now",
   store: store?.value || "",
   createdAt: Date.now()
-});
-    
-save();
+};
+
+shoppingItems.push(newItem);
+state.shopping = shoppingItems;
+saveLocal();
+
+shoppingCollection()
+  .doc(newItem.id)
+  .set({
+    name: newItem.name,
+    category: newItem.category,
+    when: newItem.when,
+    store: newItem.store,
+    createdAt: newItem.createdAt
+  })
+  .catch(err => {
+    console.error("Shopping item save failed:", err);
+  });
     
   input.value = "";
 category.value = "";
