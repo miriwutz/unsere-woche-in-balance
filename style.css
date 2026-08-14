@@ -3537,3 +3537,14 @@ border:var(--family-border-width, 3px) solid transparent !important;
   overflow-wrap:normal;
   word-break:normal;
 }
+/* Papa-Übersicht */
+.papa-overview-btn{
+  background:rgba(200,68,77,.10);
+  border-color:rgba(200,68,77,.28);
+  color:#9f4f55;
+}
+
+.papa-overview-btn:hover{
+  background:rgba(200,68,77,.16);
+  border-color:rgba(200,68,77,.38);
+}
