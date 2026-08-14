@@ -3198,7 +3198,7 @@ border:var(--family-border-width, 3px) solid transparent !important;
 
 .shopping-item-name{
     display:grid;
-    ggrid-template-columns:170px 40px 60px;
+    grid-template-columns:115px 36px 50px;
     align-items:center;
     gap:4px;
     min-width:0;
