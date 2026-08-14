@@ -3455,3 +3455,52 @@ border:var(--family-border-width, 3px) solid transparent !important;
     font-size:.72rem;
   }
 }
+
+/* ======================================================================
+   FINAL STABILISIERUNG – 14.08.2026
+   Zweck: Wochenplan auf schmaleren Tablets stabil halten.
+   Künftige Anpassungen für Wochenplan/Tablet bitte vorzugsweise HIER
+   vornehmen, damit ältere Versionsblöcke nicht wieder gegeneinander laufen.
+   ====================================================================== */
+
+/* Grid-Kinder dürfen innerhalb ihrer Spalten wirklich schrumpfen. */
+.day,
+.grouped-family-block,
+.person-todo-group,
+.grouped-todo-row{
+  min-width:0;
+}
+
+/* Lange To-do-Texte bleiben innerhalb des Familienkästchens. */
+.grouped-todo-row > span,
+.todo-mini > span{
+  flex:1 1 0;
+  min-width:0;
+  max-width:100%;
+  overflow-wrap:anywhere;
+  word-break:break-word;
+}
+
+/* Checkbox bleibt stabil, während nur der Text schrumpft/umbricht. */
+.grouped-todo-row > input[type="checkbox"],
+.todo-mini > input[type="checkbox"]{
+  flex:0 0 auto;
+}
+
+/* Verhindert, dass Inhalte optisch aus dem Familienrahmen hinausragen. */
+.grouped-family-block,
+.person-todo-group{
+  overflow:hidden;
+}
+
+/*
+   Bestehende responsive Wochenlogik bleibt absichtlich unverändert:
+   > 1100 px : 7 Tage
+   761–1100 px: 4 Spalten
+   <= 760 px : 1 Spalte
+
+   Eine eigene iPad-7-Tage-Regel wird erst ergänzt, wenn Ausrichtung/
+   effektive Viewport-Breite des iPads feststeht. So wird das funktionierende
+   Android-/Tablet-Layout nicht erneut versehentlich verändert.
+*/
+
