@@ -3290,3 +3290,43 @@ border:var(--family-border-width, 3px) solid transparent !important;
   color:#8f8580;
   opacity:.9;
 }
+/* EINKAUF – Lesbarkeit Handy */
+
+.shopping-new{
+  margin-left:5px;
+  padding:2px 5px;
+  font-size:.62rem;
+  font-weight:600;
+  color:#756572;
+  background:#f0ebf1;
+  border-radius:999px;
+  opacity:1;
+}
+
+.shopping-tag{
+  margin-left:6px;
+  padding:2px 7px;
+  font-size:.7rem;
+  font-weight:600;
+  color:#536a51;
+  background:#e4eee1;
+  border-radius:999px;
+  opacity:1;
+}
+
+.shopping-delete{
+  margin-left:4px;
+  width:32px;
+  height:32px;
+  padding:0;
+  border:0;
+  background:transparent;
+  color:#8f7772;
+  font-size:1.15rem;
+  font-weight:500;
+  line-height:32px;
+  text-align:center;
+  opacity:.8;
+  cursor:pointer;
+  flex:0 0 32px;
+}
