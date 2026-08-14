@@ -2812,9 +2812,20 @@ border:var(--family-border-width, 3px) solid transparent !important;
   transform:scale(.99);
 }
 
-/* Checkbox */
+/* Checkbox Schul-To-dos */
 .workroom-todo-check{
-  margin:0;
+  appearance: auto;
+  -webkit-appearance: checkbox;
+
+  display: block;
+  flex: 0 0 auto;
+
+  width: 20px;
+  height: 20px;
+  margin: 0 4px 0 0;
+
+  cursor: pointer;
+  accent-color: #b78b43;
 }
 
 /* Inhalt */
