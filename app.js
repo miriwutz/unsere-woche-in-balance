@@ -2621,6 +2621,28 @@ function startShoppingSync() {
   });
 }
 
+// ===== EINKAUF – vorhandene Liste einmalig übernehmen =====
+
+async function migrateShoppingToCollection() {
+  const snapshot = await shoppingCollection().get();
+
+  // Wenn im neuen Einkaufsbereich schon Artikel liegen,
+  // wird nichts mehr übernommen.
+  if (!snapshot.empty) return;
+
+  // Wenn die alte Liste leer ist, gibt es nichts zu übertragen.
+  if (!shoppingItems.length) return;
+
+  const batch = firebase.firestore().batch();
+
+  shoppingItems.forEach(item => {
+    const { id, ...data } = item;
+    batch.set(shoppingCollection().doc(id), data);
+  });
+
+  await batch.commit();
+}
+
 function startCloudSync() {
   if (cloudUnsubscribe) cloudUnsubscribe();
 
