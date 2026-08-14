@@ -2127,14 +2127,15 @@ const todos = [...state.workroom.todos]
   };
 
   list.innerHTML = todos.map(t => `
-  <div
+<div
   class="workroom-todo-row ${t.done ? "done" : ""}"
-  data-id="${t.id}"
-      <input
-        class="workroom-todo-check"
-        type="checkbox"
-        data-id="${t.id}"
-        ${t.done ? "checked" : ""}>
+  data-id="${t.id}">
+
+  <input
+    class="workroom-todo-check"
+    type="checkbox"
+    data-id="${t.id}"
+    ${t.done ? "checked" : ""}>
 
       <div class="workroom-todo-content">
         <span class="workroom-todo-text">${escapeHtml(t.text)}</span>
