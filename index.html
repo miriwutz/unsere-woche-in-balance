@@ -646,28 +646,40 @@
   </article>
 
 
-  <!-- DRUCKEN -->
-  <article class="card workroom-main-card">
-    <div class="workroom-card-head">
-      <div>
-        <h3>🖨 Drucken</h3>
-        <p>Was möchte ich in der Schule noch ausdrucken?</p>
-      </div>
+<!-- DRUCKEN -->
+<article class="card workroom-main-card">
+  <div class="workroom-card-head">
+    <div>
+      <h3>🖨 Drucken</h3>
+      <p>Was möchte ich in der Schule noch ausdrucken?</p>
     </div>
+  </div>
 
-    <div class="workroom-quick-add">
-      <input id="schoolPrintInput"
-             type="text"
-             placeholder="Was muss ich drucken?">
-      <button id="addSchoolPrintBtn"
-              class="secondary-btn"
-              type="button">+ Eintragen</button>
+  <div id="schoolPrintList" class="workroom-list">
+    <div class="workroom-empty">
+      Im Moment steht nichts auf der Druckliste.
     </div>
+  </div>
 
-    <div id="schoolPrintList" class="workroom-list">
-      <div class="workroom-empty">Im Moment steht nichts auf der Druckliste.</div>
-    </div>
-  </article>
+  <details class="workroom-archive">
+    <summary>Erledigte Druckaufträge</summary>
+    <div id="schoolPrintArchive" class="workroom-archive-list"></div>
+  </details>
+
+  <div class="workroom-quick-add school-print-add">
+    <input id="schoolPrintInput"
+           type="text"
+           placeholder="Neuen Druckauftrag eintragen …">
+
+    <input id="schoolPrintLink"
+           type="url"
+           placeholder="Link – optional">
+
+    <button id="addSchoolPrintBtn"
+            class="secondary-btn"
+            type="button">+ Eintragen</button>
+  </div>
+</article>
 
 
   <!-- LINKSAMMLUNG -->
