@@ -3622,7 +3622,7 @@ border:var(--family-border-width, 3px) solid transparent !important;
 .papa-triquetra-knot{
   fill:none;
   stroke:#bd8b38;
-  stroke-width:5;
+  stroke-width:4;
   stroke-linecap:round;
   stroke-linejoin:round;
 }
