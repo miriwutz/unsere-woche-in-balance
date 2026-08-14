@@ -2317,10 +2317,23 @@ border:var(--family-border-width, 3px) solid transparent !important;
 .login-submit{margin-top:4px;width:100%}
 .login-error{min-height:1.2em;margin:11px 0 0;color:#a15353;font-size:.78rem}
 .logout-btn{
-  position:fixed;right:18px;bottom:18px;z-index:8000;
-  padding:8px 12px;border:1px solid var(--line);border-radius:999px;
-  background:rgba(255,253,251,.92);color:#81756e;font:inherit;font-size:.72rem;
-  cursor:pointer;box-shadow:0 6px 20px rgba(70,60,55,.08);
+  position:fixed;
+  top:14px;
+  right:16px;
+  bottom:auto;
+  width:auto;
+  height:auto;
+  z-index:8000;
+  padding:7px 12px;
+  border:1px solid var(--line);
+  border-radius:999px;
+  background:rgba(255,253,251,.92);
+  color:#81756e;
+  font-size:.72rem;
+  font-weight:400;
+  line-height:1.2;
+  cursor:pointer;
+  box-shadow:0 3px 12px rgba(70,60,55,.06);
 }
 @media print{
   .login-gate,.logout-btn{display:none!important}
