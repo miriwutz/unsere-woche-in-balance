@@ -3373,3 +3373,38 @@ border:var(--family-border-width, 3px) solid transparent !important;
     opacity:.85;
   }
 }
+/* ABMELDEN – ruhig rechts oben */
+
+.logout-btn{
+  position:fixed;
+  top:14px;
+  right:16px;
+  z-index:1000;
+
+  padding:7px 12px;
+  border:1px solid rgba(120,105,98,.18);
+  border-radius:999px;
+
+  background:rgba(255,253,251,.88);
+  color:#7b6f69;
+
+  font-size:.72rem;
+  font-weight:500;
+
+  box-shadow:0 2px 10px rgba(70,55,45,.05);
+  cursor:pointer;
+}
+
+.logout-btn:hover{
+  background:#fffdfb;
+  color:#554c48;
+}
+
+@media(max-width:600px){
+  .logout-btn{
+    top:10px;
+    right:10px;
+    padding:7px 11px;
+    font-size:.72rem;
+  }
+}
