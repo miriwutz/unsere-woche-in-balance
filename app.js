@@ -2033,7 +2033,8 @@ function renderAll() {
   renderSchool();
   renderSchoolWorkTodos();
   renderSchoolPrints();
-renderShopping();
+  renderWorkroomLinks();
+  renderShopping();
 }
 
 async function updateVideoPreview() {
