@@ -3957,3 +3957,29 @@ border:var(--family-border-width, 3px) solid transparent !important;
   opacity:.32;
   cursor:grab;
 }
+/* Druckliste – Pfeile ruhig darstellen */
+.workroom-print-move-btn{
+  width:26px;
+  height:28px;
+
+  padding:0 !important;
+  border:0 !important;
+  border-radius:8px;
+
+  background:transparent !important;
+  box-shadow:none !important;
+
+  color:#81766f;
+  font-size:1rem;
+  line-height:1;
+
+  display:grid;
+  place-items:center;
+
+  cursor:pointer;
+}
+
+.workroom-print-move-btn:hover{
+  background:rgba(183,163,201,.12) !important;
+  color:#554b46;
+}
