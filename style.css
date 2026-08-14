@@ -4101,3 +4101,30 @@ border:var(--family-border-width, 3px) solid transparent !important;
 .workroom-link-delete:hover{
   background:rgba(183,163,201,.12);
 }
+/* Linktitel ruhig, mit kleinem Öffnen-Symbol */
+.workroom-link-title{
+  display:inline-flex;
+  align-items:center;
+  gap:5px;
+
+  color:#4f4039;
+  font-weight:500;
+  text-decoration:none !important;
+}
+
+.workroom-link-title::after{
+  content:"↗";
+  font-size:.72em;
+  color:#9a8e87;
+  opacity:.75;
+  transform:translateY(-1px);
+}
+
+.workroom-link-title:hover{
+  color:#6f5d54;
+  text-decoration:none !important;
+}
+
+.workroom-link-title:hover::after{
+  opacity:1;
+}
