@@ -3234,8 +3234,8 @@ border:var(--family-border-width, 3px) solid transparent !important;
 /* EINKAUF – Liste noch kompakter */
 
 .shopping-item{
-  padding:2px 2px;
-  min-height:24px;
+  padding:1px 2px;
+  min-height:20px;
 }
 
 .shopping-category-items{
@@ -3243,12 +3243,13 @@ border:var(--family-border-width, 3px) solid transparent !important;
 }
 
 .shopping-category-items + .shopping-category-items{
-  margin-top:3px;
-  padding-top:5px;
+  margin-top:2px;
+  padding-top:2px;
+  border-top:1px solid rgba(104,118,82,.28);
 }
 
 .shopping-item-name{
-  line-height:1.2;
+  line-height:1.1;
 }
 
 .shopping-new{
