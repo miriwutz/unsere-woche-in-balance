@@ -3681,3 +3681,20 @@ store.value = "";
     renderShopping();
   });
 renderAll();
+// =============================
+// WERKRAUM – BEREICHE AUF/ZU
+// =============================
+
+document.addEventListener("click", e => {
+  const head = e.target.closest(".workroom-fold-head");
+  if (!head) return;
+
+  const card = head.closest(".workroom-fold-card");
+  if (!card) return;
+
+  document.querySelectorAll(".workroom-fold-card").forEach(otherCard => {
+    otherCard.classList.remove("open");
+  });
+
+  card.classList.add("open");
+});
