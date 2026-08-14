@@ -3831,3 +3831,34 @@ border:var(--family-border-width, 3px) solid transparent !important;
 .workroom-todo-delete:hover{
   opacity:1;
 }
+/* Werkraum – ruhige Checkbox */
+
+.workroom-todo-check{
+  appearance:none !important;
+  -webkit-appearance:none !important;
+
+  width:17px !important;
+  height:17px !important;
+  min-width:17px !important;
+
+  border:1.5px solid #b9aa9d !important;
+  border-radius:6px !important;
+  background:#fffdfb !important;
+
+  display:grid !important;
+  place-content:center !important;
+  cursor:pointer;
+}
+
+.workroom-todo-check:checked{
+  background:#fffaf1 !important;
+  border-color:#c99a45 !important;
+}
+
+.workroom-todo-check:checked::after{
+  content:"✓";
+  font-size:13px;
+  line-height:1;
+  font-weight:600;
+  color:#b9852d;
+}
