@@ -950,14 +950,52 @@
     <div class="papa-quote-panel">
 
   <div class="papa-triquetra-wrap">
-    <div class="papa-triquetra-ring">
-      <div class="papa-triquetra">☘</div>
-    </div>
+  <div class="papa-triquetra-ring">
+  <svg class="papa-triquetra-svg"
+       viewBox="0 0 120 120"
+       aria-label="Triquetra – Das Leben fließt, wir fließen mit">
 
-    <div class="papa-triquetra-text">
-      <span>Das Leben fließt</span>
-      <span>wir fließen mit</span>
-    </div>
+    <defs>
+      <path id="papaQuoteTopArc"
+            d="M 18,60 A 42,42 0 0,1 102,60" />
+
+      <path id="papaQuoteBottomArc"
+            d="M 102,60 A 42,42 0 0,1 18,60" />
+    </defs>
+
+    <text class="papa-triquetra-ring-text">
+      <textPath href="#papaQuoteTopArc"
+                startOffset="50%"
+                text-anchor="middle">
+        DAS LEBEN FLIESST
+      </textPath>
+    </text>
+
+    <text class="papa-triquetra-ring-text">
+      <textPath href="#papaQuoteBottomArc"
+                startOffset="50%"
+                text-anchor="middle">
+        WIR FLIESSEN MIT
+      </textPath>
+    </text>
+
+    <g class="papa-triquetra-knot">
+      <path d="M60 25
+               C46 44 40 59 60 88
+               C80 59 74 44 60 25 Z" />
+
+      <path d="M60 25
+               C46 44 40 59 60 88
+               C80 59 74 44 60 25 Z"
+            transform="rotate(120 60 60)" />
+
+      <path d="M60 25
+               C46 44 40 59 60 88
+               C80 59 74 44 60 25 Z"
+            transform="rotate(240 60 60)" />
+    </g>
+  </svg>
+</div>
   </div>
 
   <p id="papaQuote" class="papa-quote"></p>
