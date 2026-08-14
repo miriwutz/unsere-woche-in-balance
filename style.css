@@ -4011,3 +4011,93 @@ border:var(--family-border-width, 3px) solid transparent !important;
 .workroom-todo-check::after{
   content:none !important;
 }
+/* ===== WERKRAUM – LINKSAMMLUNG ===== */
+
+.workroom-link-list{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  margin:10px 0 14px;
+}
+
+.workroom-link-item{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:14px;
+
+  padding:10px 12px;
+
+  border:1px solid rgba(169,149,139,.22);
+  border-radius:12px;
+  background:rgba(255,255,255,.62);
+
+  box-shadow:0 2px 8px rgba(93,75,67,.03);
+}
+
+.workroom-link-main{
+  min-width:0;
+  flex:1;
+
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+
+.workroom-link-title{
+  min-width:0;
+
+  color:#4f4039;
+  font-weight:500;
+  text-decoration:none;
+
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+
+.workroom-link-title:hover{
+  text-decoration:underline;
+}
+
+.workroom-link-category{
+  flex:0 0 auto;
+  white-space:nowrap;
+
+  padding:3px 8px;
+  border-radius:999px;
+
+  background:#f4efe9;
+  color:#78685f;
+
+  font-size:.72rem;
+}
+
+.workroom-link-actions{
+  flex:0 0 auto;
+
+  display:flex;
+  align-items:center;
+  gap:5px;
+}
+
+.workroom-link-edit,
+.workroom-link-delete{
+  width:28px;
+  height:28px;
+
+  padding:0;
+  border:0;
+  border-radius:8px;
+
+  background:transparent;
+  box-shadow:none;
+
+  color:#81766f;
+  cursor:pointer;
+}
+
+.workroom-link-edit:hover,
+.workroom-link-delete:hover{
+  background:rgba(183,163,201,.12);
+}
