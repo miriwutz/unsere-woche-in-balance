@@ -4078,11 +4078,20 @@ border:var(--family-border-width, 3px) solid transparent !important;
   text-decoration:none !important;
 }
 
+.workroom-link-texts{
+  min-width:0;
+  flex:1;
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+
 .workroom-link-note{
-  margin-top:3px;
+  margin-top:0;
   color:#998d86;
-  font-size:.74rem;
-  line-height:1.3;
+  font-size:inherit;
+  line-height:inherit;
+  white-space:nowrap;
 }
 
 .workroom-link-category{
