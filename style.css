@@ -3197,12 +3197,13 @@ border:var(--family-border-width, 3px) solid transparent !important;
 }
 
 .shopping-item-name{
-  display:inline-flex;
-  align-items:center;
-  gap:5px;
-  min-width:0;
-  color:#514b48;
-  font-size:.92rem;
+    display:grid;
+    grid-template-columns: 70px 34px 46px;
+    align-items:center;
+    gap:4px;
+    min-width:0;
+    color:#514b48;
+    font-size:.92rem;
 }
 
 .shopping-new{
