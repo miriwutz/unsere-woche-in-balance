@@ -2914,7 +2914,15 @@ function renderShopping() {
 
       item.done = e.currentTarget.checked;
 
-      save();
+      state.shopping = shoppingItems;
+saveLocal();
+
+shoppingCollection()
+  .doc(id)
+  .set({ done: item.done }, { merge: true })
+  .catch(err => {
+    console.error("Shopping item update failed:", err);
+  });
       
       // Sofort neu zeichnen:
       // erledigter Artikel wird heller/durchgestrichen
@@ -2933,8 +2941,16 @@ function renderShopping() {
 
           if (index !== -1) {
             shoppingItems.splice(index, 1);
-            save();
-            renderShopping();
+state.shopping = shoppingItems;
+saveLocal();
+renderShopping();
+
+shoppingCollection()
+  .doc(id)
+  .delete()
+  .catch(err => {
+    console.error("Shopping item auto-delete failed:", err);
+  });
           }
         }, 10000);
       }
