@@ -1848,8 +1848,14 @@ function setRandomPapaQuote() {
   const quote = document.querySelector("#papaQuote");
   if (!quote) return;
 
-  quote.textContent =
-    papaQuotes[Math.floor(Math.random() * papaQuotes.length)];
+  const text =
+    papaQuotes[Math.floor(Math.random() * papaQuotes.length)]
+      .replace(/^✦\s*/, "");
+
+  quote.innerHTML = `
+    <span class="papa-quote-star">✦</span>
+    <span class="papa-quote-text">${escapeHtml(text)}</span>
+  `;
 }
 
 const papaOverviewDialog = document.querySelector("#papaOverviewDialog");
