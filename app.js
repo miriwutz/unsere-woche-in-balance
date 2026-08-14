@@ -2032,6 +2032,7 @@ function renderAll() {
   renderArchive();
   renderSchool();
   renderSchoolWorkTodos();
+  renderSchoolPrints();
 renderShopping();
 }
 
