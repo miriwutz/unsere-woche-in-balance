@@ -3785,3 +3785,49 @@ border:var(--family-border-width, 3px) solid transparent !important;
 .workroom-todo-link{
   flex:0 0 auto;
 }
+/* Werkraum – Bedienung übersichtlicher gruppieren */
+
+.workroom-todo-actions{
+  margin-left:auto;
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  gap:8px;
+  flex:0 0 auto;
+}
+
+/* etwas Abstand zwischen Art/Link und Bearbeitung */
+.workroom-todo-edit{
+  margin-left:8px;
+}
+
+/* Sortierpfeile als eigene Gruppe */
+.workroom-move-controls{
+  display:flex;
+  align-items:center;
+  gap:4px;
+  margin-left:6px;
+  padding-left:8px;
+  border-left:1px solid rgba(169,149,139,.22);
+}
+
+/* Drag-Griff etwas besser sichtbar */
+.workroom-drag-handle{
+  margin-left:5px;
+  opacity:.5;
+}
+
+.workroom-drag-handle:hover{
+  opacity:.85;
+}
+
+/* Bearbeiten und Löschen ruhig halten */
+.workroom-todo-edit,
+.workroom-todo-delete{
+  opacity:.65;
+}
+
+.workroom-todo-edit:hover,
+.workroom-todo-delete:hover{
+  opacity:1;
+}
