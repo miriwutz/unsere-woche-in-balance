@@ -2662,6 +2662,175 @@ document.querySelector("#addSchoolPrintBtn")?.addEventListener("click", () => {
   renderSchoolPrints();
 });
 
+// =============================
+// WERKRAUM – LINKSAMMLUNG
+// =============================
+
+let activeWorkroomLinkCategory = "all";
+
+function renderWorkroomLinks() {
+  const list = document.querySelector("#workroomLinkList");
+  if (!list) return;
+
+  const categoryLabels = {
+    wood: "🪵 Holz",
+    paper: "📄 Papier",
+    free: "✂️ Freies Arbeiten",
+    experiment: "🧪 Experimentieren",
+    other: "✨ Sonstiges"
+  };
+
+  const links = [...state.workroom.links]
+    .filter(link =>
+      activeWorkroomLinkCategory === "all" ||
+      link.category === activeWorkroomLinkCategory
+    );
+
+  if (!links.length) {
+    list.innerHTML =
+      `<div class="workroom-empty">Noch keine Links in dieser Kategorie gespeichert.</div>`;
+    return;
+  }
+
+  list.innerHTML = links.map(link => `
+    <div class="workroom-link-item" data-id="${link.id}">
+
+      <div class="workroom-link-main">
+        <a
+          href="${escapeHtml(link.url)}"
+          target="_blank"
+          rel="noopener"
+          class="workroom-link-title">
+          ${escapeHtml(link.title)}
+        </a>
+
+        <span class="workroom-link-category">
+          ${categoryLabels[link.category] || "✨ Sonstiges"}
+        </span>
+      </div>
+
+      <div class="workroom-link-actions">
+        <button
+          class="workroom-link-edit"
+          type="button"
+          data-id="${link.id}"
+          title="Bearbeiten">✎</button>
+
+        <button
+          class="workroom-link-delete"
+          type="button"
+          data-id="${link.id}"
+          title="Löschen">×</button>
+      </div>
+
+    </div>
+  `).join("");
+
+  document.querySelectorAll(".workroom-link-delete").forEach(btn => {
+    btn.addEventListener("click", e => {
+      const id = e.currentTarget.dataset.id;
+
+      state.workroom.links =
+        state.workroom.links.filter(link => link.id !== id);
+
+      save();
+      renderWorkroomLinks();
+    });
+  });
+
+  document.querySelectorAll(".workroom-link-edit").forEach(btn => {
+    btn.addEventListener("click", e => {
+      const id = e.currentTarget.dataset.id;
+      const link = state.workroom.links.find(link => link.id === id);
+
+      if (!link) return;
+
+      document.querySelector("#workroomLinkTitle").value = link.title || "";
+      document.querySelector("#workroomLinkUrl").value = link.url || "";
+      document.querySelector("#workroomLinkCategory").value =
+        link.category || "other";
+
+      const addBtn = document.querySelector("#addWorkroomLinkBtn");
+
+      addBtn.dataset.editId = link.id;
+      addBtn.textContent = "Änderung speichern";
+    });
+  });
+}
+
+
+// Link speichern / bearbeiten
+document.querySelector("#addWorkroomLinkBtn")?.addEventListener("click", () => {
+
+  const titleInput = document.querySelector("#workroomLinkTitle");
+  const urlInput = document.querySelector("#workroomLinkUrl");
+  const categoryInput = document.querySelector("#workroomLinkCategory");
+  const button = document.querySelector("#addWorkroomLinkBtn");
+
+  const title = titleInput.value.trim();
+  let url = urlInput.value.trim();
+  const category = categoryInput.value || "other";
+
+  if (!title || !url) return;
+
+  if (!/^https?:\/\//i.test(url)) {
+    url = "https://" + url;
+  }
+
+  const editId = button.dataset.editId;
+
+  if (editId) {
+    const item =
+      state.workroom.links.find(link => link.id === editId);
+
+    if (item) {
+      item.title = title;
+      item.url = url;
+      item.category = category;
+    }
+
+    delete button.dataset.editId;
+    button.textContent = "+ Speichern";
+
+  } else {
+    state.workroom.links.push({
+      id: uid(),
+      title,
+      url,
+      category,
+      createdAt: Date.now()
+    });
+  }
+
+  titleInput.value = "";
+  urlInput.value = "";
+  categoryInput.value = "wood";
+
+  save();
+  renderWorkroomLinks();
+});
+
+
+// Kategorien filtern
+document.querySelectorAll(".workroom-link-filter").forEach(btn => {
+
+  btn.addEventListener("click", e => {
+
+    activeWorkroomLinkCategory =
+      e.currentTarget.dataset.category || "all";
+
+    document.querySelectorAll(".workroom-link-filter")
+      .forEach(filter =>
+        filter.classList.toggle(
+          "active",
+          filter === e.currentTarget
+        )
+      );
+
+    renderWorkroomLinks();
+  });
+});
+
 document.querySelector("#addVideoBtn").addEventListener("click", () => {
   detectedVideoTitle = "";
   document.querySelector("#videoPreview").className = "video-preview empty-preview";
