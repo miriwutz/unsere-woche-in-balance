@@ -2765,11 +2765,13 @@ function renderWorkroomLinks() {
 document.querySelector("#addWorkroomLinkBtn")?.addEventListener("click", () => {
 
   const titleInput = document.querySelector("#workroomLinkTitle");
+  const noteInput = document.querySelector("#workroomLinkNote");
   const urlInput = document.querySelector("#workroomLinkUrl");
   const categoryInput = document.querySelector("#workroomLinkCategory");
   const button = document.querySelector("#addWorkroomLinkBtn");
 
   const title = titleInput.value.trim();
+  const note = noteInput.value.trim();
   let url = urlInput.value.trim();
   const category = categoryInput.value || "other";
 
@@ -2787,6 +2789,7 @@ document.querySelector("#addWorkroomLinkBtn")?.addEventListener("click", () => {
 
     if (item) {
       item.title = title;
+      item.note = note;
       item.url = url;
       item.category = category;
     }
@@ -2798,6 +2801,7 @@ document.querySelector("#addWorkroomLinkBtn")?.addEventListener("click", () => {
     state.workroom.links.push({
       id: uid(),
       title,
+      note,
       url,
       category,
       createdAt: Date.now()
@@ -2805,6 +2809,7 @@ document.querySelector("#addWorkroomLinkBtn")?.addEventListener("click", () => {
   }
 
   titleInput.value = "";
+  noteInput.value = "";
   urlInput.value = "";
   categoryInput.value = "wood";
 
