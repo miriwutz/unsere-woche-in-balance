@@ -3737,3 +3737,24 @@ border:var(--family-border-width, 3px) solid transparent !important;
   letter-spacing:.01em;
   color:#4b4039;
 }
+.papa-quote{
+  display:flex;
+  align-items:flex-start;
+  gap:12px;
+  margin:0;
+  font-family:Georgia, "Times New Roman", serif;
+  font-size:1.22rem;
+  line-height:1.5;
+  color:#4b4039;
+}
+
+.papa-quote-star{
+  flex:0 0 auto;
+  color:#bd8b38;
+  font-size:1.05rem;
+  line-height:1.75;
+}
+
+.papa-quote-text{
+  display:block;
+}
