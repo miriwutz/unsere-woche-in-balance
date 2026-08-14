@@ -1891,6 +1891,13 @@ function renderPapaOverview(weekOffset = 0) {
 
   days.forEach((dayName, index) => {
     const date = dayDate(monday, index);
+    const today = new Date();
+today.setHours(0, 0, 0, 0);
+
+const checkDate = new Date(date);
+checkDate.setHours(0, 0, 0, 0);
+
+if (checkDate < today) return;
 
     const entries = state.todos
       .filter(t => occursOnDate(t, date))
