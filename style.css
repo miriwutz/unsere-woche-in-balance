@@ -3198,12 +3198,20 @@ border:var(--family-border-width, 3px) solid transparent !important;
 
 .shopping-item-name{
     display:grid;
-    grid-template-columns: 150px 34px 60px;
+    grid-template-columns:220px 40px 60px;
     align-items:center;
     gap:4px;
     min-width:0;
     color:#514b48;
     font-size:.92rem;
+}
+
+.shopping-new{
+  grid-column:2;
+}
+
+.shopping-tag{
+  grid-column:3;
 }
 
 .shopping-new{
