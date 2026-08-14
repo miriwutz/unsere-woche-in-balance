@@ -3768,3 +3768,20 @@ border:var(--family-border-width, 3px) solid transparent !important;
   line-height:1.5;
   color:#4b4039;
 }
+/* Werkraum – rechte Bedienleiste */
+.workroom-todo-actions{
+  margin-left:auto;
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  gap:7px;
+  flex:0 0 auto;
+}
+
+.workroom-todo-type{
+  white-space:nowrap;
+}
+
+.workroom-todo-link{
+  flex:0 0 auto;
+}
