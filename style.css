@@ -4181,7 +4181,7 @@ border:var(--family-border-width, 3px) solid transparent !important;
 }
 
 .workroom-fold-arrow{
-  font-size:.75rem;
+  font-size:1.15rem;
   color:#9a8e87;
   transition:transform .2s ease;
 }
