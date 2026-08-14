@@ -2395,6 +2395,273 @@ document.querySelector("#addSchoolWorkTodoBtn")?.addEventListener("click", () =>
   save();
   renderSchoolWorkTodos();
 });
+
+// =============================
+// WERKRAUM – DRUCKLISTE
+// =============================
+
+function renderSchoolPrints() {
+  const list = document.querySelector("#schoolPrintList");
+  const archive = document.querySelector("#schoolPrintArchive");
+
+  if (!list) return;
+
+  const startOfToday = new Date();
+  startOfToday.setHours(0, 0, 0, 0);
+
+  const prints = [...state.workroom.prints]
+    .filter(p => {
+      if (!p.done) return true;
+      if (!p.completedAt) return true;
+
+      return p.completedAt >= startOfToday.getTime();
+    })
+    .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+
+  if (!prints.length) {
+    list.innerHTML =
+      `<div class="workroom-empty">Im Moment steht nichts auf der Druckliste.</div>`;
+  } else {
+    list.innerHTML = prints.map(p => `
+      <div
+        class="workroom-todo-row ${p.done ? "done" : ""}"
+        data-print-id="${p.id}">
+
+        <input
+          class="workroom-print-check"
+          type="checkbox"
+          data-id="${p.id}"
+          ${p.done ? "checked" : ""}>
+
+        <div class="workroom-todo-content">
+          <span class="workroom-todo-text">${escapeHtml(p.text)}</span>
+        </div>
+
+        <div class="workroom-todo-actions">
+
+          ${p.url
+            ? `<a class="workroom-todo-link"
+                  href="${escapeHtml(p.url)}"
+                  target="_blank"
+                  rel="noopener"
+                  title="Link öffnen">🔗</a>`
+            : ""}
+
+          <button
+            class="workroom-print-edit"
+            type="button"
+            data-id="${p.id}"
+            title="Bearbeiten">✎</button>
+
+          <button
+            class="workroom-print-delete"
+            type="button"
+            data-id="${p.id}"
+            title="Löschen">×</button>
+
+          <div class="workroom-move-controls">
+
+            <button
+              class="workroom-print-move-btn workroom-print-move-top"
+              type="button"
+              data-id="${p.id}"
+              title="Ganz nach oben">⇈</button>
+
+            <button
+              class="workroom-print-move-btn workroom-print-move-up"
+              type="button"
+              data-id="${p.id}"
+              title="Eine Position nach oben">↑</button>
+
+            <button
+              class="workroom-print-move-btn workroom-print-move-down"
+              type="button"
+              data-id="${p.id}"
+              title="Eine Position nach unten">↓</button>
+
+            <button
+              class="workroom-print-move-btn workroom-print-move-bottom"
+              type="button"
+              data-id="${p.id}"
+              title="Ganz nach unten">⇊</button>
+
+            <span
+              class="workroom-drag-handle"
+              title="Ziehen"
+              aria-label="Ziehen">⋮⋮</span>
+
+          </div>
+        </div>
+      </div>
+    `).join("");
+  }
+
+  if (archive) {
+    const oldDone = state.workroom.prints
+      .filter(p =>
+        p.done &&
+        p.completedAt &&
+        p.completedAt < startOfToday.getTime()
+      );
+
+    archive.innerHTML = oldDone.length
+      ? oldDone.map(p => `
+          <div class="workroom-archive-item">
+            ${escapeHtml(p.text)}
+          </div>
+        `).join("")
+      : `<div class="workroom-empty">Noch keine erledigten Druckaufträge.</div>`;
+  }
+
+  document.querySelectorAll(".workroom-print-check").forEach(box => {
+    box.addEventListener("change", e => {
+      const item = state.workroom.prints.find(
+        p => p.id === e.currentTarget.dataset.id
+      );
+
+      if (!item) return;
+
+      item.done = e.currentTarget.checked;
+      item.completedAt = item.done ? Date.now() : null;
+
+      save();
+      renderSchoolPrints();
+    });
+  });
+
+  document.querySelectorAll(".workroom-print-delete").forEach(btn => {
+    btn.addEventListener("click", e => {
+      const id = e.currentTarget.dataset.id;
+
+      state.workroom.prints =
+        state.workroom.prints.filter(p => p.id !== id);
+
+      save();
+      renderSchoolPrints();
+    });
+  });
+
+  document.querySelectorAll(".workroom-print-edit").forEach(btn => {
+    btn.addEventListener("click", e => {
+      const id = e.currentTarget.dataset.id;
+      const item = state.workroom.prints.find(p => p.id === id);
+
+      if (!item) return;
+
+      document.querySelector("#schoolPrintInput").value = item.text || "";
+      document.querySelector("#schoolPrintLink").value = item.url || "";
+
+      const addBtn = document.querySelector("#addSchoolPrintBtn");
+      addBtn.dataset.editId = item.id;
+      addBtn.textContent = "Änderung speichern";
+    });
+  });
+
+  document.querySelectorAll(".workroom-print-move-btn").forEach(btn => {
+    btn.addEventListener("click", e => {
+      const id = e.currentTarget.dataset.id;
+
+      const sorted = [...state.workroom.prints]
+        .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+
+      const index = sorted.findIndex(p => p.id === id);
+      if (index === -1) return;
+
+      let newIndex = index;
+
+      if (e.currentTarget.classList.contains("workroom-print-move-top")) {
+        newIndex = 0;
+      } else if (e.currentTarget.classList.contains("workroom-print-move-up")) {
+        newIndex = Math.max(0, index - 1);
+      } else if (e.currentTarget.classList.contains("workroom-print-move-down")) {
+        newIndex = Math.min(sorted.length - 1, index + 1);
+      } else if (e.currentTarget.classList.contains("workroom-print-move-bottom")) {
+        newIndex = sorted.length - 1;
+      }
+
+      const [moved] = sorted.splice(index, 1);
+      sorted.splice(newIndex, 0, moved);
+
+      sorted.forEach((p, i) => {
+        p.order = i;
+      });
+
+      state.workroom.prints = sorted;
+
+      save();
+      renderSchoolPrints();
+    });
+  });
+
+  if (typeof Sortable !== "undefined") {
+    const printList = document.querySelector("#schoolPrintList");
+
+    if (printList) {
+      new Sortable(printList, {
+        animation: 150,
+        handle: ".workroom-drag-handle",
+        draggable: ".workroom-todo-row",
+
+        onEnd: () => {
+          const ids = [...printList.querySelectorAll(".workroom-todo-row")]
+            .map(row => row.dataset.printId);
+
+          ids.forEach((id, index) => {
+            const item = state.workroom.prints.find(p => p.id === id);
+            if (item) item.order = index;
+          });
+
+          save();
+          renderSchoolPrints();
+        }
+      });
+    }
+  }
+}
+
+
+// Druckauftrag hinzufügen / bearbeiten
+document.querySelector("#addSchoolPrintBtn")?.addEventListener("click", () => {
+  const textInput = document.querySelector("#schoolPrintInput");
+  const linkInput = document.querySelector("#schoolPrintLink");
+  const button = document.querySelector("#addSchoolPrintBtn");
+
+  const text = textInput.value.trim();
+  if (!text) return;
+
+  const url = linkInput?.value.trim() || "";
+  const editId = button.dataset.editId;
+
+  if (editId) {
+    const item = state.workroom.prints.find(p => p.id === editId);
+
+    if (item) {
+      item.text = text;
+      item.url = url;
+    }
+
+    delete button.dataset.editId;
+    button.textContent = "+ Eintragen";
+
+  } else {
+    state.workroom.prints.push({
+      id: uid(),
+      text,
+      url,
+      done: false,
+      completedAt: null,
+      order: state.workroom.prints.length,
+      createdAt: Date.now()
+    });
+  }
+
+  textInput.value = "";
+  if (linkInput) linkInput.value = "";
+
+  save();
+  renderSchoolPrints();
+});
+
 document.querySelector("#addVideoBtn").addEventListener("click", () => {
   detectedVideoTitle = "";
   document.querySelector("#videoPreview").className = "video-preview empty-preview";
