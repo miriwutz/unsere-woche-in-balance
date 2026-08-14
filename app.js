@@ -1809,6 +1809,17 @@ document.querySelector("#closeFamilyTimetableDialog")?.addEventListener("click",
   familyTimetableDialog?.close();
 });
 
+// Papa-Übersicht öffnen / schließen
+const papaOverviewDialog = document.querySelector("#papaOverviewDialog");
+
+document.querySelector("#openPapaOverviewBtn")?.addEventListener("click", () => {
+  papaOverviewDialog?.showModal();
+});
+
+document.querySelector("#closePapaOverviewBtn")?.addEventListener("click", () => {
+  papaOverviewDialog?.close();
+});
+
 document.querySelectorAll(".family-timetable-person").forEach(btn => {
   btn.addEventListener("click", () => {
     const person = btn.dataset.person;
