@@ -3515,3 +3515,23 @@ border:var(--family-border-width, 3px) solid transparent !important;
     padding-right:9px;
   }
 }
+/* TERMINE – kompakte Ausrichtung im Wochenplan */
+
+.event-display{
+  display:flex;
+  align-items:flex-start;
+  gap:4px;
+  width:100%;
+  min-width:0;
+}
+
+.event-symbol{
+  flex:0 0 auto;
+}
+
+.event-copy{
+  flex:1;
+  min-width:0;
+  overflow-wrap:anywhere;
+  word-break:break-word;
+}
