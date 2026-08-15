@@ -1765,7 +1765,13 @@ function renderTTMatrix(id) {
     });
 }
 function openManualTimetableEditor(id){renderTTMatrix(id);document.querySelector(`#manualTimetableWrap${id}`)?.classList.remove("hidden")}
-function closeManualTimetableEditor(id){document.querySelector(`#manualTimetableWrap${id}`)?.classList.add("hidden")}
+function closeManualTimetableEditor(id){
+  document.querySelector(`#manualTimetableWrap${id}`)?.classList.add("hidden");
+  if (id === "mama" && familyTimetableDialog?.open) {
+    document.querySelector("#familyTimetableDialog .family-timetable-buttons")?.classList.remove("hidden");
+    familyTimetableDialog.close();
+  }
+}
 function saveTTMatrix(id) {
   const c = timetablePerson(id);
   const t = ensureManualTimetable(c);
@@ -2031,6 +2037,7 @@ let familyTimetableMode = "view";
 function openFamilyTimetableChooser(mode = "view") {
   familyTimetableMode = mode;
   document.querySelector("#manualTimetableWrapmama")?.classList.add("hidden");
+  document.querySelector("#familyTimetableDialog .family-timetable-buttons")?.classList.remove("hidden");
 
   const title = document.querySelector("#familyTimetableDialogTitle");
   if (title) {
@@ -2050,13 +2057,29 @@ document.querySelector("#openSchoolTimetableEditorBtn")?.addEventListener("click
   openFamilyTimetableChooser("edit");
 });
 
-document.querySelector("#openWorkTimetableBtn")?.addEventListener("click", () => {
-  openManualTimetableEditor("mama");
-});
+function openMamaTimetableEditorDirect() {
+  familyTimetableMode = "edit";
 
-document.querySelector("#closeFamilyTimetableDialog")?.addEventListener("click", () => {
+  const title = document.querySelector("#familyTimetableDialogTitle");
+  if (title) title.textContent = "Mama – Stundenplan bearbeiten";
+
+  const chooserButtons = document.querySelector("#familyTimetableDialog .family-timetable-buttons");
+  if (chooserButtons) chooserButtons.classList.add("hidden");
+
+  familyTimetableDialog?.showModal();
+  renderTTMatrix("mama");
+  document.querySelector("#manualTimetableWrapmama")?.classList.remove("hidden");
+}
+
+document.querySelector("#openWorkTimetableBtn")?.addEventListener("click", openMamaTimetableEditorDirect);
+
+function closeFamilyTimetableEditorDialog() {
+  document.querySelector("#manualTimetableWrapmama")?.classList.add("hidden");
+  document.querySelector("#familyTimetableDialog .family-timetable-buttons")?.classList.remove("hidden");
   familyTimetableDialog?.close();
-});
+}
+
+document.querySelector("#closeFamilyTimetableDialog")?.addEventListener("click", closeFamilyTimetableEditorDialog);
 
 // ===== PAPA – Alles auf einen Blick =====
 
@@ -2915,6 +2938,11 @@ function renderMealPlan() {
 
   document.querySelector("#mealPlanThisWeekBtn")?.classList.toggle("active", mealPlanWeekOffset === 0);
   document.querySelector("#mealPlanNextWeekBtn")?.classList.toggle("active", mealPlanWeekOffset === 1);
+}
+
+function closeRecipeDetailDialog() {
+  const dialog = document.querySelector("#recipeDetailDialog");
+  if (dialog?.open) dialog.close();
 }
 
 document.querySelector("#closeRecipeDetailBtn")?.addEventListener("click", closeRecipeDetailDialog);
