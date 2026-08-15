@@ -584,11 +584,26 @@
     <div id="recipeList" class="recipe-list">
       <div class="workroom-empty">Noch keine Rezepte gespeichert.</div>
     </div>
+    <div id="recipePager" class="recipe-pager"></div>
   </section>
 
 </section>
     
-    <section id="school" class="view">
+    
+<dialog id="recipeDetailDialog" class="recipe-detail-dialog">
+  <div class="dialog-card recipe-detail-card">
+    <div class="dialog-head">
+      <div>
+        <p class="small-label">REZEPT</p>
+        <h2 id="recipeDetailTitle">Rezept</h2>
+      </div>
+      <button id="closeRecipeDetailBtn" class="icon-btn" type="button" aria-label="Schließen">×</button>
+    </div>
+    <div id="recipeDetailBody"></div>
+  </div>
+</dialog>
+
+<section id="school" class="view">
       <div class="section-head"><div><p class="small-label">SCHULE</p><h2>Lernen & Schule</h2>
       <p class="school-intro">Deine Lernaufgaben, Termine und Lieblings-Lernseiten – alles an einem Ort.</p></div>
       <button id="openSchoolTimetableEditorBtn" class="secondary-btn school-timetable-editor-btn" type="button">🗓 Stundenpläne bearbeiten</button>
