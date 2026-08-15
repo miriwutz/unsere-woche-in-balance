@@ -3938,7 +3938,8 @@ store.value = "";
     if (!serviceWorkerSupported()) return null;
 
     try {
-      const registration = await navigator.serviceWorker.register("./sw.js");
+      await navigator.serviceWorker.register("./sw.js");
+      const registration = await navigator.serviceWorker.ready;
       return registration;
     } catch (err) {
       console.warn("Service Worker konnte nicht registriert werden:", err);
@@ -4034,56 +4035,66 @@ store.value = "";
     }
   }
 
-  function unlockAudio(){
+  async function unlockAudio(){
     try {
       audioContext =
         audioContext ||
         new (window.AudioContext || window.webkitAudioContext)();
 
       if (audioContext.state === "suspended") {
-        audioContext.resume();
+        await audioContext.resume();
       }
 
-      audioUnlocked = true;
+      audioUnlocked = audioContext.state === "running";
+      return audioUnlocked;
     } catch (_) {
       audioUnlocked = false;
+      return false;
     }
   }
 
-  function playPling(){
+  async function playPling(){
     try {
-      unlockAudio();
-      if (!audioContext || !audioUnlocked) return false;
+      const ready = await unlockAudio();
+      if (!audioContext || !ready) return false;
 
       const now = audioContext.currentTime;
-      const gain = audioContext.createGain();
-      const osc1 = audioContext.createOscillator();
-      const osc2 = audioContext.createOscillator();
+      const master = audioContext.createGain();
 
-      osc1.type = "sine";
-      osc2.type = "sine";
+      // Deutlich hörbarer, aber immer noch kurzer freundlicher Dreiklang.
+      master.gain.setValueAtTime(0.0001, now);
+      master.gain.exponentialRampToValueAtTime(0.22, now + 0.02);
+      master.gain.setValueAtTime(0.22, now + 0.42);
+      master.gain.exponentialRampToValueAtTime(0.0001, now + 0.85);
+      master.connect(audioContext.destination);
 
-      osc1.frequency.setValueAtTime(880, now);
-      osc1.frequency.exponentialRampToValueAtTime(1175, now + 0.16);
+      const notes = [
+        {freq: 880,  start: 0.00, stop: 0.28},
+        {freq: 1175, start: 0.22, stop: 0.52},
+        {freq: 1320, start: 0.46, stop: 0.82}
+      ];
 
-      osc2.frequency.setValueAtTime(1175, now + 0.18);
-      osc2.frequency.exponentialRampToValueAtTime(1320, now + 0.34);
+      notes.forEach(note => {
+        const osc = audioContext.createOscillator();
+        const gain = audioContext.createGain();
 
-      gain.gain.setValueAtTime(0.0001, now);
-      gain.gain.exponentialRampToValueAtTime(0.065, now + 0.015);
-      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.52);
+        osc.type = "sine";
+        osc.frequency.setValueAtTime(note.freq, now + note.start);
 
-      osc1.connect(gain);
-      osc2.connect(gain);
-      gain.connect(audioContext.destination);
+        gain.gain.setValueAtTime(0.0001, now + note.start);
+        gain.gain.exponentialRampToValueAtTime(0.75, now + note.start + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + note.stop);
 
-      osc1.start(now);
-      osc1.stop(now + 0.24);
-      osc2.start(now + 0.18);
-      osc2.stop(now + 0.52);
+        osc.connect(gain);
+        gain.connect(master);
+
+        osc.start(now + note.start);
+        osc.stop(now + note.stop + 0.03);
+      });
 
       return true;
-    } catch (_) {
+    } catch (err) {
+      console.warn("Test-Pling konnte nicht abgespielt werden:", err);
       return false;
     }
   }
@@ -4180,7 +4191,7 @@ store.value = "";
     markFired(key);
 
     // In-App-Ton als Ergänzung.
-    playPling();
+    await playPling();
 
     const body = `${item.text} · in ${minutes} Minuten`;
 
@@ -4223,10 +4234,20 @@ store.value = "";
   }
 
   async function runTestPling(){
-    unlockAudio();
-    const sounded = playPling();
+    // Test-Klick ist eine echte Nutzeraktion: Audio hier direkt freischalten.
+    const sounded = await playPling();
+
+    // Falls Benachrichtigungen noch nicht freigegeben sind, darf der Test-Klick
+    // selbst die Browser-Abfrage auslösen.
+    if (
+      notificationSupported() &&
+      Notification.permission !== "granted"
+    ) {
+      await enableNotificationsOnThisDevice();
+    }
 
     let systemShown = false;
+
     if (
       notificationSupported() &&
       Notification.permission === "granted" &&
@@ -4239,22 +4260,37 @@ store.value = "";
       );
     }
 
-    if (!sounded && !systemShown) {
-      showMotivation("🔔 Test: Ton oder Benachrichtigungen sind auf diesem Gerät noch nicht freigegeben.");
-    } else if (!systemShown) {
-      showMotivation("🔔 Test-Pling gehört. System-Benachrichtigungen sind auf diesem Gerät noch nicht aktiviert.");
+    updateDeviceStatus();
+
+    if (sounded && systemShown) {
+      showMotivation("🔔 Test erfolgreich – Pling und System-Benachrichtigung funktionieren.");
+      return;
+    }
+
+    if (sounded && !systemShown) {
+      showMotivation("🔔 Pling hörbar. Die System-Benachrichtigung ist auf diesem Gerät noch nicht freigegeben.");
+      return;
+    }
+
+    if (!sounded && systemShown) {
+      showMotivation("🔔 System-Benachrichtigung funktioniert. Der Browser blockiert derzeit den Ton.");
+      return;
+    }
+
+    const permission = permissionState();
+    if (permission === "denied") {
+      showMotivation("🔕 Benachrichtigungen sind im Browser für diese Seite blockiert.");
     } else {
-      showMotivation("🔔 Test erfolgreich – Ton und Geräte-Benachrichtigung wurden ausgelöst.");
+      showMotivation("🔕 Test fehlgeschlagen – bitte Medienlautstärke und Browser-Berechtigung dieses Geräts prüfen.");
     }
   }
 
   document.querySelector("#enablePlingNotifications")?.addEventListener("click", async () => {
-    unlockAudio();
+    await unlockAudio();
     await enableNotificationsOnThisDevice();
   });
 
   document.querySelector("#testPlingBtn")?.addEventListener("click", async () => {
-    unlockAudio();
     await runTestPling();
   });
 
