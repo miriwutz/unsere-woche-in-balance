@@ -2146,22 +2146,6 @@ archive.innerHTML = archivedTodos.length
     `).join("")
   : `<div class="workroom-empty">Noch keine erledigten Schul-To-dos.</div>`;
 
-archive.innerHTML = archivedTodos.length
-  ? archivedTodos.map(t => `
-      <div class="workroom-archive-item">
-        <span>✓ ${escapeHtml(t.text)}</span>
-
-        <button
-          type="button"
-          class="workroom-archive-delete"
-          data-id="${t.id}"
-          title="Endgültig löschen"
-          aria-label="Erledigtes Schul-To-do löschen"
-        >×</button>
-      </div>
-    `).join("")
-  : `<div class="workroom-empty">Noch keine erledigten Schul-To-dos.</div>`;
-
 /* GENAU HIER EINFÜGEN */
 document.querySelectorAll(".workroom-archive-delete").forEach(btn => {
   btn.addEventListener("click", e => {
@@ -2174,6 +2158,7 @@ document.querySelectorAll(".workroom-archive-delete").forEach(btn => {
     renderSchoolWorkTodos();
   });
 });
+  }
 
 const typeLabels = {
   
