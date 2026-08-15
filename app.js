@@ -1015,10 +1015,10 @@ ${isNewEntry(t) ? `<span class="new-entry-badge">NEU</span>` : ""}
       <h3>${day}<span class="day-date">${dateLabel}</span></h3>
       ${holidayHtml}
       ${(() => { const rows=["1","2"].map(cid=>{const tm=homeByForDate(cid,date),c=state.school.children[cid];return tm?`<span><b>${escapeHtml(c.name)}</b> <strong class="home-by-time">${escapeHtml(tm)}</strong></span>`:""}).filter(Boolean);return rows.length?`<div class="home-by-strip home-by-top"><span class="home-by-label">⌂ zu Hause bis</span>${rows.join("")}</div>`:"";})()}
-      ${state.meals?.[dateKey(date)] ? `<div class="day-meal"><span class="day-meal-label">ESSEN</span><strong>${escapeHtml(state.meals[dateKey(date)])}</strong></div>` : ""}
       ${schoolHtml}
       ${eventHtml}
       ${todoHtml}
+      ${mealHtml}
       ${videoHtml}
     `;
     grid.appendChild(dayEl);
@@ -1036,6 +1036,13 @@ ${isNewEntry(t) ? `<span class="new-entry-badge">NEU</span>` : ""}
       }
     });
   }
+
+  document.querySelectorAll(".day-meal.has-recipe").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const recipe = state.recipes.find(r => r.id === btn.dataset.recipeId);
+      if (recipe) showRecipeDetail(recipe);
+    });
+  });
 
   document.querySelectorAll(".video-check").forEach(el => el.addEventListener("change", e => {
     const item = state.videos.find(v => v.id === e.target.dataset.id);
@@ -2346,6 +2353,8 @@ let activeRecipeDifficulty = "all";
 let recipeKidsOnly = false;
 let activeRecipeSearch = "";
 let mealPlanWeekOffset = 0;
+let recipePage = 0;
+const RECIPE_PAGE_SIZE = 10;
 
 function recipeDifficultyLabel(value) {
   return {easy:"Einfach", medium:"Mittel", advanced:"Etwas aufwendiger"}[value] || "Mittel";
@@ -2353,6 +2362,94 @@ function recipeDifficultyLabel(value) {
 
 function recipeLines(value) {
   return String(value || "").split(/\r?\n/).map(v => v.trim()).filter(Boolean);
+}
+
+
+function recipeByTitle(title) {
+  const q = String(title || "").trim().toLowerCase();
+  if (!q) return null;
+  return (state.recipes || []).find(r =>
+    String(r.title || "").trim().toLowerCase() === q
+  ) || null;
+}
+
+function recipeLinkTarget(recipe) {
+  if (!recipe) return "";
+  return recipe.webUrl || recipe.youtubeUrl || "";
+}
+
+function showRecipeDetail(recipeOrTitle) {
+  const recipe = typeof recipeOrTitle === "string"
+    ? recipeByTitle(recipeOrTitle)
+    : recipeOrTitle;
+
+  if (!recipe) return false;
+
+  const dialog = document.querySelector("#recipeDetailDialog");
+  const title = document.querySelector("#recipeDetailTitle");
+  const body = document.querySelector("#recipeDetailBody");
+  if (!dialog || !title || !body) return false;
+
+  title.textContent = recipe.title || "Rezept";
+
+  body.innerHTML = `
+    <div class="recipe-detail-meta">
+      <span>${escapeHtml(recipeDifficultyLabel(recipe.difficulty))}</span>
+      ${recipe.kids ? `<span class="recipe-kids-badge">🧒 Das kannst du selbst kochen!</span>` : ""}
+      ${recipe.time ? `<span>◔ ${escapeHtml(recipe.time)}</span>` : ""}
+    </div>
+
+    <div class="recipe-detail-grid">
+      <section>
+        <h3>Zutaten</h3>
+        <ul>${(recipe.ingredients || []).map(x => `<li>${escapeHtml(x)}</li>`).join("")}</ul>
+      </section>
+      <section>
+        <h3>Zubereitung</h3>
+        <ol>${(recipe.steps || []).map(x => `<li>${escapeHtml(x)}</li>`).join("")}</ol>
+      </section>
+    </div>
+
+    <div class="recipe-detail-links">
+      ${recipe.webUrl ? `<a href="${escapeHtml(recipe.webUrl)}" target="_blank" rel="noopener">↗ Onlinerezept öffnen</a>` : ""}
+      ${recipe.youtubeUrl ? `<a href="${escapeHtml(recipe.youtubeUrl)}" target="_blank" rel="noopener">▶ YouTube öffnen</a>` : ""}
+    </div>
+  `;
+
+  dialog.showModal();
+  return true;
+}
+
+function renderRecipePager(totalItems) {
+  const host = document.querySelector("#recipePager");
+  if (!host) return;
+
+  const totalPages = Math.ceil(totalItems / RECIPE_PAGE_SIZE);
+  recipePage = Math.min(recipePage, Math.max(0, totalPages - 1));
+
+  if (totalPages <= 1) {
+    host.innerHTML = "";
+    return;
+  }
+
+  host.innerHTML = `
+    <button type="button" class="recipe-page-btn" data-page="${recipePage - 1}" ${recipePage <= 0 ? "disabled" : ""}>‹</button>
+    ${Array.from({length: totalPages}, (_, i) =>
+      `<button type="button" class="recipe-page-btn ${i === recipePage ? "active" : ""}" data-page="${i}">${i + 1}</button>`
+    ).join("")}
+    <button type="button" class="recipe-page-btn" data-page="${recipePage + 1}" ${recipePage >= totalPages - 1 ? "disabled" : ""}>›</button>
+  `;
+
+  host.querySelectorAll(".recipe-page-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      if (btn.disabled) return;
+      const next = Number(btn.dataset.page);
+      if (!Number.isFinite(next) || next < 0 || next >= totalPages) return;
+      recipePage = next;
+      renderRecipes();
+      document.querySelector("#recipeList")?.scrollIntoView({behavior:"smooth", block:"start"});
+    });
+  });
 }
 
 function renderRecipes() {
@@ -2376,20 +2473,32 @@ function renderRecipes() {
     })
     .sort((a,b) => (b.createdAt || 0) - (a.createdAt || 0));
 
+  recipePage = Math.min(
+    recipePage,
+    Math.max(0, Math.ceil(recipes.length / RECIPE_PAGE_SIZE) - 1)
+  );
+  const visibleRecipes = recipes.slice(
+    recipePage * RECIPE_PAGE_SIZE,
+    recipePage * RECIPE_PAGE_SIZE + RECIPE_PAGE_SIZE
+  );
+
   if (!recipes.length) {
     host.innerHTML = `<div class="workroom-empty">Keine passenden Rezepte gefunden.</div>`;
+    renderRecipePager(0);
     renderRecipeSearchSuggestions();
     renderRecipeToc();
     return;
   }
 
-  host.innerHTML = recipes.map(r => `
+  host.innerHTML = visibleRecipes.map(r => `
     <article class="recipe-card" id="recipe-${r.id}">
       <header class="recipe-card-head">
         <div class="recipe-time-mark"><span class="recipe-clock">◔</span><span>${escapeHtml(r.time || "–")}</span></div>
         <div class="recipe-title-wrap">
           <span class="recipe-ribbon">REZEPT</span>
-          <h3>${escapeHtml(r.title)}</h3>
+          <button type="button" class="recipe-title-button" data-recipe-id="${r.id}">
+            ${escapeHtml(r.title)}
+          </button>
           <div class="recipe-badges">
             <span>${escapeHtml(recipeDifficultyLabel(r.difficulty))}</span>
             ${r.kids ? `<span class="recipe-kids-badge">🧒 Das kannst du selbst kochen!</span>` : ""}
@@ -2423,6 +2532,14 @@ function renderRecipes() {
     renderRecipes();
   }));
 
+  host.querySelectorAll(".recipe-title-button").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const recipe = state.recipes.find(r => r.id === btn.dataset.recipeId);
+      if (recipe) showRecipeDetail(recipe);
+    });
+  });
+
+  renderRecipePager(recipes.length);
   renderRecipeSearchSuggestions();
   renderRecipeToc();
 }
@@ -2520,27 +2637,45 @@ function renderMealPlan() {
   if (!host) return;
 
   const monday = mealPlanMonday(mealPlanWeekOffset);
-  const recipeTitles = (state.recipes || [])
-    .map(r => r.title)
-    .filter(Boolean)
-    .sort((a,b) => a.localeCompare(b, "de"));
+  const recipes = (state.recipes || [])
+    .slice()
+    .sort((a,b) => String(a.title || "").localeCompare(String(b.title || ""), "de"));
 
   host.innerHTML = days.map((dayName, index) => {
     const date = new Date(monday);
     date.setDate(monday.getDate() + index);
     const key = dateKey(date);
-    const value = state.meals?.[key] || "";
+
+    const stored = state.meals?.[key];
+    const value = typeof stored === "string"
+      ? stored
+      : (stored?.label || "");
+
+    const recipeId = typeof stored === "object" ? (stored.recipeId || "") : "";
+    const matched = recipeId
+      ? recipes.find(r => r.id === recipeId)
+      : recipeByTitle(value);
 
     return `
       <label class="meal-plan-day">
         <span class="meal-plan-day-name">${escapeHtml(dayName)}</span>
         <span class="meal-plan-date">${String(date.getDate()).padStart(2,"0")}.${String(date.getMonth()+1).padStart(2,"0")}.</span>
-        <input type="text"
-               class="meal-plan-input"
-               data-date="${key}"
-               list="mealRecipeSuggestions"
-               value="${escapeHtml(value)}"
-               placeholder="z. B. Pizza oder Rezept wählen">
+
+        <div class="meal-plan-input-wrap">
+          <input type="text"
+                 class="meal-plan-input"
+                 data-date="${key}"
+                 list="mealRecipeSuggestions"
+                 value="${escapeHtml(value)}"
+                 placeholder="z. B. Pizza oder Rezept wählen">
+
+          ${matched ? `
+            <button type="button"
+                    class="meal-plan-recipe-btn"
+                    data-recipe-id="${matched.id}"
+                    title="Rezept öffnen">↗</button>
+          ` : ""}
+        </div>
       </label>
     `;
   }).join("");
@@ -2551,20 +2686,48 @@ function renderMealPlan() {
     datalist.id = "mealRecipeSuggestions";
     document.body.appendChild(datalist);
   }
-  datalist.innerHTML = recipeTitles.map(title => `<option value="${escapeHtml(title)}"></option>`).join("");
+
+  datalist.innerHTML = recipes
+    .map(r => `<option value="${escapeHtml(r.title || "")}"></option>`)
+    .join("");
 
   host.querySelectorAll(".meal-plan-input").forEach(input => {
     const saveValue = () => {
       const key = input.dataset.date;
-      const value = input.value.trim();
+      const label = input.value.trim();
+      const matched = recipeByTitle(label);
+
       state.meals = state.meals && typeof state.meals === "object" ? state.meals : {};
-      if (value) state.meals[key] = value;
-      else delete state.meals[key];
+
+      if (!label) {
+        delete state.meals[key];
+      } else if (matched) {
+        state.meals[key] = {
+          label: matched.title,
+          recipeId: matched.id
+        };
+      } else {
+        state.meals[key] = {
+          label,
+          recipeId: ""
+        };
+      }
+
       save();
+      renderMealPlan();
       renderWeek();
     };
+
     input.addEventListener("change", saveValue);
     input.addEventListener("blur", saveValue);
+  });
+
+  host.querySelectorAll(".meal-plan-recipe-btn").forEach(btn => {
+    btn.addEventListener("click", e => {
+      e.preventDefault();
+      const recipe = state.recipes.find(r => r.id === btn.dataset.recipeId);
+      if (recipe) showRecipeDetail(recipe);
+    });
   });
 
   document.querySelector("#mealPlanThisWeekBtn")?.classList.toggle("active", mealPlanWeekOffset === 0);
@@ -2576,16 +2739,19 @@ document.querySelector("#toggleRecipeFormBtn")?.addEventListener("click", () => 
 });
 document.querySelector("#recipeSearch")?.addEventListener("input", e => {
   activeRecipeSearch = e.currentTarget.value || "";
+  recipePage = 0;
   renderRecipes();
   renderRecipeSearchSuggestions();
 });
 
 document.querySelector("#recipeDifficultyFilter")?.addEventListener("change", e => {
   activeRecipeDifficulty = e.currentTarget.value || "all";
+  recipePage = 0;
   renderRecipes();
 });
 document.querySelector("#recipeKidsOnlyFilter")?.addEventListener("change", e => {
   recipeKidsOnly = !!e.currentTarget.checked;
+  recipePage = 0;
   renderRecipes();
 });
 
