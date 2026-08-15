@@ -991,3 +991,21 @@ input[type="checkbox"]:checked::before{transform:rotate(-45deg) scale(1)}
 @media (min-width:601px) and (max-width:1100px){
   .week-video-shelf-list{grid-template-columns:1fr}
 }
+/* Werkraum – mobile Bedienzeile weiter beruhigen */
+@media (max-width:600px){
+
+  .workroom-todo-text{
+    padding-right:0 !important;
+  }
+
+  .workroom-todo-link,
+  .workroom-todo-edit,
+  .workroom-todo-delete{
+    opacity:.72;
+  }
+
+  .workroom-move-controls{
+    opacity:.68;
+  }
+
+}
