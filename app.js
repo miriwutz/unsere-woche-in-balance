@@ -1,6 +1,9 @@
+// WICHTIGES PROJEKT-PRINZIP:
+// Die App muss vollständig kostenlos nutzbar bleiben.
+// Keine Funktionen einbauen, die Blaze/Billing, Firebase Storage oder andere kostenpflichtige Dienste voraussetzen.
+
 // FINAL LEER – saubere Ausgangsversion für den Online-Start.
 // Lou, Fina, Familienfarben, Fächer und Funktionen bleiben erhalten.
-
 
 
 // FINAL LEER: Beim allerersten Start dieser leeren Ausgabe werden nur Inhalts-/Testdaten entfernt.
@@ -30,7 +33,7 @@ const state = {
 
   workroom: JSON.parse(
     localStorage.getItem("balanceProd.workroom") ||
-    '{"todos":[],"prints":[],"links":[],"substitutions":[]}'
+    '{"todos":[],"prints":[],"links":[],"substitutions":[],"plans":{"week":[],"year":[]}}'
   ),
 
   settings: {
@@ -38,6 +41,13 @@ const state = {
     familyBorderWidth: localStorage.getItem("balanceProd.familyBorderWidth") || "3"
   }
 };
+
+// Werkraum-Daten aus älteren Versionen sicher ergänzen.
+state.workroom = state.workroom || {};
+state.workroom.todos = Array.isArray(state.workroom.todos) ? state.workroom.todos : [];
+state.workroom.prints = Array.isArray(state.workroom.prints) ? state.workroom.prints : [];
+state.workroom.links = Array.isArray(state.workroom.links) ? state.workroom.links : [];
+state.workroom.substitutions = Array.isArray(state.workroom.substitutions) ? state.workroom.substitutions : [];
 
 let shoppingItems = state.shopping;
 let cloudReady = false;
@@ -300,8 +310,78 @@ const NOE_SCHOOL_YEARS = {
 state.settings = state.settings || {};
 state.settings.schoolYear = localStorage.getItem("balanceProd.schoolYear") || "2026-27";
 
+function schoolYearKey(startYear) {
+  return `${startYear}-${String((startYear + 1) % 100).padStart(2, "0")}`;
+}
+
+function firstWeekdayOfMonth(year, monthIndex, weekday) {
+  const d = new Date(year, monthIndex, 1, 12, 0, 0, 0);
+  const shift = (weekday - d.getDay() + 7) % 7;
+  d.setDate(1 + shift);
+  return d;
+}
+
+function easterSunday(year) {
+  // Gregorianischer Osteralgorithmus (Meeus/Jones/Butcher).
+  const a = year % 19;
+  const b = Math.floor(year / 100);
+  const c = year % 100;
+  const d = Math.floor(b / 4);
+  const e = b % 4;
+  const f = Math.floor((b + 8) / 25);
+  const g = Math.floor((b - f + 1) / 3);
+  const h = (19 * a + b - d - g + 15) % 30;
+  const i = Math.floor(c / 4);
+  const k = c % 4;
+  const l = (32 + 2 * e + 2 * i - h - k) % 7;
+  const m = Math.floor((a + 11 * h + 22 * l) / 451);
+  const month = Math.floor((h + l - 7 * m + 114) / 31) - 1;
+  const day = ((h + l - 7 * m + 114) % 31) + 1;
+  return new Date(year, month, day, 12, 0, 0, 0);
+}
+
+function addDays(date, amount) {
+  const d = new Date(date);
+  d.setDate(d.getDate() + amount);
+  return d;
+}
+
+function generatedNoeSchoolYear(startYear) {
+  const nextYear = startYear + 1;
+  const start = firstWeekdayOfMonth(startYear, 8, 1); // erster Montag im September
+  const julyFirstSaturday = firstWeekdayOfMonth(nextYear, 6, 6);
+  const end = addDays(julyFirstSaturday, -1);
+  const easter = easterSunday(nextYear);
+  const semesterStart = firstWeekdayOfMonth(nextYear, 1, 1); // erster Montag im Februar
+
+  return {
+    label: `${startYear}/${String(nextYear).slice(-2)}`,
+    start: dateKey(start),
+    end: dateKey(end),
+    generated: true,
+    freeRanges: [
+      [`${startYear}-10-26`, `${startYear}-11-02`],
+      [`${startYear}-11-15`, `${startYear}-11-15`], // Hl. Leopold, NÖ
+      [`${startYear}-12-08`, `${startYear}-12-08`],
+      [`${startYear}-12-24`, `${nextYear}-01-06`],
+      [dateKey(semesterStart), dateKey(addDays(semesterStart, 5))],
+      [dateKey(addDays(easter, -8)), dateKey(addDays(easter, 1))],
+      [`${nextYear}-05-01`, `${nextYear}-05-01`],
+      [dateKey(addDays(easter, 39)), dateKey(addDays(easter, 39))],
+      [dateKey(addDays(easter, 48)), dateKey(addDays(easter, 50))],
+      [dateKey(addDays(easter, 60)), dateKey(addDays(easter, 60))]
+    ]
+  };
+}
+
+function schoolYearConfig(key) {
+  if (NOE_SCHOOL_YEARS[key]?.start) return NOE_SCHOOL_YEARS[key];
+  const startYear = Number(String(key || "").slice(0, 4));
+  return Number.isFinite(startYear) ? generatedNoeSchoolYear(startYear) : NOE_SCHOOL_YEARS["2026-27"];
+}
+
 function activeSchoolYear(){
-  return NOE_SCHOOL_YEARS[state.settings.schoolYear] || NOE_SCHOOL_YEARS["2026-27"];
+  return schoolYearConfig(state.settings.schoolYear || "2026-27");
 }
 
 function parseLocalDate(key) {
@@ -452,6 +532,32 @@ function dayDate(monday, index) {
   const d = new Date(monday);
   d.setDate(monday.getDate() + index);
   return d;
+}
+
+function austrianPublicHoliday(date) {
+  const year = date.getFullYear();
+  const key = dateKey(date);
+  const fixed = {
+    [`${year}-01-01`]: "Neujahr",
+    [`${year}-01-06`]: "Heilige Drei Könige",
+    [`${year}-05-01`]: "Staatsfeiertag",
+    [`${year}-08-15`]: "Mariä Himmelfahrt",
+    [`${year}-10-26`]: "Nationalfeiertag",
+    [`${year}-11-01`]: "Allerheiligen",
+    [`${year}-12-08`]: "Mariä Empfängnis",
+    [`${year}-12-25`]: "Christtag",
+    [`${year}-12-26`]: "Stephanitag"
+  };
+  if (fixed[key]) return fixed[key];
+
+  const easter = easterSunday(year);
+  const moving = new Map([
+    [dateKey(addDays(easter, 1)), "Ostermontag"],
+    [dateKey(addDays(easter, 39)), "Christi Himmelfahrt"],
+    [dateKey(addDays(easter, 50)), "Pfingstmontag"],
+    [dateKey(addDays(easter, 60)), "Fronleichnam"]
+  ]);
+  return moving.get(key) || "";
 }
 
 function extractYouTubeId(url) {
@@ -651,7 +757,6 @@ function ratingFor(url) {
 }
 
 
-
 const familyNames = {a:"",b:"",c:"",d:""};
 
 function todoGroupKey(todo) {
@@ -714,6 +819,10 @@ function renderWeek() {
 
     const date = dayDate(currentWeekMonday, index);
     const dateLabel = date.toLocaleDateString("de-AT",{day:"2-digit",month:"2-digit"});
+    const holidayName = austrianPublicHoliday(date);
+    const holidayHtml = holidayName
+      ? `<div class="day-holiday" title="Gesetzlicher Feiertag in Österreich">✦ ${escapeHtml(holidayName)}</div>`
+      : "";
 
     const videos = state.videos.filter(v => v.day === day && v.weekKey === weekKey);
     const occurrences = state.todos.filter(t => occursOnDate(t, date));
@@ -886,9 +995,11 @@ ${isNewEntry(t) ? `<span class="new-entry-badge">NEU</span>` : ""}
     dayEl.innerHTML = `
       <h3>${day}<span class="day-date">${dateLabel}</span></h3>
       ${(() => { const rows=["1","2"].map(cid=>{const tm=homeByForDate(cid,date),c=state.school.children[cid];return tm?`<span><b>${escapeHtml(c.name)}</b> ${escapeHtml(tm)}</span>`:""}).filter(Boolean);return rows.length?`<div class="home-by-strip home-by-top"><span class="home-by-label">⌂ zu Hause bis</span>${rows.join("")}</div>`:"";})()}
-      ${videoHtml || '<div class="empty print-hide-empty">Heute ist noch Platz für etwas Schönes.</div>'}
+      ${holidayHtml}
       ${eventHtml}
-      ${schoolHtml}${todoHtml}
+      ${schoolHtml}
+      ${todoHtml}
+      ${videoHtml}
     `;
     grid.appendChild(dayEl);
   });
@@ -1380,8 +1491,6 @@ function childHasNoOpenHomework(child) {
 }
 
 
-
-
 const manualTimetableDayKeys=["Mon","Tue","Wed","Thu","Fri"],manualTimetableDayNames=["Montag","Dienstag","Mittwoch","Donnerstag","Freitag"];
 const defaultLessonTimes=[["07:45","08:35"],["08:35","09:25"],["09:45","10:35"],["10:35","11:25"],["11:35","12:25"],["12:25","13:15"]];
 function subjectOptionsFor(id){
@@ -1758,23 +1867,54 @@ document.querySelectorAll(".save-timetable").forEach(b=>b.addEventListener("clic
 }));
 
 
+function populateSchoolYearSelect(select) {
+  if (!select) return;
+  const selectedKey = state.settings.schoolYear || "2026-27";
+  const nowYear = new Date().getFullYear();
+  const selectedStart = Number(selectedKey.slice(0, 4)) || nowYear;
+  const first = Math.min(nowYear - 1, selectedStart);
+  const last = Math.max(nowYear + 8, selectedStart + 2);
+
+  const keys = [];
+  for (let y = first; y <= last; y++) keys.push(schoolYearKey(y));
+
+  select.innerHTML = keys.map(key => {
+    const sy = schoolYearConfig(key);
+    return `<option value="${key}">${escapeHtml(sy.label)}</option>`;
+  }).join("");
+  select.value = selectedKey;
+}
+
+function updateSchoolYearTexts() {
+  const sy = activeSchoolYear();
+  const recurrenceOption = document.querySelector('#recurrence option[value="schoolyear-noe"]');
+  const hint = document.querySelector("#schoolHolidayHint");
+
+  if (recurrenceOption) recurrenceOption.textContent = `Schuljahr NÖ ${sy.label}`;
+  if (hint) {
+    hint.textContent = sy.generated
+      ? `🎒 Schuljahr NÖ ${sy.label} – automatisch weitergeführt. Ferien werden nach dem üblichen NÖ-Rhythmus berechnet; abweichende oder schulautonome Tage bitte prüfen.`
+      : `🎒 Wöchentlich im Schuljahr NÖ ${sy.label} – Ferien und offizielle schulfreie Tage werden ausgelassen.`;
+  }
+}
+
 function bindSchoolYearSetting(){
   const select = document.querySelector("#schoolYearSelect");
   if (!select) return;
-  if (document.activeElement !== select) select.value = state.settings.schoolYear || "2026-27";
+
+  populateSchoolYearSelect(select);
+  updateSchoolYearTexts();
+
   if (!select.dataset.bound) {
     select.dataset.bound = "1";
     select.addEventListener("change", () => {
       state.settings.schoolYear = select.value;
       localStorage.setItem("balanceProd.schoolYear", select.value);
+      updateSchoolYearTexts();
       renderAll();
 
       const sy = activeSchoolYear();
-      if (!sy.start) {
-        showMotivation("Für dieses Schuljahr sind die NÖ-Ferien noch nicht hinterlegt.");
-      } else {
-        showMotivation(`Schuljahr ${sy.label} ist jetzt ausgewählt.`);
-      }
+      showMotivation(`Schuljahr ${sy.label} ist jetzt ausgewählt.`);
     });
   }
 }
@@ -2714,6 +2854,7 @@ document.querySelector("#addSchoolPrintBtn")?.addEventListener("click", () => {
   save();
   renderSchoolPrints();
 });
+
 
 // =============================
 // WERKRAUM – LINKSAMMLUNG
