@@ -2473,13 +2473,7 @@ function renderSchoolPrints() {
               data-id="${p.id}"
               title="Eine Position nach unten">↓</button>
 
-            <button
-              class="workroom-print-move-btn workroom-print-move-bottom"
-              type="button"
-              data-id="${p.id}"
-              title="Ganz nach unten">⇊</button>
-
-            <span
+                  <span
               class="workroom-drag-handle"
               title="Ziehen"
               aria-label="Ziehen">⋮⋮</span>
@@ -2488,23 +2482,6 @@ function renderSchoolPrints() {
         </div>
       </div>
     `).join("");
-  }
-
-  if (archive) {
-    const oldDone = state.workroom.prints
-      .filter(p =>
-        p.done &&
-        p.completedAt &&
-        p.completedAt < startOfToday.getTime()
-      );
-
-    archive.innerHTML = oldDone.length
-      ? oldDone.map(p => `
-          <div class="workroom-archive-item">
-            ${escapeHtml(p.text)}
-          </div>
-        `).join("")
-      : `<div class="workroom-empty">Noch keine erledigten Druckaufträge.</div>`;
   }
 
   document.querySelectorAll(".workroom-print-check").forEach(box => {
