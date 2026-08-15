@@ -510,7 +510,9 @@
     
     <section id="school" class="view">
       <div class="section-head"><div><p class="small-label">SCHULE</p><h2>Lernen & Schule</h2>
-      <p class="school-intro">Deine Lernaufgaben, Termine und Lieblings-Lernseiten – alles an einem Ort.</p></div></div>
+      <p class="school-intro">Deine Lernaufgaben, Termine und Lieblings-Lernseiten – alles an einem Ort.</p></div>
+      <button id="openSchoolTimetableEditorBtn" class="secondary-btn school-timetable-editor-btn" type="button">🗓 Stundenpläne bearbeiten</button>
+      </div>
       <div class="school-kind-note">💛 Trag ein, was du erledigen oder nicht vergessen möchtest. Wenn du fertig bist, darfst du abhaken.</div>
       <div class="school-grid">
 <article class="card school-card">
@@ -768,14 +770,19 @@
 
     <button type="button"
             class="workroom-link-filter"
+            data-category="documents">📎 Unterlagen & Belege</button>
+
+    <button type="button"
+            class="workroom-link-filter"
             data-category="other">✨ Sonstiges</button>
   </div>
 
   <div class="workroom-link-use-filters" aria-label="Verwendungszeitraum">
-    <button type="button" class="workroom-link-use-filter active" data-use="soon">⭐ Demnächst</button>
+    <button type="button" class="workroom-link-use-filter active" data-use="soon">Demnächst</button>
     <button type="button" class="workroom-link-use-filter" data-use="year">🗓 Jahresplanung</button>
     <button type="button" class="workroom-link-use-filter" data-use="later">🌙 Später vorgemerkt</button>
     <button type="button" class="workroom-link-use-filter" data-use="all">Alle Zeiträume</button>
+    <button type="button" class="workroom-link-important-filter" id="workroomLinkImportantFilter">⭐ Wichtig</button>
   </div>
 
   <!-- gespeicherte Links -->
@@ -805,6 +812,7 @@
   <option value="paper">📄 Papier</option>
   <option value="free">✂️ Freies Arbeiten</option>
   <option value="experiment">🧪 Experimentieren</option>
+  <option value="documents">📎 Unterlagen & Belege</option>
   <option value="other">✨ Sonstiges</option>
 </select>
 
@@ -828,9 +836,10 @@
   <!-- SELTENER BENÖTIGTE BEREICHE -->
   <div class="workroom-small-grid">
 
-    <article class="card workroom-small-card">
+    <article class="card workroom-small-card substitution-card">
       <h3>↻ Supplierungen</h3>
       <p>Gehaltene Supplierstunden übersichtlich erfassen.</p>
+      <div id="substitutionList" class="substitution-list"></div>
       <button id="openSubstitutionBtn"
               class="secondary-btn"
               type="button">+ Supplierung erfassen</button>
@@ -992,7 +1001,7 @@
     <div class="dialog-head">
       <div>
         <p class="small-label">STUNDENPLAN</p>
-        <h2>Wessen Stundenplan?</h2>
+        <h2>Welchen Stundenplan bearbeiten?</h2>
       </div>
 
       <button id="closeFamilyTimetableDialog"
@@ -1046,6 +1055,50 @@
     </button>
   </div>
 </div>
+  </div>
+</dialog>
+
+
+<dialog id="substitutionDialog" class="substitution-dialog">
+  <div class="dialog-card">
+    <div class="dialog-head">
+      <div>
+        <p class="small-label">SUPPLIERUNG</p>
+        <h2>Supplierstunde eintragen</h2>
+      </div>
+      <button id="closeSubstitutionDialogBtn" class="icon-btn" type="button" aria-label="Schließen">×</button>
+    </div>
+
+    <div class="substitution-form">
+      <label>
+        Tag
+        <input id="substitutionDate" type="date">
+      </label>
+
+      <label>
+        Klasse
+        <input id="substitutionClass" type="text" placeholder="z. B. 4c">
+      </label>
+
+      <label>
+        Was wird suppliert?
+        <input id="substitutionSubject" type="text" placeholder="z. B. Werken / Mathematik">
+      </label>
+
+      <label>
+        Für wen?
+        <input id="substitutionForWhom" type="text" placeholder="Name der Kollegin / des Kollegen">
+      </label>
+
+      <label class="substitution-note-label">
+        Notiz – optional
+        <textarea id="substitutionNote" rows="3" placeholder="z. B. 3. Stunde, besondere Hinweise"></textarea>
+      </label>
+    </div>
+
+    <div class="dialog-actions">
+      <button id="saveSubstitutionBtn" class="primary-btn" type="button">Speichern</button>
+    </div>
   </div>
 </dialog>
 
