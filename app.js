@@ -1011,6 +1011,26 @@ ${isNewEntry(t) ? `<span class="new-entry-badge">NEU</span>` : ""}
       </div>
     ` : "";
 
+    // Essen bewusst ganz unten im Tag, direkt vor dem Video.
+    const mealStored = state.meals?.[dateKey(date)];
+    const mealLabel = typeof mealStored === "string"
+      ? mealStored
+      : (mealStored?.label || "");
+
+    const mealRecipe = mealStored && typeof mealStored === "object" && mealStored.recipeId
+      ? state.recipes.find(r => r.id === mealStored.recipeId)
+      : recipeByTitle(mealLabel);
+
+    const mealHtml = mealLabel ? `
+      <button type="button"
+              class="day-meal ${mealRecipe ? "has-recipe" : ""}"
+              ${mealRecipe ? `data-recipe-id="${mealRecipe.id}"` : ""}>
+        <span class="day-meal-label">ESSEN</span>
+        <strong>${escapeHtml(mealLabel)}</strong>
+        ${mealRecipe ? `<span class="day-meal-open">Rezept ↗</span>` : ""}
+      </button>
+    ` : "";
+
     dayEl.innerHTML = `
       <h3>${day}<span class="day-date">${dateLabel}</span></h3>
       ${holidayHtml}
