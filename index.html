@@ -302,6 +302,24 @@
     </select>
   </label>
 
+<div class="pling-field" style="grid-column:1 / -1">
+  <label>
+    <input id="eventPlingEnabled" type="checkbox">
+    <span>🔔 Pling</span>
+  </label>
+
+  <select
+    id="eventPlingMinutes"
+    aria-label="Erinnerung vor dem Termin"
+  >
+    <option value="5">5 Minuten vorher</option>
+    <option value="15" selected>15 Minuten vorher</option>
+    <option value="30">30 Minuten vorher</option>
+  </select>
+
+  <span class="pling-note">nur bei eingetragener Uhrzeit</span>
+</div>
+        
 </div>
   
         <div class="recurrence-row">
