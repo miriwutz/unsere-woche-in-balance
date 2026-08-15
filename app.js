@@ -52,7 +52,6 @@ state.workroom.substitutions = Array.isArray(state.workroom.substitutions) ? sta
 state.recipes = Array.isArray(state.recipes) ? state.recipes : [];
 
 let shoppingItems = state.shopping;
-    state.recipes = Array.isArray(data.recipes) ? data.recipes : (Array.isArray(state.recipes) ? state.recipes : []);
 let cloudReady = false;
 let cloudApplying = false;
 let cloudSaveTimer = null;
@@ -3979,6 +3978,9 @@ function applyCloudData(data) {
 
 shoppingItems = state.shopping;
     
+    state.recipes = Array.isArray(data.recipes)
+      ? data.recipes
+      : (Array.isArray(state.recipes) ? state.recipes : []);
     state.workroom = data.workroom && typeof data.workroom === "object"
   ? {
       todos: Array.isArray(data.workroom.todos) ? data.workroom.todos : [],
