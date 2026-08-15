@@ -1954,44 +1954,58 @@ return `
     </div>
 
     <div class="papa-overview-day-entries">
-      ${day.entries.map(t => {
-        const isEvent = t.type === "event";
+${(() => {
+  const events = day.entries.filter(t => t.type === "event");
+  const todos = day.entries.filter(t => t.type !== "event");
 
-        let time = "";
+  const renderEvent = t => {
+    let time = "";
 
-        if (isEvent) {
-          if (t.time && t.endTime) {
-            time = `${t.time}–${t.endTime}`;
-          } else if (t.time) {
-            time = t.time;
-          } else if (t.endTime) {
-            time = `bis ${t.endTime}`;
-          }
-        }
+    if (t.time && t.endTime) {
+      time = `${t.time}–${t.endTime}`;
+    } else if (t.time) {
+      time = t.time;
+    } else if (t.endTime) {
+      time = `bis ${t.endTime}`;
+    }
 
-        if (isEvent) {
-          return `
-            <div class="papa-overview-entry event">
-              <span class="papa-overview-symbol">✦</span>
+    return `
+      <div class="papa-overview-entry event">
+        <span class="papa-overview-symbol">✦</span>
+        <span class="papa-overview-entry-text">
+          ${time ? `<strong>${escapeHtml(time)}</strong> ` : ""}
+          ${escapeHtml(t.text || "")}
+        </span>
+      </div>
+    `;
+  };
 
-              <span class="papa-overview-entry-text">
-                ${time ? `<strong>${escapeHtml(time)}</strong> ` : ""}
-                ${escapeHtml(t.text || "")}
-              </span>
-            </div>
-          `;
-        }
+  const renderTodo = t => `
+    <div class="papa-overview-entry todo">
+      <span class="papa-overview-symbol">☐</span>
+      <span class="papa-overview-entry-text">
+        ${escapeHtml(t.text || "")}
+      </span>
+    </div>
+  `;
 
-        return `
-          <div class="papa-overview-entry todo">
-            <span class="papa-overview-symbol">☐</span>
+  return `
+    ${events.length ? `
+      <div class="papa-overview-group">
+        <div class="papa-overview-group-label">Termine</div>
+        ${events.map(renderEvent).join("")}
+      </div>
+    ` : ""}
 
-            <span class="papa-overview-entry-text">
-              ${escapeHtml(t.text || "")}
-            </span>
-          </div>
-        `;
-      }).join("")}
+    ${todos.length ? `
+      <div class="papa-overview-group">
+        <div class="papa-overview-group-label">To-dos</div>
+        ${todos.map(renderTodo).join("")}
+      </div>
+    ` : ""}
+  `;
+})()}
+
     </div>
 
   </section>
