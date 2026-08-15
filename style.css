@@ -1876,3 +1876,70 @@ input[type="checkbox"]:checked::before{transform:rotate(-45deg) scale(1)}
   .workroom-link-filter-select-label{width:100%;justify-content:space-between}
   .workroom-link-filter-select-label select{flex:1;min-width:0}
 }
+
+
+/* Werkraum: Supplierungen + Stundenplan wieder nebeneinander */
+.workroom-small-grid{grid-template-columns:repeat(2,minmax(0,1fr)) !important;align-items:start !important}
+.substitution-card{grid-column:auto !important}
+.substitution-summary{justify-content:flex-start !important;margin:7px 0 9px !important}
+.substitution-grid{display:flex !important;flex-wrap:wrap !important;gap:7px !important}
+.substitution-item{width:auto !important;min-width:145px !important;max-width:205px !important;flex:0 1 auto !important;padding:7px 8px !important}
+.substitution-item-main{width:max-content !important;max-width:180px !important}
+.substitution-item-main>span,.substitution-item-main>small{width:max-content !important;max-width:170px !important}
+
+/* Wichtig kompakt */
+.workroom-link-important-toggle{
+  width:auto !important;max-width:max-content !important;min-height:32px !important;
+  padding:0 8px !important;justify-self:start !important;align-self:center !important;
+  font-size:.74rem !important
+}
+.workroom-link-important-toggle input{width:auto !important;flex:0 0 auto !important;margin:0 !important}
+.workroom-link-add{align-items:center !important}
+
+/* Rezeptkarten – rauchiges Pastell-Türkis */
+.recipes-section{margin-top:20px}
+.recipes-head{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;margin-bottom:12px}
+.recipes-head h2{margin:2px 0 3px}
+.recipe-filters{display:flex;align-items:center;gap:10px;padding:10px 12px;margin-bottom:12px;background:rgba(226,239,236,.72);border-color:rgba(117,153,147,.24)}
+.recipe-filters select{width:auto;min-width:190px}
+.recipe-kids-filter,.recipe-kids-toggle{display:inline-flex !important;align-items:center;gap:7px !important;width:auto !important;margin:0 !important}
+.recipe-form{margin-bottom:14px;background:linear-gradient(135deg,rgba(224,239,235,.82),rgba(250,247,243,.96));border-color:rgba(118,151,145,.28)}
+.recipe-form-grid{display:grid;grid-template-columns:1.4fr .8fr .9fr .7fr;gap:10px}
+.recipe-form-grid textarea{grid-column:span 2;min-height:120px;resize:vertical}
+.recipe-form-actions{display:flex;justify-content:flex-end;margin-top:10px}
+.recipe-list{display:grid;gap:18px}
+.recipe-card{overflow:hidden;border:1px solid rgba(109,145,139,.34);border-radius:18px;background:#fffdfb;box-shadow:0 7px 24px rgba(75,103,98,.06)}
+.recipe-card-head{display:grid;grid-template-columns:105px 1fr 72px;min-height:132px;background:linear-gradient(90deg,#aecbc5 0%,#c5d9d5 48%,#abc7c1 100%);color:#3f4f4c}
+.recipe-time-mark{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;font-family:Georgia,"Times New Roman",serif;font-size:.9rem}
+.recipe-clock{display:grid;place-items:center;width:50px;height:50px;border:1.5px solid rgba(59,82,78,.76);border-radius:50%;font-size:1.5rem}
+.recipe-title-wrap{position:relative;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:26px 18px 18px;text-align:center}
+.recipe-ribbon{position:absolute;top:0;padding:7px 18px 13px;background:#f8f4ef;color:#62716e;clip-path:polygon(0 0,100% 0,100% 72%,50% 100%,0 72%);font-size:.62rem;letter-spacing:.12em}
+.recipe-title-wrap h3{margin:12px 0 8px;font-family:Georgia,"Times New Roman",serif;font-size:1.75rem;font-weight:500;color:#3e4b48}
+.recipe-badges{display:flex;flex-wrap:wrap;justify-content:center;gap:6px}
+.recipe-badges span{padding:4px 8px;border-radius:999px;background:rgba(255,255,255,.62);font-size:.68rem}
+.recipe-kids-badge{background:#f4e7c8 !important}
+.recipe-tools{display:grid;place-items:center;font-size:1.8rem;opacity:.52}
+.recipe-card-body{display:grid;grid-template-columns:1fr 1.25fr}
+.recipe-column{padding:18px 22px 22px}
+.recipe-column+.recipe-column{border-left:1px solid rgba(112,151,144,.20)}
+.recipe-column h4{display:inline-block;margin:0 0 12px;padding-bottom:4px;border-bottom:2px solid rgba(132,171,164,.36);color:#566a66;font-size:.82rem;letter-spacing:.06em}
+.recipe-column ul,.recipe-column ol{margin:0;padding-left:20px}
+.recipe-column li{margin-bottom:7px;line-height:1.45}
+.recipe-card-footer{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 16px;background:rgba(190,216,210,.60)}
+.recipe-links{display:flex;flex-wrap:wrap;gap:8px}
+.recipe-links a{padding:5px 9px;border-radius:999px;background:rgba(255,255,255,.68);color:#4d6560;text-decoration:none;font-size:.72rem}
+.recipe-delete{border:0;background:transparent;color:#7b8d89;cursor:pointer;font-size:1rem}
+
+@media(max-width:900px){.recipe-form-grid{grid-template-columns:1fr 1fr}.recipe-form-grid textarea{grid-column:span 1}}
+@media(max-width:700px){
+  .workroom-small-grid{grid-template-columns:1fr !important}
+  .recipes-head{align-items:flex-start;flex-direction:column}
+  .recipe-filters{align-items:stretch;flex-direction:column}
+  .recipe-filters select{width:100%;min-width:0}
+  .recipe-form-grid{grid-template-columns:1fr}
+  .recipe-card-head{grid-template-columns:68px 1fr 42px;min-height:108px}
+  .recipe-title-wrap h3{font-size:1.3rem}
+  .recipe-clock{width:40px;height:40px}
+  .recipe-card-body{grid-template-columns:1fr}
+  .recipe-column+.recipe-column{border-left:0;border-top:1px solid rgba(112,151,144,.20)}
+}
