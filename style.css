@@ -1421,3 +1421,64 @@ input[type="checkbox"]:checked::before{transform:rotate(-45deg) scale(1)}
   .tabs .tab[data-view="workroom"]::before{content:"🛠" !important}
   .tabs .tab[data-view="archive"]::before{content:"♡" !important}
 }
+
+/* =========================================================
+   PLING – Lautstärke pro Gerät
+   ========================================================= */
+.pling-volume-control{
+  display:inline-flex !important;
+  grid-template-columns:none !important;
+  align-items:center;
+  gap:6px !important;
+  margin:0 !important;
+  color:#81766f;
+  font-size:.72rem;
+  white-space:nowrap;
+}
+.pling-volume-control select{
+  width:auto;
+  min-width:92px;
+  padding:6px 26px 6px 9px;
+  border-radius:9px;
+  font-size:.72rem;
+}
+
+/* =========================================================
+   WERKRAUM – Links frei verschiebbar
+   ========================================================= */
+.workroom-link-item{
+  cursor:grab;
+  transition:transform .15s ease,opacity .15s ease,border-color .15s ease,background .15s ease;
+}
+.workroom-link-item:active{cursor:grabbing}
+.workroom-link-item a,
+.workroom-link-item button{cursor:pointer}
+.workroom-link-drag-handle{
+  flex:0 0 auto;
+  padding:4px 5px;
+  color:#a99bad;
+  opacity:.48;
+  letter-spacing:-3px;
+  font-size:1rem;
+  cursor:grab;
+  user-select:none;
+  touch-action:none;
+}
+.workroom-link-drag-handle:hover{opacity:.9}
+.workroom-link-drag-handle:active{cursor:grabbing}
+
+@media (max-width:700px){
+  .pling-volume-control{
+    flex:1 1 150px;
+  }
+  .pling-volume-control select{
+    flex:1;
+    min-width:90px;
+  }
+
+  /* Auf dem Handy verhindert ein normaler Cursor-Hinweis Verwirrung;
+     Sortable nutzt weiterhin die freie Zeilenfläche mit kurzem Halten. */
+  .workroom-link-item{cursor:default}
+  .workroom-link-item:active{cursor:default}
+  .workroom-link-drag-handle{display:none}
+}
