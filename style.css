@@ -1943,3 +1943,143 @@ input[type="checkbox"]:checked::before{transform:rotate(-45deg) scale(1)}
   .recipe-card-body{grid-template-columns:1fr}
   .recipe-column+.recipe-column{border-left:0;border-top:1px solid rgba(112,151,144,.20)}
 }
+
+
+/* =========================================================
+   REZEPTE – Suche, Inhaltsverzeichnis, Wochenplanung
+   ========================================================= */
+.recipe-search-wrap{
+  flex:1 1 260px;
+  min-width:220px;
+}
+.recipe-search-wrap input{
+  width:100%;
+}
+.recipe-toc{
+  margin:0 0 12px;
+  padding:10px 12px;
+  background:rgba(248,247,244,.76);
+}
+.recipe-toc summary{
+  cursor:pointer;
+  color:#5b6f6b;
+  font-weight:600;
+  font-size:.78rem;
+}
+.recipe-toc-list{
+  display:flex;
+  flex-wrap:wrap;
+  gap:6px;
+  margin-top:9px;
+}
+.recipe-toc-link{
+  border:1px solid rgba(111,145,139,.22);
+  background:rgba(227,239,236,.72);
+  color:#506762;
+  border-radius:999px;
+  padding:5px 8px;
+  font-size:.7rem;
+  cursor:pointer;
+}
+.recipe-toc-link:hover{
+  background:#d9ebe7;
+}
+.recipe-toc-empty{
+  color:var(--muted);
+  font-size:.72rem;
+}
+
+.meal-plan-card{
+  margin:0 0 14px;
+  padding:14px;
+  background:linear-gradient(135deg,rgba(225,239,236,.82),rgba(248,246,241,.94));
+  border-color:rgba(113,150,143,.26);
+}
+.meal-plan-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:14px;
+  margin-bottom:12px;
+}
+.meal-plan-head h3{
+  margin:2px 0 3px;
+  font-family:Georgia,"Times New Roman",serif;
+  color:#445854;
+}
+.meal-plan-week-switch{
+  display:flex;
+  gap:6px;
+}
+.meal-plan-week-switch .active{
+  background:#c7ddd8 !important;
+  border-color:#99bbb4 !important;
+  color:#3e5751 !important;
+}
+.meal-plan-grid{
+  display:grid;
+  grid-template-columns:repeat(7,minmax(0,1fr));
+  gap:7px;
+}
+.meal-plan-day{
+  display:grid !important;
+  gap:4px !important;
+  padding:8px;
+  border:1px solid rgba(119,151,145,.22);
+  border-radius:12px;
+  background:rgba(255,255,255,.60);
+}
+.meal-plan-day-name{
+  font-family:Georgia,"Times New Roman",serif;
+  color:#4f625e;
+  font-size:.83rem;
+}
+.meal-plan-date{
+  color:#8c9996;
+  font-size:.64rem;
+}
+.meal-plan-input{
+  width:100%;
+  min-width:0;
+  padding:7px 8px !important;
+  font-size:.72rem !important;
+}
+
+/* Essen im Wochenplan */
+.day-meal{
+  display:grid;
+  gap:3px;
+  margin:8px 0 9px;
+  padding:7px 8px;
+  border-radius:10px;
+  background:linear-gradient(90deg,rgba(215,234,229,.78),rgba(241,247,245,.68));
+  border:1px solid rgba(116,156,148,.24);
+}
+.day-meal-label{
+  color:#748b86;
+  font-size:.56rem;
+  letter-spacing:.11em;
+}
+.day-meal strong{
+  color:#425a55;
+  font-size:.75rem;
+  font-weight:600;
+}
+
+@media (max-width:1050px){
+  .meal-plan-grid{
+    grid-template-columns:repeat(4,minmax(0,1fr));
+  }
+}
+@media (max-width:700px){
+  .recipe-search-wrap{
+    min-width:0;
+    width:100%;
+  }
+  .meal-plan-head{
+    flex-direction:column;
+  }
+  .meal-plan-grid{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+  }
+}
