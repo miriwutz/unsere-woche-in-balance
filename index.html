@@ -518,17 +518,44 @@
     </div>
 
     <div class="recipe-filters card">
+      <div class="recipe-search-wrap">
+        <input id="recipeSearch" type="search" list="recipeSearchSuggestions"
+               placeholder="Rezept suchen …" autocomplete="off">
+        <datalist id="recipeSearchSuggestions"></datalist>
+      </div>
+
       <select id="recipeDifficultyFilter">
         <option value="all">Alle Schwierigkeitsstufen</option>
         <option value="easy">Einfach</option>
         <option value="medium">Mittel</option>
         <option value="advanced">Etwas aufwendiger</option>
       </select>
+
       <label class="recipe-kids-filter">
         <input id="recipeKidsOnlyFilter" type="checkbox">
         <span>🧒 Kindergerichte</span>
       </label>
     </div>
+
+    <details class="recipe-toc card">
+      <summary>Inhaltsverzeichnis</summary>
+      <div id="recipeTocList" class="recipe-toc-list"></div>
+    </details>
+
+    <section class="meal-plan-card card">
+      <div class="meal-plan-head">
+        <div>
+          <p class="small-label">ESSENSPLAN</p>
+          <h3>Was essen wir diese Woche?</h3>
+          <p>Rezept auswählen oder einfach frei etwas eintragen.</p>
+        </div>
+        <div class="meal-plan-week-switch">
+          <button id="mealPlanThisWeekBtn" class="secondary-btn active" type="button">Diese Woche</button>
+          <button id="mealPlanNextWeekBtn" class="secondary-btn" type="button">Nächste Woche</button>
+        </div>
+      </div>
+      <div id="mealPlanGrid" class="meal-plan-grid"></div>
+    </section>
 
     <div id="recipeForm" class="card recipe-form hidden">
       <div class="recipe-form-grid">
