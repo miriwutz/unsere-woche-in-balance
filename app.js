@@ -2403,7 +2403,6 @@ document.querySelector("#addSchoolWorkTodoBtn")?.addEventListener("click", () =>
 
 function renderSchoolPrints() {
   const list = document.querySelector("#schoolPrintList");
-  const archive = document.querySelector("#schoolPrintArchive");
 
   if (!list) return;
 
