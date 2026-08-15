@@ -2257,6 +2257,7 @@ document.querySelectorAll(".workroom-todo-check").forEach(box => {
 }
   });
 });
+  }
     function moveSchoolWorkTodo(id, direction) {
   const sorted = [...state.workroom.todos]
     .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
