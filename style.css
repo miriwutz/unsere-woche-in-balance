@@ -1485,97 +1485,140 @@ input[type="checkbox"]:checked::before{transform:rotate(-45deg) scale(1)}
 
 
 /* =========================================================
-   PLING – Tonwahl + Kennzeichnung
+   FEINSCHLIFF – Feiertage, Heimkehr, Neueste
    ========================================================= */
-.pling-sound-control{
-  display:inline-flex !important;
-  grid-template-columns:none !important;
-  align-items:center;
-  gap:6px !important;
-  margin:0 !important;
-  color:#81766f;
-  font-size:.72rem;
-  white-space:nowrap;
+.day-holiday{
+  margin:5px 0 10px !important;
+  padding:7px 9px !important;
+  border:1px solid rgba(197,155,76,.34);
+  background:linear-gradient(90deg,rgba(248,233,190,.72),rgba(248,240,220,.52)) !important;
+  color:#765b2d !important;
+  font-size:.72rem !important;
+  font-weight:600;
+  letter-spacing:.015em;
+  box-shadow:0 3px 10px rgba(172,132,58,.05);
 }
-.pling-sound-control select{
-  width:auto;
-  min-width:110px;
-  padding:6px 26px 6px 9px;
+.day-holiday::before{
+  content:"FEIERTAG · ";
+  font-size:.58rem;
+  letter-spacing:.10em;
+  opacity:.72;
+}
+
+.home-by-strip.home-by-top{
+  padding:6px 7px;
   border-radius:9px;
-  font-size:.72rem;
+  background:rgba(239,235,244,.50);
+  border:1px solid rgba(201,193,215,.30);
 }
-.pling-pill{
-  background:#f2ecf6;
-  color:#756783;
-  border:1px solid rgba(201,193,215,.55);
+.home-by-strip .home-by-label{
+  font-weight:500;
+  color:#766d79;
+}
+.home-by-strip .home-by-time{
+  color:#514950;
+  font-weight:700;
+}
+
+.day-school{
+  margin-top:10px;
+  padding-top:9px;
+  border-top:1px dashed rgba(201,193,215,.55);
+}
+
+.filter[data-filter="latest"]{
+  border:1px solid rgba(166,143,187,.55) !important;
+  background:linear-gradient(90deg,rgba(239,235,244,.86),rgba(246,241,248,.76)) !important;
+  color:#66596e !important;
+  font-weight:600 !important;
+  box-shadow:0 3px 10px rgba(110,90,120,.06);
+}
+.filter[data-filter="latest"].active{
+  background:#e8e0f0 !important;
+  border-color:#b9a4ca !important;
+  box-shadow:0 4px 13px rgba(110,90,120,.10) !important;
 }
 
 /* =========================================================
-   WERKRAUM – Links: Demnächst / Jahresplanung / Später
+   WERKRAUM – 10er-Seiten & Archiv nach Datum
    ========================================================= */
-.workroom-link-use-filters{
+.workroom-pager{
   display:flex;
-  flex-wrap:wrap;
-  gap:7px;
-  margin:8px 0 14px;
+  justify-content:center;
+  align-items:center;
+  gap:5px;
+  margin:10px 0 2px;
 }
-.workroom-link-use-filter{
+.workroom-page-btn{
+  min-width:30px;
+  height:30px;
+  padding:0 8px;
   border:1px solid var(--line);
-  background:rgba(255,253,251,.72);
-  color:var(--muted);
-  padding:7px 11px;
   border-radius:999px;
-  font-size:.76rem;
+  background:rgba(255,253,251,.86);
+  color:var(--muted);
+  font-size:.72rem;
 }
-.workroom-link-use-filter.active{
+.workroom-page-btn:hover:not(:disabled){
   background:var(--lavender-soft);
   color:var(--ink);
-  border-color:rgba(201,193,215,.72);
 }
-.workroom-link-badges{
-  display:flex;
-  flex-wrap:wrap;
-  gap:6px;
-  align-items:center;
-}
-.workroom-link-use{
-  display:inline-flex;
-  align-items:center;
-  padding:4px 8px;
-  border-radius:999px;
-  background:#f2eee8;
-  color:#7e746e;
-  font-size:.68rem;
-  white-space:nowrap;
-}
-.workroom-link-use.is-soon{
-  background:#fff4cf;
-  color:#795f22;
-  border:1px solid rgba(202,164,70,.32);
+.workroom-page-btn.active{
+  background:var(--lavender-soft);
+  border-color:#cbbfd6;
+  color:var(--ink);
   font-weight:600;
+}
+.workroom-page-btn:disabled{
+  opacity:.32;
+  cursor:default;
+}
+.workroom-archive-group{padding:4px 0 9px}
+.workroom-archive-group + .workroom-archive-group{
+  border-top:1px solid rgba(231,221,216,.72);
+  padding-top:9px;
+}
+.workroom-archive-date{
+  margin:0 0 4px;
+  color:var(--muted);
+  font-size:.66rem;
+  font-weight:600;
+  text-transform:uppercase;
+  letter-spacing:.08em;
+}
+
+/* Links: nur Demnächst hervorheben, Später bewusst zurücknehmen. */
+.workroom-link-item{
+  background:rgba(255,253,251,.84);
+  border-color:var(--line);
 }
 .workroom-link-item.workroom-link-soon{
-  border-color:rgba(202,164,70,.58);
-  background:linear-gradient(90deg,rgba(255,248,220,.82),rgba(255,253,251,.94));
-  box-shadow:0 7px 20px rgba(164,129,46,.08);
+  border-color:rgba(208,171,78,.55) !important;
+  background:linear-gradient(90deg,rgba(255,248,222,.72),rgba(255,253,251,.94)) !important;
+  box-shadow:0 4px 13px rgba(164,129,46,.055) !important;
 }
-.workroom-link-item.workroom-link-soon .workroom-link-title{
-  font-weight:600;
+.workroom-link-item.workroom-link-later{
+  opacity:.62;
+  background:rgba(250,248,246,.66) !important;
+  border-color:rgba(231,221,216,.72) !important;
 }
+.workroom-link-item.workroom-link-later:hover{opacity:.86}
+.workroom-link-use:not(.is-soon){
+  background:#f3efeb !important;
+  color:#8b817a !important;
+  border:1px solid transparent !important;
+}
+.workroom-link-use.is-soon{
+  background:#fff2c8 !important;
+  color:#705720 !important;
+  border-color:rgba(202,164,70,.32) !important;
+}
+
 @media (max-width:700px){
-  .pling-sound-control{
-    flex:1 1 150px;
-  }
-  .pling-sound-control select{
-    flex:1;
-    min-width:90px;
-  }
-  .workroom-link-use-filters{
-    gap:5px;
-  }
-  .workroom-link-use-filter{
-    padding:6px 9px;
-    font-size:.7rem;
+  .workroom-page-btn{
+    min-width:28px;
+    height:28px;
+    font-size:.68rem;
   }
 }
 
