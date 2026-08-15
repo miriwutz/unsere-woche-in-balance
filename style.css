@@ -2558,3 +2558,16 @@ a.day-meal{
   border-color:rgba(87,139,128,.46);
   background:linear-gradient(90deg,rgba(201,228,221,.92),rgba(237,246,243,.84));
 }
+
+
+/* Rezept-Zubereitung: exakt so anzeigen, wie eingegeben – ohne automatische Nummerierung */
+.recipe-prep-lines{
+  display:grid;
+  gap:7px;
+  margin:0;
+  padding:0;
+}
+.recipe-prep-line{
+  line-height:1.45;
+  color:inherit;
+}
