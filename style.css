@@ -2083,3 +2083,64 @@ input[type="checkbox"]:checked::before{transform:rotate(-45deg) scale(1)}
     grid-template-columns:repeat(2,minmax(0,1fr));
   }
 }
+
+
+/* ===== Feinschliff: Links / Rezeptsuche / Kindergerichte ===== */
+.workroom-link-use-filters{
+  display:flex;
+  align-items:flex-end;
+  gap:8px;
+  flex-wrap:wrap;
+}
+.workroom-link-use-filters .workroom-link-filter-select-label{
+  min-width:170px;
+}
+.workroom-link-important-filter{
+  align-self:flex-end;
+  min-height:34px;
+}
+
+.recipe-search-wrap{
+  position:relative;
+}
+.recipe-autocomplete{
+  position:absolute;
+  z-index:30;
+  top:calc(100% + 4px);
+  left:0;
+  right:0;
+  padding:5px;
+  border:1px solid rgba(105,145,138,.28);
+  border-radius:12px;
+  background:#fffdfb;
+  box-shadow:0 10px 28px rgba(62,78,73,.12);
+}
+.recipe-autocomplete.hidden{display:none}
+.recipe-autocomplete-item{
+  display:block;
+  width:100%;
+  border:0;
+  background:transparent;
+  text-align:left;
+  padding:8px 10px;
+  border-radius:8px;
+  color:#425b56;
+  cursor:pointer;
+}
+.recipe-autocomplete-item:hover{
+  background:#e4f0ed;
+}
+
+.recipe-kids-badge{
+  display:inline-flex !important;
+  align-items:center;
+  gap:5px;
+  padding:6px 10px !important;
+  border-radius:999px;
+  background:#fff0b9 !important;
+  border:1px solid #e8c96d !important;
+  color:#72581b !important;
+  font-size:.76rem !important;
+  font-weight:700 !important;
+  box-shadow:0 2px 8px rgba(171,137,48,.10);
+}
