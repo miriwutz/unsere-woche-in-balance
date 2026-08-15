@@ -1212,3 +1212,75 @@ input[type="checkbox"]:checked::before{transform:rotate(-45deg) scale(1)}
 /* Videos bleiben in der Tageskarte, stehen aber bewusst ganz unten. */
 .day .video-item:first-of-type{margin-top:16px}
 
+/* =========================================================
+   UI-FEINSCHLIFF – Navigation, Neueste-Filter, Heute
+   ========================================================= */
+
+/* Dezente Orientierungssymbole in der oberen Navigation */
+.tab[data-view="week"]::before{content:"⌂ ";opacity:.72}
+.tab[data-view="todos"]::before{content:"✓ ";opacity:.72}
+.tab[data-view="shopping"]::before{content:"🛒 ";opacity:.72}
+.tab[data-view="school"]::before{content:"🎒 ";opacity:.72}
+.tab[data-view="workroom"]::before{content:"⚒ ";opacity:.72}
+.tab[data-view="archive"]::before{content:"♡ ";opacity:.72}
+
+/* Einkauf hat das Symbol bereits im HTML – dort kein doppeltes Icon erzwingen */
+.tab[data-view="shopping"]::before{content:""}
+
+/* "Neueste" ist ein häufig genutzter Besprechungsfilter */
+.filter[data-filter="latest"]{
+  border:1px solid rgba(183,167,198,.35);
+  background:rgba(239,235,244,.45);
+  color:#756b79;
+  font-weight:500;
+}
+.filter[data-filter="latest"]::before{
+  content:"◷ ";
+  color:#9a89aa;
+}
+.filter[data-filter="latest"]:hover{
+  background:rgba(239,235,244,.78);
+}
+.filter[data-filter="latest"].active{
+  background:var(--lavender-soft);
+  border-color:#cfc2da;
+  color:var(--ink);
+  box-shadow:0 2px 8px rgba(110,90,120,.06);
+}
+
+/* Der aktuelle Tag wird von app.js mit .today markiert.
+   Die Style-Regel ist schon vorbereitet. */
+.day.today{
+  border-color:rgba(196,157,88,.42);
+  box-shadow:0 5px 18px rgba(171,132,69,.08);
+  background:linear-gradient(180deg,rgba(255,250,240,.96),rgba(255,253,251,.86));
+}
+.day.today h3::after{
+  content:"Heute";
+  display:inline-flex;
+  margin-left:7px;
+  padding:2px 6px;
+  border-radius:999px;
+  background:#f5ead7;
+  color:#8a6b3d;
+  font-family:"DM Sans",system-ui,sans-serif;
+  font-size:.58rem;
+  font-weight:600;
+  letter-spacing:.05em;
+  vertical-align:middle;
+}
+
+/* Schuljahr-Einstellung optisch als eigener Verwaltungsblock,
+   obwohl sie technisch noch innerhalb der Einstellungen liegt. */
+.schoolyear-setting{
+  border:1px solid rgba(183,167,198,.22);
+  background:linear-gradient(90deg,#f8f3ec,#f4f1f7);
+}
+.schoolyear-setting label{
+  font-weight:600;
+}
+
+@media (max-width:700px){
+  .tab::before{font-size:.92em}
+  .filter[data-filter="latest"]::before{content:"◷ "}
+}
