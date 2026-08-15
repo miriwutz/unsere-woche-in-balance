@@ -2161,8 +2161,6 @@ document.querySelectorAll(".workroom-archive-delete").forEach(btn => {
   }
 
 const typeLabels = {
-  
-  const typeLabels = {
     draw: "✏️ Vorzeichnen",
     prepare: "🛠 Vorbereiten",
     create: "📄 Erstellen",
