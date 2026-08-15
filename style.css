@@ -2306,3 +2306,168 @@ button.day-meal.has-recipe:hover{
     font-size:1.3rem;
   }
 }
+
+
+/* ===== Rezeptkarte – näher am Rezeptzettel ===== */
+.recipe-detail-close{
+  width:34px;
+  height:34px;
+  border:1px solid rgba(221,208,198,.9);
+  border-radius:50%;
+  background:#fffdfb;
+  color:#6d625d;
+  font-size:1rem;
+  cursor:pointer;
+}
+.recipe-detail-close:hover{
+  background:#f3ece6;
+}
+.recipe-detail-banner{
+  display:grid;
+  grid-template-columns:92px 1fr 60px;
+  align-items:stretch;
+  margin:-2px -2px 16px;
+  border-radius:14px;
+  overflow:hidden;
+  background:linear-gradient(90deg,#aecbc5 0%,#c5d9d5 50%,#abc7c1 100%);
+  color:#3f514d;
+}
+.recipe-detail-time{
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+  gap:5px;
+  padding:14px 8px;
+  font-size:.75rem;
+}
+.recipe-detail-clock{
+  display:grid;
+  place-items:center;
+  width:42px;
+  height:42px;
+  border:1.5px solid rgba(64,92,86,.68);
+  border-radius:50%;
+  font-size:1.25rem;
+}
+.recipe-detail-center{
+  position:relative;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:32px 12px 15px;
+}
+.recipe-detail-ribbon{
+  position:absolute;
+  top:0;
+  padding:6px 15px 12px;
+  background:#fbf7f1;
+  color:#61726e;
+  clip-path:polygon(0 0,100% 0,100% 72%,50% 100%,0 72%);
+  font-size:.58rem;
+  letter-spacing:.12em;
+}
+.recipe-detail-tags{
+  display:flex;
+  flex-wrap:wrap;
+  justify-content:center;
+  gap:6px;
+}
+.recipe-detail-tags > span{
+  padding:5px 8px;
+  border-radius:999px;
+  background:rgba(255,255,255,.62);
+  color:#526762;
+  font-size:.68rem;
+}
+.recipe-detail-utensil{
+  display:grid;
+  place-items:center;
+  font-size:1.7rem;
+  opacity:.48;
+}
+.recipe-detail-grid section{
+  background:linear-gradient(180deg,#fffdfb,#fffaf7);
+}
+.recipe-detail-grid h3{
+  padding-bottom:5px;
+  border-bottom:2px solid rgba(174,203,197,.5);
+}
+.recipe-detail-card::after{
+  content:"♡";
+  display:block;
+  margin:14px -18px -18px;
+  padding:10px;
+  text-align:center;
+  background:#c7ddd8;
+  color:white;
+  font-size:1rem;
+}
+
+/* Gesund-Button wie Kindergerichte */
+.recipe-healthy-filter,
+.recipe-healthy-toggle{
+  display:inline-flex !important;
+  align-items:center;
+  gap:7px !important;
+  width:auto !important;
+  margin:0 !important;
+}
+.recipe-healthy-badge{
+  display:inline-flex !important;
+  align-items:center;
+  gap:5px;
+  padding:6px 10px !important;
+  border-radius:999px;
+  background:#dfeee1 !important;
+  border:1px solid #afcfb4 !important;
+  color:#3f6947 !important;
+  font-size:.76rem !important;
+  font-weight:700 !important;
+}
+
+/* Löschbestätigung */
+.recipe-delete-dialog{
+  width:min(440px,calc(100% - 28px));
+}
+.recipe-delete-confirm-card{
+  text-align:left;
+}
+.recipe-delete-confirm-actions{
+  display:flex;
+  justify-content:flex-end;
+  gap:8px;
+  margin-top:18px;
+}
+.recipe-danger-btn{
+  border:1px solid #c89b91;
+  background:#f6e8e4;
+  color:#784c43;
+  border-radius:999px;
+  padding:9px 14px;
+  cursor:pointer;
+  font-weight:600;
+}
+.recipe-danger-btn:hover{
+  background:#efd8d2;
+}
+
+/* Mehr Filter dürfen umbrechen, ohne unruhig zu werden */
+.recipe-filters{
+  flex-wrap:wrap;
+}
+.recipe-filters > select{
+  min-width:170px;
+}
+
+@media(max-width:700px){
+  .recipe-detail-banner{
+    grid-template-columns:72px 1fr 42px;
+  }
+  .recipe-delete-confirm-actions{
+    flex-direction:column-reverse;
+  }
+  .recipe-delete-confirm-actions button{
+    width:100%;
+  }
+}
