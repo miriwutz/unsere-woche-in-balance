@@ -2119,6 +2119,26 @@ if (!todos.length) {
   list.innerHTML = `<div class="workroom-empty">Im Moment ist alles erledigt. ✨</div>`;
 }
 
+const archive = document.querySelector("#schoolWorkTodoArchive");
+
+if (archive) {
+  const archivedTodos = state.workroom.todos
+    .filter(t =>
+      t.done &&
+      t.completedAt &&
+      t.completedAt <= oneMinuteAgo
+    )
+    .sort((a, b) => (b.completedAt ?? 0) - (a.completedAt ?? 0));
+
+  archive.innerHTML = archivedTodos.length
+    ? archivedTodos.map(t => `
+        <div class="workroom-archive-item">
+          ✓ ${escapeHtml(t.text)}
+        </div>
+      `).join("")
+    : `<div class="workroom-empty">Noch keine erledigten Schul-To-dos.</div>`;
+}
+  
   const typeLabels = {
     draw: "✏️ Vorzeichnen",
     prepare: "🛠 Vorbereiten",
