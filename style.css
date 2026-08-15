@@ -1137,3 +1137,30 @@ input[type="checkbox"]:checked::before{transform:rotate(-45deg) scale(1)}
     gap:10px;
   }
 }
+.papa-overview-group{
+  margin-top:10px;
+}
+
+.papa-overview-group:first-child{
+  margin-top:0;
+}
+
+.papa-overview-group-label{
+  margin-bottom:4px;
+  font-size:.72rem;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  opacity:.55;
+}
+
+.papa-overview-entry{
+  display:flex;
+  align-items:flex-start;
+  gap:7px;
+  padding:2px 0;
+}
+
+.papa-overview-symbol{
+  flex:0 0 auto;
+  opacity:.7;
+}
