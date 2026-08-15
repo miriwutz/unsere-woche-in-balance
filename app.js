@@ -1016,20 +1016,39 @@ ${isNewEntry(t) ? `<span class="new-entry-badge">NEU</span>` : ""}
     const mealLabel = typeof mealStored === "string"
       ? mealStored
       : (mealStored?.label || "");
+    const mealUrl = mealStored && typeof mealStored === "object"
+      ? (mealStored.url || "")
+      : "";
 
     const mealRecipe = mealStored && typeof mealStored === "object" && mealStored.recipeId
       ? state.recipes.find(r => r.id === mealStored.recipeId)
       : recipeByTitle(mealLabel);
 
-    const mealHtml = mealLabel ? `
-      <button type="button"
-              class="day-meal ${mealRecipe ? "has-recipe" : ""}"
-              ${mealRecipe ? `data-recipe-id="${mealRecipe.id}"` : ""}>
-        <span class="day-meal-label">ESSEN</span>
-        <strong>${escapeHtml(mealLabel)}</strong>
-        ${mealRecipe ? `<span class="day-meal-open">Rezept ↗</span>` : ""}
-      </button>
-    ` : "";
+    const mealHtml = mealLabel ? (
+      mealRecipe ? `
+        <button type="button"
+                class="day-meal has-recipe"
+                data-recipe-id="${mealRecipe.id}">
+          <span class="day-meal-label">ESSEN</span>
+          <strong>${escapeHtml(mealLabel)}</strong>
+          <span class="day-meal-open">Rezept ↗</span>
+        </button>
+      ` : mealUrl ? `
+        <a class="day-meal has-link"
+           href="${escapeHtml(mealUrl)}"
+           target="_blank"
+           rel="noopener">
+          <span class="day-meal-label">ESSEN</span>
+          <strong>${escapeHtml(mealLabel)}</strong>
+          <span class="day-meal-open">Öffnen ↗</span>
+        </a>
+      ` : `
+        <div class="day-meal">
+          <span class="day-meal-label">ESSEN</span>
+          <strong>${escapeHtml(mealLabel)}</strong>
+        </div>
+      `
+    ) : "";
 
     dayEl.innerHTML = `
       <h3>${day}<span class="day-date">${dateLabel}</span></h3>
@@ -2377,6 +2396,59 @@ let activeRecipeSearch = "";
 let mealPlanWeekOffset = 0;
 let recipePage = 0;
 const RECIPE_PAGE_SIZE = 10;
+let editingRecipeId = null;
+
+function resetRecipeForm() {
+  ["#recipeTitle","#recipeTime","#recipeIngredients","#recipeSteps","#recipeWebUrl","#recipeYoutubeUrl"]
+    .forEach(sel => {
+      const el = document.querySelector(sel);
+      if (el) el.value = "";
+    });
+
+  const category = document.querySelector("#recipeCategory");
+  if (category) category.value = "main";
+
+  const difficulty = document.querySelector("#recipeDifficulty");
+  if (difficulty) difficulty.value = "medium";
+
+  const kids = document.querySelector("#recipeKids");
+  if (kids) kids.checked = false;
+
+  const healthy = document.querySelector("#recipeHealthy");
+  if (healthy) healthy.checked = false;
+
+  editingRecipeId = null;
+
+  const saveBtn = document.querySelector("#saveRecipeBtn");
+  if (saveBtn) saveBtn.textContent = "Rezept speichern";
+
+  document.querySelector("#cancelRecipeEditBtn")?.classList.add("hidden");
+}
+
+function startRecipeEdit(recipe) {
+  if (!recipe) return;
+
+  editingRecipeId = recipe.id;
+
+  document.querySelector("#recipeTitle").value = recipe.title || "";
+  document.querySelector("#recipeCategory").value = recipe.category || "main";
+  document.querySelector("#recipeDifficulty").value = recipe.difficulty || "medium";
+  document.querySelector("#recipeKids").checked = !!recipe.kids;
+  document.querySelector("#recipeHealthy").checked = !!recipe.healthy;
+  document.querySelector("#recipeTime").value = recipe.time || "";
+  document.querySelector("#recipeIngredients").value = (recipe.ingredients || []).join("\\n");
+  document.querySelector("#recipeSteps").value = (recipe.steps || []).join("\\n");
+  document.querySelector("#recipeWebUrl").value = recipe.webUrl || "";
+  document.querySelector("#recipeYoutubeUrl").value = recipe.youtubeUrl || "";
+
+  document.querySelector("#recipeForm")?.classList.remove("hidden");
+
+  const saveBtn = document.querySelector("#saveRecipeBtn");
+  if (saveBtn) saveBtn.textContent = "Änderungen speichern";
+
+  document.querySelector("#cancelRecipeEditBtn")?.classList.remove("hidden");
+  document.querySelector("#recipeForm")?.scrollIntoView({behavior:"smooth", block:"start"});
+}
 
 function recipeDifficultyLabel(value) {
   return {easy:"Einfach", medium:"Mittel", advanced:"Etwas aufwendiger"}[value] || "Mittel";
@@ -2573,7 +2645,10 @@ function renderRecipes() {
           ${r.webUrl ? `<a href="${escapeHtml(r.webUrl)}" target="_blank" rel="noopener">↗ Onlinerezept</a>` : ""}
           ${r.youtubeUrl ? `<a href="${escapeHtml(r.youtubeUrl)}" target="_blank" rel="noopener">▶ YouTube</a>` : ""}
         </div>
-        <button class="recipe-delete" data-id="${r.id}" type="button">×</button>
+        <div class="recipe-card-actions">
+          <button class="recipe-edit" data-id="${r.id}" type="button" title="Rezept bearbeiten">✎</button>
+          <button class="recipe-delete" data-id="${r.id}" type="button" title="Rezept löschen">×</button>
+        </div>
       </footer>
     </article>
   `).join("");
@@ -2587,6 +2662,13 @@ function renderRecipes() {
     if (text) text.textContent = `„${recipe.title || "Dieses Rezept"}“ wird dauerhaft aus deinen Rezeptkarten entfernt.`;
     document.querySelector("#recipeDeleteDialog")?.showModal();
   }));
+
+  host.querySelectorAll(".recipe-edit").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const recipe = state.recipes.find(r => r.id === btn.dataset.id);
+      if (recipe) startRecipeEdit(recipe);
+    });
+  });
 
   host.querySelectorAll(".recipe-title-button").forEach(btn => {
     btn.addEventListener("click", () => {
@@ -2707,15 +2789,21 @@ function renderMealPlan() {
       ? stored
       : (stored?.label || "");
 
+    const customUrl = typeof stored === "object" ? (stored.url || "") : "";
     const recipeId = typeof stored === "object" ? (stored.recipeId || "") : "";
+
     const matched = recipeId
       ? recipes.find(r => r.id === recipeId)
       : recipeByTitle(value);
 
+    const hasLink = !!customUrl || !!matched;
+
     return `
-      <label class="meal-plan-day">
-        <span class="meal-plan-day-name">${escapeHtml(dayName)}</span>
-        <span class="meal-plan-date">${String(date.getDate()).padStart(2,"0")}.${String(date.getMonth()+1).padStart(2,"0")}.</span>
+      <div class="meal-plan-day">
+        <div class="meal-plan-day-head">
+          <span class="meal-plan-day-name">${escapeHtml(dayName)}</span>
+          <span class="meal-plan-date">${String(date.getDate()).padStart(2,"0")}.${String(date.getMonth()+1).padStart(2,"0")}.</span>
+        </div>
 
         <div class="meal-plan-input-wrap">
           <input type="text"
@@ -2723,16 +2811,35 @@ function renderMealPlan() {
                  data-date="${key}"
                  list="mealRecipeSuggestions"
                  value="${escapeHtml(value)}"
-                 placeholder="z. B. Pizza oder Rezept wählen">
+                 placeholder="Bezeichnung, z. B. Pizza">
+
+          <button type="button"
+                  class="meal-plan-link-toggle ${customUrl ? "active" : ""}"
+                  data-date="${key}"
+                  title="Link hinterlegen">🔗</button>
 
           ${matched ? `
             <button type="button"
                     class="meal-plan-recipe-btn"
                     data-recipe-id="${matched.id}"
                     title="Rezept öffnen">↗</button>
+          ` : customUrl ? `
+            <a class="meal-plan-recipe-btn"
+               href="${escapeHtml(customUrl)}"
+               target="_blank"
+               rel="noopener"
+               title="Link öffnen">↗</a>
           ` : ""}
         </div>
-      </label>
+
+        <div class="meal-plan-url-row ${customUrl ? "" : "hidden"}" data-date="${key}">
+          <input type="url"
+                 class="meal-plan-url-input"
+                 data-date="${key}"
+                 value="${escapeHtml(customUrl)}"
+                 placeholder="https://…">
+        </div>
+      </div>
     `;
   }).join("");
 
@@ -2747,38 +2854,58 @@ function renderMealPlan() {
     .map(r => `<option value="${escapeHtml(r.title || "")}"></option>`)
     .join("");
 
+  function saveMealForDate(key) {
+    const labelInput = host.querySelector(`.meal-plan-input[data-date="${CSS.escape(key)}"]`);
+    const urlInput = host.querySelector(`.meal-plan-url-input[data-date="${CSS.escape(key)}"]`);
+
+    const label = labelInput?.value.trim() || "";
+    const url = urlInput?.value.trim() || "";
+    const matched = recipeByTitle(label);
+
+    state.meals = state.meals && typeof state.meals === "object" ? state.meals : {};
+
+    if (!label && !url) {
+      delete state.meals[key];
+    } else if (matched) {
+      state.meals[key] = {
+        label: matched.title,
+        recipeId: matched.id,
+        url: url || ""
+      };
+    } else {
+      state.meals[key] = {
+        label: label || "Link",
+        recipeId: "",
+        url
+      };
+    }
+
+    save();
+    renderMealPlan();
+    renderWeek();
+  }
+
   host.querySelectorAll(".meal-plan-input").forEach(input => {
-    const saveValue = () => {
-      const key = input.dataset.date;
-      const label = input.value.trim();
-      const matched = recipeByTitle(label);
-
-      state.meals = state.meals && typeof state.meals === "object" ? state.meals : {};
-
-      if (!label) {
-        delete state.meals[key];
-      } else if (matched) {
-        state.meals[key] = {
-          label: matched.title,
-          recipeId: matched.id
-        };
-      } else {
-        state.meals[key] = {
-          label,
-          recipeId: ""
-        };
-      }
-
-      save();
-      renderMealPlan();
-      renderWeek();
-    };
-
-    input.addEventListener("change", saveValue);
-    input.addEventListener("blur", saveValue);
+    input.addEventListener("change", () => saveMealForDate(input.dataset.date));
+    input.addEventListener("blur", () => saveMealForDate(input.dataset.date));
   });
 
-  host.querySelectorAll(".meal-plan-recipe-btn").forEach(btn => {
+  host.querySelectorAll(".meal-plan-url-input").forEach(input => {
+    input.addEventListener("change", () => saveMealForDate(input.dataset.date));
+    input.addEventListener("blur", () => saveMealForDate(input.dataset.date));
+  });
+
+  host.querySelectorAll(".meal-plan-link-toggle").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const row = host.querySelector(`.meal-plan-url-row[data-date="${CSS.escape(btn.dataset.date)}"]`);
+      row?.classList.toggle("hidden");
+      if (row && !row.classList.contains("hidden")) {
+        row.querySelector("input")?.focus();
+      }
+    });
+  });
+
+  host.querySelectorAll(".meal-plan-recipe-btn[data-recipe-id]").forEach(btn => {
     btn.addEventListener("click", e => {
       e.preventDefault();
       const recipe = state.recipes.find(r => r.id === btn.dataset.recipeId);
@@ -2788,14 +2915,6 @@ function renderMealPlan() {
 
   document.querySelector("#mealPlanThisWeekBtn")?.classList.toggle("active", mealPlanWeekOffset === 0);
   document.querySelector("#mealPlanNextWeekBtn")?.classList.toggle("active", mealPlanWeekOffset === 1);
-}
-
-
-let pendingRecipeDeleteId = null;
-
-function closeRecipeDetailDialog() {
-  const dialog = document.querySelector("#recipeDetailDialog");
-  if (dialog?.open) dialog.close();
 }
 
 document.querySelector("#closeRecipeDetailBtn")?.addEventListener("click", closeRecipeDetailDialog);
@@ -2866,8 +2985,7 @@ document.querySelector("#saveRecipeBtn")?.addEventListener("click", () => {
   const title = document.querySelector("#recipeTitle")?.value.trim() || "";
   if (!title) return showMotivation("Bitte zuerst einen Rezeptnamen eintragen.");
 
-  state.recipes.push({
-    id: uid(),
+  const recipeData = {
     title,
     category: document.querySelector("#recipeCategory")?.value || "main",
     difficulty: document.querySelector("#recipeDifficulty")?.value || "medium",
@@ -2877,1053 +2995,44 @@ document.querySelector("#saveRecipeBtn")?.addEventListener("click", () => {
     ingredients: recipeLines(document.querySelector("#recipeIngredients")?.value),
     steps: recipeLines(document.querySelector("#recipeSteps")?.value),
     webUrl: document.querySelector("#recipeWebUrl")?.value.trim() || "",
-    youtubeUrl: document.querySelector("#recipeYoutubeUrl")?.value.trim() || "",
-    createdAt: Date.now()
-  });
-
-  ["#recipeTitle","#recipeTime","#recipeIngredients","#recipeSteps","#recipeWebUrl","#recipeYoutubeUrl"].forEach(sel => {
-    const el = document.querySelector(sel); if (el) el.value = "";
-  });
-  const kid = document.querySelector("#recipeKids"); if (kid) kid.checked = false;
-  const healthy = document.querySelector("#recipeHealthy"); if (healthy) healthy.checked = false;
-  save(); renderRecipes();
-  document.querySelector("#recipeForm")?.classList.add("hidden");
-  showMotivation("Rezept gespeichert.");
-});
-
-const WORKROOM_PAGE_SIZE = 10;
-let schoolWorkTodoPage = 0;
-let schoolPrintPage = 0;
-let workroomLinkPage = 0;
-
-function clampWorkroomPage(page, totalItems) {
-  const maxPage = Math.max(0, Math.ceil(totalItems / WORKROOM_PAGE_SIZE) - 1);
-  return Math.min(Math.max(0, page), maxPage);
-}
-
-function workroomPageSlice(items, page) {
-  const start = page * WORKROOM_PAGE_SIZE;
-  return items.slice(start, start + WORKROOM_PAGE_SIZE);
-}
-
-function renderWorkroomPager(listElement, totalItems, currentPage, onChange) {
-  if (!listElement) return;
-
-  const old = listElement.parentElement?.querySelector(
-    `.workroom-pager[data-for="${listElement.id}"]`
-  );
-  if (old) old.remove();
-
-  const totalPages = Math.ceil(totalItems / WORKROOM_PAGE_SIZE);
-  if (totalPages <= 1) return;
-
-  const pager = document.createElement("div");
-  pager.className = "workroom-pager";
-  pager.dataset.for = listElement.id;
-
-  const buttons = [];
-  for (let i = 0; i < totalPages; i++) {
-    const near = Math.abs(i - currentPage) <= 2;
-    const edge = i === 0 || i === totalPages - 1;
-    if (totalPages <= 7 || near || edge) {
-      buttons.push(`<button type="button" class="workroom-page-btn ${i === currentPage ? "active" : ""}" data-page="${i}">${i + 1}</button>`);
-    }
-  }
-
-  pager.innerHTML = `
-    <button type="button" class="workroom-page-btn" data-page="${currentPage - 1}" ${currentPage <= 0 ? "disabled" : ""}>‹</button>
-    ${buttons.join("")}
-    <button type="button" class="workroom-page-btn" data-page="${currentPage + 1}" ${currentPage >= totalPages - 1 ? "disabled" : ""}>›</button>
-  `;
-
-  listElement.insertAdjacentElement("afterend", pager);
-
-  pager.querySelectorAll(".workroom-page-btn[data-page]").forEach(btn => {
-    btn.addEventListener("click", () => {
-      if (btn.disabled) return;
-      const next = Number(btn.dataset.page);
-      if (!Number.isFinite(next) || next < 0 || next >= totalPages) return;
-      onChange(next);
-    });
-  });
-}
-
-function renderSchoolWorkTodos() {
-  const list = document.querySelector("#schoolWorkTodoList");
-  if (!list) return;
-
-  const archiveCutoff = Date.now() - 3 * 60 * 1000;
-
-  const todos = [...state.workroom.todos]
-    .filter(t => {
-      if (!t.done) return true;
-      if (!t.completedAt) return true;
-      return t.completedAt > archiveCutoff;
-    })
-    .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
-
-  schoolWorkTodoPage = clampWorkroomPage(schoolWorkTodoPage, todos.length);
-  const visibleTodos = workroomPageSlice(todos, schoolWorkTodoPage);
-
-  const archive = document.querySelector("#schoolWorkTodoArchive");
-
-  if (archive) {
-    const archivedTodos = state.workroom.todos
-      .filter(t =>
-        t.done &&
-        t.completedAt &&
-        t.completedAt <= archiveCutoff
-      )
-      .sort((a, b) => (b.completedAt ?? 0) - (a.completedAt ?? 0));
-
-    if (archivedTodos.length) {
-      const groups = archivedTodos.reduce((acc, t) => {
-        const label = new Date(t.completedAt).toLocaleDateString("de-AT", {
-          weekday: "short",
-          day: "2-digit",
-          month: "2-digit",
-          year: "numeric"
-        });
-        (acc[label] ||= []).push(t);
-        return acc;
-      }, {});
-
-      archive.innerHTML = Object.entries(groups).map(([dateLabel, items]) => `
-        <div class="workroom-archive-group">
-          <div class="workroom-archive-date">${escapeHtml(dateLabel)}</div>
-          ${items.map(t => `
-            <div class="workroom-archive-item">
-              <span>✓ ${escapeHtml(t.text)}</span>
-              <button
-                type="button"
-                class="workroom-archive-delete"
-                data-id="${t.id}"
-                title="Endgültig löschen"
-                aria-label="Erledigtes Schul-To-do löschen"
-              >×</button>
-            </div>
-          `).join("")}
-        </div>
-      `).join("");
-    } else {
-      archive.innerHTML = `<div class="workroom-empty">Noch keine erledigten Schul-To-dos.</div>`;
-    }
-
-    archive.querySelectorAll(".workroom-archive-delete").forEach(btn => {
-      btn.addEventListener("click", e => {
-        const id = e.currentTarget.dataset.id;
-
-        state.workroom.todos =
-          state.workroom.todos.filter(t => t.id !== id);
-
-        save();
-        renderSchoolWorkTodos();
-      });
-    });
-  }
-
-  if (!todos.length) {
-    list.innerHTML =
-      `<div class="workroom-empty">Im Moment ist alles erledigt. ✨</div>`;
-    return;
-  }
-
-  const typeLabels = {
-    draw: "✏️ Vorzeichnen",
-    prepare: "🛠 Vorbereiten",
-    create: "📄 Erstellen",
-    print: "🖨 Drucken"
+    youtubeUrl: document.querySelector("#recipeYoutubeUrl")?.value.trim() || ""
   };
 
-  list.innerHTML = visibleTodos.map(t => `
-    <div
-      class="workroom-todo-row ${t.done ? "done" : ""}"
-      data-id="${t.id}">
-
-      <input
-        class="workroom-todo-check"
-        type="checkbox"
-        data-id="${t.id}"
-        ${t.done ? "checked" : ""}>
-
-      <div class="workroom-todo-content">
-        <span class="workroom-todo-text">
-          ${escapeHtml(t.text)}
-        </span>
-      </div>
-
-      <div class="workroom-todo-actions">
-
-        ${t.type
-          ? `<span class="workroom-todo-type">
-               ${typeLabels[t.type] || ""}
-             </span>`
-          : ""}
-
-        ${t.url
-          ? `<a
-               class="workroom-todo-link"
-               href="${escapeHtml(t.url)}"
-               target="_blank"
-               rel="noopener"
-               title="Link öffnen">🔗</a>`
-          : ""}
-
-        <button
-          class="workroom-todo-edit"
-          type="button"
-          data-id="${t.id}"
-          title="Bearbeiten">✎</button>
-
-        <button
-          class="workroom-todo-delete"
-          type="button"
-          data-id="${t.id}"
-          title="Löschen">×</button>
-
-        <div class="workroom-move-controls">
-
-          <button
-            class="workroom-move-btn workroom-move-top"
-            type="button"
-            data-id="${t.id}"
-            title="Ganz nach oben">⇈</button>
-
-          <button
-            class="workroom-move-btn workroom-move-up"
-            type="button"
-            data-id="${t.id}"
-            title="Eine Position nach oben">↑</button>
-
-          <button
-            class="workroom-move-btn workroom-move-down"
-            type="button"
-            data-id="${t.id}"
-            title="Eine Position nach unten">↓</button>
-
-          <span
-            class="workroom-drag-handle"
-            title="Ziehen"
-            aria-label="Ziehen">⋮⋮</span>
-
-        </div>
-      </div>
-    </div>
-  `).join("");
-
-  renderWorkroomPager(
-    list,
-    todos.length,
-    schoolWorkTodoPage,
-    page => {
-      schoolWorkTodoPage = page;
-      renderSchoolWorkTodos();
-    }
-  );
-
-  document.querySelectorAll(".workroom-todo-check").forEach(box => {
-    box.addEventListener("change", e => {
-      const item = state.workroom.todos.find(
-        t => t.id === e.currentTarget.dataset.id
-      );
-
-      if (!item) return;
-
-      item.done = e.currentTarget.checked;
-      item.completedAt = item.done ? Date.now() : null;
-
-      save();
-      renderSchoolWorkTodos();
-
-      if (item.done) {
-        setTimeout(() => {
-          renderSchoolWorkTodos();
-        }, 181000);
-      }
-    });
-  });
-
-  document.querySelectorAll(".workroom-todo-delete").forEach(btn => {
-    btn.addEventListener("click", e => {
-      const id = e.currentTarget.dataset.id;
-
-      state.workroom.todos =
-        state.workroom.todos.filter(t => t.id !== id);
-
-      save();
-      renderSchoolWorkTodos();
-    });
-  });
-
-  document.querySelectorAll(".workroom-todo-edit").forEach(btn => {
-    btn.addEventListener("click", e => {
-      const id = e.currentTarget.dataset.id;
-      const item = state.workroom.todos.find(t => t.id === id);
-
-      if (!item) return;
-
-      document.querySelector("#schoolWorkTodoInput").value =
-        item.text || "";
-
-      document.querySelector("#schoolWorkTodoType").value =
-        item.type || "";
-
-      document.querySelector("#schoolWorkTodoLink").value =
-        item.url || "";
-
-      const addBtn =
-        document.querySelector("#addSchoolWorkTodoBtn");
-
-      addBtn.dataset.editId = item.id;
-      addBtn.textContent = "Änderung speichern";
-    });
-  });
-
-  const todoList =
-    document.querySelector("#schoolWorkTodoList");
-
-  if (todoList && typeof Sortable !== "undefined") {
-    new Sortable(todoList, {
-      animation: 180,
-      draggable: ".workroom-todo-row",
-      filter: "input, button, a, select, textarea, .workroom-todo-actions, .workroom-drag-handle",
-      preventOnFilter: false,
-      ghostClass: "workroom-sort-ghost",
-      chosenClass: "workroom-sort-chosen",
-      dragClass: "workroom-sort-drag",
-      delay: 180,
-      delayOnTouchOnly: true,
-      touchStartThreshold: 6,
-      forceFallback: false,
-
-      onEnd: function () {
-        const ids = [
-          ...todoList.querySelectorAll(".workroom-todo-row")
-        ].map(row => row.dataset.id);
-
-        const sortedAll = [...state.workroom.todos]
-          .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
-
-        const startIndex = schoolWorkTodoPage * WORKROOM_PAGE_SIZE;
-        const visibleIdSet = new Set(ids);
-        const unaffected = sortedAll.filter(t => !visibleIdSet.has(t.id));
-        const moved = ids.map(id => state.workroom.todos.find(t => t.id === id)).filter(Boolean);
-
-        const rebuilt = [
-          ...unaffected.slice(0, startIndex),
-          ...moved,
-          ...unaffected.slice(startIndex)
-        ];
-
-        rebuilt.forEach((todo, index) => { todo.order = index; });
-        state.workroom.todos = rebuilt;
-
-        save();
-        renderSchoolWorkTodos();
-      }
-    });
-  }
-}
-
-// Werkraum: Schul-To-dos mit Pfeilen verschieben
-document.addEventListener("click", e => {
-  const btn = e.target.closest(".workroom-move-btn");
-  if (!btn) return;
-
-  const id = btn.dataset.id;
-
-  const sorted = [...state.workroom.todos]
-    .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
-
-  const index = sorted.findIndex(t => t.id === id);
-  if (index === -1) return;
-
-  let newIndex = index;
-
-  if (btn.classList.contains("workroom-move-top")) {
-    newIndex = 0;
-  } else if (btn.classList.contains("workroom-move-up")) {
-    newIndex = Math.max(0, index - 1);
-  } else if (btn.classList.contains("workroom-move-down")) {
-    newIndex = Math.min(sorted.length - 1, index + 1);
-  } else if (btn.classList.contains("workroom-move-bottom")) {
-    newIndex = sorted.length - 1;
-  } else {
-    return;
-  }
-
-  if (newIndex === index) return;
-
-  const [moved] = sorted.splice(index, 1);
-  sorted.splice(newIndex, 0, moved);
-
-  sorted.forEach((todo, i) => {
-    todo.order = i;
-  });
-
-  state.workroom.todos = sorted;
-
-  save();
-  renderSchoolWorkTodos();
-});
-
-document.querySelector("#addSchoolWorkTodoBtn")?.addEventListener("click", () => {
-  const textInput = document.querySelector("#schoolWorkTodoInput");
-  const typeInput = document.querySelector("#schoolWorkTodoType");
-  const linkInput = document.querySelector("#schoolWorkTodoLink");
-  const button = document.querySelector("#addSchoolWorkTodoBtn");
-
-  const text = textInput.value.trim();
-  if (!text) return;
-
-  const url = linkInput.value.trim();
-  const editId = button.dataset.editId;
-
-  if (editId) {
-    const item = state.workroom.todos.find(t => t.id === editId);
-
-    if (item) {
-      item.text = text;
-      item.type = typeInput.value || "";
-      item.url = url;
-    }
-
-    delete button.dataset.editId;
-    button.textContent = "+ Eintragen";
-
-    showMotivation("Schul-To-do geändert ✓");
-
-  } else {
-    state.workroom.todos.push({
-      id: uid(),
-      text,
-      type: typeInput.value || "",
-      url,
-      order: state.workroom.todos.length,
-      done: false,
-      createdAt: Date.now()
-    });
-
-    showMotivation("Schul-To-do hinzugefügt ✓");
-  }
-
-  textInput.value = "";
-  typeInput.value = "";
-  linkInput.value = "";
-
-  save();
-  renderSchoolWorkTodos();
-});
-
-// =============================
-// WERKRAUM – DRUCKLISTE
-// =============================
-
-function renderSchoolPrints() {
-  const list = document.querySelector("#schoolPrintList");
-
-  if (!list) return;
-
-const now = Date.now();
-
-state.workroom.prints = state.workroom.prints.filter(p => {
-  if (!p.done || !p.completedAt) return true;
-
-  return now - p.completedAt < 60000;
-});
-  
-const prints = [...state.workroom.prints]
-  .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
-
-schoolPrintPage = clampWorkroomPage(schoolPrintPage, prints.length);
-const visiblePrints = workroomPageSlice(prints, schoolPrintPage);
-  
-  if (!prints.length) {
-    list.innerHTML =
-      `<div class="workroom-empty">Im Moment steht nichts auf der Druckliste.</div>`;
-  } else {
-    list.innerHTML = visiblePrints.map(p => `
-      <div
-        class="workroom-todo-row ${p.done ? "done" : ""}"
-        data-print-id="${p.id}">
-
-        <input
-          class="workroom-print-check"
-          type="checkbox"
-          data-id="${p.id}"
-          ${p.done ? "checked" : ""}>
-
-        <div class="workroom-todo-content">
-          <span class="workroom-todo-text">${escapeHtml(p.text)}</span>
-        </div>
-
-        <div class="workroom-todo-actions">
-
-          ${p.url
-            ? `<a class="workroom-todo-link"
-                  href="${escapeHtml(p.url)}"
-                  target="_blank"
-                  rel="noopener"
-                  title="Link öffnen">🔗</a>`
-            : ""}
-
-          <button
-            class="workroom-print-edit"
-            type="button"
-            data-id="${p.id}"
-            title="Bearbeiten">✎</button>
-
-          <button
-            class="workroom-print-delete"
-            type="button"
-            data-id="${p.id}"
-            title="Löschen">×</button>
-
-          <div class="workroom-move-controls">
-
-            <button
-              class="workroom-print-move-btn workroom-print-move-top"
-              type="button"
-              data-id="${p.id}"
-              title="Ganz nach oben">⇈</button>
-
-            <button
-              class="workroom-print-move-btn workroom-print-move-up"
-              type="button"
-              data-id="${p.id}"
-              title="Eine Position nach oben">↑</button>
-
-            <button
-              class="workroom-print-move-btn workroom-print-move-down"
-              type="button"
-              data-id="${p.id}"
-              title="Eine Position nach unten">↓</button>
-
-                  <span
-              class="workroom-drag-handle"
-              title="Ziehen"
-              aria-label="Ziehen">⋮⋮</span>
-
-          </div>
-        </div>
-      </div>
-    `).join("");
-  }
-
-  renderWorkroomPager(
-    list,
-    prints.length,
-    schoolPrintPage,
-    page => {
-      schoolPrintPage = page;
-      renderSchoolPrints();
-    }
-  );
-
- document.querySelectorAll(".workroom-print-check").forEach(box => {
-  box.addEventListener("change", e => {
-    const id = e.currentTarget.dataset.id;
-    const item = state.workroom.prints.find(p => p.id === id);
-
-    if (!item) return;
-
-    item.done = e.currentTarget.checked;
-    item.completedAt = item.done ? Date.now() : null;
-
-    save();
-    renderSchoolPrints();
-
-    if (item.done) {
-      setTimeout(() => {
-        const currentItem = state.workroom.prints.find(p => p.id === id);
-
-        if (!currentItem || !currentItem.done) return;
-
-        state.workroom.prints =
-          state.workroom.prints.filter(p => p.id !== id);
-
-        save();
-        renderSchoolPrints();
-      }, 60000);
-    }
-  });
-});
-
-  document.querySelectorAll(".workroom-print-delete").forEach(btn => {
-    btn.addEventListener("click", e => {
-      const id = e.currentTarget.dataset.id;
-
-      state.workroom.prints =
-        state.workroom.prints.filter(p => p.id !== id);
-
-      save();
-      renderSchoolPrints();
-    });
-  });
-
-  document.querySelectorAll(".workroom-print-edit").forEach(btn => {
-    btn.addEventListener("click", e => {
-      const id = e.currentTarget.dataset.id;
-      const item = state.workroom.prints.find(p => p.id === id);
-
-      if (!item) return;
-
-      document.querySelector("#schoolPrintInput").value = item.text || "";
-      document.querySelector("#schoolPrintLink").value = item.url || "";
-
-      const addBtn = document.querySelector("#addSchoolPrintBtn");
-      addBtn.dataset.editId = item.id;
-      addBtn.textContent = "Änderung speichern";
-    });
-  });
-
-  document.querySelectorAll(".workroom-print-move-btn").forEach(btn => {
-    btn.addEventListener("click", e => {
-      const id = e.currentTarget.dataset.id;
-
-      const sorted = [...state.workroom.prints]
-        .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
-
-      const index = sorted.findIndex(p => p.id === id);
-      if (index === -1) return;
-
-      let newIndex = index;
-
-      if (e.currentTarget.classList.contains("workroom-print-move-top")) {
-        newIndex = 0;
-      } else if (e.currentTarget.classList.contains("workroom-print-move-up")) {
-        newIndex = Math.max(0, index - 1);
-      } else if (e.currentTarget.classList.contains("workroom-print-move-down")) {
-        newIndex = Math.min(sorted.length - 1, index + 1);
-      } else if (e.currentTarget.classList.contains("workroom-print-move-bottom")) {
-        newIndex = sorted.length - 1;
-      }
-
-      const [moved] = sorted.splice(index, 1);
-      sorted.splice(newIndex, 0, moved);
-
-      sorted.forEach((p, i) => {
-        p.order = i;
-      });
-
-      state.workroom.prints = sorted;
-
-      save();
-      renderSchoolPrints();
-    });
-  });
-
-  if (typeof Sortable !== "undefined") {
-    const printList = document.querySelector("#schoolPrintList");
-
-    if (printList) {
-      new Sortable(printList, {
-        animation: 150,
-        draggable: ".workroom-todo-row",
-        filter: "input, button, a, select, textarea, .workroom-todo-actions, .workroom-drag-handle",
-        preventOnFilter: false,
-        delay: 180,
-        delayOnTouchOnly: true,
-        touchStartThreshold: 6,
-
-        onEnd: () => {
-          const ids = [...printList.querySelectorAll(".workroom-todo-row")]
-            .map(row => row.dataset.printId);
-
-          const sortedAll = [...state.workroom.prints]
-            .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
-
-          const startIndex = schoolPrintPage * WORKROOM_PAGE_SIZE;
-          const visibleIdSet = new Set(ids);
-          const unaffected = sortedAll.filter(p => !visibleIdSet.has(p.id));
-          const moved = ids.map(id => state.workroom.prints.find(p => p.id === id)).filter(Boolean);
-
-          const rebuilt = [
-            ...unaffected.slice(0, startIndex),
-            ...moved,
-            ...unaffected.slice(startIndex)
-          ];
-
-          rebuilt.forEach((item, index) => { item.order = index; });
-          state.workroom.prints = rebuilt;
-
-          save();
-          renderSchoolPrints();
+  if (editingRecipeId) {
+    const recipe = state.recipes.find(r => r.id === editingRecipeId);
+    if (recipe) {
+      Object.assign(recipe, recipeData, {updatedAt: Date.now()});
+
+      // Bereits verknüpfte Essensplan-Einträge behalten die Verbindung,
+      // bekommen aber automatisch den neuen Rezeptnamen.
+      Object.keys(state.meals || {}).forEach(key => {
+        const meal = state.meals[key];
+        if (meal && typeof meal === "object" && meal.recipeId === recipe.id) {
+          meal.label = recipe.title;
         }
       });
     }
-  }
-}
-
-
-// Druckauftrag hinzufügen / bearbeiten
-document.querySelector("#addSchoolPrintBtn")?.addEventListener("click", () => {
-  const textInput = document.querySelector("#schoolPrintInput");
-  const linkInput = document.querySelector("#schoolPrintLink");
-  const button = document.querySelector("#addSchoolPrintBtn");
-
-  const text = textInput.value.trim();
-  if (!text) return;
-
-  const url = linkInput?.value.trim() || "";
-  const editId = button.dataset.editId;
-
-  if (editId) {
-    const item = state.workroom.prints.find(p => p.id === editId);
-
-    if (item) {
-      item.text = text;
-      item.url = url;
-    }
-
-    delete button.dataset.editId;
-    button.textContent = "+ Eintragen";
-
   } else {
-    state.workroom.prints.push({
+    state.recipes.push({
       id: uid(),
-      text,
-      url,
-      done: false,
-      completedAt: null,
-      order: state.workroom.prints.length,
+      ...recipeData,
       createdAt: Date.now()
     });
   }
 
-  textInput.value = "";
-  if (linkInput) linkInput.value = "";
-
+  const wasEditing = !!editingRecipeId;
   save();
-  renderSchoolPrints();
+  renderRecipes();
+  renderMealPlan();
+  renderWeek();
+  resetRecipeForm();
+  document.querySelector("#recipeForm")?.classList.add("hidden");
+  showMotivation(wasEditing ? "Rezept geändert." : "Rezept gespeichert.");
 });
 
-
-// =============================
-// WERKRAUM – LINKSAMMLUNG
-// =============================
-
-let activeWorkroomLinkCategory = "all";
-let activeWorkroomLinkUse = "soon";
-let workroomImportantOnly = false;
-
-function renderWorkroomLinks() {
-  const list = document.querySelector("#workroomLinkList");
-  if (!list) return;
-
-  // Ältere Links bekommen einmalig eine stabile Reihenfolge.
-  let orderChanged = false;
-  state.workroom.links.forEach((link, index) => {
-    if (!Number.isFinite(Number(link.order))) {
-      link.order = index;
-      orderChanged = true;
-    }
-  });
-  if (orderChanged) save();
-
-  const categoryLabels = {
-    wood: "🪵 Holz",
-    paper: "📄 Papier",
-    free: "✂️ Freies Arbeiten",
-    experiment: "🧪 Experimentieren",
-    documents: "📎 Unterlagen & Belege",
-    bureaucracy: "🗂 Bürokratie",
-    current: "📌 Aktuell",
-    other: "✨ Sonstiges"
-  };
-
-  const useLabels = {
-    soon: "Demnächst",
-    current: "📌 Aktuell",
-    bureaucracy: "🗂 Bürokratie",
-    year: "🗓 Jahresplanung",
-    later: "🌙 Später vorgemerkt"
-  };
-
-  const useRank = { current: 0, soon: 1, bureaucracy: 2, year: 3, later: 4 };
-
-  const links = [...state.workroom.links]
-    .sort((a, b) => {
-      const importantDiff = Number(!!b.important) - Number(!!a.important);
-      if (importantDiff) return importantDiff;
-
-      if (activeWorkroomLinkUse === "all") {
-        const rankDiff = (useRank[a.use || "soon"] ?? 0) - (useRank[b.use || "soon"] ?? 0);
-        if (rankDiff) return rankDiff;
-      }
-
-      return (Number(a.order) || 0) - (Number(b.order) || 0);
-    })
-    .filter(link =>
-      (activeWorkroomLinkCategory === "all" ||
-       link.category === activeWorkroomLinkCategory) &&
-      (activeWorkroomLinkUse === "all" ||
-       (link.use || "soon") === activeWorkroomLinkUse) &&
-      (!workroomImportantOnly || !!link.important)
-    );
-
-  workroomLinkPage = clampWorkroomPage(workroomLinkPage, links.length);
-  const visibleLinks = workroomPageSlice(links, workroomLinkPage);
-
-  if (!links.length) {
-    list.innerHTML =
-      `<div class="workroom-empty">Noch keine Links in dieser Kategorie gespeichert.</div>`;
-    return;
-  }
-
-  list.innerHTML = visibleLinks.map(link => `
-    <div class="workroom-link-item ${link.important ? "workroom-link-important" : ""} ${(link.use || "soon") === "later" ? "workroom-link-later" : ""}" data-id="${link.id}">
-
- <div class="workroom-link-main">
-
-  <div class="workroom-link-texts">
-    <a
-      href="${escapeHtml(link.url)}"
-      target="_blank"
-      rel="noopener"
-      class="workroom-link-title">
-      ${escapeHtml(link.title)}
-    </a>
-
-    ${link.note
-      ? `<div class="workroom-link-note">${escapeHtml(link.note)}</div>`
-      : ""}
-  </div>
-
-  <div class="workroom-link-badges">
-    ${link.important ? `<span class="workroom-link-important-badge">⭐ Wichtig</span>` : ""}
-    <span class="workroom-link-use">
-      ${useLabels[link.use || "soon"]}
-    </span>
-    <span class="workroom-link-category">
-      ${categoryLabels[link.category] || "✨ Sonstiges"}
-    </span>
-  </div>
-
-</div>
-
-      <div class="workroom-link-actions">
-        <span
-          class="workroom-link-drag-handle"
-          title="Link verschieben"
-          aria-label="Link verschieben">⋮⋮</span>
-
-        <button
-          class="workroom-link-edit"
-          type="button"
-          data-id="${link.id}"
-          title="Bearbeiten">✎</button>
-
-        <button
-          class="workroom-link-delete"
-          type="button"
-          data-id="${link.id}"
-          title="Löschen">×</button>
-      </div>
-
-    </div>
-  `).join("");
-
-  renderWorkroomPager(
-    list,
-    links.length,
-    workroomLinkPage,
-    page => {
-      workroomLinkPage = page;
-      renderWorkroomLinks();
-    }
-  );
-
-  document.querySelectorAll(".workroom-link-delete").forEach(btn => {
-    btn.addEventListener("click", e => {
-      const id = e.currentTarget.dataset.id;
-
-      state.workroom.links =
-        state.workroom.links.filter(link => link.id !== id);
-
-      save();
-      renderWorkroomLinks();
-    });
-  });
-
-  document.querySelectorAll(".workroom-link-edit").forEach(btn => {
-    btn.addEventListener("click", e => {
-      const id = e.currentTarget.dataset.id;
-      const link = state.workroom.links.find(link => link.id === id);
-
-      if (!link) return;
-
-      document.querySelector("#workroomLinkTitle").value = link.title || "";
-      document.querySelector("#workroomLinkNote").value = link.note || "";
-      document.querySelector("#workroomLinkUrl").value = link.url || "";
-      document.querySelector("#workroomLinkCategory").value =
-        link.category || "other";
-      document.querySelector("#workroomLinkUse").value =
-        link.use || "soon";
-      const importantInput = document.querySelector("#workroomLinkImportant");
-      if (importantInput) importantInput.checked = !!link.important;
-
-      const addBtn = document.querySelector("#addWorkroomLinkBtn");
-
-      addBtn.dataset.editId = link.id;
-      addBtn.textContent = "Änderung speichern";
-    });
-  });
-
-  if (typeof Sortable !== "undefined") {
-    new Sortable(list, {
-      animation: 180,
-      draggable: ".workroom-link-item",
-      filter: "a, button, input, select, textarea",
-      preventOnFilter: false,
-      ghostClass: "workroom-sort-ghost",
-      chosenClass: "workroom-sort-chosen",
-      dragClass: "workroom-sort-drag",
-      delay: 180,
-      delayOnTouchOnly: true,
-      touchStartThreshold: 6,
-
-      onEnd: function () {
-        const draggedIds = [...list.querySelectorAll(".workroom-link-item")]
-          .map(row => row.dataset.id);
-
-        const allSorted = [...state.workroom.links]
-          .sort((a, b) => (Number(a.order) || 0) - (Number(b.order) || 0));
-
-        // Beim Kategorie-Filter nur die sichtbaren Plätze neu belegen.
-        const visibleSlots = [];
-        allSorted.forEach((link, index) => {
-          if (
-            (activeWorkroomLinkCategory === "all" ||
-             link.category === activeWorkroomLinkCategory) &&
-            (activeWorkroomLinkUse === "all" ||
-             (link.use || "soon") === activeWorkroomLinkUse)
-          ) {
-            visibleSlots.push(index);
-          }
-        });
-
-        const byId = new Map(state.workroom.links.map(link => [link.id, link]));
-
-        draggedIds.forEach((id, index) => {
-          const slot = visibleSlots[index];
-          if (slot !== undefined && byId.has(id)) {
-            allSorted[slot] = byId.get(id);
-          }
-        });
-
-        allSorted.forEach((link, index) => {
-          link.order = index;
-        });
-
-        state.workroom.links = allSorted;
-        save();
-        renderWorkroomLinks();
-      }
-    });
-  }
-}
-
-
-// Link speichern / bearbeiten
-document.querySelector("#addWorkroomLinkBtn")?.addEventListener("click", () => {
-
-  const titleInput = document.querySelector("#workroomLinkTitle");
-  const noteInput = document.querySelector("#workroomLinkNote");
-  const urlInput = document.querySelector("#workroomLinkUrl");
-  const categoryInput = document.querySelector("#workroomLinkCategory");
-  const useInput = document.querySelector("#workroomLinkUse");
-  const importantInput = document.querySelector("#workroomLinkImportant");
-  const button = document.querySelector("#addWorkroomLinkBtn");
-
-  const title = titleInput.value.trim();
-  const note = noteInput.value.trim();
-  let url = urlInput.value.trim();
-  const category = categoryInput.value || "other";
-  const use = useInput?.value || "soon";
-  const important = !!importantInput?.checked;
-
-  if (!title || !url) return;
-
-  if (!/^https?:\/\//i.test(url)) {
-    url = "https://" + url;
-  }
-
-  const editId = button.dataset.editId;
-
-  if (editId) {
-    const item =
-      state.workroom.links.find(link => link.id === editId);
-
-    if (item) {
-      item.title = title;
-      item.note = note;
-      item.url = url;
-      item.category = category;
-      item.use = use;
-      item.important = important;
-    }
-
-    delete button.dataset.editId;
-    button.textContent = "+ Speichern";
-
-  } else {
-    state.workroom.links.push({
-      id: uid(),
-      title,
-      note,
-      url,
-      category,
-      use,
-      important,
-      order: state.workroom.links.length,
-      createdAt: Date.now()
-    });
-  }
-
-  titleInput.value = "";
-  noteInput.value = "";
-  urlInput.value = "";
-  categoryInput.value = "wood";
-  if (useInput) useInput.value = "soon";
-  if (importantInput) importantInput.checked = false;
-
-  save();
-  renderWorkroomLinks();
-});
-
-
-// Kategorien filtern – kompakt per Dropdown
-document.querySelector("#workroomLinkCategoryFilter")?.addEventListener("change", e => {
-  activeWorkroomLinkCategory = e.currentTarget.value || "all";
-  workroomLinkPage = 0;
-  renderWorkroomLinks();
-});
-
-document.querySelectorAll(".workroom-link-use-filter").forEach(btn => {
-  btn.addEventListener("click", e => {
-    activeWorkroomLinkUse = e.currentTarget.dataset.use || "soon";
-    workroomLinkPage = 0;
-
-    document.querySelectorAll(".workroom-link-use-filter").forEach(filter =>
-      filter.classList.toggle("active", filter === e.currentTarget)
-    );
-
-    renderWorkroomLinks();
-  });
-});
-
-document.querySelector("#workroomLinkUseFilterSelect")?.addEventListener("change", e => {
-  activeWorkroomLinkUse = e.currentTarget.value || "soon";
-  workroomLinkPage = 1;
-  renderWorkroomLinks();
-});
-
-document.querySelector("#workroomLinkImportantFilter")?.addEventListener("click", e => {
-  workroomImportantOnly = !workroomImportantOnly;
-  workroomLinkPage = 0;
-  e.currentTarget.classList.toggle("active", workroomImportantOnly);
-  renderWorkroomLinks();
+document.querySelector("#cancelRecipeEditBtn")?.addEventListener("click", () => {
+  resetRecipeForm();
+  document.querySelector("#recipeForm")?.classList.add("hidden");
 });
 
 
