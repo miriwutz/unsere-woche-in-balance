@@ -2100,66 +2100,66 @@ document.querySelector("#todayWeekBtn").addEventListener("click", () => {
   renderWeek();
 });
 function renderSchoolWorkTodos() {
-   const list = document.querySelector("#schoolWorkTodoList");
+  const list = document.querySelector("#schoolWorkTodoList");
   if (!list) return;
 
-const oneMinuteAgo = Date.now() - 60000;
+  const oneMinuteAgo = Date.now() - 60000;
 
-const todos = [...state.workroom.todos]
-  .filter(t => {
-    if (!t.done) return true;
-    if (!t.completedAt) return true;
+  const todos = [...state.workroom.todos]
+    .filter(t => {
+      if (!t.done) return true;
+      if (!t.completedAt) return true;
+      return t.completedAt > oneMinuteAgo;
+    })
+    .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 
-    return t.completedAt > oneMinuteAgo;
-  })
-  
-  .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+  const archive = document.querySelector("#schoolWorkTodoArchive");
 
-if (!todos.length) {
-  list.innerHTML = `<div class="workroom-empty">Im Moment ist alles erledigt. ✨</div>`;
-}
+  if (archive) {
+    const archivedTodos = state.workroom.todos
+      .filter(t =>
+        t.done &&
+        t.completedAt &&
+        t.completedAt <= oneMinuteAgo
+      )
+      .sort((a, b) => (b.completedAt ?? 0) - (a.completedAt ?? 0));
 
-const archive = document.querySelector("#schoolWorkTodoArchive");
+    archive.innerHTML = archivedTodos.length
+      ? archivedTodos.map(t => `
+          <div class="workroom-archive-item">
+            <span>✓ ${escapeHtml(t.text)}</span>
 
-if (archive) {
-  const archivedTodos = state.workroom.todos
-    .filter(t =>
-      t.done &&
-      t.completedAt &&
-      t.completedAt <= oneMinuteAgo
-    )
-    .sort((a, b) => (b.completedAt ?? 0) - (a.completedAt ?? 0));
+            <button
+              type="button"
+              class="workroom-archive-delete"
+              data-id="${t.id}"
+              title="Endgültig löschen"
+              aria-label="Erledigtes Schul-To-do löschen"
+            >×</button>
+          </div>
+        `).join("")
+      : `<div class="workroom-empty">Noch keine erledigten Schul-To-dos.</div>`;
 
-archive.innerHTML = archivedTodos.length
-  ? archivedTodos.map(t => `
-      <div class="workroom-archive-item">
-        <span>✓ ${escapeHtml(t.text)}</span>
+    archive.querySelectorAll(".workroom-archive-delete").forEach(btn => {
+      btn.addEventListener("click", e => {
+        const id = e.currentTarget.dataset.id;
 
-        <button
-          type="button"
-          class="workroom-archive-delete"
-          data-id="${t.id}"
-          title="Endgültig löschen"
-          aria-label="Erledigtes Schul-To-do löschen"
-        >×</button>
-      </div>
-    `).join("")
-  : `<div class="workroom-empty">Noch keine erledigten Schul-To-dos.</div>`;
+        state.workroom.todos =
+          state.workroom.todos.filter(t => t.id !== id);
 
-/* GENAU HIER EINFÜGEN */
-document.querySelectorAll(".workroom-archive-delete").forEach(btn => {
-  btn.addEventListener("click", e => {
-    const id = e.currentTarget.dataset.id;
-
-    state.workroom.todos =
-      state.workroom.todos.filter(t => t.id !== id);
-
-    save();
-    renderSchoolWorkTodos();
-});
+        save();
+        renderSchoolWorkTodos();
+      });
+    });
   }
 
-const typeLabels = {
+  if (!todos.length) {
+    list.innerHTML =
+      `<div class="workroom-empty">Im Moment ist alles erledigt. ✨</div>`;
+    return;
+  }
+
+  const typeLabels = {
     draw: "✏️ Vorzeichnen",
     prepare: "🛠 Vorbereiten",
     create: "📄 Erstellen",
@@ -2167,182 +2167,172 @@ const typeLabels = {
   };
 
   list.innerHTML = todos.map(t => `
-<div
-  class="workroom-todo-row ${t.done ? "done" : ""}"
-  data-id="${t.id}">
+    <div
+      class="workroom-todo-row ${t.done ? "done" : ""}"
+      data-id="${t.id}">
 
-  <input
-    class="workroom-todo-check"
-    type="checkbox"
-    data-id="${t.id}"
-    ${t.done ? "checked" : ""}>
+      <input
+        class="workroom-todo-check"
+        type="checkbox"
+        data-id="${t.id}"
+        ${t.done ? "checked" : ""}>
 
- <div class="workroom-todo-content">
-  <span class="workroom-todo-text">${escapeHtml(t.text)}</span>
-</div>
+      <div class="workroom-todo-content">
+        <span class="workroom-todo-text">
+          ${escapeHtml(t.text)}
+        </span>
+      </div>
 
-<div class="workroom-todo-actions">
+      <div class="workroom-todo-actions">
 
-  ${t.type
-    ? `<span class="workroom-todo-type">${typeLabels[t.type] || ""}</span>`
-    : ""}
+        ${t.type
+          ? `<span class="workroom-todo-type">
+               ${typeLabels[t.type] || ""}
+             </span>`
+          : ""}
 
-  ${t.url
-    ? `<a class="workroom-todo-link"
-        href="${escapeHtml(t.url)}"
-        target="_blank"
-        rel="noopener"
-        title="Link öffnen">🔗</a>`
-    : ""}
+        ${t.url
+          ? `<a
+               class="workroom-todo-link"
+               href="${escapeHtml(t.url)}"
+               target="_blank"
+               rel="noopener"
+               title="Link öffnen">🔗</a>`
+          : ""}
+
+        <button
+          class="workroom-todo-edit"
+          type="button"
+          data-id="${t.id}"
+          title="Bearbeiten">✎</button>
+
+        <button
+          class="workroom-todo-delete"
+          type="button"
+          data-id="${t.id}"
+          title="Löschen">×</button>
+
+        <div class="workroom-move-controls">
+
           <button
-  class="workroom-todo-edit"
-  type="button"
-  data-id="${t.id}"
-  title="Bearbeiten">✎</button>
+            class="workroom-move-btn workroom-move-top"
+            type="button"
+            data-id="${t.id}"
+            title="Ganz nach oben">⇈</button>
 
-<button
-  class="workroom-todo-delete"
-  type="button"
-  data-id="${t.id}"
-  title="Löschen">×</button>
+          <button
+            class="workroom-move-btn workroom-move-up"
+            type="button"
+            data-id="${t.id}"
+            title="Eine Position nach oben">↑</button>
 
-<div class="workroom-move-controls">
-  <button
-    class="workroom-move-btn workroom-move-top"
-    type="button"
-    data-id="${t.id}"
-    title="Ganz nach oben">⇈</button>
+          <button
+            class="workroom-move-btn workroom-move-down"
+            type="button"
+            data-id="${t.id}"
+            title="Eine Position nach unten">↓</button>
 
-  <button
-    class="workroom-move-btn workroom-move-up"
-    type="button"
-    data-id="${t.id}"
-    title="Eine Position nach oben">↑</button>
+          <span
+            class="workroom-drag-handle"
+            title="Ziehen"
+            aria-label="Ziehen">⋮⋮</span>
 
-  <button
-    class="workroom-move-btn workroom-move-down"
-    type="button"
-    data-id="${t.id}"
-    title="Eine Position nach unten">↓</button>
-
-  <span
-    class="workroom-drag-handle"
-    title="Ziehen"
-    aria-label="Ziehen">⋮⋮</span>
-</div>
+        </div>
       </div>
     </div>
   `).join("");
 
-document.querySelectorAll(".workroom-todo-check").forEach(box => {
-  box.addEventListener("change", e => {
-    const item = state.workroom.todos.find(t => t.id === e.currentTarget.dataset.id);
-    if (!item) return;
+  document.querySelectorAll(".workroom-todo-check").forEach(box => {
+    box.addEventListener("change", e => {
+      const item = state.workroom.todos.find(
+        t => t.id === e.currentTarget.dataset.id
+      );
 
-    item.done = e.currentTarget.checked;
+      if (!item) return;
 
-    if (item.done) {
-      item.completedAt = Date.now();
-    } else {
-      item.completedAt = null;
-    }
-
-    save();
-    renderSchoolWorkTodos();
-    if (item.done) {
-  setTimeout(() => {
-    renderSchoolWorkTodos();
-  }, 60000);
-}
-  });
-});
-  
-    function moveSchoolWorkTodo(id, direction) {
-  const sorted = [...state.workroom.todos]
-    .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
-
-  const index = sorted.findIndex(t => t.id === id);
-  if (index === -1) return;
-
-  let newIndex = index;
-
-  if (direction === "top") newIndex = 0;
-  if (direction === "up") newIndex = Math.max(0, index - 1);
-  if (direction === "down") newIndex = Math.min(sorted.length - 1, index + 1);
-
-  if (newIndex === index) return;
-
-  const [moved] = sorted.splice(index, 1);
-  sorted.splice(newIndex, 0, moved);
-
-  sorted.forEach((todo, i) => {
-    todo.order = i;
-  });
-
-  state.workroom.todos = sorted;
-
-  save();
-  renderSchoolWorkTodos();
-}
-
-
-  document.querySelectorAll(".workroom-todo-delete").forEach(btn => {
-  btn.addEventListener("click", e => {
-    const id = e.currentTarget.dataset.id;
-
-    state.workroom.todos = state.workroom.todos.filter(t => t.id !== id);
-
-    save();
-    renderSchoolWorkTodos();
-  });
-});
-
-document.querySelectorAll(".workroom-todo-edit").forEach(btn => {
-  btn.addEventListener("click", e => {
-    const id = e.currentTarget.dataset.id;
-    const item = state.workroom.todos.find(t => t.id === id);
-    if (!item) return;
-
-    document.querySelector("#schoolWorkTodoInput").value = item.text || "";
-    document.querySelector("#schoolWorkTodoType").value = item.type || "";
-    document.querySelector("#schoolWorkTodoLink").value = item.url || "";
-
-    document.querySelector("#addSchoolWorkTodoBtn").dataset.editId = item.id;
-    document.querySelector("#addSchoolWorkTodoBtn").textContent = "Änderung speichern";
-  });
-});
-// Schul-To-dos per Maus oder Touch sortieren
-const todoList = document.querySelector("#schoolWorkTodoList");
-
-if (todoList && typeof Sortable !== "undefined") {
-  new Sortable(todoList, {
-    animation: 180,
-    handle: ".workroom-drag-handle",
-    ghostClass: "workroom-sort-ghost",
-    chosenClass: "workroom-sort-chosen",
-    dragClass: "workroom-sort-drag",
-delay: 0,
-delayOnTouchOnly: false,
-touchStartThreshold: 5,
-
-forceFallback: false,
-    
-    onEnd: function () {
-      const ids = [...todoList.querySelectorAll(".workroom-todo-row")]
-        .map(row => row.dataset.id);
-
-      ids.forEach((id, index) => {
-        const todo = state.workroom.todos.find(t => t.id === id);
-        if (todo) todo.order = index;
-      });
+      item.done = e.currentTarget.checked;
+      item.completedAt = item.done ? Date.now() : null;
 
       save();
       renderSchoolWorkTodos();
-    }
-  });
-}
-}
 
+      if (item.done) {
+        setTimeout(() => {
+          renderSchoolWorkTodos();
+        }, 61000);
+      }
+    });
+  });
+
+  document.querySelectorAll(".workroom-todo-delete").forEach(btn => {
+    btn.addEventListener("click", e => {
+      const id = e.currentTarget.dataset.id;
+
+      state.workroom.todos =
+        state.workroom.todos.filter(t => t.id !== id);
+
+      save();
+      renderSchoolWorkTodos();
+    });
+  });
+
+  document.querySelectorAll(".workroom-todo-edit").forEach(btn => {
+    btn.addEventListener("click", e => {
+      const id = e.currentTarget.dataset.id;
+      const item = state.workroom.todos.find(t => t.id === id);
+
+      if (!item) return;
+
+      document.querySelector("#schoolWorkTodoInput").value =
+        item.text || "";
+
+      document.querySelector("#schoolWorkTodoType").value =
+        item.type || "";
+
+      document.querySelector("#schoolWorkTodoLink").value =
+        item.url || "";
+
+      const addBtn =
+        document.querySelector("#addSchoolWorkTodoBtn");
+
+      addBtn.dataset.editId = item.id;
+      addBtn.textContent = "Änderung speichern";
+    });
+  });
+
+  const todoList =
+    document.querySelector("#schoolWorkTodoList");
+
+  if (todoList && typeof Sortable !== "undefined") {
+    new Sortable(todoList, {
+      animation: 180,
+      handle: ".workroom-drag-handle",
+      ghostClass: "workroom-sort-ghost",
+      chosenClass: "workroom-sort-chosen",
+      dragClass: "workroom-sort-drag",
+      delay: 0,
+      delayOnTouchOnly: false,
+      touchStartThreshold: 5,
+      forceFallback: false,
+
+      onEnd: function () {
+        const ids = [
+          ...todoList.querySelectorAll(".workroom-todo-row")
+        ].map(row => row.dataset.id);
+
+        ids.forEach((id, index) => {
+          const todo =
+            state.workroom.todos.find(t => t.id === id);
+
+          if (todo) todo.order = index;
+        });
+
+        save();
+        renderSchoolWorkTodos();
+      }
+    });
+  }
+}
 
 // Werkraum: Schul-To-dos mit Pfeilen verschieben
 document.addEventListener("click", e => {
