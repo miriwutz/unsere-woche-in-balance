@@ -1482,3 +1482,100 @@ input[type="checkbox"]:checked::before{transform:rotate(-45deg) scale(1)}
   .workroom-link-item:active{cursor:default}
   .workroom-link-drag-handle{display:none}
 }
+
+
+/* =========================================================
+   PLING – Tonwahl + Kennzeichnung
+   ========================================================= */
+.pling-sound-control{
+  display:inline-flex !important;
+  grid-template-columns:none !important;
+  align-items:center;
+  gap:6px !important;
+  margin:0 !important;
+  color:#81766f;
+  font-size:.72rem;
+  white-space:nowrap;
+}
+.pling-sound-control select{
+  width:auto;
+  min-width:110px;
+  padding:6px 26px 6px 9px;
+  border-radius:9px;
+  font-size:.72rem;
+}
+.pling-pill{
+  background:#f2ecf6;
+  color:#756783;
+  border:1px solid rgba(201,193,215,.55);
+}
+
+/* =========================================================
+   WERKRAUM – Links: Demnächst / Jahresplanung / Später
+   ========================================================= */
+.workroom-link-use-filters{
+  display:flex;
+  flex-wrap:wrap;
+  gap:7px;
+  margin:8px 0 14px;
+}
+.workroom-link-use-filter{
+  border:1px solid var(--line);
+  background:rgba(255,253,251,.72);
+  color:var(--muted);
+  padding:7px 11px;
+  border-radius:999px;
+  font-size:.76rem;
+}
+.workroom-link-use-filter.active{
+  background:var(--lavender-soft);
+  color:var(--ink);
+  border-color:rgba(201,193,215,.72);
+}
+.workroom-link-badges{
+  display:flex;
+  flex-wrap:wrap;
+  gap:6px;
+  align-items:center;
+}
+.workroom-link-use{
+  display:inline-flex;
+  align-items:center;
+  padding:4px 8px;
+  border-radius:999px;
+  background:#f2eee8;
+  color:#7e746e;
+  font-size:.68rem;
+  white-space:nowrap;
+}
+.workroom-link-use.is-soon{
+  background:#fff4cf;
+  color:#795f22;
+  border:1px solid rgba(202,164,70,.32);
+  font-weight:600;
+}
+.workroom-link-item.workroom-link-soon{
+  border-color:rgba(202,164,70,.58);
+  background:linear-gradient(90deg,rgba(255,248,220,.82),rgba(255,253,251,.94));
+  box-shadow:0 7px 20px rgba(164,129,46,.08);
+}
+.workroom-link-item.workroom-link-soon .workroom-link-title{
+  font-weight:600;
+}
+@media (max-width:700px){
+  .pling-sound-control{
+    flex:1 1 150px;
+  }
+  .pling-sound-control select{
+    flex:1;
+    min-width:90px;
+  }
+  .workroom-link-use-filters{
+    gap:5px;
+  }
+  .workroom-link-use-filter{
+    padding:6px 9px;
+    font-size:.7rem;
+  }
+}
+
