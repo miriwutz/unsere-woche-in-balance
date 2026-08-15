@@ -2005,7 +2005,7 @@ document.querySelector("#openSchoolTimetableEditorBtn")?.addEventListener("click
 });
 
 document.querySelector("#openWorkTimetableBtn")?.addEventListener("click", () => {
-  openFamilyTimetableChooser("edit");
+  openManualTimetableEditor("mama");
 });
 
 document.querySelector("#closeFamilyTimetableDialog")?.addEventListener("click", () => {
@@ -2392,7 +2392,7 @@ function renderRecipes() {
           <h3>${escapeHtml(r.title)}</h3>
           <div class="recipe-badges">
             <span>${escapeHtml(recipeDifficultyLabel(r.difficulty))}</span>
-            ${r.kids ? `<span class="recipe-kids-badge">🧒 Kindergericht</span>` : ""}
+            ${r.kids ? `<span class="recipe-kids-badge">🧒 Das kannst du selbst kochen!</span>` : ""}
           </div>
         </div>
         <div class="recipe-tools">⌁</div>
@@ -2430,12 +2430,52 @@ function renderRecipes() {
 
 function renderRecipeSearchSuggestions() {
   const list = document.querySelector("#recipeSearchSuggestions");
-  if (!list) return;
-  list.innerHTML = (state.recipes || [])
+  const popup = document.querySelector("#recipeAutocomplete");
+  const input = document.querySelector("#recipeSearch");
+  const recipes = (state.recipes || [])
     .slice()
-    .sort((a,b) => String(a.title || "").localeCompare(String(b.title || ""), "de"))
-    .map(r => `<option value="${escapeHtml(r.title || "")}"></option>`)
-    .join("");
+    .sort((a,b) => String(a.title || "").localeCompare(String(b.title || ""), "de"));
+
+  if (list) {
+    list.innerHTML = recipes
+      .map(r => `<option value="${escapeHtml(r.title || "")}"></option>`)
+      .join("");
+  }
+
+  if (!popup || !input) return;
+  const q = (input.value || "").trim().toLowerCase();
+
+  if (!q) {
+    popup.classList.add("hidden");
+    popup.innerHTML = "";
+    return;
+  }
+
+  const matches = recipes
+    .filter(r => String(r.title || "").toLowerCase().includes(q))
+    .slice(0, 7);
+
+  if (!matches.length) {
+    popup.classList.add("hidden");
+    popup.innerHTML = "";
+    return;
+  }
+
+  popup.innerHTML = matches.map(r =>
+    `<button type="button" class="recipe-autocomplete-item" data-title="${escapeHtml(r.title || "")}">
+       ${escapeHtml(r.title || "")}
+     </button>`
+  ).join("");
+  popup.classList.remove("hidden");
+
+  popup.querySelectorAll(".recipe-autocomplete-item").forEach(btn => {
+    btn.addEventListener("click", () => {
+      input.value = btn.dataset.title || "";
+      activeRecipeSearch = input.value;
+      popup.classList.add("hidden");
+      renderRecipes();
+    });
+  });
 }
 
 function renderRecipeToc() {
@@ -2452,13 +2492,19 @@ function renderRecipeToc() {
   }
 
   host.innerHTML = recipes
-    .map(r => `<button type="button" class="recipe-toc-link" data-id="${r.id}">${escapeHtml(r.title || "Ohne Titel")}</button>`)
+    .map(r => `<button type="button" class="recipe-toc-link" data-id="${r.id}" data-title="${escapeHtml(r.title || "")}">${escapeHtml(r.title || "Ohne Titel")}</button>`)
     .join("");
 
   host.querySelectorAll(".recipe-toc-link").forEach(btn => {
     btn.addEventListener("click", () => {
-      const card = document.querySelector(`#recipe-${CSS.escape(btn.dataset.id)}`);
-      if (card) card.scrollIntoView({behavior:"smooth", block:"start"});
+      const search = document.querySelector("#recipeSearch");
+      if (search) search.value = btn.dataset.title || "";
+      activeRecipeSearch = btn.dataset.title || "";
+      renderRecipes();
+      requestAnimationFrame(() => {
+        const card = document.querySelector(`#recipe-${CSS.escape(btn.dataset.id)}`);
+        if (card) card.scrollIntoView({behavior:"smooth", block:"start"});
+      });
     });
   });
 }
@@ -2531,6 +2577,7 @@ document.querySelector("#toggleRecipeFormBtn")?.addEventListener("click", () => 
 document.querySelector("#recipeSearch")?.addEventListener("input", e => {
   activeRecipeSearch = e.currentTarget.value || "";
   renderRecipes();
+  renderRecipeSearchSuggestions();
 });
 
 document.querySelector("#recipeDifficultyFilter")?.addEventListener("change", e => {
@@ -3320,11 +3367,13 @@ function renderWorkroomLinks() {
 
   const useLabels = {
     soon: "Demnächst",
+    current: "📌 Aktuell",
+    bureaucracy: "🗂 Bürokratie",
     year: "🗓 Jahresplanung",
     later: "🌙 Später vorgemerkt"
   };
 
-  const useRank = { soon: 0, year: 1, later: 2 };
+  const useRank = { current: 0, soon: 1, bureaucracy: 2, year: 3, later: 4 };
 
   const links = [...state.workroom.links]
     .sort((a, b) => {
@@ -3595,6 +3644,12 @@ document.querySelectorAll(".workroom-link-use-filter").forEach(btn => {
 
     renderWorkroomLinks();
   });
+});
+
+document.querySelector("#workroomLinkUseFilterSelect")?.addEventListener("change", e => {
+  activeWorkroomLinkUse = e.currentTarget.value || "soon";
+  workroomLinkPage = 1;
+  renderWorkroomLinks();
 });
 
 document.querySelector("#workroomLinkImportantFilter")?.addEventListener("click", e => {
