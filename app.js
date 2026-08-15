@@ -2115,10 +2115,9 @@ const todos = [...state.workroom.todos]
   
   .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 
-  if (!todos.length) {
-    list.innerHTML = `<div class="workroom-empty">Noch keine Schul-To-dos eingetragen.</div>`;
-    return;
-  }
+if (!todos.length) {
+  list.innerHTML = `<div class="workroom-empty">Im Moment ist alles erledigt. ✨</div>`;
+}
 
   const typeLabels = {
     draw: "✏️ Vorzeichnen",
