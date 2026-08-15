@@ -997,10 +997,12 @@ input[type="checkbox"]:checked::before{transform:rotate(-45deg) scale(1)}
 }
 @media (max-width:600px){
 
-  .workroom-todo-edit,
-  .workroom-todo-delete{
-    display:none !important;
-  }
+.workroom-todo-edit,
+.workroom-todo-delete,
+.workroom-print-edit,
+.workroom-print-delete{
+  display:none !important;
+}
 
   .workroom-todo-text{
     font-size:.92rem !important;
