@@ -2370,7 +2370,9 @@ document.querySelector("#todayWeekBtn").addEventListener("click", () => {
 
 // ===== EINKAUF – REZEPTKARTEN =====
 let activeRecipeDifficulty = "all";
+let activeRecipeCategory = "all";
 let recipeKidsOnly = false;
+let recipeHealthyOnly = false;
 let activeRecipeSearch = "";
 let mealPlanWeekOffset = 0;
 let recipePage = 0;
@@ -2378,6 +2380,20 @@ const RECIPE_PAGE_SIZE = 10;
 
 function recipeDifficultyLabel(value) {
   return {easy:"Einfach", medium:"Mittel", advanced:"Etwas aufwendiger"}[value] || "Mittel";
+}
+
+function recipeCategoryLabel(value) {
+  return {
+    breakfast: "🥣 Frühstück & Morgenideen",
+    spread: "🥖 Aufstriche & Dips",
+    soup: "🍲 Suppen & Eintöpfe",
+    main: "🍝 Hauptgerichte",
+    small: "🥙 Kleine Sachen & Jause",
+    salad: "🥗 Salate & Frisches",
+    sweet: "🍓 Süßes & Backen",
+    drink: "🥤 Getränke & Smoothies",
+    other: "✨ Sonstiges"
+  }[value] || "🍝 Hauptgerichte";
 }
 
 function recipeLines(value) {
@@ -2413,10 +2429,21 @@ function showRecipeDetail(recipeOrTitle) {
   title.textContent = recipe.title || "Rezept";
 
   body.innerHTML = `
-    <div class="recipe-detail-meta">
-      <span>${escapeHtml(recipeDifficultyLabel(recipe.difficulty))}</span>
-      ${recipe.kids ? `<span class="recipe-kids-badge">🧒 Das kannst du selbst kochen!</span>` : ""}
-      ${recipe.time ? `<span>◔ ${escapeHtml(recipe.time)}</span>` : ""}
+    <div class="recipe-detail-banner">
+      <div class="recipe-detail-time">
+        <span class="recipe-detail-clock">◔</span>
+        <span>${escapeHtml(recipe.time || "–")}</span>
+      </div>
+      <div class="recipe-detail-center">
+        <span class="recipe-detail-ribbon">REZEPT</span>
+        <div class="recipe-detail-tags">
+          <span>${escapeHtml(recipeCategoryLabel(recipe.category || "main"))}</span>
+          <span>${escapeHtml(recipeDifficultyLabel(recipe.difficulty))}</span>
+          ${recipe.kids ? `<span class="recipe-kids-badge">🧒 Das kannst du selbst kochen!</span>` : ""}
+          ${recipe.healthy ? `<span class="recipe-healthy-badge">🌿 Gesund & bunt</span>` : ""}
+        </div>
+      </div>
+      <div class="recipe-detail-utensil">⌁</div>
     </div>
 
     <div class="recipe-detail-grid">
@@ -2481,15 +2508,18 @@ function renderRecipes() {
 
   const recipes = state.recipes
     .filter(r => {
+      const matchesCategory =
+        activeRecipeCategory === "all" || (r.category || "main") === activeRecipeCategory;
       const matchesDifficulty =
         activeRecipeDifficulty === "all" || r.difficulty === activeRecipeDifficulty;
       const matchesKids = !recipeKidsOnly || !!r.kids;
+      const matchesHealthy = !recipeHealthyOnly || !!r.healthy;
       const haystack = [
         r.title,
         ...(Array.isArray(r.ingredients) ? r.ingredients : [])
       ].join(" ").toLowerCase();
       const matchesSearch = !query || haystack.includes(query);
-      return matchesDifficulty && matchesKids && matchesSearch;
+      return matchesCategory && matchesDifficulty && matchesKids && matchesHealthy && matchesSearch;
     })
     .sort((a,b) => (b.createdAt || 0) - (a.createdAt || 0));
 
@@ -2520,8 +2550,10 @@ function renderRecipes() {
             ${escapeHtml(r.title)}
           </button>
           <div class="recipe-badges">
+            <span>${escapeHtml(recipeCategoryLabel(r.category || "main"))}</span>
             <span>${escapeHtml(recipeDifficultyLabel(r.difficulty))}</span>
             ${r.kids ? `<span class="recipe-kids-badge">🧒 Das kannst du selbst kochen!</span>` : ""}
+            ${r.healthy ? `<span class="recipe-healthy-badge">🌿 Gesund & bunt</span>` : ""}
           </div>
         </div>
         <div class="recipe-tools">⌁</div>
@@ -2547,9 +2579,13 @@ function renderRecipes() {
   `).join("");
 
   host.querySelectorAll(".recipe-delete").forEach(btn => btn.addEventListener("click", () => {
-    state.recipes = state.recipes.filter(r => r.id !== btn.dataset.id);
-    save();
-    renderRecipes();
+    const recipe = state.recipes.find(r => r.id === btn.dataset.id);
+    if (!recipe) return;
+
+    pendingRecipeDeleteId = recipe.id;
+    const text = document.querySelector("#recipeDeleteText");
+    if (text) text.textContent = `„${recipe.title || "Dieses Rezept"}“ wird dauerhaft aus deinen Rezeptkarten entfernt.`;
+    document.querySelector("#recipeDeleteDialog")?.showModal();
   }));
 
   host.querySelectorAll(".recipe-title-button").forEach(btn => {
@@ -2754,6 +2790,36 @@ function renderMealPlan() {
   document.querySelector("#mealPlanNextWeekBtn")?.classList.toggle("active", mealPlanWeekOffset === 1);
 }
 
+
+let pendingRecipeDeleteId = null;
+
+function closeRecipeDetailDialog() {
+  const dialog = document.querySelector("#recipeDetailDialog");
+  if (dialog?.open) dialog.close();
+}
+
+document.querySelector("#closeRecipeDetailBtn")?.addEventListener("click", closeRecipeDetailDialog);
+
+document.querySelector("#recipeDetailDialog")?.addEventListener("click", e => {
+  if (e.target === e.currentTarget) closeRecipeDetailDialog();
+});
+
+document.querySelector("#cancelRecipeDeleteBtn")?.addEventListener("click", () => {
+  pendingRecipeDeleteId = null;
+  document.querySelector("#recipeDeleteDialog")?.close();
+});
+
+document.querySelector("#confirmRecipeDeleteBtn")?.addEventListener("click", () => {
+  if (!pendingRecipeDeleteId) return;
+  state.recipes = state.recipes.filter(r => r.id !== pendingRecipeDeleteId);
+  pendingRecipeDeleteId = null;
+  save();
+  renderRecipes();
+  renderMealPlan();
+  document.querySelector("#recipeDeleteDialog")?.close();
+  showMotivation("Rezept gelöscht.");
+});
+
 document.querySelector("#toggleRecipeFormBtn")?.addEventListener("click", () => {
   document.querySelector("#recipeForm")?.classList.toggle("hidden");
 });
@@ -2764,6 +2830,12 @@ document.querySelector("#recipeSearch")?.addEventListener("input", e => {
   renderRecipeSearchSuggestions();
 });
 
+document.querySelector("#recipeCategoryFilter")?.addEventListener("change", e => {
+  activeRecipeCategory = e.currentTarget.value || "all";
+  recipePage = 0;
+  renderRecipes();
+});
+
 document.querySelector("#recipeDifficultyFilter")?.addEventListener("change", e => {
   activeRecipeDifficulty = e.currentTarget.value || "all";
   recipePage = 0;
@@ -2771,6 +2843,12 @@ document.querySelector("#recipeDifficultyFilter")?.addEventListener("change", e 
 });
 document.querySelector("#recipeKidsOnlyFilter")?.addEventListener("change", e => {
   recipeKidsOnly = !!e.currentTarget.checked;
+  recipePage = 0;
+  renderRecipes();
+});
+
+document.querySelector("#recipeHealthyOnlyFilter")?.addEventListener("change", e => {
+  recipeHealthyOnly = !!e.currentTarget.checked;
   recipePage = 0;
   renderRecipes();
 });
@@ -2791,8 +2869,10 @@ document.querySelector("#saveRecipeBtn")?.addEventListener("click", () => {
   state.recipes.push({
     id: uid(),
     title,
+    category: document.querySelector("#recipeCategory")?.value || "main",
     difficulty: document.querySelector("#recipeDifficulty")?.value || "medium",
     kids: !!document.querySelector("#recipeKids")?.checked,
+    healthy: !!document.querySelector("#recipeHealthy")?.checked,
     time: document.querySelector("#recipeTime")?.value.trim() || "",
     ingredients: recipeLines(document.querySelector("#recipeIngredients")?.value),
     steps: recipeLines(document.querySelector("#recipeSteps")?.value),
@@ -2805,6 +2885,7 @@ document.querySelector("#saveRecipeBtn")?.addEventListener("click", () => {
     const el = document.querySelector(sel); if (el) el.value = "";
   });
   const kid = document.querySelector("#recipeKids"); if (kid) kid.checked = false;
+  const healthy = document.querySelector("#recipeHealthy"); if (healthy) healthy.checked = false;
   save(); renderRecipes();
   document.querySelector("#recipeForm")?.classList.add("hidden");
   showMotivation("Rezept gespeichert.");
