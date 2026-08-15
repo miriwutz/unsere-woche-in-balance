@@ -30,6 +30,7 @@ const state = {
   todos: JSON.parse(localStorage.getItem("balanceProd.todos") || "[]"),
   archive: JSON.parse(localStorage.getItem("balanceProd.archive") || "[]"),
   shopping: JSON.parse(localStorage.getItem("balanceProd.shopping") || "[]"),
+  recipes: JSON.parse(localStorage.getItem("balanceProd.recipes") || "[]"),
 
   workroom: JSON.parse(
     localStorage.getItem("balanceProd.workroom") ||
@@ -48,8 +49,10 @@ state.workroom.todos = Array.isArray(state.workroom.todos) ? state.workroom.todo
 state.workroom.prints = Array.isArray(state.workroom.prints) ? state.workroom.prints : [];
 state.workroom.links = Array.isArray(state.workroom.links) ? state.workroom.links : [];
 state.workroom.substitutions = Array.isArray(state.workroom.substitutions) ? state.workroom.substitutions : [];
+state.recipes = Array.isArray(state.recipes) ? state.recipes : [];
 
 let shoppingItems = state.shopping;
+    state.recipes = Array.isArray(data.recipes) ? data.recipes : (Array.isArray(state.recipes) ? state.recipes : []);
 let cloudReady = false;
 let cloudApplying = false;
 let cloudSaveTimer = null;
@@ -60,6 +63,7 @@ function saveLocal() {
   localStorage.setItem("balanceProd.todos", JSON.stringify(state.todos));
   localStorage.setItem("balanceProd.archive", JSON.stringify(state.archive));
   localStorage.setItem("balanceProd.shopping", JSON.stringify(state.shopping));
+  localStorage.setItem("balanceProd.recipes", JSON.stringify(state.recipes));
   localStorage.setItem("balanceProd.workroom", JSON.stringify(state.workroom));
   localStorage.setItem("balanceProd.school", JSON.stringify(state.school));
   localStorage.setItem("balanceProd.familySettings", JSON.stringify(state.familySettings));
@@ -74,6 +78,7 @@ function cloudPayload() {
     todos: state.todos,
     archive: state.archive,
     shopping: state.shopping,
+    recipes: state.recipes,
     workroom: state.workroom,
     school: state.school,
     familySettings: state.familySettings,
@@ -1987,12 +1992,16 @@ function openFamilyTimetableChooser(mode = "view") {
   familyTimetableDialog?.showModal();
 }
 
+document.querySelector("#openFamilyTimetableBtn")?.addEventListener("click", () => {
+  openFamilyTimetableChooser("view");
+});
+
 document.querySelector("#openSchoolTimetableEditorBtn")?.addEventListener("click", () => {
   openFamilyTimetableChooser("edit");
 });
 
 document.querySelector("#openWorkTimetableBtn")?.addEventListener("click", () => {
-  openFamilyTimetableChooser("view");
+  openFamilyTimetableChooser("edit");
 });
 
 document.querySelector("#closeFamilyTimetableDialog")?.addEventListener("click", () => {
@@ -2259,6 +2268,7 @@ function renderAll() {
   renderSchoolWorkTodos();
   renderSchoolPrints();
   renderWorkroomLinks();
+  renderRecipes();
   renderSubstitutions();
   renderShopping();
 }
@@ -2325,6 +2335,112 @@ document.querySelector("#todayWeekBtn").addEventListener("click", () => {
   currentWeekMonday = getMonday(new Date());
   renderWeek();
 });
+
+// ===== EINKAUF – REZEPTKARTEN =====
+let activeRecipeDifficulty = "all";
+let recipeKidsOnly = false;
+
+function recipeDifficultyLabel(value) {
+  return {easy:"Einfach", medium:"Mittel", advanced:"Etwas aufwendiger"}[value] || "Mittel";
+}
+
+function recipeLines(value) {
+  return String(value || "").split(/\r?\n/).map(v => v.trim()).filter(Boolean);
+}
+
+function renderRecipes() {
+  const host = document.querySelector("#recipeList");
+  if (!host) return;
+  state.recipes = Array.isArray(state.recipes) ? state.recipes : [];
+
+  const recipes = state.recipes
+    .filter(r => (activeRecipeDifficulty === "all" || r.difficulty === activeRecipeDifficulty) &&
+                 (!recipeKidsOnly || !!r.kids))
+    .sort((a,b) => (b.createdAt || 0) - (a.createdAt || 0));
+
+  if (!recipes.length) {
+    host.innerHTML = `<div class="workroom-empty">Keine passenden Rezepte gefunden.</div>`;
+    return;
+  }
+
+  host.innerHTML = recipes.map(r => `
+    <article class="recipe-card">
+      <header class="recipe-card-head">
+        <div class="recipe-time-mark"><span class="recipe-clock">◔</span><span>${escapeHtml(r.time || "–")}</span></div>
+        <div class="recipe-title-wrap">
+          <span class="recipe-ribbon">REZEPT</span>
+          <h3>${escapeHtml(r.title)}</h3>
+          <div class="recipe-badges">
+            <span>${escapeHtml(recipeDifficultyLabel(r.difficulty))}</span>
+            ${r.kids ? `<span class="recipe-kids-badge">🧒 Kindergericht</span>` : ""}
+          </div>
+        </div>
+        <div class="recipe-tools">⌁</div>
+      </header>
+      <div class="recipe-card-body">
+        <section class="recipe-column">
+          <h4>ZUTATEN</h4>
+          <ul>${(r.ingredients || []).map(x => `<li>${escapeHtml(x)}</li>`).join("")}</ul>
+        </section>
+        <section class="recipe-column">
+          <h4>ZUBEREITUNG</h4>
+          <ol>${(r.steps || []).map(x => `<li>${escapeHtml(x)}</li>`).join("")}</ol>
+        </section>
+      </div>
+      <footer class="recipe-card-footer">
+        <div class="recipe-links">
+          ${r.webUrl ? `<a href="${escapeHtml(r.webUrl)}" target="_blank" rel="noopener">↗ Onlinerezept</a>` : ""}
+          ${r.youtubeUrl ? `<a href="${escapeHtml(r.youtubeUrl)}" target="_blank" rel="noopener">▶ YouTube</a>` : ""}
+        </div>
+        <button class="recipe-delete" data-id="${r.id}" type="button">×</button>
+      </footer>
+    </article>
+  `).join("");
+
+  host.querySelectorAll(".recipe-delete").forEach(btn => btn.addEventListener("click", () => {
+    state.recipes = state.recipes.filter(r => r.id !== btn.dataset.id);
+    save();
+    renderRecipes();
+  }));
+}
+
+document.querySelector("#toggleRecipeFormBtn")?.addEventListener("click", () => {
+  document.querySelector("#recipeForm")?.classList.toggle("hidden");
+});
+document.querySelector("#recipeDifficultyFilter")?.addEventListener("change", e => {
+  activeRecipeDifficulty = e.currentTarget.value || "all";
+  renderRecipes();
+});
+document.querySelector("#recipeKidsOnlyFilter")?.addEventListener("change", e => {
+  recipeKidsOnly = !!e.currentTarget.checked;
+  renderRecipes();
+});
+document.querySelector("#saveRecipeBtn")?.addEventListener("click", () => {
+  const title = document.querySelector("#recipeTitle")?.value.trim() || "";
+  if (!title) return showMotivation("Bitte zuerst einen Rezeptnamen eintragen.");
+
+  state.recipes.push({
+    id: uid(),
+    title,
+    difficulty: document.querySelector("#recipeDifficulty")?.value || "medium",
+    kids: !!document.querySelector("#recipeKids")?.checked,
+    time: document.querySelector("#recipeTime")?.value.trim() || "",
+    ingredients: recipeLines(document.querySelector("#recipeIngredients")?.value),
+    steps: recipeLines(document.querySelector("#recipeSteps")?.value),
+    webUrl: document.querySelector("#recipeWebUrl")?.value.trim() || "",
+    youtubeUrl: document.querySelector("#recipeYoutubeUrl")?.value.trim() || "",
+    createdAt: Date.now()
+  });
+
+  ["#recipeTitle","#recipeTime","#recipeIngredients","#recipeSteps","#recipeWebUrl","#recipeYoutubeUrl"].forEach(sel => {
+    const el = document.querySelector(sel); if (el) el.value = "";
+  });
+  const kid = document.querySelector("#recipeKids"); if (kid) kid.checked = false;
+  save(); renderRecipes();
+  document.querySelector("#recipeForm")?.classList.add("hidden");
+  showMotivation("Rezept gespeichert.");
+});
+
 const WORKROOM_PAGE_SIZE = 10;
 let schoolWorkTodoPage = 0;
 let schoolPrintPage = 0;
@@ -4587,11 +4703,11 @@ store.value = "";
         tone(1175,0.18, 0.62, {gain:0.78});
 
       } else if (sound === "peng") {
-        // Knackiger, sehr kurzer Impuls mit deutlichem Attack.
-        noiseBurst(0.00, 0.11, 1.15);
-        tone(115, 0.00, 0.24, {type:"square", gain:1.0, endFreq:58});
-        tone(920, 0.004, 0.085, {type:"square", gain:0.38, endFreq:360});
-        tone(190, 0.018, 0.32, {type:"triangle", gain:0.72, endFreq:72});
+        // Heller, trockener PENG-Impuls mit scharfem Attack.
+        noiseBurst(0.00, 0.070, 0.88);
+        tone(1650, 0.000, 0.070, {type:"square", gain:0.50, endFreq:720});
+        tone(980,  0.006, 0.115, {type:"triangle", gain:0.72, endFreq:520});
+        tone(360,  0.018, 0.190, {type:"triangle", gain:0.42, endFreq:220});
 
       } else if (sound === "elf") {
         tone(1319,0.00,0.42,{gain:0.48});
