@@ -2156,7 +2156,6 @@ document.querySelectorAll(".workroom-archive-delete").forEach(btn => {
 
     save();
     renderSchoolWorkTodos();
-  });
 });
   }
 
