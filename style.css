@@ -1622,3 +1622,163 @@ input[type="checkbox"]:checked::before{transform:rotate(-45deg) scale(1)}
   }
 }
 
+
+
+/* =========================================================
+   LINKSAMMLUNG – Wichtig ist die einzige starke Hervorhebung
+   ========================================================= */
+.workroom-link-item.workroom-link-soon{
+  border-color:var(--line) !important;
+  background:rgba(255,253,251,.84) !important;
+  box-shadow:none !important;
+}
+.workroom-link-use.is-soon,
+.workroom-link-use{
+  background:#f3efeb !important;
+  color:#857b74 !important;
+  border:1px solid transparent !important;
+  font-weight:500 !important;
+}
+.workroom-link-important-toggle{
+  display:inline-flex !important;
+  align-items:center;
+  gap:6px !important;
+  min-height:38px;
+  padding:0 12px !important;
+  border:1px solid var(--line);
+  border-radius:12px;
+  background:#fffdfb;
+  cursor:pointer;
+  white-space:nowrap;
+}
+.workroom-link-important-toggle input{margin:0}
+.workroom-link-important-filter{
+  border:1px solid rgba(198,158,72,.38);
+  background:#fffaf0;
+  color:#735a25;
+  padding:7px 11px;
+  border-radius:999px;
+  font-size:.76rem;
+}
+.workroom-link-important-filter.active{
+  background:#f6e5ad;
+  border-color:#d7ad50;
+  color:#594316;
+  font-weight:700;
+}
+.workroom-link-item.workroom-link-important{
+  border:2px solid rgba(209,164,63,.78) !important;
+  background:linear-gradient(90deg,rgba(255,244,202,.90),rgba(255,253,247,.96)) !important;
+  box-shadow:0 6px 18px rgba(171,126,35,.09) !important;
+}
+.workroom-link-important-badge{
+  display:inline-flex;
+  align-items:center;
+  padding:4px 8px;
+  border-radius:999px;
+  background:#f7e4a4;
+  color:#674d12;
+  border:1px solid rgba(205,159,57,.34);
+  font-size:.68rem;
+  font-weight:700;
+}
+.workroom-link-category[data-category="documents"]{
+  background:#edf0f3;
+}
+
+/* =========================================================
+   SCHULE – Stundenplaneditor
+   ========================================================= */
+.school-timetable-editor-btn{
+  flex:0 0 auto;
+  align-self:center;
+}
+
+/* =========================================================
+   SUPPLIERUNGEN
+   ========================================================= */
+.substitution-list{
+  display:grid;
+  gap:6px;
+  margin:10px 0 12px;
+}
+.substitution-empty{
+  padding:6px 0 !important;
+  font-size:.76rem !important;
+}
+.substitution-item{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:8px;
+  padding:8px 9px;
+  border:1px solid rgba(231,221,216,.82);
+  border-radius:11px;
+  background:rgba(255,253,251,.82);
+}
+.substitution-item-main{
+  display:grid;
+  gap:2px;
+  min-width:0;
+}
+.substitution-item-main strong{font-size:.75rem}
+.substitution-item-main span{font-size:.76rem}
+.substitution-item-main small{
+  color:var(--muted);
+  font-size:.68rem;
+}
+.substitution-delete{
+  border:0;
+  background:transparent;
+  color:#a4948d;
+  cursor:pointer;
+  padding:1px 4px;
+}
+.substitution-dialog{
+  width:min(620px,calc(100% - 28px));
+}
+.substitution-form{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+}
+.substitution-form label{
+  display:grid;
+  gap:6px;
+}
+.substitution-note-label{
+  grid-column:1 / -1;
+}
+.substitution-form textarea{
+  resize:vertical;
+  min-height:76px;
+}
+
+/* =========================================================
+   HANDY – Heute deutlich und automatisch angesprungen
+   ========================================================= */
+@media (max-width:760px){
+  .day.today{
+    border:3px solid rgba(196,145,42,.82) !important;
+    background:linear-gradient(180deg,#fff5d8 0%,#fffdf7 34%,#fffdfb 100%) !important;
+    box-shadow:0 8px 24px rgba(163,116,28,.18) !important;
+    scroll-margin-top:14px;
+  }
+  .day.today h3{
+    color:#604716;
+  }
+  .day.today h3::after{
+    content:"HEUTE";
+    background:#e6bd55 !important;
+    color:#47340e !important;
+    font-size:.64rem !important;
+    font-weight:800 !important;
+    padding:3px 7px !important;
+  }
+  .substitution-form{
+    grid-template-columns:1fr;
+  }
+  .substitution-note-label{
+    grid-column:auto;
+  }
+}
