@@ -1357,6 +1357,13 @@ if (isExpanded) {
 document.querySelector("#eventEndDate").value = item.endDate || "";
 document.querySelector("#eventTime").value = item.time || "";
 document.querySelector("#eventEndTime").value = item.endTime || "";
+
+const plingEnabled = document.querySelector("#eventPlingEnabled");
+const plingMinutes = document.querySelector("#eventPlingMinutes");
+
+if (plingEnabled) plingEnabled.checked = !!item.plingEnabled;
+if (plingMinutes) plingMinutes.value = String(item.plingMinutes || 15);
+
 document.querySelector("#eventCategory").value = item.eventCategory || "normal";
     document.querySelector("#recurrence").value = item.recurrence || "none";
     setSelectedFamilyMembers(item.family || []);
