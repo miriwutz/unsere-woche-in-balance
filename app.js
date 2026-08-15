@@ -1971,17 +1971,28 @@ document.querySelectorAll(".timetable-switch").forEach(btn => {
 });
 // Stundenplan-Auswahl auf der Wochenplan-Seite
 const familyTimetableDialog = document.querySelector("#familyTimetableDialog");
+let familyTimetableMode = "view";
 
-function openFamilyTimetableEditorChooser() {
+function openFamilyTimetableChooser(mode = "view") {
+  familyTimetableMode = mode;
   document.querySelector("#manualTimetableWrapmama")?.classList.add("hidden");
+
+  const title = document.querySelector("#familyTimetableDialogTitle");
+  if (title) {
+    title.textContent = mode === "edit"
+      ? "Welchen Stundenplan bearbeiten?"
+      : "Welchen Stundenplan ansehen?";
+  }
+
   familyTimetableDialog?.showModal();
 }
 
-document.querySelector("#openSchoolTimetableEditorBtn")?.addEventListener("click", openFamilyTimetableEditorChooser);
+document.querySelector("#openSchoolTimetableEditorBtn")?.addEventListener("click", () => {
+  openFamilyTimetableChooser("edit");
+});
+
 document.querySelector("#openWorkTimetableBtn")?.addEventListener("click", () => {
-  familyTimetableDialog?.showModal();
-  renderTTMatrix("mama");
-  document.querySelector("#manualTimetableWrapmama")?.classList.remove("hidden");
+  openFamilyTimetableChooser("view");
 });
 
 document.querySelector("#closeFamilyTimetableDialog")?.addEventListener("click", () => {
@@ -2213,18 +2224,22 @@ document.querySelectorAll(".family-timetable-person").forEach(btn => {
   btn.addEventListener("click", () => {
     const person = btn.dataset.person;
 
-           
- if (person === "1" || person === "2") {
-    familyTimetableDialog?.close();
-    openManualTimetableEditor(person);
-    return;
-}
+    if (familyTimetableMode === "view") {
+      familyTimetableDialog?.close();
+      showManualTimetable(person);
+      return;
+    }
 
-       if (person === "mama") {
-  renderTTMatrix("mama");
-  document.querySelector("#manualTimetableWrapmama")?.classList.remove("hidden");
-  return;
-}
+    if (person === "1" || person === "2") {
+      familyTimetableDialog?.close();
+      openManualTimetableEditor(person);
+      return;
+    }
+
+    if (person === "mama") {
+      renderTTMatrix("mama");
+      document.querySelector("#manualTimetableWrapmama")?.classList.remove("hidden");
+    }
   });
 });
 const manualTimetableDialog = document.querySelector("#manualTimetableDialog");
@@ -3046,6 +3061,8 @@ function renderWorkroomLinks() {
     free: "✂️ Freies Arbeiten",
     experiment: "🧪 Experimentieren",
     documents: "📎 Unterlagen & Belege",
+    bureaucracy: "🗂 Bürokratie",
+    current: "📌 Aktuell",
     other: "✨ Sonstiges"
   };
 
@@ -3059,10 +3076,14 @@ function renderWorkroomLinks() {
 
   const links = [...state.workroom.links]
     .sort((a, b) => {
+      const importantDiff = Number(!!b.important) - Number(!!a.important);
+      if (importantDiff) return importantDiff;
+
       if (activeWorkroomLinkUse === "all") {
         const rankDiff = (useRank[a.use || "soon"] ?? 0) - (useRank[b.use || "soon"] ?? 0);
         if (rankDiff) return rankDiff;
       }
+
       return (Number(a.order) || 0) - (Number(b.order) || 0);
     })
     .filter(link =>
@@ -3304,25 +3325,11 @@ document.querySelector("#addWorkroomLinkBtn")?.addEventListener("click", () => {
 });
 
 
-// Kategorien filtern
-document.querySelectorAll(".workroom-link-filter").forEach(btn => {
-
-  btn.addEventListener("click", e => {
-
-    activeWorkroomLinkCategory =
-      e.currentTarget.dataset.category || "all";
-    workroomLinkPage = 0;
-
-    document.querySelectorAll(".workroom-link-filter")
-      .forEach(filter =>
-        filter.classList.toggle(
-          "active",
-          filter === e.currentTarget
-        )
-      );
-
-    renderWorkroomLinks();
-  });
+// Kategorien filtern – kompakt per Dropdown
+document.querySelector("#workroomLinkCategoryFilter")?.addEventListener("change", e => {
+  activeWorkroomLinkCategory = e.currentTarget.value || "all";
+  workroomLinkPage = 0;
+  renderWorkroomLinks();
 });
 
 document.querySelectorAll(".workroom-link-use-filter").forEach(btn => {
@@ -3365,25 +3372,39 @@ function renderSubstitutions() {
     return;
   }
 
-  host.innerHTML = items.slice(0, 6).map(item => {
-    const dateLabel = item.date
-      ? parseLocalDate(item.date)?.toLocaleDateString("de-AT", {
-          weekday:"short", day:"2-digit", month:"2-digit"
-        }) || item.date
-      : "";
+  const totalHours = items.reduce((sum, item) => sum + (Number(item.hours) || 1), 0);
 
-    return `
-      <div class="substitution-item">
-        <div class="substitution-item-main">
-          <strong>${escapeHtml(dateLabel)}</strong>
-          <span>${escapeHtml(item.className || "")}${item.className && item.subject ? " · " : ""}${escapeHtml(item.subject || "")}</span>
-          ${item.forWhom ? `<small>für ${escapeHtml(item.forWhom)}</small>` : ""}
-          ${item.note ? `<small>${escapeHtml(item.note)}</small>` : ""}
-        </div>
-        <button type="button" class="substitution-delete" data-id="${item.id}" title="Löschen" aria-label="Supplierung löschen">×</button>
-      </div>
-    `;
-  }).join("");
+  host.innerHTML = `
+    <div class="substitution-summary">
+      <span>Für die Abrechnung</span>
+      <strong>${String(totalHours).replace(".", ",")} Std.</strong>
+    </div>
+    <div class="substitution-grid">
+      ${items.map(item => {
+        const dateLabel = item.date
+          ? parseLocalDate(item.date)?.toLocaleDateString("de-AT", {
+              weekday:"short", day:"2-digit", month:"2-digit"
+            }) || item.date
+          : "";
+        const hours = Number(item.hours) || 1;
+
+        return `
+          <div class="substitution-item">
+            <div class="substitution-item-main">
+              <div class="substitution-topline">
+                <strong>${escapeHtml(dateLabel)}</strong>
+                <span class="substitution-hours">${String(hours).replace(".", ",")} Std.</span>
+              </div>
+              <span>${escapeHtml(item.className || "")}${item.className && item.subject ? " · " : ""}${escapeHtml(item.subject || "")}</span>
+              ${item.forWhom ? `<small>für ${escapeHtml(item.forWhom)}</small>` : ""}
+              ${item.note ? `<small>${escapeHtml(item.note)}</small>` : ""}
+            </div>
+            <button type="button" class="substitution-delete" data-id="${item.id}" title="Löschen" aria-label="Supplierung löschen">×</button>
+          </div>
+        `;
+      }).join("")}
+    </div>
+  `;
 
   host.querySelectorAll(".substitution-delete").forEach(btn => {
     btn.addEventListener("click", () => {
@@ -3413,6 +3434,7 @@ document.querySelector("#saveSubstitutionBtn")?.addEventListener("click", () => 
   const className = document.querySelector("#substitutionClass")?.value.trim() || "";
   const subject = document.querySelector("#substitutionSubject")?.value.trim() || "";
   const forWhom = document.querySelector("#substitutionForWhom")?.value.trim() || "";
+  const hours = Number(document.querySelector("#substitutionHours")?.value || 1);
   const note = document.querySelector("#substitutionNote")?.value.trim() || "";
 
   if (!date || !className || !subject) {
@@ -3426,6 +3448,7 @@ document.querySelector("#saveSubstitutionBtn")?.addEventListener("click", () => 
     className,
     subject,
     forWhom,
+    hours: Number.isFinite(hours) && hours > 0 ? hours : 1,
     note,
     createdAt: Date.now()
   });
@@ -3435,6 +3458,9 @@ document.querySelector("#saveSubstitutionBtn")?.addEventListener("click", () => 
       const el = document.querySelector(sel);
       if (el) el.value = "";
     });
+
+  const hoursInput = document.querySelector("#substitutionHours");
+  if (hoursInput) hoursInput.value = "1";
 
   save();
   renderSubstitutions();
