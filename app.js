@@ -1289,6 +1289,7 @@ ${isNewEntry(t) ? `<span class="new-entry-badge">NEU</span>` : ""}
                   ${t.type !== "event" && t.period ? `<span class="pill">${labels[t.period]}</span>` : ""}
                   ${t.day ? `<span class="pill">${t.day}</span>` : ""}
                   ${t.recurrence && t.recurrence !== "none" ? `<span class="pill repeat-pill">↻ ${recurrenceLabel(t.recurrence)}</span>` : ""}
+                  ${t.plingEnabled ? `<span class="pill pling-pill" title="Erinnerung aktiviert">🔔 ${Number(t.plingMinutes) || 15} Min.</span>` : ""}
                   ${t.superImportant ? `<span class="pill super-pill">⭐ Superwichtig</span>` : ""}
                 </div>
               </div>
@@ -2879,6 +2880,7 @@ document.querySelector("#addSchoolPrintBtn")?.addEventListener("click", () => {
 // =============================
 
 let activeWorkroomLinkCategory = "all";
+let activeWorkroomLinkUse = "soon";
 
 function renderWorkroomLinks() {
   const list = document.querySelector("#workroomLinkList");
@@ -2902,11 +2904,19 @@ function renderWorkroomLinks() {
     other: "✨ Sonstiges"
   };
 
+  const useLabels = {
+    soon: "⭐ Demnächst",
+    year: "🗓 Jahresplanung",
+    later: "🌙 Später vorgemerkt"
+  };
+
   const links = [...state.workroom.links]
     .sort((a, b) => (Number(a.order) || 0) - (Number(b.order) || 0))
     .filter(link =>
-      activeWorkroomLinkCategory === "all" ||
-      link.category === activeWorkroomLinkCategory
+      (activeWorkroomLinkCategory === "all" ||
+       link.category === activeWorkroomLinkCategory) &&
+      (activeWorkroomLinkUse === "all" ||
+       (link.use || "soon") === activeWorkroomLinkUse)
     );
 
   if (!links.length) {
@@ -2916,7 +2926,7 @@ function renderWorkroomLinks() {
   }
 
   list.innerHTML = links.map(link => `
-    <div class="workroom-link-item" data-id="${link.id}">
+    <div class="workroom-link-item ${(link.use || "soon") === "soon" ? "workroom-link-soon" : ""}" data-id="${link.id}">
 
  <div class="workroom-link-main">
 
@@ -2934,9 +2944,14 @@ function renderWorkroomLinks() {
       : ""}
   </div>
 
-  <span class="workroom-link-category">
-    ${categoryLabels[link.category] || "✨ Sonstiges"}
-  </span>
+  <div class="workroom-link-badges">
+    <span class="workroom-link-use ${(link.use || "soon") === "soon" ? "is-soon" : ""}">
+      ${useLabels[link.use || "soon"]}
+    </span>
+    <span class="workroom-link-category">
+      ${categoryLabels[link.category] || "✨ Sonstiges"}
+    </span>
+  </div>
 
 </div>
 
@@ -2986,6 +3001,8 @@ function renderWorkroomLinks() {
       document.querySelector("#workroomLinkUrl").value = link.url || "";
       document.querySelector("#workroomLinkCategory").value =
         link.category || "other";
+      document.querySelector("#workroomLinkUse").value =
+        link.use || "soon";
 
       const addBtn = document.querySelector("#addWorkroomLinkBtn");
 
@@ -3018,8 +3035,10 @@ function renderWorkroomLinks() {
         const visibleSlots = [];
         allSorted.forEach((link, index) => {
           if (
-            activeWorkroomLinkCategory === "all" ||
-            link.category === activeWorkroomLinkCategory
+            (activeWorkroomLinkCategory === "all" ||
+             link.category === activeWorkroomLinkCategory) &&
+            (activeWorkroomLinkUse === "all" ||
+             (link.use || "soon") === activeWorkroomLinkUse)
           ) {
             visibleSlots.push(index);
           }
@@ -3054,12 +3073,14 @@ document.querySelector("#addWorkroomLinkBtn")?.addEventListener("click", () => {
   const noteInput = document.querySelector("#workroomLinkNote");
   const urlInput = document.querySelector("#workroomLinkUrl");
   const categoryInput = document.querySelector("#workroomLinkCategory");
+  const useInput = document.querySelector("#workroomLinkUse");
   const button = document.querySelector("#addWorkroomLinkBtn");
 
   const title = titleInput.value.trim();
   const note = noteInput.value.trim();
   let url = urlInput.value.trim();
   const category = categoryInput.value || "other";
+  const use = useInput?.value || "soon";
 
   if (!title || !url) return;
 
@@ -3078,6 +3099,7 @@ document.querySelector("#addWorkroomLinkBtn")?.addEventListener("click", () => {
       item.note = note;
       item.url = url;
       item.category = category;
+      item.use = use;
     }
 
     delete button.dataset.editId;
@@ -3090,6 +3112,7 @@ document.querySelector("#addWorkroomLinkBtn")?.addEventListener("click", () => {
       note,
       url,
       category,
+      use,
       order: state.workroom.links.length,
       createdAt: Date.now()
     });
@@ -3099,6 +3122,7 @@ document.querySelector("#addWorkroomLinkBtn")?.addEventListener("click", () => {
   noteInput.value = "";
   urlInput.value = "";
   categoryInput.value = "wood";
+  if (useInput) useInput.value = "soon";
 
   save();
   renderWorkroomLinks();
@@ -3120,6 +3144,18 @@ document.querySelectorAll(".workroom-link-filter").forEach(btn => {
           filter === e.currentTarget
         )
       );
+
+    renderWorkroomLinks();
+  });
+});
+
+document.querySelectorAll(".workroom-link-use-filter").forEach(btn => {
+  btn.addEventListener("click", e => {
+    activeWorkroomLinkUse = e.currentTarget.dataset.use || "soon";
+
+    document.querySelectorAll(".workroom-link-use-filter").forEach(filter =>
+      filter.classList.toggle("active", filter === e.currentTarget)
+    );
 
     renderWorkroomLinks();
   });
@@ -3990,6 +4026,7 @@ store.value = "";
 
   const DEVICE_KEY = "balanceProd.plingDeviceEnabled";
   const VOLUME_KEY = "balanceProd.plingVolume";
+  const SOUND_KEY = "balanceProd.plingSound";
   const FIRED_KEY = "balanceProd.plingFired";
 
   let audioContext = null;
@@ -4106,16 +4143,22 @@ store.value = "";
 
   function currentPlingVolume(){
     const saved = localStorage.getItem(VOLUME_KEY) || "loud";
-    return ["soft","medium","loud","extra"].includes(saved) ? saved : "loud";
+    return ["soft","medium","loud","extra","super"].includes(saved) ? saved : "loud";
+  }
+
+  function currentPlingSound(){
+    const saved = localStorage.getItem(SOUND_KEY) || "pling";
+    return ["pling","peng","elf","boing"].includes(saved) ? saved : "pling";
   }
 
   function plingMasterGain(){
     return {
-      soft: 0.20,
-      medium: 0.38,
-      loud: 0.62,
-      extra: 0.92
-    }[currentPlingVolume()] || 0.62;
+      soft: 0.18,
+      medium: 0.34,
+      loud: 0.58,
+      extra: 0.82,
+      super: 1.0
+    }[currentPlingVolume()] || 0.58;
   }
 
   const volumeSelect = document.querySelector("#plingVolume");
@@ -4123,7 +4166,16 @@ store.value = "";
     volumeSelect.value = currentPlingVolume();
     volumeSelect.addEventListener("change", () => {
       localStorage.setItem(VOLUME_KEY, volumeSelect.value);
-      showMotivation(`🔔 Pling-Lautstärke auf diesem Gerät: ${volumeSelect.options[volumeSelect.selectedIndex].text}`);
+      showMotivation(`🔔 Lautstärke auf diesem Gerät: ${volumeSelect.options[volumeSelect.selectedIndex].text}`);
+    });
+  }
+
+  const soundSelect = document.querySelector("#plingSound");
+  if (soundSelect) {
+    soundSelect.value = currentPlingSound();
+    soundSelect.addEventListener("change", () => {
+      localStorage.setItem(SOUND_KEY, soundSelect.value);
+      showMotivation(`♪ Erinnerungston: ${soundSelect.options[soundSelect.selectedIndex].text}`);
     });
   }
 
@@ -4152,45 +4204,59 @@ store.value = "";
 
       const now = audioContext.currentTime;
       const master = audioContext.createGain();
-
-      // Deutlich lauterer, aber weiterhin freundlicher Dreiklang.
-      // Web-Audio kann die Geräte-Medienlautstärke nicht übersteuern,
-      // deshalb holen wir hier innerhalb des Browsers mehr Pegel heraus.
       const masterLevel = plingMasterGain();
+      const sound = currentPlingSound();
 
       master.gain.setValueAtTime(0.0001, now);
-      master.gain.exponentialRampToValueAtTime(masterLevel, now + 0.02);
-      master.gain.setValueAtTime(masterLevel, now + 0.72);
-      master.gain.exponentialRampToValueAtTime(0.0001, now + 1.35);
+      master.gain.exponentialRampToValueAtTime(masterLevel, now + 0.015);
+      master.gain.setValueAtTime(masterLevel, now + 0.58);
+      master.gain.exponentialRampToValueAtTime(0.0001, now + 1.10);
       master.connect(audioContext.destination);
 
-      const notes = [
-        {freq: 784,  start: 0.00, stop: 0.34},
-        {freq: 988,  start: 0.26, stop: 0.64},
-        {freq: 1175, start: 0.56, stop: 1.08}
-      ];
+      const soundSets = {
+        // Der frühere, weichere Pling-Charakter.
+        pling: [
+          {freq:880, start:0.00, stop:0.24, type:"sine"},
+          {freq:1175,start:0.18, stop:0.52, type:"sine"}
+        ],
+        peng: [
+          {freq:660, start:0.00, stop:0.18, type:"triangle"},
+          {freq:440, start:0.12, stop:0.46, type:"triangle"}
+        ],
+        elf: [
+          {freq:1047,start:0.00, stop:0.20, type:"sine"},
+          {freq:1319,start:0.16, stop:0.38, type:"sine"},
+          {freq:1568,start:0.34, stop:0.72, type:"sine"}
+        ],
+        boing: [
+          {freq:520, start:0.00, stop:0.48, type:"sine", endFreq:180},
+          {freq:260, start:0.18, stop:0.72, type:"sine", endFreq:120}
+        ]
+      };
 
-      notes.forEach(note => {
+      (soundSets[sound] || soundSets.pling).forEach(note => {
         const osc = audioContext.createOscillator();
         const gain = audioContext.createGain();
 
-        osc.type = "sine";
+        osc.type = note.type || "sine";
         osc.frequency.setValueAtTime(note.freq, now + note.start);
+        if (note.endFreq) {
+          osc.frequency.exponentialRampToValueAtTime(note.endFreq, now + note.stop);
+        }
 
         gain.gain.setValueAtTime(0.0001, now + note.start);
-        gain.gain.exponentialRampToValueAtTime(1.0, now + note.start + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.95, now + note.start + 0.015);
         gain.gain.exponentialRampToValueAtTime(0.0001, now + note.stop);
 
         osc.connect(gain);
         gain.connect(master);
-
         osc.start(now + note.start);
         osc.stop(now + note.stop + 0.03);
       });
 
       return true;
     } catch (err) {
-      console.warn("Test-Pling konnte nicht abgespielt werden:", err);
+      console.warn("Erinnerungston konnte nicht abgespielt werden:", err);
       return false;
     }
   }
