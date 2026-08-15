@@ -3137,8 +3137,15 @@ function resetTodoEditor() {
   document.querySelector("#eventDate").value = "";
   document.querySelector("#eventEndDate").value = "";
   document.querySelector("#eventTime").value = "";
-  document.querySelector("#eventEndTime").value = "";
-  document.querySelector("#eventCategory").value = "normal";
+document.querySelector("#eventEndTime").value = "";
+
+const plingEnabled = document.querySelector("#eventPlingEnabled");
+const plingMinutes = document.querySelector("#eventPlingMinutes");
+
+if (plingEnabled) plingEnabled.checked = false;
+if (plingMinutes) plingMinutes.value = "15";
+
+document.querySelector("#eventCategory").value = "normal";
   document.querySelector("#recurrence").value = "none";
   setSelectedFamilyMembers([]);
   updateEntryTypeUI();
