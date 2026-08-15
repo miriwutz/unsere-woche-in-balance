@@ -2399,6 +2399,14 @@ function renderSchoolPrints() {
 
   if (!list) return;
 
+const now = Date.now();
+
+state.workroom.prints = state.workroom.prints.filter(p => {
+  if (!p.done || !p.completedAt) return true;
+
+  return now - p.completedAt < 60000;
+});
+  
 const prints = [...state.workroom.prints]
   .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
   
