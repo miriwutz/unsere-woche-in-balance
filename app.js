@@ -2337,13 +2337,15 @@ function renderSchoolWorkTodos() {
   if (todoList && typeof Sortable !== "undefined") {
     new Sortable(todoList, {
       animation: 180,
-      handle: ".workroom-drag-handle",
+      draggable: ".workroom-todo-row",
+      filter: "input, button, a, select, textarea, .workroom-todo-actions, .workroom-drag-handle",
+      preventOnFilter: false,
       ghostClass: "workroom-sort-ghost",
       chosenClass: "workroom-sort-chosen",
       dragClass: "workroom-sort-drag",
-      delay: 0,
-      delayOnTouchOnly: false,
-      touchStartThreshold: 5,
+      delay: 180,
+      delayOnTouchOnly: true,
+      touchStartThreshold: 6,
       forceFallback: false,
 
       onEnd: function () {
@@ -2646,8 +2648,12 @@ const prints = [...state.workroom.prints]
     if (printList) {
       new Sortable(printList, {
         animation: 150,
-        handle: ".workroom-drag-handle",
         draggable: ".workroom-todo-row",
+        filter: "input, button, a, select, textarea, .workroom-todo-actions, .workroom-drag-handle",
+        preventOnFilter: false,
+        delay: 180,
+        delayOnTouchOnly: true,
+        touchStartThreshold: 6,
 
         onEnd: () => {
           const ids = [...printList.querySelectorAll(".workroom-todo-row")]
