@@ -2144,3 +2144,165 @@ input[type="checkbox"]:checked::before{transform:rotate(-45deg) scale(1)}
   font-weight:700 !important;
   box-shadow:0 2px 8px rgba(171,137,48,.10);
 }
+
+
+/* ===== Rezepte: 10er-Seiten, interaktive Essensplanung ===== */
+.recipe-pager{
+  display:flex;
+  justify-content:center;
+  gap:6px;
+  margin:12px 0 2px;
+}
+.recipe-page-btn{
+  min-width:30px;
+  height:30px;
+  border:1px solid rgba(112,151,144,.24);
+  border-radius:999px;
+  background:#fffdfb;
+  color:#617671;
+  cursor:pointer;
+}
+.recipe-page-btn.active{
+  background:#c7ddd8;
+  border-color:#99bbb4;
+  color:#3f5752;
+  font-weight:700;
+}
+.recipe-page-btn:disabled{
+  opacity:.35;
+  cursor:default;
+}
+.recipe-title-button{
+  border:0;
+  background:transparent;
+  color:#3e4b48;
+  font-family:Georgia,"Times New Roman",serif;
+  font-size:1.75rem;
+  font-weight:500;
+  cursor:pointer;
+  padding:0;
+}
+.recipe-title-button:hover{
+  text-decoration:underline;
+  text-decoration-color:rgba(89,126,119,.35);
+  text-underline-offset:4px;
+}
+
+.recipe-detail-dialog{
+  width:min(760px,calc(100% - 28px));
+}
+.recipe-detail-card{
+  max-height:min(84vh,850px);
+  overflow:auto;
+}
+.recipe-detail-meta{
+  display:flex;
+  flex-wrap:wrap;
+  gap:7px;
+  margin-bottom:14px;
+}
+.recipe-detail-meta > span{
+  padding:5px 8px;
+  border-radius:999px;
+  background:#edf4f2;
+  color:#526963;
+  font-size:.72rem;
+}
+.recipe-detail-grid{
+  display:grid;
+  grid-template-columns:1fr 1.2fr;
+  gap:16px;
+}
+.recipe-detail-grid section{
+  padding:14px;
+  border:1px solid rgba(112,151,144,.18);
+  border-radius:14px;
+  background:#fffdfb;
+}
+.recipe-detail-grid h3{
+  margin:0 0 10px;
+  color:#4f6660;
+}
+.recipe-detail-links{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  margin-top:14px;
+}
+.recipe-detail-links a{
+  padding:7px 10px;
+  border-radius:999px;
+  background:#cfe2de;
+  color:#3f5a54;
+  text-decoration:none;
+  font-size:.74rem;
+}
+
+.meal-plan-input-wrap{
+  display:flex;
+  align-items:center;
+  gap:4px;
+}
+.meal-plan-recipe-btn{
+  flex:0 0 auto;
+  width:28px;
+  height:28px;
+  border:1px solid rgba(102,143,135,.28);
+  border-radius:999px;
+  background:#dcebe8;
+  color:#48635d;
+  cursor:pointer;
+}
+.meal-plan-recipe-btn:hover{
+  background:#c7ddd8;
+}
+
+/* Essen sitzt im Tagesplan bewusst unten – direkt vor Video. */
+.day-meal{
+  width:100%;
+  display:grid;
+  grid-template-columns:1fr auto;
+  gap:2px 7px;
+  margin:10px 0 8px;
+  padding:7px 8px;
+  text-align:left;
+  border-radius:10px;
+  background:linear-gradient(90deg,rgba(215,234,229,.78),rgba(241,247,245,.68));
+  border:1px solid rgba(116,156,148,.24);
+  color:#425a55;
+}
+button.day-meal{
+  cursor:default;
+}
+button.day-meal.has-recipe{
+  cursor:pointer;
+}
+button.day-meal.has-recipe:hover{
+  border-color:rgba(87,139,128,.46);
+  background:linear-gradient(90deg,rgba(201,228,221,.92),rgba(237,246,243,.84));
+}
+.day-meal-label{
+  grid-column:1 / -1;
+  color:#748b86;
+  font-size:.56rem;
+  letter-spacing:.11em;
+}
+.day-meal strong{
+  font-size:.75rem;
+  font-weight:600;
+}
+.day-meal-open{
+  align-self:center;
+  color:#718b85;
+  font-size:.62rem;
+  white-space:nowrap;
+}
+
+@media(max-width:700px){
+  .recipe-detail-grid{
+    grid-template-columns:1fr;
+  }
+  .recipe-title-button{
+    font-size:1.3rem;
+  }
+}
