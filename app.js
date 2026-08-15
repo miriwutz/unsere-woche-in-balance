@@ -2486,17 +2486,13 @@ function renderSchoolPrints() {
 
   document.querySelectorAll(".workroom-print-check").forEach(box => {
     box.addEventListener("change", e => {
-      const item = state.workroom.prints.find(
-        p => p.id === e.currentTarget.dataset.id
-      );
+const id = e.currentTarget.dataset.id;
 
-      if (!item) return;
+state.workroom.prints =
+  state.workroom.prints.filter(p => p.id !== id);
 
-      item.done = e.currentTarget.checked;
-      item.completedAt = item.done ? Date.now() : null;
-
-      save();
-      renderSchoolPrints();
+save();
+renderSchoolPrints();
     });
   });
 
