@@ -2459,8 +2459,8 @@ function startRecipeEdit(recipe) {
   document.querySelector("#recipeKids").checked = !!recipe.kids;
   document.querySelector("#recipeHealthy").checked = !!recipe.healthy;
   document.querySelector("#recipeTime").value = recipe.time || "";
-  document.querySelector("#recipeIngredients").value = (recipe.ingredients || []).join("\\n");
-  document.querySelector("#recipeSteps").value = (recipe.steps || []).join("\\n");
+  document.querySelector("#recipeIngredients").value = normalizedRecipeLines(recipe.ingredients).join("\n");
+  document.querySelector("#recipeSteps").value = normalizedRecipeLines(recipe.steps).join("\n");
   document.querySelector("#recipeWebUrl").value = recipe.webUrl || "";
   document.querySelector("#recipeYoutubeUrl").value = recipe.youtubeUrl || "";
 
@@ -2492,7 +2492,16 @@ function recipeCategoryLabel(value) {
 }
 
 function recipeLines(value) {
-  return String(value || "").split(/\r?\n/).map(v => v.trim()).filter(Boolean);
+  const source = Array.isArray(value) ? value.join("\n") : String(value || "");
+  return source
+    .replace(/\\n/g, "\n")
+    .split(/\r?\n/)
+    .map(v => v.trim())
+    .filter(Boolean);
+}
+
+function normalizedRecipeLines(value) {
+  return recipeLines(value);
 }
 
 
@@ -2544,11 +2553,11 @@ function showRecipeDetail(recipeOrTitle) {
     <div class="recipe-detail-grid">
       <section>
         <h3>Zutaten</h3>
-        <ul>${(recipe.ingredients || []).map(x => `<li>${escapeHtml(x)}</li>`).join("")}</ul>
+        <ul>${normalizedRecipeLines(recipe.ingredients).map(x => `<li>${escapeHtml(x)}</li>`).join("")}</ul>
       </section>
       <section>
         <h3>Zubereitung</h3>
-        <ol>${(recipe.steps || []).map(x => `<li>${escapeHtml(x)}</li>`).join("")}</ol>
+        <div class="recipe-prep-lines">${normalizedRecipeLines(recipe.steps).map(x => `<div class="recipe-prep-line">${escapeHtml(x)}</div>`).join("")}</div>
       </section>
     </div>
 
@@ -2656,11 +2665,11 @@ function renderRecipes() {
       <div class="recipe-card-body">
         <section class="recipe-column">
           <h4>ZUTATEN</h4>
-          <ul>${(r.ingredients || []).map(x => `<li>${escapeHtml(x)}</li>`).join("")}</ul>
+          <ul>${normalizedRecipeLines(r.ingredients).map(x => `<li>${escapeHtml(x)}</li>`).join("")}</ul>
         </section>
         <section class="recipe-column">
           <h4>ZUBEREITUNG</h4>
-          <ol>${(r.steps || []).map(x => `<li>${escapeHtml(x)}</li>`).join("")}</ol>
+          <div class="recipe-prep-lines">${normalizedRecipeLines(r.steps).map(x => `<div class="recipe-prep-line">${escapeHtml(x)}</div>`).join("")}</div>
         </section>
       </div>
       <footer class="recipe-card-footer">
