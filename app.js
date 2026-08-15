@@ -1015,6 +1015,19 @@ ${isNewEntry(t) ? `<span class="new-entry-badge">NEU</span>` : ""}
     grid.appendChild(dayEl);
   });
 
+  // Am Handy direkt den heutigen Tag zeigen, wenn die aktuelle Woche geöffnet ist.
+  if (
+    window.matchMedia("(max-width:760px)").matches &&
+    currentWeekKey() === dateKey(getMonday(new Date()))
+  ) {
+    requestAnimationFrame(() => {
+      const todayCard = grid.querySelector(".day.today");
+      if (todayCard) {
+        todayCard.scrollIntoView({behavior:"auto", block:"start", inline:"nearest"});
+      }
+    });
+  }
+
   document.querySelectorAll(".video-check").forEach(el => el.addEventListener("change", e => {
     const item = state.videos.find(v => v.id === e.target.dataset.id);
     if (!item) return;
@@ -1959,9 +1972,16 @@ document.querySelectorAll(".timetable-switch").forEach(btn => {
 // Stundenplan-Auswahl auf der Wochenplan-Seite
 const familyTimetableDialog = document.querySelector("#familyTimetableDialog");
 
-document.querySelector("#openFamilyTimetableBtn")?.addEventListener("click", () => {
+function openFamilyTimetableEditorChooser() {
   document.querySelector("#manualTimetableWrapmama")?.classList.add("hidden");
   familyTimetableDialog?.showModal();
+}
+
+document.querySelector("#openSchoolTimetableEditorBtn")?.addEventListener("click", openFamilyTimetableEditorChooser);
+document.querySelector("#openWorkTimetableBtn")?.addEventListener("click", () => {
+  familyTimetableDialog?.showModal();
+  renderTTMatrix("mama");
+  document.querySelector("#manualTimetableWrapmama")?.classList.remove("hidden");
 });
 
 document.querySelector("#closeFamilyTimetableDialog")?.addEventListener("click", () => {
@@ -2196,7 +2216,7 @@ document.querySelectorAll(".family-timetable-person").forEach(btn => {
            
  if (person === "1" || person === "2") {
     familyTimetableDialog?.close();
-    showManualTimetable(person);
+    openManualTimetableEditor(person);
     return;
 }
 
@@ -2224,6 +2244,7 @@ function renderAll() {
   renderSchoolWorkTodos();
   renderSchoolPrints();
   renderWorkroomLinks();
+  renderSubstitutions();
   renderShopping();
 }
 
@@ -3003,6 +3024,7 @@ document.querySelector("#addSchoolPrintBtn")?.addEventListener("click", () => {
 
 let activeWorkroomLinkCategory = "all";
 let activeWorkroomLinkUse = "soon";
+let workroomImportantOnly = false;
 
 function renderWorkroomLinks() {
   const list = document.querySelector("#workroomLinkList");
@@ -3023,11 +3045,12 @@ function renderWorkroomLinks() {
     paper: "📄 Papier",
     free: "✂️ Freies Arbeiten",
     experiment: "🧪 Experimentieren",
+    documents: "📎 Unterlagen & Belege",
     other: "✨ Sonstiges"
   };
 
   const useLabels = {
-    soon: "⭐ Demnächst",
+    soon: "Demnächst",
     year: "🗓 Jahresplanung",
     later: "🌙 Später vorgemerkt"
   };
@@ -3046,7 +3069,8 @@ function renderWorkroomLinks() {
       (activeWorkroomLinkCategory === "all" ||
        link.category === activeWorkroomLinkCategory) &&
       (activeWorkroomLinkUse === "all" ||
-       (link.use || "soon") === activeWorkroomLinkUse)
+       (link.use || "soon") === activeWorkroomLinkUse) &&
+      (!workroomImportantOnly || !!link.important)
     );
 
   workroomLinkPage = clampWorkroomPage(workroomLinkPage, links.length);
@@ -3059,7 +3083,7 @@ function renderWorkroomLinks() {
   }
 
   list.innerHTML = visibleLinks.map(link => `
-    <div class="workroom-link-item ${(link.use || "soon") === "soon" ? "workroom-link-soon" : ""} ${(link.use || "soon") === "later" ? "workroom-link-later" : ""}" data-id="${link.id}">
+    <div class="workroom-link-item ${link.important ? "workroom-link-important" : ""} ${(link.use || "soon") === "later" ? "workroom-link-later" : ""}" data-id="${link.id}">
 
  <div class="workroom-link-main">
 
@@ -3078,7 +3102,8 @@ function renderWorkroomLinks() {
   </div>
 
   <div class="workroom-link-badges">
-    <span class="workroom-link-use ${(link.use || "soon") === "soon" ? "is-soon" : ""}">
+    ${link.important ? `<span class="workroom-link-important-badge">⭐ Wichtig</span>` : ""}
+    <span class="workroom-link-use">
       ${useLabels[link.use || "soon"]}
     </span>
     <span class="workroom-link-category">
@@ -3146,6 +3171,8 @@ function renderWorkroomLinks() {
         link.category || "other";
       document.querySelector("#workroomLinkUse").value =
         link.use || "soon";
+      const importantInput = document.querySelector("#workroomLinkImportant");
+      if (importantInput) importantInput.checked = !!link.important;
 
       const addBtn = document.querySelector("#addWorkroomLinkBtn");
 
@@ -3217,6 +3244,7 @@ document.querySelector("#addWorkroomLinkBtn")?.addEventListener("click", () => {
   const urlInput = document.querySelector("#workroomLinkUrl");
   const categoryInput = document.querySelector("#workroomLinkCategory");
   const useInput = document.querySelector("#workroomLinkUse");
+  const importantInput = document.querySelector("#workroomLinkImportant");
   const button = document.querySelector("#addWorkroomLinkBtn");
 
   const title = titleInput.value.trim();
@@ -3224,6 +3252,7 @@ document.querySelector("#addWorkroomLinkBtn")?.addEventListener("click", () => {
   let url = urlInput.value.trim();
   const category = categoryInput.value || "other";
   const use = useInput?.value || "soon";
+  const important = !!importantInput?.checked;
 
   if (!title || !url) return;
 
@@ -3243,6 +3272,7 @@ document.querySelector("#addWorkroomLinkBtn")?.addEventListener("click", () => {
       item.url = url;
       item.category = category;
       item.use = use;
+      item.important = important;
     }
 
     delete button.dataset.editId;
@@ -3256,6 +3286,7 @@ document.querySelector("#addWorkroomLinkBtn")?.addEventListener("click", () => {
       url,
       category,
       use,
+      important,
       order: state.workroom.links.length,
       createdAt: Date.now()
     });
@@ -3266,6 +3297,7 @@ document.querySelector("#addWorkroomLinkBtn")?.addEventListener("click", () => {
   urlInput.value = "";
   categoryInput.value = "wood";
   if (useInput) useInput.value = "soon";
+  if (importantInput) importantInput.checked = false;
 
   save();
   renderWorkroomLinks();
@@ -3304,6 +3336,110 @@ document.querySelectorAll(".workroom-link-use-filter").forEach(btn => {
 
     renderWorkroomLinks();
   });
+});
+
+document.querySelector("#workroomLinkImportantFilter")?.addEventListener("click", e => {
+  workroomImportantOnly = !workroomImportantOnly;
+  workroomLinkPage = 0;
+  e.currentTarget.classList.toggle("active", workroomImportantOnly);
+  renderWorkroomLinks();
+});
+
+
+// =========================================================
+// WERKRAUM – SUPPLIERUNGEN
+// =========================================================
+function renderSubstitutions() {
+  const host = document.querySelector("#substitutionList");
+  if (!host) return;
+
+  state.workroom.substitutions = Array.isArray(state.workroom.substitutions)
+    ? state.workroom.substitutions
+    : [];
+
+  const items = [...state.workroom.substitutions]
+    .sort((a, b) => String(b.date || "").localeCompare(String(a.date || "")));
+
+  if (!items.length) {
+    host.innerHTML = `<div class="workroom-empty substitution-empty">Noch keine Supplierungen eingetragen.</div>`;
+    return;
+  }
+
+  host.innerHTML = items.slice(0, 6).map(item => {
+    const dateLabel = item.date
+      ? parseLocalDate(item.date)?.toLocaleDateString("de-AT", {
+          weekday:"short", day:"2-digit", month:"2-digit"
+        }) || item.date
+      : "";
+
+    return `
+      <div class="substitution-item">
+        <div class="substitution-item-main">
+          <strong>${escapeHtml(dateLabel)}</strong>
+          <span>${escapeHtml(item.className || "")}${item.className && item.subject ? " · " : ""}${escapeHtml(item.subject || "")}</span>
+          ${item.forWhom ? `<small>für ${escapeHtml(item.forWhom)}</small>` : ""}
+          ${item.note ? `<small>${escapeHtml(item.note)}</small>` : ""}
+        </div>
+        <button type="button" class="substitution-delete" data-id="${item.id}" title="Löschen" aria-label="Supplierung löschen">×</button>
+      </div>
+    `;
+  }).join("");
+
+  host.querySelectorAll(".substitution-delete").forEach(btn => {
+    btn.addEventListener("click", () => {
+      state.workroom.substitutions = state.workroom.substitutions
+        .filter(item => item.id !== btn.dataset.id);
+      save();
+      renderSubstitutions();
+    });
+  });
+}
+
+const substitutionDialog = document.querySelector("#substitutionDialog");
+
+document.querySelector("#openSubstitutionBtn")?.addEventListener("click", () => {
+  const dateInput = document.querySelector("#substitutionDate");
+  if (dateInput && !dateInput.value) dateInput.value = dateKey(new Date());
+  substitutionDialog?.showModal();
+  setTimeout(() => dateInput?.showPicker?.(), 80);
+});
+
+document.querySelector("#closeSubstitutionDialogBtn")?.addEventListener("click", () => {
+  substitutionDialog?.close();
+});
+
+document.querySelector("#saveSubstitutionBtn")?.addEventListener("click", () => {
+  const date = document.querySelector("#substitutionDate")?.value || "";
+  const className = document.querySelector("#substitutionClass")?.value.trim() || "";
+  const subject = document.querySelector("#substitutionSubject")?.value.trim() || "";
+  const forWhom = document.querySelector("#substitutionForWhom")?.value.trim() || "";
+  const note = document.querySelector("#substitutionNote")?.value.trim() || "";
+
+  if (!date || !className || !subject) {
+    showMotivation("Bitte Tag, Klasse und Supplierfach eintragen.");
+    return;
+  }
+
+  state.workroom.substitutions.push({
+    id: uid(),
+    date,
+    className,
+    subject,
+    forWhom,
+    note,
+    createdAt: Date.now()
+  });
+
+  ["#substitutionClass","#substitutionSubject","#substitutionForWhom","#substitutionNote"]
+    .forEach(sel => {
+      const el = document.querySelector(sel);
+      if (el) el.value = "";
+    });
+
+  save();
+  renderSubstitutions();
+  substitutionDialog?.close();
+  showMotivation("Supplierung gespeichert.");
 });
 
 document.querySelector("#addVideoBtn").addEventListener("click", () => {
@@ -4425,9 +4561,11 @@ store.value = "";
         tone(1175,0.18, 0.62, {gain:0.78});
 
       } else if (sound === "peng") {
-        noiseBurst(0.00, 0.16, 0.9);
-        tone(165, 0.00, 0.30, {type:"triangle", gain:0.95, endFreq:82});
-        tone(760, 0.01, 0.13, {type:"square", gain:0.22, endFreq:430});
+        // Knackiger, sehr kurzer Impuls mit deutlichem Attack.
+        noiseBurst(0.00, 0.11, 1.15);
+        tone(115, 0.00, 0.24, {type:"square", gain:1.0, endFreq:58});
+        tone(920, 0.004, 0.085, {type:"square", gain:0.38, endFreq:360});
+        tone(190, 0.018, 0.32, {type:"triangle", gain:0.72, endFreq:72});
 
       } else if (sound === "elf") {
         tone(1319,0.00,0.42,{gain:0.48});
@@ -4438,10 +4576,12 @@ store.value = "";
         tone(3136,0.94,1.48,{gain:0.20});
 
       } else if (sound === "bowl") {
-        tone(220, 0.00, 2.65, {gain:0.72, attack:0.025});
-        tone(440, 0.00, 2.25, {gain:0.28, attack:0.02});
-        tone(660, 0.02, 1.90, {gain:0.18, attack:0.018});
-        tone(990, 0.03, 1.40, {gain:0.10, attack:0.015});
+        // Wärmere, schwebendere Klangschale mit langen Obertönen.
+        tone(174.6, 0.00, 2.75, {gain:0.74, attack:0.035});
+        tone(349.2, 0.01, 2.55, {gain:0.30, attack:0.028});
+        tone(523.3, 0.04, 2.20, {gain:0.20, attack:0.025});
+        tone(698.5, 0.10, 1.90, {gain:0.14, attack:0.02});
+        tone(1046.5,0.22, 1.55, {gain:0.08, attack:0.018});
 
       } else if (sound === "boing") {
         tone(520,0.00,0.52,{gain:0.82,endFreq:170});
