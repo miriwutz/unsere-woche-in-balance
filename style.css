@@ -933,6 +933,61 @@ input[type="checkbox"]:checked::before{transform:rotate(-45deg) scale(1)}
   .papa-tab[data-week-offset="2"]::after{content:"+2"}
   .papa-tab[data-week-offset="3"]::after{content:"+3"}
 }
+/* HANDY-FIX – Werkraum-To-dos */
+@media (max-width:600px){
+
+  .workroom-todo-content{
+    grid-column:2;
+    grid-row:1;
+    width:100%;
+    min-width:0;
+
+    display:grid !important;
+    grid-template-columns:34px 34px 34px minmax(0,1fr);
+    gap:6px;
+    align-items:center;
+  }
+
+  .workroom-todo-text{
+    grid-column:1 / -1;
+    grid-row:1;
+    width:100%;
+    min-width:0;
+
+    line-height:1.35;
+    overflow-wrap:break-word;
+    word-break:normal !important;
+  }
+
+  .workroom-todo-type{
+    display:none !important;
+  }
+
+  .workroom-todo-link{
+    grid-column:1;
+    grid-row:2;
+  }
+
+  .workroom-todo-edit{
+    grid-column:2;
+    grid-row:2;
+  }
+
+  .workroom-todo-delete{
+    grid-column:3;
+    grid-row:2;
+  }
+
+  .workroom-move-controls{
+    grid-column:4;
+    grid-row:2;
+
+    justify-self:end;
+    margin-left:0 !important;
+    padding-left:0 !important;
+  }
+
+}
 @media (min-width:601px) and (max-width:1100px){
   .week-video-shelf-list{grid-template-columns:1fr}
 }
