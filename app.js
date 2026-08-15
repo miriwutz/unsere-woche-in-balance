@@ -2474,17 +2474,34 @@ const prints = [...state.workroom.prints]
     `).join("");
   }
 
-  document.querySelectorAll(".workroom-print-check").forEach(box => {
-    box.addEventListener("change", e => {
-const id = e.currentTarget.dataset.id;
+ document.querySelectorAll(".workroom-print-check").forEach(box => {
+  box.addEventListener("change", e => {
+    const id = e.currentTarget.dataset.id;
+    const item = state.workroom.prints.find(p => p.id === id);
 
-state.workroom.prints =
-  state.workroom.prints.filter(p => p.id !== id);
+    if (!item) return;
 
-save();
-renderSchoolPrints();
-    });
+    item.done = e.currentTarget.checked;
+    item.completedAt = item.done ? Date.now() : null;
+
+    save();
+    renderSchoolPrints();
+
+    if (item.done) {
+      setTimeout(() => {
+        const currentItem = state.workroom.prints.find(p => p.id === id);
+
+        if (!currentItem || !currentItem.done) return;
+
+        state.workroom.prints =
+          state.workroom.prints.filter(p => p.id !== id);
+
+        save();
+        renderSchoolPrints();
+      }, 60000);
+    }
   });
+});
 
   document.querySelectorAll(".workroom-print-delete").forEach(btn => {
     btn.addEventListener("click", e => {
