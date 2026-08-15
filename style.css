@@ -942,6 +942,7 @@ input[type="checkbox"]:checked::before{transform:rotate(-45deg) scale(1)}
 
   .workroom-todo-row{
     grid-template-columns:22px minmax(0,1fr) !important;
+      display:grid !important;
     gap:8px 10px !important;
     align-items:start !important;
   }
