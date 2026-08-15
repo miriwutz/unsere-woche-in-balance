@@ -1,4 +1,4 @@
-const CACHE_NAME = "balance-offline-v3";
+const CACHE_NAME = "balance-offline-v4";
 
 const APP_FILES = [
   "./",
