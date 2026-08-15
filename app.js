@@ -1887,7 +1887,16 @@ function renderPapaOverview(weekOffset = 0) {
   const monday = new Date(currentWeekMonday);
   monday.setDate(monday.getDate() + (weekOffset * 7));
 
-  const weekEntries = [];
+const weekEntries = [];
+
+const undatedTodos = state.todos
+  .filter(t =>
+    (t.type || "todo") === "todo" &&
+    papaEntryIsRelevant(t) &&
+    papaTodoIsVisible(t) &&
+    (!t.day || t.day === "") &&
+    t.weekKey === dateKey(monday)
+  );
 
   days.forEach((dayName, index) => {
     const date = dayDate(monday, index);
@@ -1913,6 +1922,14 @@ if (checkDate < today) return;
     });
   });
 
+if (undatedTodos.length) {
+  weekEntries.unshift({
+    dayName: "Diese Woche",
+    date: monday,
+    entries: undatedTodos
+  });
+}
+  
   if (!weekEntries.length) {
     list.innerHTML = `
       <div class="papa-overview-empty">
