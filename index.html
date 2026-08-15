@@ -164,11 +164,7 @@
         <p class="family-settings-hint">Namen und Farben könnt ihr jederzeit ändern. Die Farben gelten überall auf der Seite.</p>
         <div class="schoolyear-setting">
           <label for="schoolYearSelect">🎒 Schuljahr</label>
-          <select id="schoolYearSelect">
-            <option value="2026-27">2026/27</option>
-            <option value="2027-28">2027/28</option>
-            <option value="2028-29">2028/29</option>
-          </select>
+          <select id="schoolYearSelect" aria-label="Schuljahr auswählen"></select>
           <span>Für „Schuljahr NÖ“ bei wiederkehrenden Einträgen.</span>
         </div>
         <div class="family-settings-grid">
@@ -317,11 +313,11 @@
               <option value="biweekly">Alle 2 Wochen</option>
               <option value="monthly">Monatlich</option>
               <option value="yearly">Jährlich</option>
-              <option value="schoolyear-noe">Schuljahr NÖ 2026/27</option>
+              <option value="schoolyear-noe">Schuljahr NÖ</option>
             </select>
           </label>
           <div id="schoolHolidayHint" class="school-holiday-hint hidden">
-            🎒 Wöchentlich im Schuljahr NÖ 2026/27 – Ferien und offizielle schulfreie Tage werden ausgelassen.
+            🎒 Wöchentlich im gewählten Schuljahr NÖ – Ferien und offizielle schulfreie Tage werden ausgelassen.
           </div>
         </div>
 
@@ -760,6 +756,7 @@
   </div>
 
 </article>
+
 
   <!-- SELTENER BENÖTIGTE BEREICHE -->
   <div class="workroom-small-grid">
