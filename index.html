@@ -522,6 +522,7 @@
         <input id="recipeSearch" type="search" list="recipeSearchSuggestions"
                placeholder="Rezept suchen …" autocomplete="off">
         <datalist id="recipeSearchSuggestions"></datalist>
+        <div id="recipeAutocomplete" class="recipe-autocomplete hidden"></div>
       </div>
 
       <select id="recipeDifficultyFilter">
@@ -844,10 +845,17 @@
   </div>
 
   <div class="workroom-link-use-filters" aria-label="Verwendungszeitraum">
-    <button type="button" class="workroom-link-use-filter active" data-use="soon">Demnächst</button>
-    <button type="button" class="workroom-link-use-filter" data-use="year">🗓 Jahresplanung</button>
-    <button type="button" class="workroom-link-use-filter" data-use="later">🌙 Später vorgemerkt</button>
-    <button type="button" class="workroom-link-use-filter" data-use="all">Alle Zeiträume</button>
+    <label class="workroom-link-filter-select-label">
+      Zeitraum
+      <select id="workroomLinkUseFilterSelect">
+        <option value="soon">Demnächst</option>
+        <option value="current">📌 Aktuell</option>
+        <option value="bureaucracy">🗂 Bürokratie</option>
+        <option value="year">🗓 Jahresplanung</option>
+        <option value="later">🌙 Später vorgemerkt</option>
+        <option value="all">Alle Zeiträume</option>
+      </select>
+    </label>
     <button type="button" class="workroom-link-important-filter" id="workroomLinkImportantFilter">⭐ Wichtig</button>
   </div>
 
@@ -886,6 +894,8 @@
 
 <select id="workroomLinkUse">
   <option value="soon" selected>Demnächst</option>
+  <option value="current">📌 Aktuell</option>
+  <option value="bureaucracy">🗂 Bürokratie</option>
   <option value="year">🗓 Jahresplanung</option>
   <option value="later">🌙 Später vorgemerkt</option>
 </select>
