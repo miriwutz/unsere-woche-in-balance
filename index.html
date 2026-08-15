@@ -747,34 +747,21 @@
   </div>
 
   <!-- Kategorien -->
-  <div class="workroom-link-filters">
-    <button type="button"
-            class="workroom-link-filter active"
-            data-category="all">Alle</button>
-
-    <button type="button"
-            class="workroom-link-filter"
-            data-category="wood">🪵 Holz</button>
-
-    <button type="button"
-            class="workroom-link-filter"
-            data-category="paper">📄 Papier</button>
-
-    <button type="button"
-            class="workroom-link-filter"
-            data-category="free">✂️ Freies Arbeiten</button>
-
-    <button type="button"
-            class="workroom-link-filter"
-            data-category="experiment">🧪 Experimentieren</button>
-
-    <button type="button"
-            class="workroom-link-filter"
-            data-category="documents">📎 Unterlagen & Belege</button>
-
-    <button type="button"
-            class="workroom-link-filter"
-            data-category="other">✨ Sonstiges</button>
+  <div class="workroom-link-filter-row">
+    <label class="workroom-link-filter-select-label">
+      Kategorie
+      <select id="workroomLinkCategoryFilter">
+        <option value="all">Alle Kategorien</option>
+        <option value="wood">🪵 Holz</option>
+        <option value="paper">📄 Papier</option>
+        <option value="free">✂️ Freies Arbeiten</option>
+        <option value="experiment">🧪 Experimentieren</option>
+        <option value="documents">📎 Unterlagen & Belege</option>
+        <option value="bureaucracy">🗂 Bürokratie</option>
+        <option value="current">📌 Aktuell</option>
+        <option value="other">✨ Sonstiges</option>
+      </select>
+    </label>
   </div>
 
   <div class="workroom-link-use-filters" aria-label="Verwendungszeitraum">
@@ -813,14 +800,21 @@
   <option value="free">✂️ Freies Arbeiten</option>
   <option value="experiment">🧪 Experimentieren</option>
   <option value="documents">📎 Unterlagen & Belege</option>
+  <option value="bureaucracy">🗂 Bürokratie</option>
+  <option value="current">📌 Aktuell</option>
   <option value="other">✨ Sonstiges</option>
 </select>
 
 <select id="workroomLinkUse">
-  <option value="soon" selected>⭐ Demnächst</option>
+  <option value="soon" selected>Demnächst</option>
   <option value="year">🗓 Jahresplanung</option>
   <option value="later">🌙 Später vorgemerkt</option>
 </select>
+
+<label class="workroom-link-important-toggle">
+  <input id="workroomLinkImportant" type="checkbox">
+  <span>⭐ Wichtig</span>
+</label>
     
     <button id="addWorkroomLinkBtn"
             class="secondary-btn"
@@ -1001,7 +995,7 @@
     <div class="dialog-head">
       <div>
         <p class="small-label">STUNDENPLAN</p>
-        <h2>Welchen Stundenplan bearbeiten?</h2>
+        <h2 id="familyTimetableDialogTitle">Welchen Stundenplan?</h2>
       </div>
 
       <button id="closeFamilyTimetableDialog"
@@ -1088,6 +1082,11 @@
       <label>
         Für wen?
         <input id="substitutionForWhom" type="text" placeholder="Name der Kollegin / des Kollegen">
+      </label>
+
+      <label>
+        Stundenanzahl
+        <input id="substitutionHours" type="number" min="0.5" max="12" step="0.5" value="1">
       </label>
 
       <label class="substitution-note-label">
