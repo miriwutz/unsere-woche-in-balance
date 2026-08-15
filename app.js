@@ -817,8 +817,19 @@ function renderWeek() {
     const dayEl = document.createElement("article");
     dayEl.className = "day";
 
-    const date = dayDate(currentWeekMonday, index);
-    const dateLabel = date.toLocaleDateString("de-AT",{day:"2-digit",month:"2-digit"});
+const date = dayDate(currentWeekMonday, index);
+
+const today = new Date();
+today.setHours(0, 0, 0, 0);
+
+const compareDate = new Date(date);
+compareDate.setHours(0, 0, 0, 0);
+
+if (compareDate.getTime() === today.getTime()) {
+  dayEl.classList.add("today");
+}
+
+const dateLabel = date.toLocaleDateString("de-AT",{day:"2-digit",month:"2-digit"});
     const holidayName = austrianPublicHoliday(date);
     const holidayHtml = holidayName
       ? `<div class="day-holiday" title="Gesetzlicher Feiertag in Österreich">✦ ${escapeHtml(holidayName)}</div>`
