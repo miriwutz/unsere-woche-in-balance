@@ -2225,7 +2225,6 @@ document.querySelectorAll(".workroom-todo-check").forEach(box => {
   if (direction === "top") newIndex = 0;
   if (direction === "up") newIndex = Math.max(0, index - 1);
   if (direction === "down") newIndex = Math.min(sorted.length - 1, index + 1);
-  if (direction === "bottom") newIndex = sorted.length - 1;
 
   if (newIndex === index) return;
 
