@@ -1110,4 +1110,30 @@ input[type="checkbox"]:checked::before{transform:rotate(-45deg) scale(1)}
     border-left:0 !important;
   }
 }
+@media (max-width:600px){
 
+  .workroom-archive-delete{
+    width:28px !important;
+    height:28px !important;
+    padding:0 !important;
+    border:0 !important;
+    background:transparent !important;
+    box-shadow:none !important;
+
+    font-size:1rem !important;
+    line-height:1 !important;
+    opacity:.45;
+  }
+
+  .workroom-archive-delete:hover,
+  .workroom-archive-delete:focus{
+    opacity:.8;
+  }
+
+  .workroom-archive-item{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+  }
+}
