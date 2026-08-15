@@ -1195,3 +1195,20 @@ input[type="checkbox"]:checked::before{transform:rotate(-45deg) scale(1)}
   flex:0 0 auto;
   opacity:.7;
 }
+
+/* =========================================================
+   ROADMAP – Wochenplan & Werkraum-Planungen
+   ========================================================= */
+.day-holiday{
+  margin:7px 0 10px;
+  padding:5px 8px;
+  border-radius:10px;
+  background:rgba(223,207,185,.26);
+  color:#8b6f48;
+  font-size:.70rem;
+  line-height:1.25;
+}
+
+/* Videos bleiben in der Tageskarte, stehen aber bewusst ganz unten. */
+.day .video-item:first-of-type{margin-top:16px}
+
