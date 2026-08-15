@@ -2229,6 +2229,11 @@ document.querySelectorAll(".workroom-todo-check").forEach(box => {
 
     save();
     renderSchoolWorkTodos();
+    if (item.done) {
+  setTimeout(() => {
+    renderSchoolWorkTodos();
+  }, 60000);
+}
   });
 });
     function moveSchoolWorkTodo(id, direction) {
