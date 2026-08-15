@@ -1281,7 +1281,7 @@ input[type="checkbox"]:checked::before{transform:rotate(-45deg) scale(1)}
 }
 
 @media (max-width:700px){
-  .tab::before{font-size:.92em}
+  .tab::before{font-size:1.05rem !important}
   .filter[data-filter="latest"]::before{content:"◷ "}
 }
 
@@ -1404,4 +1404,20 @@ input[type="checkbox"]:checked::before{transform:rotate(-45deg) scale(1)}
   .pling-test-btn{
     flex:1 1 150px;
   }
+}
+
+/* Mobile-Navigation: Icons müssen sichtbar bleiben, obwohl .tab selbst font-size:0 hat. */
+@media (max-width:700px){
+  .tabs .tab::before{
+    display:inline-block !important;
+    font-size:1.05rem !important;
+    line-height:1 !important;
+    opacity:.78 !important;
+  }
+  .tabs .tab[data-view="week"]::before{content:"⌂" !important}
+  .tabs .tab[data-view="todos"]::before{content:"✓" !important}
+  .tabs .tab[data-view="shopping"]::before{content:"🛒" !important}
+  .tabs .tab[data-view="school"]::before{content:"🎒" !important}
+  .tabs .tab[data-view="workroom"]::before{content:"🛠" !important}
+  .tabs .tab[data-view="archive"]::before{content:"♡" !important}
 }
