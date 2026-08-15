@@ -1005,10 +1005,10 @@ ${isNewEntry(t) ? `<span class="new-entry-badge">NEU</span>` : ""}
 
     dayEl.innerHTML = `
       <h3>${day}<span class="day-date">${dateLabel}</span></h3>
-      ${(() => { const rows=["1","2"].map(cid=>{const tm=homeByForDate(cid,date),c=state.school.children[cid];return tm?`<span><b>${escapeHtml(c.name)}</b> ${escapeHtml(tm)}</span>`:""}).filter(Boolean);return rows.length?`<div class="home-by-strip home-by-top"><span class="home-by-label">⌂ zu Hause bis</span>${rows.join("")}</div>`:"";})()}
       ${holidayHtml}
-      ${eventHtml}
+      ${(() => { const rows=["1","2"].map(cid=>{const tm=homeByForDate(cid,date),c=state.school.children[cid];return tm?`<span><b>${escapeHtml(c.name)}</b> <strong class="home-by-time">${escapeHtml(tm)}</strong></span>`:""}).filter(Boolean);return rows.length?`<div class="home-by-strip home-by-top"><span class="home-by-label">⌂ zu Hause bis</span>${rows.join("")}</div>`:"";})()}
       ${schoolHtml}
+      ${eventHtml}
       ${todoHtml}
       ${videoHtml}
     `;
@@ -2289,19 +2289,79 @@ document.querySelector("#todayWeekBtn").addEventListener("click", () => {
   currentWeekMonday = getMonday(new Date());
   renderWeek();
 });
+const WORKROOM_PAGE_SIZE = 10;
+let schoolWorkTodoPage = 0;
+let schoolPrintPage = 0;
+let workroomLinkPage = 0;
+
+function clampWorkroomPage(page, totalItems) {
+  const maxPage = Math.max(0, Math.ceil(totalItems / WORKROOM_PAGE_SIZE) - 1);
+  return Math.min(Math.max(0, page), maxPage);
+}
+
+function workroomPageSlice(items, page) {
+  const start = page * WORKROOM_PAGE_SIZE;
+  return items.slice(start, start + WORKROOM_PAGE_SIZE);
+}
+
+function renderWorkroomPager(listElement, totalItems, currentPage, onChange) {
+  if (!listElement) return;
+
+  const old = listElement.parentElement?.querySelector(
+    `.workroom-pager[data-for="${listElement.id}"]`
+  );
+  if (old) old.remove();
+
+  const totalPages = Math.ceil(totalItems / WORKROOM_PAGE_SIZE);
+  if (totalPages <= 1) return;
+
+  const pager = document.createElement("div");
+  pager.className = "workroom-pager";
+  pager.dataset.for = listElement.id;
+
+  const buttons = [];
+  for (let i = 0; i < totalPages; i++) {
+    const near = Math.abs(i - currentPage) <= 2;
+    const edge = i === 0 || i === totalPages - 1;
+    if (totalPages <= 7 || near || edge) {
+      buttons.push(`<button type="button" class="workroom-page-btn ${i === currentPage ? "active" : ""}" data-page="${i}">${i + 1}</button>`);
+    }
+  }
+
+  pager.innerHTML = `
+    <button type="button" class="workroom-page-btn" data-page="${currentPage - 1}" ${currentPage <= 0 ? "disabled" : ""}>‹</button>
+    ${buttons.join("")}
+    <button type="button" class="workroom-page-btn" data-page="${currentPage + 1}" ${currentPage >= totalPages - 1 ? "disabled" : ""}>›</button>
+  `;
+
+  listElement.insertAdjacentElement("afterend", pager);
+
+  pager.querySelectorAll(".workroom-page-btn[data-page]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      if (btn.disabled) return;
+      const next = Number(btn.dataset.page);
+      if (!Number.isFinite(next) || next < 0 || next >= totalPages) return;
+      onChange(next);
+    });
+  });
+}
+
 function renderSchoolWorkTodos() {
   const list = document.querySelector("#schoolWorkTodoList");
   if (!list) return;
 
-  const oneMinuteAgo = Date.now() - 60000;
+  const archiveCutoff = Date.now() - 3 * 60 * 1000;
 
   const todos = [...state.workroom.todos]
     .filter(t => {
       if (!t.done) return true;
       if (!t.completedAt) return true;
-      return t.completedAt > oneMinuteAgo;
+      return t.completedAt > archiveCutoff;
     })
     .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+
+  schoolWorkTodoPage = clampWorkroomPage(schoolWorkTodoPage, todos.length);
+  const visibleTodos = workroomPageSlice(todos, schoolWorkTodoPage);
 
   const archive = document.querySelector("#schoolWorkTodoArchive");
 
@@ -2310,25 +2370,42 @@ function renderSchoolWorkTodos() {
       .filter(t =>
         t.done &&
         t.completedAt &&
-        t.completedAt <= oneMinuteAgo
+        t.completedAt <= archiveCutoff
       )
       .sort((a, b) => (b.completedAt ?? 0) - (a.completedAt ?? 0));
 
-    archive.innerHTML = archivedTodos.length
-      ? archivedTodos.map(t => `
-          <div class="workroom-archive-item">
-            <span>✓ ${escapeHtml(t.text)}</span>
+    if (archivedTodos.length) {
+      const groups = archivedTodos.reduce((acc, t) => {
+        const label = new Date(t.completedAt).toLocaleDateString("de-AT", {
+          weekday: "short",
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric"
+        });
+        (acc[label] ||= []).push(t);
+        return acc;
+      }, {});
 
-            <button
-              type="button"
-              class="workroom-archive-delete"
-              data-id="${t.id}"
-              title="Endgültig löschen"
-              aria-label="Erledigtes Schul-To-do löschen"
-            >×</button>
-          </div>
-        `).join("")
-      : `<div class="workroom-empty">Noch keine erledigten Schul-To-dos.</div>`;
+      archive.innerHTML = Object.entries(groups).map(([dateLabel, items]) => `
+        <div class="workroom-archive-group">
+          <div class="workroom-archive-date">${escapeHtml(dateLabel)}</div>
+          ${items.map(t => `
+            <div class="workroom-archive-item">
+              <span>✓ ${escapeHtml(t.text)}</span>
+              <button
+                type="button"
+                class="workroom-archive-delete"
+                data-id="${t.id}"
+                title="Endgültig löschen"
+                aria-label="Erledigtes Schul-To-do löschen"
+              >×</button>
+            </div>
+          `).join("")}
+        </div>
+      `).join("");
+    } else {
+      archive.innerHTML = `<div class="workroom-empty">Noch keine erledigten Schul-To-dos.</div>`;
+    }
 
     archive.querySelectorAll(".workroom-archive-delete").forEach(btn => {
       btn.addEventListener("click", e => {
@@ -2356,7 +2433,7 @@ function renderSchoolWorkTodos() {
     print: "🖨 Drucken"
   };
 
-  list.innerHTML = todos.map(t => `
+  list.innerHTML = visibleTodos.map(t => `
     <div
       class="workroom-todo-row ${t.done ? "done" : ""}"
       data-id="${t.id}">
@@ -2432,6 +2509,16 @@ function renderSchoolWorkTodos() {
     </div>
   `).join("");
 
+  renderWorkroomPager(
+    list,
+    todos.length,
+    schoolWorkTodoPage,
+    page => {
+      schoolWorkTodoPage = page;
+      renderSchoolWorkTodos();
+    }
+  );
+
   document.querySelectorAll(".workroom-todo-check").forEach(box => {
     box.addEventListener("change", e => {
       const item = state.workroom.todos.find(
@@ -2449,7 +2536,7 @@ function renderSchoolWorkTodos() {
       if (item.done) {
         setTimeout(() => {
           renderSchoolWorkTodos();
-        }, 61000);
+        }, 181000);
       }
     });
   });
@@ -2512,12 +2599,22 @@ function renderSchoolWorkTodos() {
           ...todoList.querySelectorAll(".workroom-todo-row")
         ].map(row => row.dataset.id);
 
-        ids.forEach((id, index) => {
-          const todo =
-            state.workroom.todos.find(t => t.id === id);
+        const sortedAll = [...state.workroom.todos]
+          .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 
-          if (todo) todo.order = index;
-        });
+        const startIndex = schoolWorkTodoPage * WORKROOM_PAGE_SIZE;
+        const visibleIdSet = new Set(ids);
+        const unaffected = sortedAll.filter(t => !visibleIdSet.has(t.id));
+        const moved = ids.map(id => state.workroom.todos.find(t => t.id === id)).filter(Boolean);
+
+        const rebuilt = [
+          ...unaffected.slice(0, startIndex),
+          ...moved,
+          ...unaffected.slice(startIndex)
+        ];
+
+        rebuilt.forEach((todo, index) => { todo.order = index; });
+        state.workroom.todos = rebuilt;
 
         save();
         renderSchoolWorkTodos();
@@ -2635,12 +2732,15 @@ state.workroom.prints = state.workroom.prints.filter(p => {
   
 const prints = [...state.workroom.prints]
   .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+
+schoolPrintPage = clampWorkroomPage(schoolPrintPage, prints.length);
+const visiblePrints = workroomPageSlice(prints, schoolPrintPage);
   
   if (!prints.length) {
     list.innerHTML =
       `<div class="workroom-empty">Im Moment steht nichts auf der Druckliste.</div>`;
   } else {
-    list.innerHTML = prints.map(p => `
+    list.innerHTML = visiblePrints.map(p => `
       <div
         class="workroom-todo-row ${p.done ? "done" : ""}"
         data-print-id="${p.id}">
@@ -2707,6 +2807,16 @@ const prints = [...state.workroom.prints]
       </div>
     `).join("");
   }
+
+  renderWorkroomPager(
+    list,
+    prints.length,
+    schoolPrintPage,
+    page => {
+      schoolPrintPage = page;
+      renderSchoolPrints();
+    }
+  );
 
  document.querySelectorAll(".workroom-print-check").forEach(box => {
   box.addEventListener("change", e => {
@@ -2818,10 +2928,22 @@ const prints = [...state.workroom.prints]
           const ids = [...printList.querySelectorAll(".workroom-todo-row")]
             .map(row => row.dataset.printId);
 
-          ids.forEach((id, index) => {
-            const item = state.workroom.prints.find(p => p.id === id);
-            if (item) item.order = index;
-          });
+          const sortedAll = [...state.workroom.prints]
+            .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+
+          const startIndex = schoolPrintPage * WORKROOM_PAGE_SIZE;
+          const visibleIdSet = new Set(ids);
+          const unaffected = sortedAll.filter(p => !visibleIdSet.has(p.id));
+          const moved = ids.map(id => state.workroom.prints.find(p => p.id === id)).filter(Boolean);
+
+          const rebuilt = [
+            ...unaffected.slice(0, startIndex),
+            ...moved,
+            ...unaffected.slice(startIndex)
+          ];
+
+          rebuilt.forEach((item, index) => { item.order = index; });
+          state.workroom.prints = rebuilt;
 
           save();
           renderSchoolPrints();
@@ -2910,8 +3032,16 @@ function renderWorkroomLinks() {
     later: "🌙 Später vorgemerkt"
   };
 
+  const useRank = { soon: 0, year: 1, later: 2 };
+
   const links = [...state.workroom.links]
-    .sort((a, b) => (Number(a.order) || 0) - (Number(b.order) || 0))
+    .sort((a, b) => {
+      if (activeWorkroomLinkUse === "all") {
+        const rankDiff = (useRank[a.use || "soon"] ?? 0) - (useRank[b.use || "soon"] ?? 0);
+        if (rankDiff) return rankDiff;
+      }
+      return (Number(a.order) || 0) - (Number(b.order) || 0);
+    })
     .filter(link =>
       (activeWorkroomLinkCategory === "all" ||
        link.category === activeWorkroomLinkCategory) &&
@@ -2919,14 +3049,17 @@ function renderWorkroomLinks() {
        (link.use || "soon") === activeWorkroomLinkUse)
     );
 
+  workroomLinkPage = clampWorkroomPage(workroomLinkPage, links.length);
+  const visibleLinks = workroomPageSlice(links, workroomLinkPage);
+
   if (!links.length) {
     list.innerHTML =
       `<div class="workroom-empty">Noch keine Links in dieser Kategorie gespeichert.</div>`;
     return;
   }
 
-  list.innerHTML = links.map(link => `
-    <div class="workroom-link-item ${(link.use || "soon") === "soon" ? "workroom-link-soon" : ""}" data-id="${link.id}">
+  list.innerHTML = visibleLinks.map(link => `
+    <div class="workroom-link-item ${(link.use || "soon") === "soon" ? "workroom-link-soon" : ""} ${(link.use || "soon") === "later" ? "workroom-link-later" : ""}" data-id="${link.id}">
 
  <div class="workroom-link-main">
 
@@ -2976,6 +3109,16 @@ function renderWorkroomLinks() {
 
     </div>
   `).join("");
+
+  renderWorkroomPager(
+    list,
+    links.length,
+    workroomLinkPage,
+    page => {
+      workroomLinkPage = page;
+      renderWorkroomLinks();
+    }
+  );
 
   document.querySelectorAll(".workroom-link-delete").forEach(btn => {
     btn.addEventListener("click", e => {
@@ -3136,6 +3279,7 @@ document.querySelectorAll(".workroom-link-filter").forEach(btn => {
 
     activeWorkroomLinkCategory =
       e.currentTarget.dataset.category || "all";
+    workroomLinkPage = 0;
 
     document.querySelectorAll(".workroom-link-filter")
       .forEach(filter =>
@@ -3152,6 +3296,7 @@ document.querySelectorAll(".workroom-link-filter").forEach(btn => {
 document.querySelectorAll(".workroom-link-use-filter").forEach(btn => {
   btn.addEventListener("click", e => {
     activeWorkroomLinkUse = e.currentTarget.dataset.use || "soon";
+    workroomLinkPage = 0;
 
     document.querySelectorAll(".workroom-link-use-filter").forEach(filter =>
       filter.classList.toggle("active", filter === e.currentTarget)
@@ -4148,7 +4293,7 @@ store.value = "";
 
   function currentPlingSound(){
     const saved = localStorage.getItem(SOUND_KEY) || "pling";
-    return ["pling","peng","elf","boing"].includes(saved) ? saved : "pling";
+    return ["pling","peng","elf","bowl","boing"].includes(saved) ? saved : "pling";
   }
 
   function plingMasterGain(){
@@ -4204,55 +4349,104 @@ store.value = "";
 
       const now = audioContext.currentTime;
       const master = audioContext.createGain();
-      const masterLevel = plingMasterGain();
+      const level = plingMasterGain();
       const sound = currentPlingSound();
 
-      master.gain.setValueAtTime(0.0001, now);
-      master.gain.exponentialRampToValueAtTime(masterLevel, now + 0.015);
-      master.gain.setValueAtTime(masterLevel, now + 0.58);
-      master.gain.exponentialRampToValueAtTime(0.0001, now + 1.10);
       master.connect(audioContext.destination);
 
-      const soundSets = {
-        // Der frühere, weichere Pling-Charakter.
-        pling: [
-          {freq:880, start:0.00, stop:0.24, type:"sine"},
-          {freq:1175,start:0.18, stop:0.52, type:"sine"}
-        ],
-        peng: [
-          {freq:660, start:0.00, stop:0.18, type:"triangle"},
-          {freq:440, start:0.12, stop:0.46, type:"triangle"}
-        ],
-        elf: [
-          {freq:1047,start:0.00, stop:0.20, type:"sine"},
-          {freq:1319,start:0.16, stop:0.38, type:"sine"},
-          {freq:1568,start:0.34, stop:0.72, type:"sine"}
-        ],
-        boing: [
-          {freq:520, start:0.00, stop:0.48, type:"sine", endFreq:180},
-          {freq:260, start:0.18, stop:0.72, type:"sine", endFreq:120}
-        ]
-      };
-
-      (soundSets[sound] || soundSets.pling).forEach(note => {
+      function tone(freq, start, stop, options = {}) {
         const osc = audioContext.createOscillator();
         const gain = audioContext.createGain();
 
-        osc.type = note.type || "sine";
-        osc.frequency.setValueAtTime(note.freq, now + note.start);
-        if (note.endFreq) {
-          osc.frequency.exponentialRampToValueAtTime(note.endFreq, now + note.stop);
+        osc.type = options.type || "sine";
+        osc.frequency.setValueAtTime(freq, now + start);
+
+        if (options.endFreq) {
+          osc.frequency.exponentialRampToValueAtTime(
+            Math.max(20, options.endFreq),
+            now + stop
+          );
         }
 
-        gain.gain.setValueAtTime(0.0001, now + note.start);
-        gain.gain.exponentialRampToValueAtTime(0.95, now + note.start + 0.015);
-        gain.gain.exponentialRampToValueAtTime(0.0001, now + note.stop);
+        gain.gain.setValueAtTime(0.0001, now + start);
+        gain.gain.exponentialRampToValueAtTime(
+          options.gain ?? 0.85,
+          now + start + (options.attack ?? 0.012)
+        );
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + stop);
 
         osc.connect(gain);
         gain.connect(master);
-        osc.start(now + note.start);
-        osc.stop(now + note.stop + 0.03);
-      });
+        osc.start(now + start);
+        osc.stop(now + stop + 0.04);
+      }
+
+      function noiseBurst(start, duration, gainLevel = 0.7) {
+        const length = Math.max(1, Math.floor(audioContext.sampleRate * duration));
+        const buffer = audioContext.createBuffer(1, length, audioContext.sampleRate);
+        const data = buffer.getChannelData(0);
+
+        for (let i = 0; i < length; i++) {
+          const fade = 1 - i / length;
+          data[i] = (Math.random() * 2 - 1) * fade;
+        }
+
+        const source = audioContext.createBufferSource();
+        const filter = audioContext.createBiquadFilter();
+        const gain = audioContext.createGain();
+
+        source.buffer = buffer;
+        filter.type = "bandpass";
+        filter.frequency.setValueAtTime(1250, now + start);
+        filter.Q.setValueAtTime(0.7, now + start);
+
+        gain.gain.setValueAtTime(gainLevel, now + start);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + start + duration);
+
+        source.connect(filter);
+        filter.connect(gain);
+        gain.connect(master);
+        source.start(now + start);
+      }
+
+      const totalDuration =
+        sound === "bowl" ? 2.8 :
+        sound === "elf" ? 1.65 :
+        sound === "peng" ? 0.65 :
+        sound === "boing" ? 0.95 : 0.72;
+
+      master.gain.setValueAtTime(0.0001, now);
+      master.gain.exponentialRampToValueAtTime(level, now + 0.012);
+      master.gain.setValueAtTime(level, now + Math.min(0.35, totalDuration * 0.35));
+      master.gain.exponentialRampToValueAtTime(0.0001, now + totalDuration);
+
+      if (sound === "pling") {
+        tone(880, 0.00, 0.28, {gain:0.82});
+        tone(1175,0.18, 0.62, {gain:0.78});
+
+      } else if (sound === "peng") {
+        noiseBurst(0.00, 0.16, 0.9);
+        tone(165, 0.00, 0.30, {type:"triangle", gain:0.95, endFreq:82});
+        tone(760, 0.01, 0.13, {type:"square", gain:0.22, endFreq:430});
+
+      } else if (sound === "elf") {
+        tone(1319,0.00,0.42,{gain:0.48});
+        tone(1760,0.15,0.60,{gain:0.42});
+        tone(2093,0.31,0.78,{gain:0.38});
+        tone(2637,0.50,1.00,{gain:0.30});
+        tone(2093,0.76,1.24,{gain:0.26});
+        tone(3136,0.94,1.48,{gain:0.20});
+
+      } else if (sound === "bowl") {
+        tone(220, 0.00, 2.65, {gain:0.72, attack:0.025});
+        tone(440, 0.00, 2.25, {gain:0.28, attack:0.02});
+        tone(660, 0.02, 1.90, {gain:0.18, attack:0.018});
+        tone(990, 0.03, 1.40, {gain:0.10, attack:0.015});
+
+      } else if (sound === "boing") {
+        tone(520,0.00,0.52,{gain:0.82,endFreq:170});
+        tone(260,0.16,0.78,{gain:0.58,endFreq:105});
+      }
 
       return true;
     } catch (err) {
