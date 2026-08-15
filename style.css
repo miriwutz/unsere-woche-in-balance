@@ -994,3 +994,20 @@ input[type="checkbox"]:checked::before{transform:rotate(-45deg) scale(1)}
   }
 
 }
+@media (max-width:600px){
+
+  .workroom-todo-edit,
+  .workroom-todo-delete{
+    display:none !important;
+  }
+
+  .workroom-todo-text{
+    font-size:.92rem !important;
+    line-height:1.3;
+  }
+
+  .workroom-todo-actions{
+    gap:5px !important;
+  }
+
+}
