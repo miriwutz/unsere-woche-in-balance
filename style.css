@@ -2471,3 +2471,90 @@ button.day-meal.has-recipe:hover{
     width:100%;
   }
 }
+
+
+/* ===== Rezept bearbeiten ===== */
+.recipe-card-actions{
+  display:flex;
+  align-items:center;
+  gap:4px;
+}
+.recipe-edit,
+.recipe-delete{
+  width:30px;
+  height:30px;
+  border:0;
+  border-radius:50%;
+  background:transparent;
+  color:#71827e;
+  cursor:pointer;
+}
+.recipe-edit:hover{
+  background:#e5f0ed;
+  color:#405d56;
+}
+.recipe-delete:hover{
+  background:#f5e8e4;
+  color:#8a554c;
+}
+.recipe-form-actions{
+  gap:8px;
+}
+
+/* ===== Essensplan: Bezeichnung + optionaler Link ===== */
+.meal-plan-day{
+  display:grid !important;
+  gap:6px !important;
+}
+.meal-plan-day-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:baseline;
+  gap:6px;
+}
+.meal-plan-input-wrap{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto auto;
+  gap:4px;
+  align-items:center;
+}
+.meal-plan-link-toggle{
+  width:28px;
+  height:28px;
+  border:1px solid rgba(102,143,135,.25);
+  border-radius:999px;
+  background:#fffdfb;
+  color:#738b86;
+  cursor:pointer;
+}
+.meal-plan-link-toggle.active,
+.meal-plan-link-toggle:hover{
+  background:#dcebe8;
+  color:#48635d;
+}
+.meal-plan-url-row{
+  margin-top:1px;
+}
+.meal-plan-url-row.hidden{
+  display:none;
+}
+.meal-plan-url-input{
+  width:100%;
+  min-width:0;
+  padding:7px 8px !important;
+  font-size:.69rem !important;
+  border-style:dashed !important;
+  color:#687c78;
+}
+
+/* Wochenplan: Link zeigt schöne Bezeichnung statt URL */
+a.day-meal{
+  text-decoration:none;
+}
+.day-meal.has-link{
+  cursor:pointer;
+}
+.day-meal.has-link:hover{
+  border-color:rgba(87,139,128,.46);
+  background:linear-gradient(90deg,rgba(201,228,221,.92),rgba(237,246,243,.84));
+}
