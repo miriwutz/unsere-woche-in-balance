@@ -3910,91 +3910,132 @@ store.value = "";
 
     renderShopping();
   });
-// =============================
-// PLING – leise Terminerinnerung
-// =============================
+// =========================================================
+// PLING – Termin-Erinnerung + Gerätestatus + Systemhinweis
+// Kostenlos: kein Blaze, kein Firebase Storage, kein Bezahl-Dienst.
+// WICHTIG: Exakte Erinnerungen bei vollständig geschlossener Web-App
+// benötigen echten Web-Push von einem Server. Diese Version erinnert
+// zuverlässig, solange die Seite läuft, und holt beim Zurückkehren
+// versäumte Erinnerungen vor Terminbeginn nach.
+// =========================================================
 (function setupPlingReminder(){
 
-  const style = document.createElement("style");
+  const DEVICE_KEY = "balanceProd.plingDeviceEnabled";
+  const FIRED_KEY = "balanceProd.plingFired";
 
-  style.textContent = `
-    .pling-field{
-      display:flex;
-      align-items:center;
-      gap:10px;
-      flex-wrap:wrap;
-      margin-top:10px;
-      padding:10px 12px;
-      border:1px solid #eadfd8;
-      border-radius:14px;
-      background:rgba(255,255,255,.45);
-    }
+  let audioContext = null;
+  let audioUnlocked = false;
 
-    .pling-field label{
-      display:flex;
-      align-items:center;
-      gap:7px;
-      margin:0;
-    }
-
-    .pling-field select{
-      width:auto;
-      min-width:115px;
-      padding:7px 30px 7px 10px;
-      border:1px solid #e4d8d1;
-      border-radius:12px;
-      background:#fff;
-    }
-
-    .pling-note{
-      font-size:.78rem;
-      opacity:.65;
-    }
-  `;
-
-  document.head.appendChild(style);
-
-  const eventFields = document.querySelector("#eventFields");
-
-  if (eventFields && !document.querySelector("#eventPlingEnabled")) {
-
-    const wrap = document.createElement("div");
-    wrap.className = "pling-field";
-
-    wrap.innerHTML = `
-      <label>
-        <input id="eventPlingEnabled" type="checkbox">
-        🔔 Pling
-      </label>
-
-      <select
-        id="eventPlingMinutes"
-        aria-label="Erinnerung vor dem Termin"
-      >
-        <option value="5">5 Minuten vorher</option>
-        <option value="15" selected>15 Minuten vorher</option>
-        <option value="30">30 Minuten vorher</option>
-      </select>
-
-      <span class="pling-note">
-        nur bei eingetragener Uhrzeit
-      </span>
-    `;
-
-    eventFields.appendChild(wrap);
+  function notificationSupported(){
+    return "Notification" in window;
   }
 
+  function serviceWorkerSupported(){
+    return "serviceWorker" in navigator;
+  }
 
-  let audioReady = false;
-  let audioContext = null;
-
-
-  function unlockAudio(){
-
-    if (audioReady) return;
+  async function ensureServiceWorker(){
+    if (!serviceWorkerSupported()) return null;
 
     try {
+      const registration = await navigator.serviceWorker.register("./sw.js");
+      return registration;
+    } catch (err) {
+      console.warn("Service Worker konnte nicht registriert werden:", err);
+      return null;
+    }
+  }
 
+  function deviceNotificationsEnabled(){
+    return localStorage.getItem(DEVICE_KEY) === "1";
+  }
+
+  function setDeviceNotificationsEnabled(value){
+    localStorage.setItem(DEVICE_KEY, value ? "1" : "0");
+  }
+
+  function permissionState(){
+    if (!notificationSupported()) return "unsupported";
+    return Notification.permission;
+  }
+
+  function updateDeviceStatus(){
+    const status = document.querySelector("#plingDeviceStatus");
+    const enableBtn = document.querySelector("#enablePlingNotifications");
+    if (!status || !enableBtn) return;
+
+    const permission = permissionState();
+    const enabled = deviceNotificationsEnabled();
+
+    if (permission === "unsupported") {
+      status.textContent = "🔕 System-Benachrichtigungen sind in diesem Browser nicht verfügbar.";
+      status.dataset.state = "unsupported";
+      enableBtn.textContent = "Nicht verfügbar";
+      enableBtn.disabled = true;
+      return;
+    }
+
+    enableBtn.disabled = false;
+
+    if (permission === "granted" && enabled) {
+      status.textContent = "🔔 Dieses Gerät ist für Benachrichtigungen aktiviert.";
+      status.dataset.state = "granted";
+      enableBtn.textContent = "Benachrichtigungen aktiv";
+      return;
+    }
+
+    if (permission === "denied") {
+      status.textContent = "🔕 Benachrichtigungen sind auf diesem Gerät blockiert.";
+      status.dataset.state = "denied";
+      enableBtn.textContent = "In Browser-Einstellungen erlauben";
+      return;
+    }
+
+    if (permission === "granted" && !enabled) {
+      status.textContent = "🔔 Browser erlaubt Benachrichtigungen – für dieses Gerät noch nicht aktiviert.";
+      status.dataset.state = "default";
+      enableBtn.textContent = "Auf diesem Gerät aktivieren";
+      return;
+    }
+
+    status.textContent = "🔔 Benachrichtigungen auf diesem Gerät noch nicht eingerichtet.";
+    status.dataset.state = "default";
+    enableBtn.textContent = "Benachrichtigungen aktivieren";
+  }
+
+  async function enableNotificationsOnThisDevice(){
+    if (!notificationSupported()) {
+      updateDeviceStatus();
+      return false;
+    }
+
+    try {
+      let permission = Notification.permission;
+
+      if (permission !== "granted") {
+        permission = await Notification.requestPermission();
+      }
+
+      if (permission === "granted") {
+        setDeviceNotificationsEnabled(true);
+        await ensureServiceWorker();
+        updateDeviceStatus();
+        return true;
+      }
+
+      setDeviceNotificationsEnabled(false);
+      updateDeviceStatus();
+      return false;
+    } catch (err) {
+      console.warn("Benachrichtigungsfreigabe fehlgeschlagen:", err);
+      setDeviceNotificationsEnabled(false);
+      updateDeviceStatus();
+      return false;
+    }
+  }
+
+  function unlockAudio(){
+    try {
       audioContext =
         audioContext ||
         new (window.AudioContext || window.webkitAudioContext)();
@@ -4003,74 +4044,107 @@ store.value = "";
         audioContext.resume();
       }
 
-      audioReady = true;
-
-    } catch (_) {}
+      audioUnlocked = true;
+    } catch (_) {
+      audioUnlocked = false;
+    }
   }
-
-
-  ["pointerdown","keydown","touchstart"].forEach(evt => {
-
-    document.addEventListener(
-      evt,
-      unlockAudio,
-      {
-        once:true,
-        passive:true
-      }
-    );
-
-  });
-
 
   function playPling(){
-
     try {
-
       unlockAudio();
-
-      if (!audioContext) return;
+      if (!audioContext || !audioUnlocked) return false;
 
       const now = audioContext.currentTime;
-
       const gain = audioContext.createGain();
-      const osc = audioContext.createOscillator();
+      const osc1 = audioContext.createOscillator();
+      const osc2 = audioContext.createOscillator();
 
-      osc.type = "sine";
+      osc1.type = "sine";
+      osc2.type = "sine";
 
-      osc.frequency.setValueAtTime(880, now);
-      osc.frequency.exponentialRampToValueAtTime(
-        1175,
-        now + 0.16
-      );
+      osc1.frequency.setValueAtTime(880, now);
+      osc1.frequency.exponentialRampToValueAtTime(1175, now + 0.16);
+
+      osc2.frequency.setValueAtTime(1175, now + 0.18);
+      osc2.frequency.exponentialRampToValueAtTime(1320, now + 0.34);
 
       gain.gain.setValueAtTime(0.0001, now);
+      gain.gain.exponentialRampToValueAtTime(0.065, now + 0.015);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.52);
 
-      gain.gain.exponentialRampToValueAtTime(
-        0.08,
-        now + 0.015
-      );
-
-      gain.gain.exponentialRampToValueAtTime(
-        0.0001,
-        now + 0.45
-      );
-
-      osc.connect(gain);
+      osc1.connect(gain);
+      osc2.connect(gain);
       gain.connect(audioContext.destination);
 
-      osc.start(now);
-      osc.stop(now + 0.46);
+      osc1.start(now);
+      osc1.stop(now + 0.24);
+      osc2.start(now + 0.18);
+      osc2.stop(now + 0.52);
 
-    } catch (_) {}
+      return true;
+    } catch (_) {
+      return false;
+    }
   }
 
+  async function showSystemNotification(title, body, tag){
+    if (
+      !notificationSupported() ||
+      Notification.permission !== "granted" ||
+      !deviceNotificationsEnabled()
+    ) {
+      return false;
+    }
 
-  const fired = new Set();
+    try {
+      const registration = await ensureServiceWorker();
 
+      if (registration?.showNotification) {
+        await registration.showNotification(title, {
+          body,
+          tag,
+          renotify: true,
+          silent: false,
+          data: { url: location.href }
+        });
+        return true;
+      }
+
+      new Notification(title, { body, tag });
+      return true;
+    } catch (err) {
+      console.warn("System-Benachrichtigung fehlgeschlagen:", err);
+      return false;
+    }
+  }
+
+  function readFired(){
+    try {
+      const parsed = JSON.parse(localStorage.getItem(FIRED_KEY) || "{}");
+      return parsed && typeof parsed === "object" ? parsed : {};
+    } catch {
+      return {};
+    }
+  }
+
+  function hasFired(key){
+    return !!readFired()[key];
+  }
+
+  function markFired(key){
+    const fired = readFired();
+    fired[key] = Date.now();
+
+    const cutoff = Date.now() - 14 * 24 * 60 * 60 * 1000;
+    Object.keys(fired).forEach(k => {
+      if (Number(fired[k]) < cutoff) delete fired[k];
+    });
+
+    localStorage.setItem(FIRED_KEY, JSON.stringify(fired));
+  }
 
   function eventStartForOccurrence(item, now){
-
     if (
       !item ||
       item.type !== "event" ||
@@ -4081,82 +4155,135 @@ store.value = "";
     }
 
     const today = new Date(now);
-
     today.setHours(12,0,0,0);
 
-    if (!occursOnDate(item, today)) {
-      return null;
-    }
+    if (!occursOnDate(item, today)) return null;
 
-    const [h,m] =
-      String(item.time)
-        .split(":")
-        .map(Number);
-
+    // Ein einmaliger mehrtägiger Termin soll nur am tatsächlichen Starttag plingen.
     if (
-      !Number.isFinite(h) ||
-      !Number.isFinite(m)
+      (item.recurrence || "none") === "none" &&
+      item.date &&
+      item.date !== dateKey(today)
     ) {
       return null;
     }
 
+    const [h,m] = String(item.time).split(":").map(Number);
+    if (!Number.isFinite(h) || !Number.isFinite(m)) return null;
+
     const start = new Date(now);
-
     start.setHours(h,m,0,0);
-
     return start;
   }
 
+  async function fireReminder(item, minutes, start, key){
+    markFired(key);
 
-  function checkPlings(){
+    // In-App-Ton als Ergänzung.
+    playPling();
 
-    const now = new Date();
+    const body = `${item.text} · in ${minutes} Minuten`;
 
-    state.todos.forEach(item => {
+    // Sichtbarer Hinweis innerhalb der App.
+    showMotivation(`🔔 ${body}`);
 
-      const start =
-        eventStartForOccurrence(item, now);
-
-      if (!start) return;
-
-      const minutes =
-        Number(item.plingMinutes || 15);
-
-      const remindAt =
-        new Date(
-          start.getTime() -
-          minutes * 60000
-        );
-
-      const diff =
-        now.getTime() -
-        remindAt.getTime();
-
-      const key =
-        `${item.id}::${dateKey(now)}::${minutes}`;
-
-      if (
-        diff >= 0 &&
-        diff < 65000 &&
-        !fired.has(key)
-      ) {
-
-        fired.add(key);
-
-        playPling();
-
-        showMotivation(
-          `🔔 ${item.text} · in ${minutes} Minuten`
-        );
-      }
-
-    });
+    // System-Benachrichtigung für dieses freigegebene Gerät.
+    await showSystemNotification(
+      "Unsere Woche in Balance",
+      body,
+      `pling-${key}`
+    );
   }
 
+  async function checkPlings(){
+    const now = new Date();
 
-  setInterval(checkPlings, 30000);
+    for (const item of state.todos) {
+      const start = eventStartForOccurrence(item, now);
+      if (!start) continue;
 
-  setTimeout(checkPlings, 1200);
+      const minutes = [5,15,30].includes(Number(item.plingMinutes))
+        ? Number(item.plingMinutes)
+        : 15;
+
+      const remindAt = new Date(start.getTime() - minutes * 60000);
+      const key = `${item.id}::${dateKey(now)}::${minutes}`;
+
+      // Ab Erinnerungszeit bis zum Termin selbst auslösen.
+      // Dadurch geht eine Erinnerung nicht verloren, wenn ein Hintergrund-Tab
+      // vom Browser kurz pausiert wurde.
+      if (
+        now >= remindAt &&
+        now < start &&
+        !hasFired(key)
+      ) {
+        await fireReminder(item, minutes, start, key);
+      }
+    }
+  }
+
+  async function runTestPling(){
+    unlockAudio();
+    const sounded = playPling();
+
+    let systemShown = false;
+    if (
+      notificationSupported() &&
+      Notification.permission === "granted" &&
+      deviceNotificationsEnabled()
+    ) {
+      systemShown = await showSystemNotification(
+        "Test-Pling",
+        "🔔 Benachrichtigungen funktionieren auf diesem Gerät.",
+        `pling-test-${Date.now()}`
+      );
+    }
+
+    if (!sounded && !systemShown) {
+      showMotivation("🔔 Test: Ton oder Benachrichtigungen sind auf diesem Gerät noch nicht freigegeben.");
+    } else if (!systemShown) {
+      showMotivation("🔔 Test-Pling gehört. System-Benachrichtigungen sind auf diesem Gerät noch nicht aktiviert.");
+    } else {
+      showMotivation("🔔 Test erfolgreich – Ton und Geräte-Benachrichtigung wurden ausgelöst.");
+    }
+  }
+
+  document.querySelector("#enablePlingNotifications")?.addEventListener("click", async () => {
+    unlockAudio();
+    await enableNotificationsOnThisDevice();
+  });
+
+  document.querySelector("#testPlingBtn")?.addEventListener("click", async () => {
+    unlockAudio();
+    await runTestPling();
+  });
+
+  ["pointerdown","keydown","touchstart"].forEach(evt => {
+    document.addEventListener(evt, unlockAudio, {
+      once:true,
+      passive:true
+    });
+  });
+
+  document.addEventListener("visibilitychange", () => {
+    if (!document.hidden) {
+      updateDeviceStatus();
+      checkPlings();
+    }
+  });
+
+  window.addEventListener("focus", () => {
+    updateDeviceStatus();
+    checkPlings();
+  });
+
+  window.addEventListener("online", updateDeviceStatus);
+
+  ensureServiceWorker();
+  updateDeviceStatus();
+
+  setInterval(checkPlings, 20000);
+  setTimeout(checkPlings, 1000);
 
 })();
 renderAll();
