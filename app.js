@@ -3273,7 +3273,9 @@ const eventCategory = document.querySelector("#eventCategory")?.value || "normal
     item.time = type === "event" ? eventTime : "";
     item.endDate = type === "event" ? eventEndDate : null;
 item.endTime = type === "event" ? eventEndTime : "";
-    item.eventCategory = type === "event" ? eventCategory : "normal";
+item.plingEnabled = type === "event" ? plingEnabled : false;
+item.plingMinutes = type === "event" ? plingMinutes : 15;
+item.eventCategory = type === "event" ? eventCategory : "normal";
     item.recurrence = recurrence;
     item.anchorDate = anchorDate;
     item.completedOccurrences = Array.isArray(item.completedOccurrences) ? item.completedOccurrences : [];
