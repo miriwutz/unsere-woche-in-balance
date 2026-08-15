@@ -2103,17 +2103,16 @@ function renderSchoolWorkTodos() {
    const list = document.querySelector("#schoolWorkTodoList");
   if (!list) return;
 
-const startOfToday = new Date();
-startOfToday.setHours(0, 0, 0, 0);
+const oneMinuteAgo = Date.now() - 60000;
 
 const todos = [...state.workroom.todos]
   .filter(t => {
     if (!t.done) return true;
-
     if (!t.completedAt) return true;
 
-    return t.completedAt >= startOfToday.getTime();
+    return t.completedAt > oneMinuteAgo;
   })
+  
   .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 
   if (!todos.length) {
