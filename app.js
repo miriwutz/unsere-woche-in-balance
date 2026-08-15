@@ -3228,7 +3228,15 @@ document.querySelector("#addTodoBtn").addEventListener("click", () => {
 const eventEndDate = document.querySelector("#eventEndDate")?.value || "";
 const eventTime = document.querySelector("#eventTime").value;
 const eventEndTime = document.querySelector("#eventEndTime")?.value || "";
-  const eventCategory = document.querySelector("#eventCategory")?.value || "normal";
+
+const plingEnabled =
+  type === "event" &&
+  !!document.querySelector("#eventPlingEnabled")?.checked;
+
+const plingMinutes =
+  Number(document.querySelector("#eventPlingMinutes")?.value || 15);
+
+const eventCategory = document.querySelector("#eventCategory")?.value || "normal";
   const superImportant = document.querySelector("#superImportant").checked;
 
   const activeMonday = new Date(currentWeekMonday);
