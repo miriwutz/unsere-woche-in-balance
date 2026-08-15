@@ -2884,6 +2884,16 @@ function renderWorkroomLinks() {
   const list = document.querySelector("#workroomLinkList");
   if (!list) return;
 
+  // Ältere Links bekommen einmalig eine stabile Reihenfolge.
+  let orderChanged = false;
+  state.workroom.links.forEach((link, index) => {
+    if (!Number.isFinite(Number(link.order))) {
+      link.order = index;
+      orderChanged = true;
+    }
+  });
+  if (orderChanged) save();
+
   const categoryLabels = {
     wood: "🪵 Holz",
     paper: "📄 Papier",
@@ -2893,6 +2903,7 @@ function renderWorkroomLinks() {
   };
 
   const links = [...state.workroom.links]
+    .sort((a, b) => (Number(a.order) || 0) - (Number(b.order) || 0))
     .filter(link =>
       activeWorkroomLinkCategory === "all" ||
       link.category === activeWorkroomLinkCategory
@@ -2930,6 +2941,11 @@ function renderWorkroomLinks() {
 </div>
 
       <div class="workroom-link-actions">
+        <span
+          class="workroom-link-drag-handle"
+          title="Link verschieben"
+          aria-label="Link verschieben">⋮⋮</span>
+
         <button
           class="workroom-link-edit"
           type="button"
@@ -2977,6 +2993,57 @@ function renderWorkroomLinks() {
       addBtn.textContent = "Änderung speichern";
     });
   });
+
+  if (typeof Sortable !== "undefined") {
+    new Sortable(list, {
+      animation: 180,
+      draggable: ".workroom-link-item",
+      filter: "a, button, input, select, textarea",
+      preventOnFilter: false,
+      ghostClass: "workroom-sort-ghost",
+      chosenClass: "workroom-sort-chosen",
+      dragClass: "workroom-sort-drag",
+      delay: 180,
+      delayOnTouchOnly: true,
+      touchStartThreshold: 6,
+
+      onEnd: function () {
+        const draggedIds = [...list.querySelectorAll(".workroom-link-item")]
+          .map(row => row.dataset.id);
+
+        const allSorted = [...state.workroom.links]
+          .sort((a, b) => (Number(a.order) || 0) - (Number(b.order) || 0));
+
+        // Beim Kategorie-Filter nur die sichtbaren Plätze neu belegen.
+        const visibleSlots = [];
+        allSorted.forEach((link, index) => {
+          if (
+            activeWorkroomLinkCategory === "all" ||
+            link.category === activeWorkroomLinkCategory
+          ) {
+            visibleSlots.push(index);
+          }
+        });
+
+        const byId = new Map(state.workroom.links.map(link => [link.id, link]));
+
+        draggedIds.forEach((id, index) => {
+          const slot = visibleSlots[index];
+          if (slot !== undefined && byId.has(id)) {
+            allSorted[slot] = byId.get(id);
+          }
+        });
+
+        allSorted.forEach((link, index) => {
+          link.order = index;
+        });
+
+        state.workroom.links = allSorted;
+        save();
+        renderWorkroomLinks();
+      }
+    });
+  }
 }
 
 
@@ -3023,6 +3090,7 @@ document.querySelector("#addWorkroomLinkBtn")?.addEventListener("click", () => {
       note,
       url,
       category,
+      order: state.workroom.links.length,
       createdAt: Date.now()
     });
   }
@@ -3198,7 +3266,7 @@ const recurrence = document.querySelector("#recurrence").value;
 
   document.querySelector("#schoolHolidayHint").classList.toggle(
     "hidden",
-    recurrence !== "schoolyear-no"
+    recurrence !== "schoolyear-noe"
   );
 
   // Wochentag bei To-dos nur für "Diese Woche" anzeigen
@@ -3921,6 +3989,7 @@ store.value = "";
 (function setupPlingReminder(){
 
   const DEVICE_KEY = "balanceProd.plingDeviceEnabled";
+  const VOLUME_KEY = "balanceProd.plingVolume";
   const FIRED_KEY = "balanceProd.plingFired";
 
   let audioContext = null;
@@ -4035,6 +4104,29 @@ store.value = "";
     }
   }
 
+  function currentPlingVolume(){
+    const saved = localStorage.getItem(VOLUME_KEY) || "loud";
+    return ["soft","medium","loud","extra"].includes(saved) ? saved : "loud";
+  }
+
+  function plingMasterGain(){
+    return {
+      soft: 0.20,
+      medium: 0.38,
+      loud: 0.62,
+      extra: 0.92
+    }[currentPlingVolume()] || 0.62;
+  }
+
+  const volumeSelect = document.querySelector("#plingVolume");
+  if (volumeSelect) {
+    volumeSelect.value = currentPlingVolume();
+    volumeSelect.addEventListener("change", () => {
+      localStorage.setItem(VOLUME_KEY, volumeSelect.value);
+      showMotivation(`🔔 Pling-Lautstärke auf diesem Gerät: ${volumeSelect.options[volumeSelect.selectedIndex].text}`);
+    });
+  }
+
   async function unlockAudio(){
     try {
       audioContext =
@@ -4061,17 +4153,21 @@ store.value = "";
       const now = audioContext.currentTime;
       const master = audioContext.createGain();
 
-      // Deutlich hörbarer, aber immer noch kurzer freundlicher Dreiklang.
+      // Deutlich lauterer, aber weiterhin freundlicher Dreiklang.
+      // Web-Audio kann die Geräte-Medienlautstärke nicht übersteuern,
+      // deshalb holen wir hier innerhalb des Browsers mehr Pegel heraus.
+      const masterLevel = plingMasterGain();
+
       master.gain.setValueAtTime(0.0001, now);
-      master.gain.exponentialRampToValueAtTime(0.22, now + 0.02);
-      master.gain.setValueAtTime(0.22, now + 0.42);
-      master.gain.exponentialRampToValueAtTime(0.0001, now + 0.85);
+      master.gain.exponentialRampToValueAtTime(masterLevel, now + 0.02);
+      master.gain.setValueAtTime(masterLevel, now + 0.72);
+      master.gain.exponentialRampToValueAtTime(0.0001, now + 1.35);
       master.connect(audioContext.destination);
 
       const notes = [
-        {freq: 880,  start: 0.00, stop: 0.28},
-        {freq: 1175, start: 0.22, stop: 0.52},
-        {freq: 1320, start: 0.46, stop: 0.82}
+        {freq: 784,  start: 0.00, stop: 0.34},
+        {freq: 988,  start: 0.26, stop: 0.64},
+        {freq: 1175, start: 0.56, stop: 1.08}
       ];
 
       notes.forEach(note => {
@@ -4082,7 +4178,7 @@ store.value = "";
         osc.frequency.setValueAtTime(note.freq, now + note.start);
 
         gain.gain.setValueAtTime(0.0001, now + note.start);
-        gain.gain.exponentialRampToValueAtTime(0.75, now + note.start + 0.02);
+        gain.gain.exponentialRampToValueAtTime(1.0, now + note.start + 0.02);
         gain.gain.exponentialRampToValueAtTime(0.0001, now + note.stop);
 
         osc.connect(gain);
