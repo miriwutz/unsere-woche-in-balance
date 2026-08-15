@@ -2400,18 +2400,9 @@ function renderSchoolPrints() {
 
   if (!list) return;
 
-  const startOfToday = new Date();
-  startOfToday.setHours(0, 0, 0, 0);
-
-  const prints = [...state.workroom.prints]
-    .filter(p => {
-      if (!p.done) return true;
-      if (!p.completedAt) return true;
-
-      return p.completedAt >= startOfToday.getTime();
-    })
-    .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
-
+const prints = [...state.workroom.prints]
+  .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+  
   if (!prints.length) {
     list.innerHTML =
       `<div class="workroom-empty">Im Moment steht nichts auf der Druckliste.</div>`;
