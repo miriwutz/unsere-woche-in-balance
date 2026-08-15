@@ -2187,12 +2187,6 @@ const todos = [...state.workroom.todos]
     data-id="${t.id}"
     title="Eine Position nach unten">↓</button>
 
-  <button
-    class="workroom-move-btn workroom-move-bottom"
-    type="button"
-    data-id="${t.id}"
-    title="Ganz nach unten">⇊</button>
-
   <span
     class="workroom-drag-handle"
     title="Ziehen"
