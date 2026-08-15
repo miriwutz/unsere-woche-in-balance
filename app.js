@@ -3910,6 +3910,255 @@ store.value = "";
 
     renderShopping();
   });
+// =============================
+// PLING – leise Terminerinnerung
+// =============================
+(function setupPlingReminder(){
+
+  const style = document.createElement("style");
+
+  style.textContent = `
+    .pling-field{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-top:10px;
+      padding:10px 12px;
+      border:1px solid #eadfd8;
+      border-radius:14px;
+      background:rgba(255,255,255,.45);
+    }
+
+    .pling-field label{
+      display:flex;
+      align-items:center;
+      gap:7px;
+      margin:0;
+    }
+
+    .pling-field select{
+      width:auto;
+      min-width:115px;
+      padding:7px 30px 7px 10px;
+      border:1px solid #e4d8d1;
+      border-radius:12px;
+      background:#fff;
+    }
+
+    .pling-note{
+      font-size:.78rem;
+      opacity:.65;
+    }
+  `;
+
+  document.head.appendChild(style);
+
+  const eventFields = document.querySelector("#eventFields");
+
+  if (eventFields && !document.querySelector("#eventPlingEnabled")) {
+
+    const wrap = document.createElement("div");
+    wrap.className = "pling-field";
+
+    wrap.innerHTML = `
+      <label>
+        <input id="eventPlingEnabled" type="checkbox">
+        🔔 Pling
+      </label>
+
+      <select
+        id="eventPlingMinutes"
+        aria-label="Erinnerung vor dem Termin"
+      >
+        <option value="5">5 Minuten vorher</option>
+        <option value="15" selected>15 Minuten vorher</option>
+        <option value="30">30 Minuten vorher</option>
+      </select>
+
+      <span class="pling-note">
+        nur bei eingetragener Uhrzeit
+      </span>
+    `;
+
+    eventFields.appendChild(wrap);
+  }
+
+
+  let audioReady = false;
+  let audioContext = null;
+
+
+  function unlockAudio(){
+
+    if (audioReady) return;
+
+    try {
+
+      audioContext =
+        audioContext ||
+        new (window.AudioContext || window.webkitAudioContext)();
+
+      if (audioContext.state === "suspended") {
+        audioContext.resume();
+      }
+
+      audioReady = true;
+
+    } catch (_) {}
+  }
+
+
+  ["pointerdown","keydown","touchstart"].forEach(evt => {
+
+    document.addEventListener(
+      evt,
+      unlockAudio,
+      {
+        once:true,
+        passive:true
+      }
+    );
+
+  });
+
+
+  function playPling(){
+
+    try {
+
+      unlockAudio();
+
+      if (!audioContext) return;
+
+      const now = audioContext.currentTime;
+
+      const gain = audioContext.createGain();
+      const osc = audioContext.createOscillator();
+
+      osc.type = "sine";
+
+      osc.frequency.setValueAtTime(880, now);
+      osc.frequency.exponentialRampToValueAtTime(
+        1175,
+        now + 0.16
+      );
+
+      gain.gain.setValueAtTime(0.0001, now);
+
+      gain.gain.exponentialRampToValueAtTime(
+        0.08,
+        now + 0.015
+      );
+
+      gain.gain.exponentialRampToValueAtTime(
+        0.0001,
+        now + 0.45
+      );
+
+      osc.connect(gain);
+      gain.connect(audioContext.destination);
+
+      osc.start(now);
+      osc.stop(now + 0.46);
+
+    } catch (_) {}
+  }
+
+
+  const fired = new Set();
+
+
+  function eventStartForOccurrence(item, now){
+
+    if (
+      !item ||
+      item.type !== "event" ||
+      !item.plingEnabled ||
+      !item.time
+    ) {
+      return null;
+    }
+
+    const today = new Date(now);
+
+    today.setHours(12,0,0,0);
+
+    if (!occursOnDate(item, today)) {
+      return null;
+    }
+
+    const [h,m] =
+      String(item.time)
+        .split(":")
+        .map(Number);
+
+    if (
+      !Number.isFinite(h) ||
+      !Number.isFinite(m)
+    ) {
+      return null;
+    }
+
+    const start = new Date(now);
+
+    start.setHours(h,m,0,0);
+
+    return start;
+  }
+
+
+  function checkPlings(){
+
+    const now = new Date();
+
+    state.todos.forEach(item => {
+
+      const start =
+        eventStartForOccurrence(item, now);
+
+      if (!start) return;
+
+      const minutes =
+        Number(item.plingMinutes || 15);
+
+      const remindAt =
+        new Date(
+          start.getTime() -
+          minutes * 60000
+        );
+
+      const diff =
+        now.getTime() -
+        remindAt.getTime();
+
+      const key =
+        `${item.id}::${dateKey(now)}::${minutes}`;
+
+      if (
+        diff >= 0 &&
+        diff < 65000 &&
+        !fired.has(key)
+      ) {
+
+        fired.add(key);
+
+        playPling();
+
+        showMotivation(
+          `🔔 ${item.text} · in ${minutes} Minuten`
+        );
+      }
+
+    });
+  }
+
+
+  setInterval(checkPlings, 30000);
+
+  setTimeout(checkPlings, 1200);
+
+})();
 renderAll();
 // =============================
 // WERKRAUM – BEREICHE AUF/ZU
