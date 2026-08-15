@@ -303,22 +303,36 @@
   </label>
 
 <div class="pling-field" style="grid-column:1 / -1">
-  <label>
-    <input id="eventPlingEnabled" type="checkbox">
-    <span>🔔 Pling</span>
-  </label>
+    <div class="pling-main-row">
+      <label class="pling-toggle">
+        <input id="eventPlingEnabled" type="checkbox">
+        <span>🔔 Pling</span>
+      </label>
 
-  <select
-    id="eventPlingMinutes"
-    aria-label="Erinnerung vor dem Termin"
-  >
-    <option value="5">5 Minuten vorher</option>
-    <option value="15" selected>15 Minuten vorher</option>
-    <option value="30">30 Minuten vorher</option>
-  </select>
+      <select
+        id="eventPlingMinutes"
+        aria-label="Erinnerung vor dem Termin"
+      >
+        <option value="5">5 Minuten vorher</option>
+        <option value="15" selected>15 Minuten vorher</option>
+        <option value="30">30 Minuten vorher</option>
+      </select>
 
-  <span class="pling-note">nur bei eingetragener Uhrzeit</span>
-</div>
+      <span class="pling-note">nur bei eingetragener Uhrzeit</span>
+    </div>
+
+    <div class="pling-device-row">
+      <span id="plingDeviceStatus" class="pling-device-status" aria-live="polite">
+        Benachrichtigungen werden geprüft …
+      </span>
+      <button id="enablePlingNotifications" class="secondary-btn pling-device-btn" type="button">
+        Benachrichtigungen aktivieren
+      </button>
+      <button id="testPlingBtn" class="secondary-btn pling-test-btn" type="button">
+        ♪ Test-Pling
+      </button>
+    </div>
+  </div>
         
 </div>
   
