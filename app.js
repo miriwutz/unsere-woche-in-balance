@@ -4354,6 +4354,7 @@ function normalizeMealEntry(entry) {
     label,
     recipeId: String(entry.recipeId || ""),
     url,
+    deleted: entry.deleted === true,
     updatedAt: Number(entry.updatedAt) || 0
   };
 }
@@ -4403,7 +4404,8 @@ function renderMealPlan() {
     date.setDate(monday.getDate() + index);
     const key = dateKey(date);
 
-    const stored = normalizeMealEntry ? normalizeMealEntry(state.meals?.[key]) : state.meals?.[key];
+    const storedRaw = normalizeMealEntry ? normalizeMealEntry(state.meals?.[key]) : state.meals?.[key];
+    const stored = storedRaw?.deleted === true ? null : storedRaw;
     const value = typeof stored === "string" ? stored : (stored?.label || "");
     const customUrl = typeof stored === "object" ? (stored?.url || "") : "";
     const recipeId = typeof stored === "object" ? (stored?.recipeId || "") : "";
@@ -4479,12 +4481,23 @@ function renderMealPlan() {
     state.meals = state.meals && typeof state.meals === "object" ? state.meals : {};
 
     if (!label && !url) {
-      delete state.meals[key];
+      // Wichtig für mehrere Geräte:
+      // Nicht einfach den Schlüssel entfernen. Sonst kann ein anderes Gerät
+      // mit dem alten Eintrag ("Pommes") ihn beim nächsten Merge zurückbringen.
+      // Stattdessen speichern wir eine Löschmarke mit Zeitstempel.
+      state.meals[key] = {
+        label: "",
+        recipeId: "",
+        url: "",
+        deleted: true,
+        updatedAt: Date.now()
+      };
     } else {
       state.meals[key] = {
         label: matched ? matched.title : label,
         recipeId: matched ? matched.id : "",
         url,
+        deleted: false,
         updatedAt: Date.now()
       };
     }
@@ -6281,6 +6294,7 @@ if (confirmReplanBtn) confirmReplanBtn.addEventListener("click", () => {
       label:link.label || "Rezept",
       recipeId:link.recipeId || "",
       url:link.url,
+      deleted:false,
       updatedAt:Date.now()
     };
 
