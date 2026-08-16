@@ -2586,7 +2586,7 @@ function showRecipeDetail(recipeOrTitle) {
   title.textContent = recipe.title || "Rezept";
 
   body.innerHTML = `
-    <div class="recipe-detail-banner ${recipeCategoryClass(recipe.category || "main")}">
+    <div class="recipe-detail-banner ${recipeCategoryClass(recipe.category || "main")} ${recipe.kids ? "recipe-detail-kids" : ""}">
       <div class="recipe-detail-time">
         <span class="recipe-detail-clock">◔</span>
         <span>${escapeHtml(recipe.time || "–")}</span>
@@ -2720,7 +2720,7 @@ function renderRecipes() {
   }
 
   host.innerHTML = visibleRecipes.map(r => `
-    <article class="recipe-card ${recipeCategoryClass(r.category || "main")}" id="recipe-${r.id}">
+    <article class="recipe-card ${recipeCategoryClass(r.category || "main")} ${r.kids ? "recipe-card-kids" : ""}" id="recipe-${r.id}">
       <header class="recipe-card-head">
         <div class="recipe-time-mark"><span class="recipe-clock">◔</span><span>${escapeHtml(r.time || "–")}</span></div>
         <div class="recipe-title-wrap">
@@ -2946,15 +2946,17 @@ function renderMealPlan() {
     .slice()
     .sort((a,b) => String(a.title || "").localeCompare(String(b.title || ""), "de"));
 
+  const isUrl = value => /^https?:\/\//i.test(String(value || "").trim());
+
   host.innerHTML = days.map((dayName, index) => {
     const date = new Date(monday);
     date.setDate(monday.getDate() + index);
     const key = dateKey(date);
 
-    const stored = normalizeMealEntry(state.meals?.[key]);
-    const value = stored?.label || "";
-    const customUrl = stored?.url || "";
-    const recipeId = stored?.recipeId || "";
+    const stored = normalizeMealEntry ? normalizeMealEntry(state.meals?.[key]) : state.meals?.[key];
+    const value = typeof stored === "string" ? stored : (stored?.label || "");
+    const customUrl = typeof stored === "object" ? (stored?.url || "") : "";
+    const recipeId = typeof stored === "object" ? (stored?.recipeId || "") : "";
 
     const matched = recipeId
       ? recipes.find(r => r.id === recipeId)
@@ -2968,12 +2970,15 @@ function renderMealPlan() {
         </div>
 
         <div class="meal-plan-input-wrap">
-          <input type="text"
-                 class="meal-plan-input"
-                 data-date="${key}"
-                 list="mealRecipeSuggestions"
-                 value="${escapeHtml(value)}"
-                 placeholder="Bezeichnung, z. B. Pommes">
+          <div class="meal-plan-name-wrap">
+            <input type="text"
+                   class="meal-plan-input"
+                   data-date="${key}"
+                   value="${escapeHtml(value)}"
+                   autocomplete="off"
+                   placeholder="Bezeichnung, z. B. Pommes">
+            <div class="meal-plan-autocomplete hidden" data-date="${key}"></div>
+          </div>
 
           <button type="button"
                   class="meal-plan-link-toggle ${customUrl ? "active" : ""}"
@@ -3005,17 +3010,6 @@ function renderMealPlan() {
     `;
   }).join("");
 
-  let datalist = document.querySelector("#mealRecipeSuggestions");
-  if (!datalist) {
-    datalist = document.createElement("datalist");
-    datalist.id = "mealRecipeSuggestions";
-    document.body.appendChild(datalist);
-  }
-
-  datalist.innerHTML = recipes
-    .map(r => `<option value="${escapeHtml(r.title || "")}"></option>`)
-    .join("");
-
   function persistMealForDate(key, {refresh = false} = {}) {
     const esc = CSS.escape(key);
     const labelInput = host.querySelector(`.meal-plan-input[data-date="${esc}"]`);
@@ -3024,9 +3018,7 @@ function renderMealPlan() {
     let label = labelInput?.value.trim() || "";
     let url = urlInput?.value.trim() || "";
 
-    // URL versehentlich im Namensfeld? Dann in Link verschieben,
-    // aber niemals als sichtbare Essensbezeichnung verwenden.
-    if (/^https?:\/\//i.test(label) && !url) {
+    if (isUrl(label) && !url) {
       url = label;
       label = "";
       if (labelInput) labelInput.value = "";
@@ -3049,14 +3041,64 @@ function renderMealPlan() {
 
     save();
     renderWeek();
-
     if (refresh) renderMealPlan();
   }
 
-  // Sofort speichern. Kein blur-Handler mehr, damit beim Klick auf 🔗
-  // nicht mitten im Bedienvorgang das ganze Feld neu aufgebaut wird.
+  function showMealSuggestions(input) {
+    const key = input.dataset.date;
+    const popup = host.querySelector(`.meal-plan-autocomplete[data-date="${CSS.escape(key)}"]`);
+    if (!popup) return;
+
+    const q = input.value.trim().toLowerCase();
+    if (!q) {
+      popup.innerHTML = "";
+      popup.classList.add("hidden");
+      return;
+    }
+
+    const matches = recipes
+      .filter(r => String(r.title || "").toLowerCase().includes(q))
+      .slice(0, 6);
+
+    if (!matches.length) {
+      popup.innerHTML = "";
+      popup.classList.add("hidden");
+      return;
+    }
+
+    popup.innerHTML = matches.map(r => `
+      <button type="button"
+              class="meal-plan-autocomplete-item"
+              data-title="${escapeHtml(r.title || "")}"
+              data-recipe-id="${r.id}">
+        <strong>${escapeHtml(r.title || "")}</strong>
+        <span>${escapeHtml(recipeCategoryLabel(r.category || "main"))}</span>
+      </button>
+    `).join("");
+    popup.classList.remove("hidden");
+
+    popup.querySelectorAll(".meal-plan-autocomplete-item").forEach(btn => {
+      btn.addEventListener("mousedown", e => e.preventDefault());
+      btn.addEventListener("click", () => {
+        input.value = btn.dataset.title || "";
+        popup.classList.add("hidden");
+        persistMealForDate(key, {refresh:true});
+      });
+    });
+  }
+
   host.querySelectorAll(".meal-plan-input").forEach(input => {
-    input.addEventListener("input", () => persistMealForDate(input.dataset.date));
+    input.addEventListener("input", () => {
+      persistMealForDate(input.dataset.date);
+      showMealSuggestions(input);
+    });
+    input.addEventListener("focus", () => showMealSuggestions(input));
+    input.addEventListener("blur", () => {
+      setTimeout(() => {
+        const popup = host.querySelector(`.meal-plan-autocomplete[data-date="${CSS.escape(input.dataset.date)}"]`);
+        popup?.classList.add("hidden");
+      }, 140);
+    });
     input.addEventListener("change", () => persistMealForDate(input.dataset.date, {refresh:true}));
   });
 
@@ -3070,9 +3112,7 @@ function renderMealPlan() {
     btn.addEventListener("click", () => {
       const row = host.querySelector(`.meal-plan-url-row[data-date="${CSS.escape(btn.dataset.date)}"]`);
       row?.classList.toggle("hidden");
-      if (row && !row.classList.contains("hidden")) {
-        row.querySelector("input")?.focus();
-      }
+      if (row && !row.classList.contains("hidden")) row.querySelector("input")?.focus();
     });
   });
 
