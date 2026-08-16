@@ -158,6 +158,25 @@ function save() {
 // =========================================================
 // PINNWAND – flüchtige Familiennachrichten
 // =========================================================
+const PINBOARD_VOLUME_KEY = "balanceProd.pinboardVolume";
+
+function getPinboardVolumeSetting() {
+  return localStorage.getItem(PINBOARD_VOLUME_KEY) || "loud";
+}
+
+function setPinboardVolumeSetting(value) {
+  localStorage.setItem(PINBOARD_VOLUME_KEY, value || "loud");
+}
+
+function pinboardVolumeGain() {
+  return {
+    soft: 0.22,
+    normal: 0.42,
+    loud: 0.72,
+    max: 1.0
+  }[getPinboardVolumeSetting()] || 0.72;
+}
+
 const pinboardSeenIds = new Set();
 let pinboardCloudInitialized = false;
 let pinboardAudioContext = null;
@@ -191,8 +210,9 @@ async function playPinboardSound(sound = "letter") {
     const now = ctx.currentTime;
     const master = ctx.createGain();
     master.connect(ctx.destination);
+    const volumeGain = pinboardVolumeGain();
     master.gain.setValueAtTime(0.0001, now);
-    master.gain.exponentialRampToValueAtTime(0.34, now + 0.01);
+    master.gain.exponentialRampToValueAtTime(volumeGain, now + 0.01);
 
     function note(freq, start, duration, type = "sine", gainValue = 0.7, endFreq = null) {
       const osc = ctx.createOscillator();
@@ -212,17 +232,17 @@ async function playPinboardSound(sound = "letter") {
     }
 
     if (sound === "sparkle") {
-      note(1047, 0.00, 0.18, "sine", 0.58);
-      note(1319, 0.10, 0.22, "sine", 0.54);
-      note(1568, 0.22, 0.28, "sine", 0.50);
+      note(1047, 0.00, 0.18, "sine", 0.82);
+      note(1319, 0.10, 0.22, "sine", 0.78);
+      note(1568, 0.22, 0.28, "sine", 0.74);
       master.gain.exponentialRampToValueAtTime(0.0001, now + 0.58);
     } else if (sound === "bubble") {
-      note(240, 0.00, 0.20, "sine", 0.72, 120);
-      note(360, 0.17, 0.16, "sine", 0.48, 180);
+      note(260, 0.00, 0.20, "sine", 0.92, 140);
+      note(410, 0.17, 0.18, "sine", 0.68, 210);
       master.gain.exponentialRampToValueAtTime(0.0001, now + 0.42);
     } else {
-      note(660, 0.00, 0.20, "triangle", 0.66);
-      note(880, 0.19, 0.26, "triangle", 0.62);
+      note(720, 0.00, 0.20, "triangle", 0.92);
+      note(980, 0.19, 0.27, "triangle", 0.88);
       master.gain.exponentialRampToValueAtTime(0.0001, now + 0.52);
     }
 
@@ -312,8 +332,19 @@ function handleIncomingPinboard(cloudMessages) {
 
 function openPinboard() {
   renderPinboard();
+  const volume = document.querySelector("#pinboardVolume");
+  if (volume) volume.value = getPinboardVolumeSetting();
   document.querySelector("#pinboardDialog")?.showModal();
 }
+
+document.querySelector("#pinboardVolume")?.addEventListener("change", e => {
+  setPinboardVolumeSetting(e.currentTarget.value || "loud");
+});
+
+document.querySelector("#testPinboardSoundBtn")?.addEventListener("click", () => {
+  const sound = document.querySelector("#pinboardSound")?.value || "letter";
+  playPinboardSound(sound);
+});
 
 document.querySelector("#openPinboardBtn")?.addEventListener("click", openPinboard);
 document.querySelector("#closePinboardBtn")?.addEventListener("click", () => {
@@ -325,6 +356,9 @@ document.querySelector("#pinboardDialog")?.addEventListener("click", e => {
 });
 
 document.querySelector("#sendPinboardBtn")?.addEventListener("click", async () => {
+  const volumeValue = document.querySelector("#pinboardVolume")?.value || getPinboardVolumeSetting();
+  setPinboardVolumeSetting(volumeValue);
+
   const recipient = document.querySelector("#pinboardRecipient")?.value || "all";
   const textInput = document.querySelector("#pinboardMessage");
   const sound = document.querySelector("#pinboardSound")?.value || "letter";
