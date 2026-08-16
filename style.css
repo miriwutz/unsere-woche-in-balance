@@ -2836,3 +2836,192 @@ a.day-meal{
 .workroom-links-card .workroom-page-btn:disabled{
   opacity:.35;
 }
+
+
+/* =========================================================
+   PINNWAND – digitale Kühlschranknotiz
+   ========================================================= */
+.pinboard-open-btn{
+  position:relative;
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+}
+.pinboard-badge{
+  min-width:18px;
+  height:18px;
+  padding:0 5px;
+  display:inline-grid;
+  place-items:center;
+  border-radius:999px;
+  background:#e7cad3;
+  color:#674b56;
+  font-size:.62rem;
+  font-weight:700;
+  line-height:1;
+}
+.pinboard-badge.hidden{display:none}
+
+.pinboard-dialog{
+  width:min(720px,calc(100% - 28px));
+}
+.pinboard-dialog::backdrop{
+  background:rgba(67,61,58,.30);
+  backdrop-filter:blur(3px);
+}
+.pinboard-dialog-card{
+  max-height:min(88vh,860px);
+  overflow:auto;
+}
+.pinboard-subtitle{
+  margin:.25rem 0 0;
+  color:var(--muted);
+  font-size:.82rem;
+}
+.pinboard-compose{
+  display:grid;
+  grid-template-columns:170px minmax(0,1fr) 170px;
+  gap:10px;
+  align-items:end;
+}
+.pinboard-message-field{
+  grid-column:2;
+  grid-row:1 / span 2;
+}
+.pinboard-message-field textarea{
+  min-height:105px;
+  resize:vertical;
+}
+.pinboard-send-btn{
+  grid-column:3;
+}
+.pinboard-divider{
+  height:1px;
+  margin:18px 0 12px;
+  background:var(--line);
+}
+.pinboard-list-head{
+  display:flex;
+  justify-content:space-between;
+  gap:12px;
+  align-items:center;
+  margin-bottom:9px;
+  color:#605753;
+}
+.pinboard-list-head span{
+  color:var(--muted);
+  font-size:.72rem;
+}
+.pinboard-list{
+  display:grid;
+  gap:8px;
+}
+.pinboard-empty{
+  padding:18px;
+  border:1px dashed var(--line);
+  border-radius:14px;
+  color:var(--muted);
+  text-align:center;
+  font-size:.8rem;
+}
+.pinboard-note{
+  position:relative;
+  padding:12px;
+  border:1px solid rgba(202,167,178,.32);
+  border-radius:14px;
+  background:linear-gradient(135deg,#fff9fa,#fffdfb);
+}
+.pinboard-note-top{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  padding-right:30px;
+}
+.pinboard-note-recipient{
+  font-weight:700;
+  color:#6a5058;
+}
+.pinboard-note-sound{
+  padding:3px 7px;
+  border-radius:999px;
+  background:#f5edf0;
+  color:#8a7279;
+  font-size:.64rem;
+}
+.pinboard-note-x{
+  position:absolute;
+  top:8px;
+  right:8px;
+  width:26px;
+  height:26px;
+  border:0;
+  border-radius:50%;
+  background:transparent;
+  color:#9b8d89;
+  cursor:pointer;
+}
+.pinboard-note-x:hover{
+  background:#f5ecee;
+}
+.pinboard-note-text{
+  margin:9px 0 11px;
+  color:#4f4946;
+  line-height:1.45;
+  white-space:pre-wrap;
+}
+.pinboard-read-delete{
+  border:1px solid rgba(116,157,148,.28);
+  border-radius:999px;
+  background:#e7f1ee;
+  color:#48635d;
+  padding:7px 10px;
+  cursor:pointer;
+  font-size:.72rem;
+}
+.pinboard-read-delete:hover{
+  background:#d9eae6;
+}
+
+/* Mit Pinnwand sind es am Handy fünf kompakte Symbole. */
+@media (max-width:600px){
+  .week-head-actions{
+    grid-template-columns:repeat(5,1fr) !important;
+  }
+  #openPinboardBtn{
+    min-width:0;
+    height:42px;
+    padding:0 5px !important;
+    font-size:0 !important;
+    position:relative;
+  }
+  #openPinboardBtn .pinboard-icon{
+    font-size:1.08rem !important;
+  }
+  #openPinboardBtn .pinboard-label{
+    display:none !important;
+  }
+  #openPinboardBtn .pinboard-badge{
+    position:absolute;
+    top:3px;
+    right:3px;
+    min-width:15px;
+    height:15px;
+    padding:0 4px;
+    font-size:.52rem !important;
+  }
+
+  .pinboard-compose{
+    grid-template-columns:1fr;
+  }
+  .pinboard-message-field,
+  .pinboard-send-btn{
+    grid-column:auto;
+    grid-row:auto;
+  }
+}
+
+@media (min-width:601px){
+  #openPinboardBtn .pinboard-label{
+    display:inline;
+  }
+}
