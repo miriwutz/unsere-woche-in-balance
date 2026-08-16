@@ -4095,3 +4095,116 @@ a.day-meal{
     max-height:none;
   }
 }
+
+
+/* =========================================================
+   TRACKING – Personenfarben deutlich ruhiger, angelehnt an To-do-Farben
+   ========================================================= */
+#archive .time-person-dot,
+#archive .active-time-item,
+#archive .time-log-row{
+  --soft-mama:#8fcfbe;
+  --soft-papa:#e6a1a1;
+  --soft-lou:#e9c6df;
+  --soft-fina:#cdb8e8;
+}
+
+#archive .active-time-item[style*="var(--a)"],
+#archive .time-log-row[style*="var(--a)"]{ --person-color:var(--soft-mama)!important; }
+#archive .active-time-item[style*="var(--b)"],
+#archive .time-log-row[style*="var(--b)"]{ --person-color:var(--soft-papa)!important; }
+#archive .active-time-item[style*="var(--c)"],
+#archive .time-log-row[style*="var(--c)"]{ --person-color:var(--soft-lou)!important; }
+#archive .active-time-item[style*="var(--d)"],
+#archive .time-log-row[style*="var(--d)"]{ --person-color:var(--soft-fina)!important; }
+
+#archive .time-person-dot{
+  opacity:.72;
+}
+
+/* summary dots are inline-styled; soften all of them */
+#archive .time-person-summary .time-person-dot,
+#archive .time-person-legend .time-person-dot{
+  filter:saturate(.55) brightness(1.08);
+  opacity:.78;
+}
+
+/* =========================================================
+   ONLINE-REZEPTE – Löschen aus Übersicht
+   ========================================================= */
+.recipe-link-remove{
+  width:26px;
+  height:26px;
+  border:0;
+  border-radius:50%;
+  background:transparent;
+  color:#a69b95;
+  cursor:pointer;
+}
+.recipe-link-remove:hover{
+  background:#f4eeea;
+  color:#7e6e67;
+}
+
+/* =========================================================
+   MOBILE WOCHENPLAN-AKTIONEN – wieder echte Kreise
+   ========================================================= */
+@media(max-width:600px){
+  .week-head-actions{
+    display:flex !important;
+    justify-content:flex-end !important;
+    gap:8px !important;
+    flex-wrap:nowrap !important;
+  }
+
+  #openPinboardBtn,
+  #openPapaOverviewBtn,
+  #addVideoBtn,
+  #openFamilyTimetableBtn,
+  #printWeekBtn{
+    width:42px !important;
+    min-width:42px !important;
+    height:42px !important;
+    padding:0 !important;
+    border-radius:50% !important;
+    display:grid !important;
+    place-items:center !important;
+    line-height:1 !important;
+    overflow:visible !important;
+  }
+
+  #openPinboardBtn .pinboard-label,
+  #openPapaOverviewBtn{
+    font-size:0 !important;
+  }
+
+  #openPapaOverviewBtn::before{
+    content:"♡";
+    font-size:1rem;
+  }
+
+  #addVideoBtn{
+    font-size:0 !important;
+  }
+  #addVideoBtn::before{
+    content:"+";
+    font-size:1.15rem;
+    line-height:1;
+  }
+
+  #openFamilyTimetableBtn,
+  #printWeekBtn{
+    font-size:.9rem !important;
+  }
+
+  #openPinboardBtn .pinboard-icon{
+    font-size:1rem !important;
+    width:auto !important;
+    height:auto !important;
+  }
+
+  #openPinboardBtn .pinboard-badge{
+    top:-3px !important;
+    right:-3px !important;
+  }
+}
