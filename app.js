@@ -2471,9 +2471,110 @@ function renderTimeTracking() {
       <span class="time-log-category">${escapeHtml(timeCategoryLabel(entry.category))}</span>
       <span class="time-log-note">${escapeHtml(entry.note || "")}</span>
       <strong>${formatMinutes(entry.minutes)}</strong>
+      <button type="button" class="time-log-edit" data-id="${entry.id}" title="Eintrag korrigieren">✎</button>
       <button type="button" class="time-log-delete" data-id="${entry.id}" title="Eintrag löschen">×</button>
     </div>
   `).join("") : `<div class="overview-empty">Noch keine Zeiten eingetragen.</div>`;
+
+
+  list.querySelectorAll(".time-log-edit").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const id = btn.dataset.id;
+      const entry = state.timeTracking.entries.find(item => item.id === id);
+      if (!entry) return;
+
+      // Falls bereits ein Editor offen ist, zuerst schließen.
+      list.querySelectorAll(".time-log-edit-panel").forEach(panel => panel.remove());
+
+      const row = btn.closest(".time-log-row");
+      if (!row) return;
+
+      const panel = document.createElement("div");
+      panel.className = "time-log-edit-panel";
+
+      const categoryOptions = [
+        ["pc","🖥 PC & Büro"],
+        ["prep","✂ Vorbereitung"],
+        ["household","🏡 Haushalt"],
+        ["cook","🍳 Kochen"],
+        ["shopping","🛒 Einkaufen"],
+        ["repair","🔧 Reparaturen"],
+        ["garden","🌿 Garten & draußen"],
+        ["sport","🏃 Sport & Bewegung"],
+        ["help","🤝 Helfen & Unterstützen"],
+        ["school","✏ Lernen & Schule"],
+        ["other","✨ Sonstiges"]
+      ];
+
+      panel.innerHTML = `
+        <label>
+          Für wen?
+          <select class="time-edit-person">
+            <option value="a"${entry.person === "a" ? " selected" : ""}>Mama</option>
+            <option value="b"${entry.person === "b" ? " selected" : ""}>Papa</option>
+            <option value="c"${entry.person === "c" ? " selected" : ""}>Lou</option>
+            <option value="d"${entry.person === "d" ? " selected" : ""}>Fina</option>
+          </select>
+        </label>
+
+        <label>
+          Bereich
+          <select class="time-edit-category">
+            ${categoryOptions.map(([value,label]) =>
+              `<option value="${value}"${entry.category === value ? " selected" : ""}>${label}</option>`
+            ).join("")}
+          </select>
+        </label>
+
+        <label class="time-edit-note-wrap">
+          Notiz
+          <input class="time-edit-note" type="text" value="${escapeHtml(entry.note || "")}">
+        </label>
+
+        <label>
+          Stunden
+          <input class="time-edit-hours" type="number" min="0" max="5" value="${Math.floor(Number(entry.minutes || 0) / 60)}">
+        </label>
+
+        <label>
+          Minuten
+          <input class="time-edit-minutes" type="number" min="0" max="59" value="${Number(entry.minutes || 0) % 60}">
+        </label>
+
+        <div class="time-edit-actions">
+          <button type="button" class="secondary-btn time-edit-cancel">Abbrechen</button>
+          <button type="button" class="primary-btn time-edit-save">Speichern</button>
+        </div>
+      `;
+
+      row.insertAdjacentElement("afterend", panel);
+
+      panel.querySelector(".time-edit-cancel")?.addEventListener("click", () => panel.remove());
+
+      panel.querySelector(".time-edit-save")?.addEventListener("click", () => {
+        const hours = Math.max(0, Math.min(5, Math.round(Number(panel.querySelector(".time-edit-hours")?.value || 0))));
+        const minutesPart = Math.max(0, Math.min(59, Math.round(Number(panel.querySelector(".time-edit-minutes")?.value || 0))));
+        const totalMinutes = Math.min(300, hours * 60 + minutesPart);
+
+        if (!totalMinutes) {
+          panel.querySelector(".time-edit-minutes")?.focus();
+          return;
+        }
+
+        const editedAt = Date.now();
+        entry.person = panel.querySelector(".time-edit-person")?.value || entry.person;
+        entry.category = panel.querySelector(".time-edit-category")?.value || entry.category;
+        entry.note = panel.querySelector(".time-edit-note")?.value.trim() || "";
+        entry.minutes = totalMinutes;
+        entry.endedAt = editedAt;
+        entry.startedAt = editedAt - totalMinutes * 60000;
+        entry.updatedAt = editedAt;
+
+        saveTimeTrackingImmediately();
+        renderTimeTracking();
+      });
+    });
+  });
 
   list.querySelectorAll(".time-log-delete").forEach(btn => {
     btn.addEventListener("click", () => {
