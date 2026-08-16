@@ -6177,76 +6177,160 @@ a.day-meal{
 
 
 /* =========================================================
-   ZEITMESSUNG – laufende Karten immer gleich groß
+   REZEPTFORMULAR – FLAGS BEI GRAD, STABIL & SICHTBAR
    ========================================================= */
-
-#activeTimeTracker.active-time-tracker{
+.recipe-form-grid{
   display:grid !important;
-  gap:8px !important;
-  width:390px !important;
-  min-width:390px !important;
-  max-width:390px !important;
-  justify-self:end !important;
-  align-self:start !important;
-}
-
-#activeTimeTracker .active-time-item{
-  box-sizing:border-box !important;
-  width:390px !important;
-  min-width:390px !important;
-  max-width:390px !important;
-  height:88px !important;
-  min-height:88px !important;
-  max-height:88px !important;
-
-  display:grid !important;
-  grid-template-columns:minmax(0,1fr) auto !important;
-  align-items:center !important;
+  grid-template-columns:repeat(12,minmax(0,1fr)) !important;
   gap:12px !important;
-  padding:10px 12px !important;
+  width:100% !important;
 }
 
-#activeTimeTracker .active-time-item > div:first-child{
+/* Kopfzeile */
+#recipeTitle{grid-column:1 / span 4 !important;grid-row:1 !important}
+#recipeCategory{grid-column:5 / span 3 !important;grid-row:1 !important}
+#recipeDifficulty{grid-column:8 / span 2 !important;grid-row:1 !important}
+#recipeTime{grid-column:10 / span 3 !important;grid-row:1 !important}
+
+/* Links */
+#recipeWebUrl{grid-column:1 / span 6 !important;grid-row:2 !important}
+#recipeYoutubeUrl{grid-column:7 / span 6 !important;grid-row:2 !important}
+
+/* Hauptfelder exakt gleich breit */
+#recipeIngredients{
+  grid-column:1 / span 6 !important;
+  grid-row:3 !important;
+  width:100% !important;
+}
+#recipeSteps{
+  grid-column:7 / span 6 !important;
+  grid-row:3 !important;
+  width:100% !important;
+}
+#recipeIngredients,
+#recipeSteps{
+  min-height:205px !important;
   min-width:0 !important;
-  display:grid !important;
-  gap:2px !important;
-  align-content:center !important;
+  box-sizing:border-box !important;
 }
 
-#activeTimeTracker .active-time-item strong,
-#activeTimeTracker .active-time-item small{
-  overflow:hidden !important;
-  text-overflow:ellipsis !important;
-  white-space:nowrap !important;
+/* Untere kompakte Zeile */
+.recipe-card-mark-field{
+  grid-column:1 / span 2 !important;
+  grid-row:4 !important;
+  width:150px !important;
+  max-width:150px !important;
+}
+.recipe-bake-field{
+  grid-column:3 / span 2 !important;
+  grid-row:4 !important;
+  width:120px !important;
+  max-width:120px !important;
+}
+.recipe-temp-field{
+  grid-column:5 / span 1 !important;
+  grid-row:4 !important;
+  width:105px !important;
+  max-width:105px !important;
 }
 
-#activeTimeTracker .active-time-right{
-  display:flex !important;
+.recipe-kids-toggle{
+  grid-column:6 / span 2 !important;
+  grid-row:4 !important;
+}
+.recipe-healthy-toggle{
+  grid-column:8 / span 2 !important;
+  grid-row:4 !important;
+}
+.recipe-favorite-toggle{
+  grid-column:10 / span 1 !important;
+  grid-row:4 !important;
+}
+
+.recipe-kids-toggle,
+.recipe-healthy-toggle,
+.recipe-favorite-toggle{
+  display:inline-flex !important;
   align-items:center !important;
-  justify-content:flex-end !important;
-  gap:9px !important;
+  justify-content:center !important;
+  gap:6px !important;
+  width:max-content !important;
+  min-height:40px !important;
+  padding:7px 10px !important;
+  margin:0 !important;
+  border-radius:999px !important;
+  align-self:end !important;
+  justify-self:start !important;
   white-space:nowrap !important;
 }
 
-#activeTimeTracker .active-time-elapsed{
-  min-width:76px !important;
-  text-align:right !important;
+.recipe-form-actions{
+  grid-column:11 / span 2 !important;
+  grid-row:4 !important;
+  align-self:end !important;
+  justify-self:end !important;
+  margin:0 !important;
 }
 
-/* Auf Handy volle Breite; die Karten bleiben untereinander gleich hoch */
-@media(max-width:760px){
-  #activeTimeTracker.active-time-tracker{
-    width:100% !important;
-    min-width:0 !important;
-    max-width:none !important;
+/* Tablet: Zusatzfelder in zwei ruhigen Reihen */
+@media(max-width:980px){
+  .recipe-form-grid{grid-template-columns:repeat(2,minmax(0,1fr)) !important}
+
+  #recipeTitle{grid-column:1 / -1 !important;grid-row:auto !important}
+  #recipeCategory,
+  #recipeWebUrl,
+  #recipeIngredients{grid-column:1 !important;grid-row:auto !important}
+  #recipeDifficulty,
+  #recipeTime,
+  #recipeYoutubeUrl,
+  #recipeSteps{grid-column:2 !important;grid-row:auto !important}
+
+  .recipe-card-mark-field,
+  .recipe-bake-field,
+  .recipe-temp-field,
+  .recipe-kids-toggle,
+  .recipe-healthy-toggle,
+  .recipe-favorite-toggle,
+  .recipe-form-actions{
+    grid-row:auto !important;
   }
 
-  #activeTimeTracker .active-time-item{
+  .recipe-card-mark-field,
+  .recipe-temp-field,
+  .recipe-healthy-toggle{grid-column:1 !important}
+  .recipe-bake-field,
+  .recipe-kids-toggle,
+  .recipe-favorite-toggle,
+  .recipe-form-actions{grid-column:2 !important}
+}
+
+/* Handy: alles untereinander, aber die drei Kennzeichnungen bleiben vorhanden */
+@media(max-width:600px){
+  .recipe-form-grid{grid-template-columns:1fr !important}
+
+  #recipeTitle,
+  #recipeCategory,
+  #recipeDifficulty,
+  #recipeTime,
+  #recipeWebUrl,
+  #recipeYoutubeUrl,
+  #recipeIngredients,
+  #recipeSteps,
+  .recipe-card-mark-field,
+  .recipe-bake-field,
+  .recipe-temp-field,
+  .recipe-kids-toggle,
+  .recipe-healthy-toggle,
+  .recipe-favorite-toggle,
+  .recipe-form-actions{
+    grid-column:1 !important;
+    grid-row:auto !important;
+  }
+
+  .recipe-kids-toggle,
+  .recipe-healthy-toggle,
+  .recipe-favorite-toggle{
     width:100% !important;
-    min-width:0 !important;
-    max-width:none !important;
-    height:88px !important;
-    min-height:88px !important;
-    max-height:88px !important;
+    border-radius:12px !important;
   }
 }
