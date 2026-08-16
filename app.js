@@ -3455,6 +3455,107 @@ document.querySelector("#todayWeekBtn").addEventListener("click", () => {
   renderWeek();
 });
 
+
+function ensureRecipeCardMarkPicker() {
+  if (document.querySelector("#recipeCardMark")) return;
+
+  const category = document.querySelector("#recipeCategory");
+  if (!category) return;
+
+  const wrapper = document.createElement("label");
+  wrapper.className = "recipe-card-mark-field";
+  wrapper.innerHTML = `
+    <span>Kartenzeichen</span>
+    <select id="recipeCardMark">
+      <optgroup label="Ruhig & geschmackvoll">
+        <option value="⌁">⌁ Feine Linie</option>
+        <option value="✦">✦ Stern</option>
+        <option value="☾">☾ Mond</option>
+        <option value="♡">♡ Herz</option>
+        <option value="❋">❋ Blüte</option>
+        <option value="◌">◌ Kreis</option>
+        <option value="≈">≈ Welle</option>
+        <option value="∞">∞ Unendlich</option>
+      </optgroup>
+      <optgroup label="Cool">
+        <option value="⚡︎">⚡ Blitz</option>
+        <option value="★">★ Star</option>
+        <option value="☻">☻ Smiley</option>
+        <option value="♬">♬ Musik</option>
+        <option value="✌︎">✌ Peace</option>
+        <option value="✪">✪ Cool Star</option>
+      </optgroup>
+    </select>
+  `;
+
+  // Direkt hinter der Kategorie – so gehört es logisch zur Rezeptgestaltung.
+  const parent = category.closest("label") || category.parentElement;
+  if (parent?.parentElement) {
+    parent.insertAdjacentElement("afterend", wrapper);
+  } else {
+    category.insertAdjacentElement("afterend", wrapper);
+  }
+}
+
+function recipeCardMark(recipe) {
+  return recipe?.cardMark || "⌁";
+}
+
+function ensureRecipeCardMarkStyles() {
+  if (document.querySelector("#recipeCardMarkStyles")) return;
+
+  const style = document.createElement("style");
+  style.id = "recipeCardMarkStyles";
+  style.textContent = `
+    .recipe-card-mark-field{
+      display:grid;
+      gap:5px;
+      min-width:145px;
+      color:#786f69;
+      font-size:.7rem;
+    }
+
+    .recipe-card-mark-field select{
+      width:100%;
+      min-height:38px;
+      border:1px solid var(--line, #e7ddd7);
+      border-radius:12px;
+      background:#fffdfb;
+      color:var(--ink, #514944);
+      padding:8px 10px;
+      font:inherit;
+    }
+
+    .recipe-tools,
+    .recipe-detail-utensil{
+      font-family:Georgia, "Times New Roman", serif !important;
+      font-size:1.45rem !important;
+      line-height:1 !important;
+      letter-spacing:0 !important;
+      opacity:.74;
+      transform:none !important;
+    }
+
+    .recipe-detail-utensil{
+      display:grid;
+      place-items:center;
+      min-width:32px;
+      min-height:32px;
+    }
+
+    @media(max-width:700px){
+      .recipe-card-mark-field{
+        min-width:0;
+      }
+    }
+  `;
+  document.head.appendChild(style);
+}
+
+ensureRecipeCardMarkPicker();
+ensureRecipeCardMarkStyles();
+
+
 // ===== EINKAUF – REZEPTKARTEN =====
 let activeRecipeDifficulty = "all";
 let activeRecipeCategory = "all";
@@ -3476,6 +3577,10 @@ function resetRecipeForm() {
 
   const category = document.querySelector("#recipeCategory");
   if (category) category.value = "main";
+
+  ensureRecipeCardMarkPicker();
+  const cardMark = document.querySelector("#recipeCardMark");
+  if (cardMark) cardMark.value = "⌁";
 
   const difficulty = document.querySelector("#recipeDifficulty");
   if (difficulty) difficulty.value = "medium";
@@ -3499,8 +3604,11 @@ function startRecipeEdit(recipe) {
 
   editingRecipeId = recipe.id;
 
+  ensureRecipeCardMarkPicker();
   document.querySelector("#recipeTitle").value = recipe.title || "";
   document.querySelector("#recipeCategory").value = recipe.category || "main";
+  const cardMark = document.querySelector("#recipeCardMark");
+  if (cardMark) cardMark.value = recipeCardMark(recipe);
   document.querySelector("#recipeDifficulty").value = recipe.difficulty || "medium";
   document.querySelector("#recipeKids").checked = !!recipe.kids;
   document.querySelector("#recipeHealthy").checked = !!recipe.healthy;
@@ -3753,7 +3861,7 @@ function showRecipeDetail(recipeOrTitle) {
           ${recipe.healthy ? `<span class="recipe-healthy-badge">🌿 Gesund & bunt</span>` : ""}
         </div>
       </div>
-      <div class="recipe-detail-utensil">⌁</div>
+      <div class="recipe-detail-utensil">${escapeHtml(recipeCardMark(recipe))}</div>
     </div>
 
     <div class="recipe-detail-grid">
@@ -3888,7 +3996,7 @@ function renderRecipes() {
             ${r.healthy ? `<span class="recipe-healthy-badge">🌿 Gesund & bunt</span>` : ""}
           </div>
         </div>
-        <div class="recipe-tools">⌁</div>
+        <div class="recipe-tools">${escapeHtml(recipeCardMark(r))}</div>
       </header>
       <div class="recipe-card-body">
         <section class="recipe-column">
@@ -4395,6 +4503,7 @@ document.querySelector("#saveRecipeBtn")?.addEventListener("click", () => {
   const recipeData = {
     title,
     category: document.querySelector("#recipeCategory")?.value || "main",
+    cardMark: document.querySelector("#recipeCardMark")?.value || "⌁",
     difficulty: document.querySelector("#recipeDifficulty")?.value || "medium",
     kids: !!document.querySelector("#recipeKids")?.checked,
     healthy: !!document.querySelector("#recipeHealthy")?.checked,
@@ -7380,4 +7489,11 @@ function ensureMobileWeekActionCircleStyles() {
 }
 
 ensureMobileWeekActionCircleStyles();
+
+
+
+document.addEventListener("DOMContentLoaded", () => {
+  ensureRecipeCardMarkPicker();
+  ensureRecipeCardMarkStyles();
+});
 
