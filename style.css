@@ -6684,3 +6684,30 @@ a.day-meal{
     border-radius:12px !important;
   }
 }
+
+
+/* =========================================================
+   KOPFBEREICH – etwas kompakter, aber nicht angeklebt
+   ========================================================= */
+@media(min-width:761px){
+  .hero{
+    margin-bottom:14px !important;
+  }
+
+  .subtitle{
+    margin-top:10px !important;
+  }
+
+  .tabs{
+    margin-top:10px !important;
+    margin-bottom:24px !important;
+    padding-bottom:10px !important;
+  }
+}
+
+/* To-do-Form hat jetzt fünf Felder in dieser Zeile */
+@media(min-width:1000px){
+  #todos .form-row{
+    grid-template-columns:repeat(5,minmax(0,1fr)) !important;
+  }
+}
