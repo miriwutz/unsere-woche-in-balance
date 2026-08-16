@@ -2571,3 +2571,85 @@ a.day-meal{
   line-height:1.45;
   color:inherit;
 }
+
+/* =========================================================
+   REZEPTKARTEN – eigene ruhige Pastellfarbe je Kategorie
+   ========================================================= */
+.recipe-card.recipe-category-breakfast .recipe-card-head,
+.recipe-detail-banner.recipe-category-breakfast{
+  background:linear-gradient(90deg,#ead9bc,#f1e7d3,#e6d0ab);
+}
+.recipe-card.recipe-category-spread .recipe-card-head,
+.recipe-detail-banner.recipe-category-spread{
+  background:linear-gradient(90deg,#d8ccb7,#e7ddcd,#d2c2a9);
+}
+.recipe-card.recipe-category-soup .recipe-card-head,
+.recipe-detail-banner.recipe-category-soup{
+  background:linear-gradient(90deg,#b7d0c8,#ccddd7,#abc7be);
+}
+.recipe-card.recipe-category-main .recipe-card-head,
+.recipe-detail-banner.recipe-category-main{
+  background:linear-gradient(90deg,#b9cfd0,#cddddd,#afc8ca);
+}
+.recipe-card.recipe-category-small .recipe-card-head,
+.recipe-detail-banner.recipe-category-small{
+  background:linear-gradient(90deg,#d8c9d7,#e6dbe5,#cebccb);
+}
+.recipe-card.recipe-category-salad .recipe-card-head,
+.recipe-detail-banner.recipe-category-salad{
+  background:linear-gradient(90deg,#c5d7bf,#dbe7d7,#b8cfb1);
+}
+.recipe-card.recipe-category-sweet .recipe-card-head,
+.recipe-detail-banner.recipe-category-sweet{
+  background:linear-gradient(90deg,#e5c3c8,#efd8dc,#dcb5bc);
+}
+.recipe-card.recipe-category-drink .recipe-card-head,
+.recipe-detail-banner.recipe-category-drink{
+  background:linear-gradient(90deg,#c6d4e0,#d9e2ea,#b9cbd9);
+}
+.recipe-card.recipe-category-other .recipe-card-head,
+.recipe-detail-banner.recipe-category-other{
+  background:linear-gradient(90deg,#d6d0c8,#e5e0da,#ccc4bb);
+}
+
+/* Beim Kochen: Zutaten/Schritte antippen und abhaken. */
+.recipe-cook-checklist{
+  display:grid;
+  gap:4px;
+}
+.recipe-cook-line{
+  width:100%;
+  display:grid;
+  grid-template-columns:20px minmax(0,1fr);
+  gap:6px;
+  align-items:start;
+  border:0;
+  background:transparent;
+  color:inherit;
+  text-align:left;
+  padding:5px 2px;
+  border-radius:8px;
+  line-height:1.45;
+}
+.recipe-cook-line:hover{
+  background:rgba(178,205,199,.16);
+}
+.recipe-cook-dot{
+  color:#719189;
+  font-weight:700;
+}
+.recipe-cook-line.done > span:last-child{
+  text-decoration:line-through;
+  opacity:.46;
+}
+.recipe-cook-line.done .recipe-cook-dot{
+  color:#789d78;
+}
+
+/* Essensplan-Linkfeld klar vom Bezeichnungsfeld trennen. */
+.meal-plan-url-row{
+  padding-top:2px;
+}
+.meal-plan-url-input{
+  background:rgba(255,255,255,.66) !important;
+}
