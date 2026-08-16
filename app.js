@@ -33,6 +33,8 @@ const state = {
   recipes: JSON.parse(localStorage.getItem("balanceProd.recipes") || "[]"),
   meals: JSON.parse(localStorage.getItem("balanceProd.meals") || "{}"),
   pinboard: JSON.parse(localStorage.getItem("balanceProd.pinboard") || "[]"),
+  timeTracking: JSON.parse(localStorage.getItem("balanceProd.timeTracking") || '{"entries":[],"active":null}'),
+  recipeLinkFeedback: JSON.parse(localStorage.getItem("balanceProd.recipeLinkFeedback") || "{}"),
 
   workroom: JSON.parse(
     localStorage.getItem("balanceProd.workroom") ||
@@ -54,6 +56,16 @@ state.workroom.substitutions = Array.isArray(state.workroom.substitutions) ? sta
 state.recipes = Array.isArray(state.recipes) ? state.recipes : [];
 state.meals = state.meals && typeof state.meals === "object" ? state.meals : {};
 state.pinboard = Array.isArray(state.pinboard) ? state.pinboard : [];
+state.timeTracking = state.timeTracking && typeof state.timeTracking === "object"
+  ? state.timeTracking
+  : {entries:[], active:null};
+state.timeTracking.entries = Array.isArray(state.timeTracking.entries) ? state.timeTracking.entries : [];
+state.timeTracking.active = state.timeTracking.active && typeof state.timeTracking.active === "object"
+  ? state.timeTracking.active
+  : null;
+state.recipeLinkFeedback = state.recipeLinkFeedback && typeof state.recipeLinkFeedback === "object"
+  ? state.recipeLinkFeedback
+  : {};
 
 let shoppingItems = state.shopping;
 let cloudReady = false;
@@ -72,6 +84,8 @@ function snapshotPersistentState() {
     recipes: state.recipes,
     meals: state.meals,
     pinboard: state.pinboard,
+    timeTracking: state.timeTracking,
+    recipeLinkFeedback: state.recipeLinkFeedback,
     workroom: state.workroom,
     school: state.school,
     familySettings: state.familySettings,
@@ -102,6 +116,8 @@ function saveLocal() {
   localStorage.setItem("balanceProd.recipes", JSON.stringify(state.recipes));
   localStorage.setItem("balanceProd.meals", JSON.stringify(state.meals));
   localStorage.setItem("balanceProd.pinboard", JSON.stringify(state.pinboard));
+  localStorage.setItem("balanceProd.timeTracking", JSON.stringify(state.timeTracking));
+  localStorage.setItem("balanceProd.recipeLinkFeedback", JSON.stringify(state.recipeLinkFeedback));
   localStorage.setItem("balanceProd.workroom", JSON.stringify(state.workroom));
   localStorage.setItem("balanceProd.school", JSON.stringify(state.school));
   localStorage.setItem("balanceProd.familySettings", JSON.stringify(state.familySettings));
@@ -119,6 +135,8 @@ function cloudPayload() {
     recipes: state.recipes,
     meals: state.meals,
     pinboard: state.pinboard,
+    timeTracking: state.timeTracking,
+    recipeLinkFeedback: state.recipeLinkFeedback,
     workroom: state.workroom,
     school: state.school,
     familySettings: state.familySettings,
@@ -1847,6 +1865,290 @@ document.querySelector("#eventCategory").value = item.eventCategory || "normal";
   }));
 }
 
+
+// =========================================================
+// UNSER ÜBERBLICK – Zeit im Blick & Online-Rezepte
+// =========================================================
+function timeCategoryLabel(key) {
+  return {
+    pc: "🖥 PC & Büro",
+    prep: "✂ Vorbereitung",
+    household: "🏡 Haushalt",
+    repair: "🔧 Reparaturen",
+    organize: "🗂 Organisieren",
+    errands: "🛒 Erledigungen",
+    garden: "🌿 Garten & draußen",
+    school: "✏ Lernen & Schule",
+    other: "✨ Sonstiges"
+  }[key] || "✨ Sonstiges";
+}
+
+function formatMinutes(total) {
+  const mins = Math.max(0, Math.round(Number(total) || 0));
+  const h = Math.floor(mins / 60);
+  const m = mins % 60;
+  if (!h) return `${m} Min.`;
+  if (!m) return `${h} Std.`;
+  return `${h} Std. ${m} Min.`;
+}
+
+function weekStartForDate(date = new Date()) {
+  const d = new Date(date);
+  const day = (d.getDay() + 6) % 7;
+  d.setHours(0,0,0,0);
+  d.setDate(d.getDate() - day);
+  return d;
+}
+
+function renderTimeTracking() {
+  const list = document.querySelector("#timeLogList");
+  const activeBox = document.querySelector("#activeTimeTracker");
+  const chips = document.querySelector("#timeSummaryChips");
+  if (!list || !activeBox || !chips) return;
+
+  const active = state.timeTracking.active;
+
+  if (active) {
+    const elapsed = Math.max(1, Math.round((Date.now() - Number(active.startedAt || Date.now())) / 60000));
+    activeBox.classList.remove("hidden");
+    activeBox.innerHTML = `
+      <div>
+        <span class="active-time-person">${escapeHtml(familyName(active.person))}</span>
+        <strong>${escapeHtml(timeCategoryLabel(active.category))}</strong>
+        <small>${escapeHtml(active.note || "")}</small>
+      </div>
+      <div class="active-time-right">
+        <span>${formatMinutes(elapsed)}</span>
+        <button id="stopTimeTrackBtn" class="secondary-btn" type="button">■ Stoppen</button>
+      </div>
+    `;
+    activeBox.querySelector("#stopTimeTrackBtn")?.addEventListener("click", stopTimeTracking);
+  } else {
+    activeBox.classList.add("hidden");
+    activeBox.innerHTML = "";
+  }
+
+  const weekStart = weekStartForDate();
+  const weekEntries = state.timeTracking.entries.filter(entry =>
+    Number(entry.endedAt || entry.createdAt || 0) >= weekStart.getTime()
+  );
+
+  const totals = {};
+  weekEntries.forEach(entry => {
+    totals[entry.category] = (totals[entry.category] || 0) + Number(entry.minutes || 0);
+  });
+
+  chips.innerHTML = Object.entries(totals)
+    .sort((a,b) => b[1] - a[1])
+    .map(([category, minutes]) => `
+      <span class="time-summary-chip">
+        ${escapeHtml(timeCategoryLabel(category))}
+        <strong>${formatMinutes(minutes)}</strong>
+      </span>
+    `).join("") || `<span class="time-summary-empty">Noch keine Zeiten diese Woche.</span>`;
+
+  const entries = state.timeTracking.entries
+    .slice()
+    .sort((a,b) => Number(b.endedAt || b.createdAt || 0) - Number(a.endedAt || a.createdAt || 0))
+    .slice(0, 14);
+
+  list.innerHTML = entries.length ? entries.map(entry => `
+    <div class="time-log-row">
+      <span class="time-log-person">${escapeHtml(familyName(entry.person))}</span>
+      <span class="time-log-category">${escapeHtml(timeCategoryLabel(entry.category))}</span>
+      <span class="time-log-note">${escapeHtml(entry.note || "")}</span>
+      <strong>${formatMinutes(entry.minutes)}</strong>
+      <button type="button" class="time-log-delete" data-id="${entry.id}" title="Eintrag löschen">×</button>
+    </div>
+  `).join("") : `<div class="overview-empty">Noch keine Zeiten eingetragen.</div>`;
+
+  list.querySelectorAll(".time-log-delete").forEach(btn => {
+    btn.addEventListener("click", () => {
+      state.timeTracking.entries = state.timeTracking.entries.filter(entry => entry.id !== btn.dataset.id);
+      save();
+      renderTimeTracking();
+    });
+  });
+}
+
+function startTimeTracking() {
+  if (state.timeTracking.active) {
+    showMotivation("Es läuft bereits eine Zeit.");
+    return;
+  }
+
+  state.timeTracking.active = {
+    id: uid(),
+    person: document.querySelector("#timeTrackPerson")?.value || "a",
+    category: document.querySelector("#timeTrackCategory")?.value || "pc",
+    note: document.querySelector("#timeTrackNote")?.value.trim() || "",
+    startedAt: Date.now()
+  };
+
+  save();
+  renderTimeTracking();
+}
+
+function stopTimeTracking() {
+  const active = state.timeTracking.active;
+  if (!active) return;
+
+  const endedAt = Date.now();
+  const minutes = Math.max(1, Math.round((endedAt - Number(active.startedAt || endedAt)) / 60000));
+
+  state.timeTracking.entries.push({
+    id: active.id || uid(),
+    person: active.person,
+    category: active.category,
+    note: active.note || "",
+    startedAt: active.startedAt,
+    endedAt,
+    createdAt: endedAt,
+    updatedAt: endedAt,
+    minutes
+  });
+
+  state.timeTracking.active = null;
+  save();
+  renderTimeTracking();
+}
+
+function addManualTimeEntry() {
+  const minutesInput = document.querySelector("#manualTimeMinutes");
+  const minutes = Math.round(Number(minutesInput?.value || 0));
+  if (!minutes || minutes < 1) {
+    minutesInput?.focus();
+    return;
+  }
+
+  const now = Date.now();
+  state.timeTracking.entries.push({
+    id: uid(),
+    person: document.querySelector("#timeTrackPerson")?.value || "a",
+    category: document.querySelector("#timeTrackCategory")?.value || "pc",
+    note: document.querySelector("#timeTrackNote")?.value.trim() || "",
+    startedAt: now - minutes * 60000,
+    endedAt: now,
+    createdAt: now,
+    updatedAt: now,
+    minutes
+  });
+
+  if (minutesInput) minutesInput.value = "";
+  save();
+  renderTimeTracking();
+}
+
+function collectInternetRecipeLinks() {
+  const map = new Map();
+
+  (state.recipes || []).forEach(recipe => {
+    const urls = [recipe.webUrl, recipe.youtubeUrl].filter(Boolean);
+    urls.forEach(url => {
+      const key = String(url).trim();
+      if (!key) return;
+      if (!map.has(key)) {
+        map.set(key, {
+          url:key,
+          label:recipe.title || "Rezept",
+          source:"Rezeptkarte"
+        });
+      }
+    });
+  });
+
+  Object.values(state.meals || {}).forEach(meal => {
+    if (!meal || typeof meal !== "object" || !meal.url) return;
+    const key = String(meal.url).trim();
+    if (!key) return;
+    if (!map.has(key)) {
+      map.set(key, {
+        url:key,
+        label:meal.label || "Rezeptlink",
+        source:"Essensplan"
+      });
+    }
+  });
+
+  return [...map.values()].sort((a,b) => String(a.label).localeCompare(String(b.label), "de"));
+}
+
+function recipeFeedbackLabel(value) {
+  return {
+    love: "💛 Sehr gern wieder",
+    okay: "🙂 Passt gut",
+    no: "🌿 Eher nicht nochmal"
+  }[value] || "Noch offen";
+}
+
+function renderRecipeLinkTracker() {
+  const host = document.querySelector("#recipeLinkTrackerList");
+  if (!host) return;
+
+  const links = collectInternetRecipeLinks();
+
+  if (!links.length) {
+    host.innerHTML = `<div class="overview-empty">Noch keine Internetrezepte hinterlegt.</div>`;
+    return;
+  }
+
+  host.innerHTML = links.map(link => {
+    const feedback = state.recipeLinkFeedback[link.url] || {};
+    return `
+      <article class="recipe-link-track-row">
+        <div class="recipe-link-track-main">
+          <a href="${escapeHtml(link.url)}" target="_blank" rel="noopener">${escapeHtml(link.label)}</a>
+          <span>${escapeHtml(link.source)}</span>
+        </div>
+
+        <div class="recipe-link-times">
+          <button type="button" class="recipe-link-used" data-url="${escapeHtml(link.url)}">
+            ✓ gekocht ${feedback.timesUsed ? `(${feedback.timesUsed}×)` : ""}
+          </button>
+        </div>
+
+        <div class="recipe-link-rating">
+          <button type="button" class="recipe-link-rate ${feedback.rating === "love" ? "active" : ""}" data-url="${escapeHtml(link.url)}" data-rating="love">💛 Sehr gern wieder</button>
+          <button type="button" class="recipe-link-rate ${feedback.rating === "okay" ? "active" : ""}" data-url="${escapeHtml(link.url)}" data-rating="okay">🙂 Passt gut</button>
+          <button type="button" class="recipe-link-rate ${feedback.rating === "no" ? "active" : ""}" data-url="${escapeHtml(link.url)}" data-rating="no">🌿 Eher nicht</button>
+        </div>
+      </article>
+    `;
+  }).join("");
+
+  host.querySelectorAll(".recipe-link-used").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const url = btn.dataset.url;
+      const current = state.recipeLinkFeedback[url] || {};
+      state.recipeLinkFeedback[url] = {
+        ...current,
+        timesUsed: Number(current.timesUsed || 0) + 1,
+        lastUsed: Date.now(),
+        updatedAt: Date.now()
+      };
+      save();
+      renderRecipeLinkTracker();
+    });
+  });
+
+  host.querySelectorAll(".recipe-link-rate").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const url = btn.dataset.url;
+      const current = state.recipeLinkFeedback[url] || {};
+      state.recipeLinkFeedback[url] = {
+        ...current,
+        rating: btn.dataset.rating,
+        updatedAt: Date.now()
+      };
+      save();
+      renderRecipeLinkTracker();
+    });
+  });
+}
+
+document.querySelector("#startTimeTrackBtn")?.addEventListener("click", startTimeTracking);
+document.querySelector("#addManualTimeBtn")?.addEventListener("click", addManualTimeEntry);
+
 let archiveFilter = "all";
 
 function renderArchive() {
@@ -1867,9 +2169,9 @@ function renderArchive() {
 
   if (archiveFilter === "all") {
     const groups = [
-      ["super","😊 Super", byNewest(items.filter(x => x.rating === "super"))],
-      ["okay","🙂 Okay", byNewest(items.filter(x => x.rating === "okay"))],
-      ["nope","😕 Nicht meins", byNewest(items.filter(x => x.rating === "nope"))]
+      ["super","💛 Sehr gern", byNewest(items.filter(x => x.rating === "super"))],
+      ["okay","🙂 Passt gut", byNewest(items.filter(x => x.rating === "okay"))],
+      ["nope","🌿 Eher nicht", byNewest(items.filter(x => x.rating === "nope"))]
     ];
 
     list.className = "archive-columns";
@@ -1891,7 +2193,7 @@ function renderArchive() {
 }
 
 function archiveCardHtml(a) {
-  const ratingLabel = {super:"😊 Super", okay:"🙂 Okay", nope:"😕 Nicht meins"};
+  const ratingLabel = {super:"💛 Sehr gern", okay:"🙂 Passt gut", nope:"🌿 Eher nicht"};
   return `
     <article class="archive-card">
       ${a.thumbnail ? `<img class="archive-thumb" src="${escapeHtml(a.thumbnail)}" alt="">` : ""}
@@ -5449,6 +5751,19 @@ shoppingItems = state.shopping;
     if (Array.isArray(data.pinboard)) {
       handleIncomingPinboard(data.pinboard);
       state.pinboard = data.pinboard;
+    }
+    if (data.timeTracking && typeof data.timeTracking === "object") {
+      const cloudEntries = Array.isArray(data.timeTracking.entries) ? data.timeTracking.entries : [];
+      state.timeTracking = {
+        entries: mergeByIdPreferNewer(state.timeTracking.entries, cloudEntries),
+        active: data.timeTracking.active || state.timeTracking.active || null
+      };
+    }
+    if (data.recipeLinkFeedback && typeof data.recipeLinkFeedback === "object") {
+      state.recipeLinkFeedback = {
+        ...state.recipeLinkFeedback,
+        ...data.recipeLinkFeedback
+      };
     }
     const localWorkroom = normalizeWorkroom(state.workroom);
     const cloudWorkroom = normalizeWorkroom(data.workroom);
