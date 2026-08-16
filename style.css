@@ -3902,3 +3902,196 @@ a.day-meal{
     flex-direction:column;
   }
 }
+
+
+/* =========================================================
+   ZEIT IM BLICK – Personen klar voneinander unterscheiden
+   ========================================================= */
+.time-person-dot{
+  display:inline-block;
+  width:8px;
+  height:8px;
+  border-radius:50%;
+  flex:0 0 auto;
+}
+
+.active-time-item{
+  border-left:4px solid var(--person-color) !important;
+}
+
+.time-log-row{
+  border-left:4px solid var(--person-color) !important;
+}
+
+.time-log-person,
+.active-time-person{
+  display:inline-flex !important;
+  align-items:center;
+  gap:6px;
+}
+
+/* Heute + Woche: erst Person, darunter Kategorien */
+.time-summary-chips{
+  display:grid !important;
+  gap:9px !important;
+}
+
+.time-person-summary{
+  display:grid;
+  gap:5px;
+  padding:7px 8px;
+  border-radius:10px;
+  background:rgba(249,248,245,.74);
+}
+
+.time-person-summary-head{
+  display:grid;
+  grid-template-columns:10px 1fr auto;
+  gap:6px;
+  align-items:center;
+  font-size:.67rem;
+}
+
+.time-person-summary-head strong{
+  color:#514b48;
+}
+
+.time-person-summary-head > span:last-child{
+  color:#817872;
+  font-size:.62rem;
+}
+
+.time-summary-chips-inner{
+  display:flex;
+  flex-wrap:wrap;
+  gap:5px;
+  padding-left:16px;
+}
+
+/* Vier konzentrische Personenringe:
+   Mama außen, Papa, Lou, Fina innen */
+.family-time-rings{
+  position:relative;
+  width:150px;
+  height:150px;
+  display:grid;
+  place-items:center;
+  flex:0 0 150px;
+}
+
+.family-time-ring{
+  position:absolute;
+  border-radius:50%;
+}
+
+.ring-mama{
+  width:148px;
+  height:148px;
+  -webkit-mask:radial-gradient(circle,transparent 58%,#000 59%);
+  mask:radial-gradient(circle,transparent 58%,#000 59%);
+}
+
+.ring-papa{
+  width:118px;
+  height:118px;
+  -webkit-mask:radial-gradient(circle,transparent 55%,#000 56%);
+  mask:radial-gradient(circle,transparent 55%,#000 56%);
+}
+
+.ring-lou{
+  width:88px;
+  height:88px;
+  -webkit-mask:radial-gradient(circle,transparent 51%,#000 52%);
+  mask:radial-gradient(circle,transparent 51%,#000 52%);
+}
+
+.ring-fina{
+  width:60px;
+  height:60px;
+  -webkit-mask:radial-gradient(circle,transparent 44%,#000 45%);
+  mask:radial-gradient(circle,transparent 44%,#000 45%);
+}
+
+.family-time-ring-center{
+  position:absolute;
+  width:42px;
+  height:42px;
+  border-radius:50%;
+  display:grid;
+  place-items:center;
+  align-content:center;
+  background:#fffdfb;
+  box-shadow:0 0 0 1px rgba(180,190,185,.14);
+  z-index:5;
+}
+
+.family-time-ring-center span{
+  font-size:.58rem;
+  font-weight:700;
+  text-align:center;
+  line-height:1.1;
+}
+
+.family-time-ring-center small{
+  color:var(--muted);
+  font-size:.46rem;
+}
+
+/* altes Donut-Element wird nicht mehr gebraucht */
+.time-donut{
+  display:none !important;
+}
+
+.time-donut-wrap{
+  grid-template-columns:160px 1fr !important;
+}
+
+.time-donut-legend{
+  max-height:160px;
+  overflow:auto;
+  padding-right:4px;
+}
+
+.time-person-legend{
+  display:grid;
+  gap:3px;
+  padding:5px 0;
+  border-bottom:1px solid rgba(180,190,185,.13);
+}
+
+.time-person-legend:last-child{
+  border-bottom:0;
+}
+
+.time-person-legend-head{
+  display:grid;
+  grid-template-columns:10px 1fr auto;
+  gap:6px;
+  align-items:center;
+  margin-bottom:2px;
+  font-size:.63rem;
+}
+
+.time-person-legend-head strong{
+  color:#514b48;
+}
+
+.time-person-legend-head > span:last-child{
+  color:#716965;
+  font-weight:700;
+}
+
+/* Auf schmalen Geräten bleibt Diagramm lesbar */
+@media(max-width:600px){
+  .time-donut-wrap{
+    grid-template-columns:1fr !important;
+  }
+
+  .family-time-rings{
+    margin:auto;
+  }
+
+  .time-donut-legend{
+    max-height:none;
+  }
+}
