@@ -3025,3 +3025,118 @@ a.day-meal{
     display:inline;
   }
 }
+
+
+/* =========================================================
+   FEINSCHLIFF – Rezeptfarben stärker voneinander unterscheiden
+   ========================================================= */
+
+/* Aufstriche: rauchiges Nude statt Beige */
+.recipe-category-spread.recipe-card .recipe-card-head,
+.recipe-detail-banner.recipe-category-spread{
+  background:linear-gradient(90deg,#d8c0b8,#e8d2cb,#cfb2aa)!important;
+}
+
+/* Suppen: klar wärmeres Salbei-Türkis */
+.recipe-category-soup.recipe-card .recipe-card-head,
+.recipe-detail-banner.recipe-category-soup{
+  background:linear-gradient(90deg,#a9cbbb,#bfdacf,#98c0ae)!important;
+}
+
+/* Hauptgerichte: deutlich kühleres Rauchblau */
+.recipe-category-main.recipe-card .recipe-card-head,
+.recipe-detail-banner.recipe-category-main{
+  background:linear-gradient(90deg,#b3c4d1,#cad5de,#a4b9c8)!important;
+}
+
+/* =========================================================
+   WOCHENPLAN – ruhigere Aktionsleiste
+   ========================================================= */
+.week-head-actions{
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  gap:8px;
+}
+.week-icon-btn{
+  width:42px;
+  min-width:42px;
+  height:42px;
+  padding:0 !important;
+  display:inline-grid !important;
+  place-items:center;
+  border-radius:50% !important;
+  font-size:.92rem;
+}
+#printWeekBtn{
+  margin-left:2px;
+  font-size:.95rem;
+}
+#openFamilyTimetableBtn{
+  font-size:.88rem;
+}
+
+/* Pinnwand-Symbol wirklich mittig – auch wenn Emoji intern anders gerendert wird */
+.pinboard-open-btn{
+  justify-content:center;
+}
+.pinboard-icon{
+  display:inline-grid;
+  place-items:center;
+  line-height:1;
+  transform:translateY(-.5px);
+}
+
+/* =========================================================
+   REZEPT – Druckbuttons
+   ========================================================= */
+.recipe-print,
+.recipe-detail-print{
+  width:30px;
+  height:30px;
+  border:0;
+  border-radius:50%;
+  background:transparent;
+  color:#71827e;
+  cursor:pointer;
+  display:grid;
+  place-items:center;
+  font-size:.78rem;
+}
+.recipe-print:hover,
+.recipe-detail-print:hover{
+  background:#e5f0ed;
+  color:#405d56;
+}
+.recipe-detail-head-actions{
+  display:flex;
+  align-items:center;
+  gap:5px;
+}
+
+/* Mobil bleibt Pinnwand nur Symbol und sitzt exakt im Zentrum */
+@media(max-width:600px){
+  #openPinboardBtn{
+    display:grid !important;
+    place-items:center !important;
+    padding:0 !important;
+  }
+  #openPinboardBtn .pinboard-icon{
+    display:grid !important;
+    place-items:center !important;
+    width:100%;
+    height:100%;
+    transform:none !important;
+    line-height:1 !important;
+  }
+
+  .week-head-actions{
+    gap:5px !important;
+  }
+
+  .week-icon-btn{
+    width:auto;
+    min-width:0;
+    height:42px;
+  }
+}
