@@ -2653,3 +2653,21 @@ a.day-meal{
 .meal-plan-url-input{
   background:rgba(255,255,255,.66) !important;
 }
+
+
+/* Essensplan – Link und Bezeichnung bleiben visuell klar getrennt */
+.meal-plan-day{
+  min-width:0;
+}
+.meal-plan-input,
+.meal-plan-url-input{
+  min-width:0;
+}
+.meal-plan-url-row:not(.hidden){
+  display:block;
+}
+
+/* Wochenplan zeigt niemals eine rohe URL als Essensnamen. */
+.day-meal strong{
+  overflow-wrap:anywhere;
+}
