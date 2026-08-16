@@ -2784,12 +2784,166 @@ function recipeLinkTarget(recipe) {
   return recipe.webUrl || recipe.youtubeUrl || "";
 }
 
+let activeRecipeDetailId = null;
+
+function printRecipe(recipe) {
+  if (!recipe) return;
+
+  const category = recipeCategoryLabel(recipe.category || "main");
+  const ingredients = normalizedRecipeLines(recipe.ingredients);
+  const steps = normalizedRecipeLines(recipe.steps);
+
+  const printWindow = window.open("", "_blank", "width=820,height=950");
+  if (!printWindow) {
+    showMotivation("Druckfenster konnte nicht geöffnet werden.");
+    return;
+  }
+
+  const safeTitle = escapeHtml(recipe.title || "Rezept");
+  const kidBadge = recipe.kids ? `<span class="print-badge kids">🧒 Kinderrezept</span>` : "";
+  const healthyBadge = recipe.healthy ? `<span class="print-badge healthy">🌿 Gesund & bunt</span>` : "";
+  const time = recipe.time ? `<span class="print-badge">◔ ${escapeHtml(recipe.time)}</span>` : "";
+
+  printWindow.document.write(`
+    <!doctype html>
+    <html lang="de">
+    <head>
+      <meta charset="utf-8">
+      <title>${safeTitle}</title>
+      <style>
+        @page { size: A4; margin: 15mm; }
+        * { box-sizing: border-box; }
+        body {
+          margin: 0;
+          color: #424745;
+          font-family: "Trebuchet MS", "Segoe UI", Arial, sans-serif;
+          background: white;
+        }
+        .sheet {
+          border: 1px solid #c9d9d5;
+          border-radius: 18px;
+          overflow: hidden;
+        }
+        .head {
+          padding: 24px 28px 20px;
+          text-align: center;
+          background: #c6ddd8;
+        }
+        .eyebrow {
+          font-size: 10px;
+          letter-spacing: .18em;
+          color: #6f7d79;
+        }
+        h1 {
+          margin: 8px 0 12px;
+          font-family: Georgia, "Times New Roman", serif;
+          font-size: 30px;
+          font-weight: 500;
+        }
+        .badges {
+          display: flex;
+          justify-content: center;
+          flex-wrap: wrap;
+          gap: 6px;
+        }
+        .print-badge {
+          padding: 5px 9px;
+          border-radius: 999px;
+          background: rgba(255,255,255,.72);
+          font-size: 11px;
+        }
+        .kids { background: #fff0ba; }
+        .healthy { background: #e2efe3; }
+        .content {
+          display: grid;
+          grid-template-columns: 1fr 1.25fr;
+        }
+        section {
+          padding: 24px 26px 30px;
+          min-height: 360px;
+        }
+        section + section { border-left: 1px solid #dce6e3; }
+        h2 {
+          margin: 0 0 14px;
+          padding-bottom: 7px;
+          border-bottom: 2px solid #d3e3df;
+          font-size: 15px;
+          text-transform: uppercase;
+          letter-spacing: .06em;
+        }
+        ul {
+          margin: 0;
+          padding-left: 20px;
+        }
+        li, .step {
+          margin-bottom: 9px;
+          font-size: 14px;
+          line-height: 1.5;
+        }
+        .footer {
+          padding: 10px;
+          text-align: center;
+          background: #d8e8e4;
+          color: white;
+        }
+        .links {
+          padding: 12px 26px 18px;
+          font-size: 11px;
+          color: #71807c;
+        }
+        @media print {
+          .sheet { break-inside: avoid; }
+        }
+      </style>
+    </head>
+    <body>
+      <main class="sheet">
+        <header class="head">
+          <div class="eyebrow">REZEPT</div>
+          <h1>${safeTitle}</h1>
+          <div class="badges">
+            <span class="print-badge">${escapeHtml(category)}</span>
+            <span class="print-badge">${escapeHtml(recipeDifficultyLabel(recipe.difficulty))}</span>
+            ${time}${kidBadge}${healthyBadge}
+          </div>
+        </header>
+        <div class="content">
+          <section>
+            <h2>Zutaten</h2>
+            <ul>${ingredients.map(item => `<li>${escapeHtml(item)}</li>`).join("")}</ul>
+          </section>
+          <section>
+            <h2>Zubereitung</h2>
+            ${steps.map(step => `<div class="step">${escapeHtml(step)}</div>`).join("")}
+          </section>
+        </div>
+        ${(recipe.webUrl || recipe.youtubeUrl) ? `
+          <div class="links">
+            ${recipe.webUrl ? `Online-Rezept: ${escapeHtml(recipe.webUrl)}<br>` : ""}
+            ${recipe.youtubeUrl ? `YouTube: ${escapeHtml(recipe.youtubeUrl)}` : ""}
+          </div>` : ""}
+        <footer class="footer">♡</footer>
+      </main>
+      <script>
+        window.onload = () => {
+          window.print();
+          window.onafterprint = () => window.close();
+        };
+      <\/script>
+    </body>
+    </html>
+  `);
+
+  printWindow.document.close();
+}
+
 function showRecipeDetail(recipeOrTitle) {
   const recipe = typeof recipeOrTitle === "string"
     ? recipeByTitle(recipeOrTitle)
     : recipeOrTitle;
 
   if (!recipe) return false;
+  activeRecipeDetailId = recipe.id;
 
   const dialog = document.querySelector("#recipeDetailDialog");
   const title = document.querySelector("#recipeDetailTitle");
@@ -2966,6 +3120,7 @@ function renderRecipes() {
           ${r.youtubeUrl ? `<a href="${escapeHtml(r.youtubeUrl)}" target="_blank" rel="noopener">▶ YouTube</a>` : ""}
         </div>
         <div class="recipe-card-actions">
+          <button class="recipe-print" data-id="${r.id}" type="button" title="Rezept drucken" aria-label="Rezept drucken">🖨</button>
           <button class="recipe-edit" data-id="${r.id}" type="button" title="Rezept bearbeiten">✎</button>
           <button class="recipe-delete" data-id="${r.id}" type="button" title="Rezept löschen">×</button>
         </div>
@@ -2982,6 +3137,13 @@ function renderRecipes() {
     if (text) text.textContent = `„${recipe.title || "Dieses Rezept"}“ wird dauerhaft aus deinen Rezeptkarten entfernt.`;
     document.querySelector("#recipeDeleteDialog")?.showModal();
   }));
+
+  host.querySelectorAll(".recipe-print").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const recipe = state.recipes.find(r => r.id === btn.dataset.id);
+      if (recipe) printRecipe(recipe);
+    });
+  });
 
   host.querySelectorAll(".recipe-edit").forEach(btn => {
     btn.addEventListener("click", () => {
@@ -3344,7 +3506,13 @@ function renderMealPlan() {
 function closeRecipeDetailDialog() {
   const dialog = document.querySelector("#recipeDetailDialog");
   if (dialog?.open) dialog.close();
+  activeRecipeDetailId = null;
 }
+
+document.querySelector("#printRecipeDetailBtn")?.addEventListener("click", () => {
+  const recipe = state.recipes.find(r => r.id === activeRecipeDetailId);
+  if (recipe) printRecipe(recipe);
+});
 
 document.querySelector("#closeRecipeDetailBtn")?.addEventListener("click", closeRecipeDetailDialog);
 
