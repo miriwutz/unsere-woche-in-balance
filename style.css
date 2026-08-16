@@ -6334,3 +6334,215 @@ a.day-meal{
     border-radius:12px !important;
   }
 }
+
+
+/* =========================================================
+   REZEPTFORMULAR – FINAL: Buttons direkt neben Grad
+   ========================================================= */
+.recipe-form-grid{
+  display:grid !important;
+  grid-template-columns:repeat(12,minmax(0,1fr)) !important;
+  gap:12px !important;
+  width:100% !important;
+  align-items:start !important;
+}
+
+/* Kopfzeile */
+#recipeTitle{
+  grid-column:1 / span 4 !important;
+  grid-row:1 !important;
+}
+#recipeCategory{
+  grid-column:5 / span 3 !important;
+  grid-row:1 !important;
+}
+#recipeDifficulty{
+  grid-column:8 / span 2 !important;
+  grid-row:1 !important;
+}
+#recipeTime{
+  grid-column:10 / span 3 !important;
+  grid-row:1 !important;
+}
+
+/* Links */
+#recipeWebUrl{
+  grid-column:1 / span 6 !important;
+  grid-row:2 !important;
+}
+#recipeYoutubeUrl{
+  grid-column:7 / span 6 !important;
+  grid-row:2 !important;
+}
+
+/* Große Felder exakt gleich breit */
+#recipeIngredients{
+  grid-column:1 / span 6 !important;
+  grid-row:3 !important;
+}
+#recipeSteps{
+  grid-column:7 / span 6 !important;
+  grid-row:3 !important;
+}
+#recipeIngredients,
+#recipeSteps{
+  width:100% !important;
+  min-width:0 !important;
+  min-height:205px !important;
+  box-sizing:border-box !important;
+}
+
+/* Untere Zeile */
+.recipe-card-mark-field{
+  grid-column:1 / span 2 !important;
+  grid-row:4 !important;
+  width:150px !important;
+  max-width:150px !important;
+}
+.recipe-bake-field{
+  grid-column:3 / span 2 !important;
+  grid-row:4 !important;
+  width:120px !important;
+  max-width:120px !important;
+}
+.recipe-temp-field{
+  grid-column:5 / span 1 !important;
+  grid-row:4 !important;
+  width:110px !important;
+  max-width:110px !important;
+}
+
+/* DIE DREI BUTTONS GENAU NACH GRAD */
+.recipe-kids-toggle{
+  grid-column:6 / span 2 !important;
+  grid-row:4 !important;
+}
+.recipe-healthy-toggle{
+  grid-column:8 / span 2 !important;
+  grid-row:4 !important;
+}
+.recipe-favorite-toggle{
+  grid-column:10 / span 1 !important;
+  grid-row:4 !important;
+}
+
+/* Alle drei als gleichartige, ruhige Pills */
+.recipe-kids-toggle,
+.recipe-healthy-toggle,
+.recipe-favorite-toggle{
+  position:relative !important;
+  display:inline-flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  gap:6px !important;
+  width:max-content !important;
+  min-width:0 !important;
+  max-width:none !important;
+  min-height:40px !important;
+  padding:7px 11px !important;
+  margin:0 !important;
+  align-self:end !important;
+  justify-self:start !important;
+  border:1px solid rgba(205,192,181,.65) !important;
+  border-radius:999px !important;
+  background:rgba(255,253,250,.9) !important;
+  white-space:nowrap !important;
+  box-sizing:border-box !important;
+}
+
+/* Checkboxen wieder sichtbar – nicht als versteckte Spezialbuttons */
+.recipe-kids-toggle input,
+.recipe-healthy-toggle input,
+.recipe-favorite-toggle input{
+  position:static !important;
+  opacity:1 !important;
+  pointer-events:auto !important;
+  width:16px !important;
+  height:16px !important;
+  margin:0 !important;
+  accent-color:#a88d65;
+}
+
+/* Favorit darf aktiv weiterhin dezent goldig werden */
+.recipe-favorite-toggle.is-favorite{
+  background:#fff2c8 !important;
+  border-color:#dfc36c !important;
+  color:#71591f !important;
+}
+
+.recipe-form-actions{
+  grid-column:11 / span 2 !important;
+  grid-row:4 !important;
+  align-self:end !important;
+  justify-self:end !important;
+  margin:0 !important;
+}
+
+/* Tablet */
+@media(max-width:980px){
+  .recipe-form-grid{
+    grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+  }
+
+  #recipeTitle{grid-column:1 / -1 !important;grid-row:auto !important}
+  #recipeCategory,
+  #recipeWebUrl,
+  #recipeIngredients{grid-column:1 !important;grid-row:auto !important}
+  #recipeDifficulty,
+  #recipeTime,
+  #recipeYoutubeUrl,
+  #recipeSteps{grid-column:2 !important;grid-row:auto !important}
+
+  .recipe-card-mark-field,
+  .recipe-bake-field,
+  .recipe-temp-field,
+  .recipe-kids-toggle,
+  .recipe-healthy-toggle,
+  .recipe-favorite-toggle,
+  .recipe-form-actions{
+    grid-row:auto !important;
+  }
+
+  .recipe-card-mark-field,
+  .recipe-temp-field,
+  .recipe-healthy-toggle{grid-column:1 !important}
+
+  .recipe-bake-field,
+  .recipe-kids-toggle,
+  .recipe-favorite-toggle,
+  .recipe-form-actions{grid-column:2 !important}
+}
+
+/* Handy */
+@media(max-width:600px){
+  .recipe-form-grid{
+    grid-template-columns:1fr !important;
+  }
+
+  #recipeTitle,
+  #recipeCategory,
+  #recipeDifficulty,
+  #recipeTime,
+  #recipeWebUrl,
+  #recipeYoutubeUrl,
+  #recipeIngredients,
+  #recipeSteps,
+  .recipe-card-mark-field,
+  .recipe-bake-field,
+  .recipe-temp-field,
+  .recipe-kids-toggle,
+  .recipe-healthy-toggle,
+  .recipe-favorite-toggle,
+  .recipe-form-actions{
+    grid-column:1 !important;
+    grid-row:auto !important;
+  }
+
+  .recipe-kids-toggle,
+  .recipe-healthy-toggle,
+  .recipe-favorite-toggle{
+    width:100% !important;
+    border-radius:12px !important;
+    justify-content:flex-start !important;
+  }
+}
