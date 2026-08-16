@@ -2437,6 +2437,11 @@ document.querySelectorAll(".tab").forEach(btn => btn.addEventListener("click", (
   // Der Rezeptbereich wird beim Öffnen von Einkauf immer aus dem aktuellen State neu aufgebaut.
   // So bleiben gespeicherte Rezepte nach Login/Cloud-Sync zuverlässig sichtbar.
   if (btn.dataset.view === "shopping") {
+    const categoryFilter = document.querySelector("#recipeCategoryFilter");
+    if (!recipeCategoryTouched && categoryFilter) {
+      activeRecipeCategory = "all";
+      categoryFilter.value = "all";
+    }
     renderRecipes();
     renderMealPlan();
   }
@@ -2460,6 +2465,7 @@ document.querySelector("#todayWeekBtn").addEventListener("click", () => {
 // ===== EINKAUF – REZEPTKARTEN =====
 let activeRecipeDifficulty = "all";
 let activeRecipeCategory = "all";
+let recipeCategoryTouched = false;
 let recipeKidsOnly = false;
 let recipeHealthyOnly = false;
 let activeRecipeSearch = "";
@@ -3166,6 +3172,7 @@ document.querySelector("#recipeSearch")?.addEventListener("input", e => {
 });
 
 document.querySelector("#recipeCategoryFilter")?.addEventListener("change", e => {
+  recipeCategoryTouched = true;
   activeRecipeCategory = e.currentTarget.value || "all";
   recipePage = 0;
   renderRecipes();
@@ -3267,7 +3274,7 @@ function workroomPageSlice(items, page) {
   return items.slice(start, start + WORKROOM_PAGE_SIZE);
 }
 
-function renderWorkroomPager(listElement, totalItems, currentPage, onChange) {
+function renderWorkroomPager(listElement, totalItems, currentPage, onChange, showSingle = false) {
   if (!listElement) return;
 
   const old = listElement.parentElement?.querySelector(
@@ -3275,8 +3282,9 @@ function renderWorkroomPager(listElement, totalItems, currentPage, onChange) {
   );
   if (old) old.remove();
 
-  const totalPages = Math.ceil(totalItems / WORKROOM_PAGE_SIZE);
-  if (totalPages <= 1) return;
+  const totalPages = Math.max(1, Math.ceil(totalItems / WORKROOM_PAGE_SIZE));
+  if (totalItems === 0) return;
+  if (totalPages <= 1 && !showSingle) return;
 
   const pager = document.createElement("div");
   pager.className = "workroom-pager";
@@ -3393,12 +3401,13 @@ function renderSchoolWorkTodos() {
     draw: "✏️ Vorzeichnen",
     prepare: "🛠 Vorbereiten",
     create: "📄 Erstellen",
-    print: "🖨 Drucken"
+    print: "🖨 Drucken",
+    ask: "💬 Nachfragen"
   };
 
   list.innerHTML = visibleTodos.map(t => `
     <div
-      class="workroom-todo-row ${t.done ? "done" : ""}"
+      class="workroom-todo-row ${t.done ? "done" : ""} ${t.type === "ask" ? "workroom-todo-ask" : ""}"
       data-id="${t.id}">
 
       <input
@@ -3647,6 +3656,7 @@ document.querySelector("#addSchoolWorkTodoBtn")?.addEventListener("click", () =>
       item.text = text;
       item.type = typeInput.value || "";
       item.url = url;
+      item.updatedAt = Date.now();
     }
 
     delete button.dataset.editId;
@@ -3662,7 +3672,8 @@ document.querySelector("#addSchoolWorkTodoBtn")?.addEventListener("click", () =>
       url,
       order: state.workroom.todos.length,
       done: false,
-      createdAt: Date.now()
+      createdAt: Date.now(),
+      updatedAt: Date.now()
     });
 
     showMotivation("Schul-To-do hinzugefügt ✓");
@@ -4038,13 +4049,19 @@ function renderWorkroomLinks() {
  <div class="workroom-link-main">
 
   <div class="workroom-link-texts">
-    <a
-      href="${escapeHtml(link.url)}"
-      target="_blank"
-      rel="noopener"
-      class="workroom-link-title">
-      ${escapeHtml(link.title)}
-    </a>
+    ${link.url ? `
+      <a
+        href="${escapeHtml(link.url)}"
+        target="_blank"
+        rel="noopener"
+        class="workroom-link-title">
+        ${escapeHtml(link.title)}
+      </a>
+    ` : `
+      <span class="workroom-link-title workroom-link-title-static">
+        ${escapeHtml(link.title)}
+      </span>
+    `}
 
     ${link.note
       ? `<div class="workroom-link-note">${escapeHtml(link.note)}</div>`
@@ -4092,7 +4109,8 @@ function renderWorkroomLinks() {
     page => {
       workroomLinkPage = page;
       renderWorkroomLinks();
-    }
+    },
+    true
   );
 
   document.querySelectorAll(".workroom-link-delete").forEach(btn => {
@@ -4204,9 +4222,12 @@ document.querySelector("#addWorkroomLinkBtn")?.addEventListener("click", () => {
   const use = useInput?.value || "soon";
   const important = !!importantInput?.checked;
 
-  if (!title || !url) return;
+  if (!title) {
+    titleInput.focus();
+    return;
+  }
 
-  if (!/^https?:\/\//i.test(url)) {
+  if (url && !/^https?:\/\//i.test(url)) {
     url = "https://" + url;
   }
 
@@ -4223,6 +4244,7 @@ document.querySelector("#addWorkroomLinkBtn")?.addEventListener("click", () => {
       item.category = category;
       item.use = use;
       item.important = important;
+      item.updatedAt = Date.now();
     }
 
     delete button.dataset.editId;
@@ -4238,7 +4260,8 @@ document.querySelector("#addWorkroomLinkBtn")?.addEventListener("click", () => {
       use,
       important,
       order: state.workroom.links.length,
-      createdAt: Date.now()
+      createdAt: Date.now(),
+      updatedAt: Date.now()
     });
   }
 
