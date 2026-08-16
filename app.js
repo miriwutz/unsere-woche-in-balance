@@ -93,7 +93,6 @@ function snapshotPersistentState() {
     recipes: state.recipes,
     meals: state.meals,
     pinboard: state.pinboard,
-    timeTracking: state.timeTracking,
     recipeLinkFeedback: state.recipeLinkFeedback,
     workroom: state.workroom,
     school: state.school,
@@ -144,7 +143,6 @@ function cloudPayload() {
     recipes: state.recipes,
     meals: state.meals,
     pinboard: state.pinboard,
-    timeTracking: state.timeTracking,
     recipeLinkFeedback: state.recipeLinkFeedback,
     workroom: state.workroom,
     school: state.school,
@@ -1887,12 +1885,15 @@ function timeCategoryLabel(key) {
     pc: "🖥 PC & Büro",
     prep: "✂ Vorbereitung",
     household: "🏡 Haushalt",
+    cook: "🍳 Kochen",
+    shopping: "🛒 Einkaufen",
     repair: "🔧 Reparaturen",
-    organize: "🗂 Organisieren",
-    errands: "🛒 Erledigungen",
     garden: "🌿 Garten & draußen",
+    sport: "🏃 Sport & Bewegung",
     help: "🤝 Helfen & Unterstützen",
     school: "✏ Lernen & Schule",
+    organize: "🗂 Organisieren", // Altbestand lesbar
+    errands: "🛒 Einkaufen",    // Altbestand sinnvoll umbenannt
     other: "✨ Sonstiges"
   }[key] || "✨ Sonstiges";
 }
@@ -1917,12 +1918,149 @@ function weekStartForDate(date = new Date()) {
 
 const TIME_TRACKING_LOCAL_KEY = "balanceProd.timeTracking";
 
-function saveTimeTrackingImmediately() {
+let timeTrackingUnsubscribe = null;
+let timeTrackingCloudSaveTimer = null;
+let timeTrackingCloudApplying = false;
+
+function writeTimeTrackingLocalOnly() {
   try {
     localStorage.setItem(TIME_TRACKING_LOCAL_KEY, JSON.stringify(state.timeTracking));
   } catch (err) {
     console.warn("Zeitdaten konnten lokal nicht gespeichert werden:", err);
   }
+}
+
+function timeTrackingDoc() {
+  return firebase.firestore()
+    .collection("families")
+    .doc("shared")
+    .collection("modules")
+    .doc("timeTracking");
+}
+
+function normalizeTimeTrackingData(value) {
+  const source = value && typeof value === "object" ? value : {};
+  return {
+    entries: Array.isArray(source.entries) ? source.entries : [],
+    active: Array.isArray(source.active)
+      ? source.active
+      : (source.active && typeof source.active === "object" ? [source.active] : []),
+    stopped: source.stopped && typeof source.stopped === "object" ? source.stopped : {}
+  };
+}
+
+function mergeStoppedMaps(a, b) {
+  const result = {...(a || {})};
+  Object.entries(b || {}).forEach(([id, ts]) => {
+    result[id] = Math.max(Number(result[id] || 0), Number(ts || 0));
+  });
+  return result;
+}
+
+function mergeTimeTrackingData(a, b) {
+  const A = normalizeTimeTrackingData(a);
+  const B = normalizeTimeTrackingData(b);
+  const stopped = mergeStoppedMaps(A.stopped, B.stopped);
+  const entries = mergeByIdPreferNewer(A.entries, B.entries);
+
+  const finishedIds = new Set(entries.map(entry => entry?.id).filter(Boolean));
+  const activeMap = new Map();
+
+  [...A.active, ...B.active].forEach(timer => {
+    if (!timer?.id || finishedIds.has(timer.id)) return;
+    const stoppedAt = Number(stopped[timer.id] || 0);
+    if (stoppedAt && stoppedAt >= Number(timer.startedAt || 0)) return;
+
+    const prev = activeMap.get(timer.id);
+    if (!prev || Number(timer.startedAt || 0) >= Number(prev.startedAt || 0)) {
+      activeMap.set(timer.id, timer);
+    }
+  });
+
+  return {entries, active:[...activeMap.values()], stopped};
+}
+
+async function saveTimeTrackingToCloudNow() {
+  if (timeTrackingCloudApplying || !firebase.auth().currentUser) return;
+
+  const ref = timeTrackingDoc();
+  const localSnapshot = normalizeTimeTrackingData(state.timeTracking);
+
+  try {
+    const merged = await firebase.firestore().runTransaction(async tx => {
+      const snap = await tx.get(ref);
+      const remote = snap.exists ? snap.data() : {};
+      const next = mergeTimeTrackingData(remote, localSnapshot);
+
+      tx.set(ref, {
+        ...next,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+
+      return next;
+    });
+
+    state.timeTracking = mergeTimeTrackingData(state.timeTracking, merged);
+    writeTimeTrackingLocalOnly();
+  } catch (err) {
+    console.error("Zeittracking-Synchronisation fehlgeschlagen:", err);
+  }
+}
+
+function scheduleTimeTrackingCloudSave() {
+  if (!firebase.auth().currentUser) return;
+  clearTimeout(timeTrackingCloudSaveTimer);
+  timeTrackingCloudSaveTimer = setTimeout(saveTimeTrackingToCloudNow, 120);
+}
+
+function saveTimeTrackingImmediately() {
+  writeTimeTrackingLocalOnly();
+  scheduleTimeTrackingCloudSave();
+}
+
+async function startTimeTrackingSync() {
+  if (timeTrackingUnsubscribe) {
+    timeTrackingUnsubscribe();
+    timeTrackingUnsubscribe = null;
+  }
+
+  const ref = timeTrackingDoc();
+
+  try {
+    const own = await ref.get();
+
+    if (!own.exists) {
+      // Einmalige Migration: alter Cloud-Zeitstand + lokale Daten zusammenführen.
+      const legacySnap = await firebase.firestore().collection("families").doc("shared").get();
+      const legacy = legacySnap.exists ? legacySnap.data()?.timeTracking : null;
+      const initial = mergeTimeTrackingData(state.timeTracking, legacy);
+
+      state.timeTracking = initial;
+      writeTimeTrackingLocalOnly();
+
+      await ref.set({
+        ...initial,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+    }
+  } catch (err) {
+    console.warn("Zeittracking-Migration konnte nicht abgeschlossen werden:", err);
+  }
+
+  timeTrackingUnsubscribe = ref.onSnapshot(snap => {
+    if (!snap.exists) return;
+
+    timeTrackingCloudApplying = true;
+    try {
+      state.timeTracking = mergeTimeTrackingData(state.timeTracking, snap.data());
+      writeTimeTrackingLocalOnly();
+      renderTimeTracking();
+    } finally {
+      timeTrackingCloudApplying = false;
+    }
+  }, err => {
+    console.error("Zeittracking Live-Sync fehlgeschlagen:", err);
+  });
 }
 
 function restoreTimeTrackingFromLocal() {
@@ -2161,16 +2299,19 @@ function renderTimeTracking() {
   // Farbe innerhalb eines Rings = gewählter Bereich/Kategorie.
   // Dieselbe Kategorie hat bei ALLEN Personen exakt dieselbe Farbe.
   const categoryPalette = {
-    pc: "#7FA7A7",          // PC & Büro – Petrol
-    prep: "#8FA6C8",        // Vorbereitung – rauchiges Blau
-    household: "#8FA67D",   // Haushalt – Salbei/Olive
-    repair: "#B58A9A",      // Reparaturen – Mauve
-    organize: "#8E99B6",    // Organisieren – gedecktes Indigo
-    errands: "#C48B6E",     // Fahrten/Erledigungen – Terrakotta
-    garden: "#6F927C",      // Garten/Draußen – Moosgrün
-    help: "#D2A24E",        // Helfen & Unterstützen – warmes Ocker
-    school: "#A184B8",      // Schule/Vorbereitung – Violett
-    other: "#9C9188"        // Sonstiges – Taupe
+    pc: "#5F9296",
+    prep: "#7892BF",
+    household: "#7F9E6D",
+    cook: "#C8795C",
+    shopping: "#D29B2F",
+    repair: "#A46F89",
+    garden: "#557F66",
+    sport: "#736DB0",
+    help: "#C99224",
+    school: "#8E73AB",
+    organize: "#91857D",
+    errands: "#D29B2F",
+    other: "#82766F"
   };
 
   const weekTotals = totalsByPersonAndCategory(weekEntries);
@@ -6318,56 +6459,8 @@ shoppingItems = state.shopping;
       handleIncomingPinboard(data.pinboard);
       state.pinboard = data.pinboard;
     }
-    if (data.timeTracking && typeof data.timeTracking === "object") {
-      const cloudEntries = Array.isArray(data.timeTracking.entries) ? data.timeTracking.entries : [];
-      const localActive = Array.isArray(state.timeTracking.active)
-        ? state.timeTracking.active
-        : (state.timeTracking.active ? [state.timeTracking.active] : []);
-      const cloudActive = Array.isArray(data.timeTracking.active)
-        ? data.timeTracking.active
-        : (data.timeTracking.active && typeof data.timeTracking.active === "object"
-            ? [data.timeTracking.active]
-            : []);
-
-      const localStopped =
-        state.timeTracking.stopped && typeof state.timeTracking.stopped === "object"
-          ? state.timeTracking.stopped
-          : {};
-      const cloudStopped =
-        data.timeTracking.stopped && typeof data.timeTracking.stopped === "object"
-          ? data.timeTracking.stopped
-          : {};
-
-      const stopped = {...localStopped, ...cloudStopped};
-
-      const activeMap = new Map();
-      [...cloudActive, ...localActive].forEach(timer => {
-        if (!timer?.id) return;
-
-        const stoppedAt = Number(stopped[timer.id] || 0);
-        if (stoppedAt && stoppedAt >= Number(timer.startedAt || 0)) return;
-
-        const prev = activeMap.get(timer.id);
-        if (!prev || Number(timer.startedAt || 0) >= Number(prev.startedAt || 0)) {
-          activeMap.set(timer.id, timer);
-        }
-      });
-
-      state.timeTracking = {
-        entries: mergeByIdPreferNewer(state.timeTracking.entries, cloudEntries),
-        active: [...activeMap.values()],
-        stopped
-      };
-
-      restoreTimeTrackingFromLocal();
-
-      state.timeTracking.active = (state.timeTracking.active || []).filter(timer => {
-        const stoppedAt = Number(state.timeTracking.stopped?.[timer.id] || 0);
-        return !(stoppedAt && stoppedAt >= Number(timer.startedAt || 0));
-      });
-
-      saveTimeTrackingImmediately();
-    }
+    // Zeittracking wird separat synchronisiert, damit Geräte sich nicht gegenseitig
+    // mit einem älteren Gesamtstand überschreiben.
     if (data.recipeLinkFeedback && typeof data.recipeLinkFeedback === "object") {
       state.recipeLinkFeedback = {
         ...state.recipeLinkFeedback,
@@ -6506,6 +6599,7 @@ firebase.auth().onAuthStateChanged(async user => {
     setLoginMessage("");
     showLoginGate(false);
     startCloudSync();
+    await startTimeTrackingSync();
     
     await migrateShoppingToCollection();
 startShoppingSync();
@@ -6515,6 +6609,10 @@ startShoppingSync();
     if (cloudUnsubscribe) {
       cloudUnsubscribe();
       cloudUnsubscribe = null;
+    }
+    if (timeTrackingUnsubscribe) {
+      timeTrackingUnsubscribe();
+      timeTrackingUnsubscribe = null;
     }
     showLoginGate(true);
   }
