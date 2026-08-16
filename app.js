@@ -6052,69 +6052,57 @@ document.querySelector("#eventCategory").value = "normal";
 
 
 function updateEntryTypeUI() {
-  const type = document.querySelector("#entryType").value;
+  const type = document.querySelector("#entryType")?.value || "todo";
   const isEvent = type === "event";
-const eventCategory = document.querySelector("#eventCategory")?.value || "normal";
-const schoolyearWeekday = document.querySelector("#schoolyearWeekday")?.value || "";
-const schoolyearTime = document.querySelector("#schoolyearTime")?.value || "";
-const schoolyearEndTime = document.querySelector("#schoolyearEndTime")?.value || "";
-const isSchoolyearEvent = type === "event" && recurrence === "schoolyear-noe";
 
-const recurrenceSelect = document.querySelector("#recurrence");
+  const eventCategory = document.querySelector("#eventCategory")?.value || "normal";
+  const recurrenceSelect = document.querySelector("#recurrence");
 
-if (
-  isEvent &&
-  ["birthday", "nameday", "anniversary", "holiday"].includes(eventCategory)
-) {
-  recurrenceSelect.value = "yearly";
-  const recurrenceValue = document.querySelector("#recurrence")?.value || "none";
-  const isSchoolyearEvent = isEvent && recurrenceValue === "schoolyear-noe";
-  const schoolyearFields = document.querySelector("#schoolyearScheduleFields");
-  if (schoolyearFields) schoolyearFields.classList.toggle("hidden", !isSchoolyearEvent);
+  // Geburtstage/Namenstage/Jahrestage/Feiertage automatisch jährlich
+  if (
+    isEvent &&
+    recurrenceSelect &&
+    ["birthday", "nameday", "anniversary", "holiday"].includes(eventCategory)
+  ) {
+    recurrenceSelect.value = "yearly";
+  }
 
-  ["#eventDate", "#eventEndDate", "#eventTime", "#eventEndTime"].forEach(selector => {
-    const field = document.querySelector(selector)?.closest("label");
-    if (field) field.classList.toggle("hidden", isSchoolyearEvent);
-  });
+  const recurrence = recurrenceSelect?.value || "none";
 
-}
-  document.querySelector("#eventFields").classList.toggle("hidden", !isEvent);
-  document.querySelector("#entryTextLabel").textContent = isEvent ? "Termin" : "Aufgabe";
-  document.querySelector("#todoText").placeholder = isEvent
-    ? "z. B. Musikschule, Elternabend, Training"
-    : "z. B. Elternbrief fertigstellen";
+  // Normale Terminfelder grundsätzlich bei "Termin" sichtbar
+  const eventFields = document.querySelector("#eventFields");
+  if (eventFields) eventFields.classList.toggle("hidden", !isEvent);
 
-  // Button passend zur gewählten Art beschriften
+  const entryTextLabel = document.querySelector("#entryTextLabel");
+  if (entryTextLabel) entryTextLabel.textContent = isEvent ? "Termin" : "Aufgabe";
+
+  const todoText = document.querySelector("#todoText");
+  if (todoText) {
+    todoText.placeholder = isEvent
+      ? "z. B. Musikschule, Elternabend, Training"
+      : "z. B. Elternbrief fertigstellen";
+  }
+
   const addBtn = document.querySelector("#addTodoBtn");
-  if (addBtn) {
+  if (addBtn && !editingTodoId) {
     addBtn.textContent = isEvent ? "Termin hinzufügen" : "To-do hinzufügen";
   }
-const periodField = document.querySelector("#todoPeriod")?.closest("label, .field, .form-field");
 
-if (periodField) {
-  periodField.classList.toggle("hidden", isEvent);
-}
- 
-const priorityField = document.querySelector("#todoPriority")?.closest("label, .field, .form-field");
-const areaField = document.querySelector("#todoArea")?.closest("label, .field, .form-field");
+  // To-do-spezifische Felder bei Termin ausblenden
+  const periodField = document.querySelector("#todoPeriod")?.closest("label, .field, .form-field");
+  const priorityField = document.querySelector("#todoPriority")?.closest("label, .field, .form-field");
+  const areaField = document.querySelector("#todoArea")?.closest("label, .field, .form-field");
 
-if (priorityField) {
-  priorityField.classList.toggle("hidden", isEvent);
-}
+  if (periodField) periodField.classList.toggle("hidden", isEvent);
+  if (priorityField) priorityField.classList.toggle("hidden", isEvent);
+  if (areaField) areaField.classList.toggle("hidden", isEvent);
 
-if (areaField) {
-  areaField.classList.toggle("hidden", isEvent);
-}
+  // Ferienhinweis
+  const schoolHint = document.querySelector("#schoolHolidayHint");
+  if (schoolHint) schoolHint.classList.toggle("hidden", recurrence !== "schoolyear-noe");
 
-const recurrence = document.querySelector("#recurrence").value;
-
-  document.querySelector("#schoolHolidayHint").classList.toggle(
-    "hidden",
-    recurrence !== "schoolyear-noe"
-  );
-
-  // Wochentag bei To-dos nur für "Diese Woche" anzeigen
-  const period = document.querySelector("#todoPeriod")?.value;
+  // To-do-Wochentag/Woche nur bei Wochen-To-do
+  const period = document.querySelector("#todoPeriod")?.value || "week";
   const todoDayField = document.querySelector("#todoDay")?.closest("label, .field, .form-field");
   const todoWeekOffsetField = document.querySelector("#todoWeekOffset")?.closest("label, .field, .form-field");
 
@@ -6124,6 +6112,19 @@ const recurrence = document.querySelector("#recurrence").value;
   if (todoWeekOffsetField) {
     todoWeekOffsetField.classList.toggle("hidden", isEvent || period !== "week");
   }
+
+  // Sonderfall Schuljahr NÖ:
+  // Statt Start-/Enddatum werden Wochentag + Von/Bis gezeigt.
+  const isSchoolyearEvent = isEvent && recurrence === "schoolyear-noe";
+  const schoolyearFields = document.querySelector("#schoolyearScheduleFields");
+  if (schoolyearFields) {
+    schoolyearFields.classList.toggle("hidden", !isSchoolyearEvent);
+  }
+
+  ["#eventDate", "#eventEndDate", "#eventTime", "#eventEndTime"].forEach(selector => {
+    const field = document.querySelector(selector)?.closest("label");
+    if (field) field.classList.toggle("hidden", isSchoolyearEvent);
+  });
 }
 
 document.querySelector("#entryType").addEventListener("change", updateEntryTypeUI);
