@@ -1025,6 +1025,8 @@ state.school = (() => {
   state.school.children[id]=state.school.children[id]||{name:(id === "1" ? "Lou" : "Fina"),tasks:[],links:[]};
   state.school.children[id].tasks=Array.isArray(state.school.children[id].tasks)?state.school.children[id].tasks:[];
   state.school.children[id].links=Array.isArray(state.school.children[id].links)?state.school.children[id].links:[];
+  state.school.children[id].deletedTaskIds=Array.isArray(state.school.children[id].deletedTaskIds)?state.school.children[id].deletedTaskIds:[];
+  state.school.children[id].deletedLinkIds=Array.isArray(state.school.children[id].deletedLinkIds)?state.school.children[id].deletedLinkIds:[];
 });
 
 
@@ -1878,6 +1880,7 @@ function timeCategoryLabel(key) {
     organize: "🗂 Organisieren",
     errands: "🛒 Erledigungen",
     garden: "🌿 Garten & draußen",
+    help: "🤝 Helfen & Unterstützen",
     school: "✏ Lernen & Schule",
     other: "✨ Sonstiges"
   }[key] || "✨ Sonstiges";
@@ -1900,6 +1903,64 @@ function weekStartForDate(date = new Date()) {
   return d;
 }
 
+
+const TIME_TRACKING_LOCAL_KEY = "balanceProd.timeTracking";
+
+function saveTimeTrackingImmediately() {
+  try {
+    localStorage.setItem(TIME_TRACKING_LOCAL_KEY, JSON.stringify(state.timeTracking));
+  } catch (err) {
+    console.warn("Zeitdaten konnten lokal nicht gespeichert werden:", err);
+  }
+}
+
+function restoreTimeTrackingFromLocal() {
+  try {
+    const raw = localStorage.getItem(TIME_TRACKING_LOCAL_KEY);
+    if (!raw) return;
+    const local = JSON.parse(raw);
+    if (!local || typeof local !== "object") return;
+
+    const localEntries = Array.isArray(local.entries) ? local.entries : [];
+    state.timeTracking.entries = mergeByIdPreferNewer(
+      state.timeTracking.entries,
+      localEntries
+    );
+
+    // Eine lokal laufende Stoppuhr niemals durch einen leeren Cloud-Stand verlieren.
+    if (local.active && typeof local.active === "object") {
+      if (!state.timeTracking.active ||
+          Number(local.active.startedAt || 0) >= Number(state.timeTracking.active.startedAt || 0)) {
+        state.timeTracking.active = local.active;
+      }
+    }
+  } catch (err) {
+    console.warn("Lokale Zeitdaten konnten nicht wiederhergestellt werden:", err);
+  }
+}
+
+function formatElapsedWithSeconds(startedAt) {
+  const seconds = Math.max(0, Math.floor((Date.now() - Number(startedAt || Date.now())) / 1000));
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  const s = seconds % 60;
+  return `${String(h).padStart(2,"0")}:${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}`;
+}
+
+let liveTimeTicker = null;
+
+function startLiveTimeTicker() {
+  clearInterval(liveTimeTicker);
+  if (!state.timeTracking.active) return;
+
+  liveTimeTicker = setInterval(() => {
+    const el = document.querySelector("#activeTimeElapsed");
+    if (el && state.timeTracking.active) {
+      el.textContent = formatElapsedWithSeconds(state.timeTracking.active.startedAt);
+    }
+  }, 1000);
+}
+
 function renderTimeTracking() {
   const list = document.querySelector("#timeLogList");
   const activeBox = document.querySelector("#activeTimeTracker");
@@ -1909,7 +1970,6 @@ function renderTimeTracking() {
   const active = state.timeTracking.active;
 
   if (active) {
-    const elapsed = Math.max(1, Math.round((Date.now() - Number(active.startedAt || Date.now())) / 60000));
     activeBox.classList.remove("hidden");
     activeBox.innerHTML = `
       <div>
@@ -1918,7 +1978,7 @@ function renderTimeTracking() {
         <small>${escapeHtml(active.note || "")}</small>
       </div>
       <div class="active-time-right">
-        <span>${formatMinutes(elapsed)}</span>
+        <span id="activeTimeElapsed" class="active-time-elapsed">${formatElapsedWithSeconds(active.startedAt)}</span>
         <button id="stopTimeTrackBtn" class="secondary-btn" type="button">■ Stoppen</button>
       </div>
     `;
@@ -1965,10 +2025,13 @@ function renderTimeTracking() {
   list.querySelectorAll(".time-log-delete").forEach(btn => {
     btn.addEventListener("click", () => {
       state.timeTracking.entries = state.timeTracking.entries.filter(entry => entry.id !== btn.dataset.id);
+      saveTimeTrackingImmediately();
       save();
       renderTimeTracking();
     });
   });
+
+  startLiveTimeTicker();
 }
 
 function startTimeTracking() {
@@ -1985,6 +2048,7 @@ function startTimeTracking() {
     startedAt: Date.now()
   };
 
+  saveTimeTrackingImmediately();
   save();
   renderTimeTracking();
 }
@@ -2009,6 +2073,7 @@ function stopTimeTracking() {
   });
 
   state.timeTracking.active = null;
+  saveTimeTrackingImmediately();
   save();
   renderTimeTracking();
 }
@@ -2035,6 +2100,7 @@ function addManualTimeEntry() {
   });
 
   if (minutesInput) minutesInput.value = "";
+  saveTimeTrackingImmediately();
   save();
   renderTimeTracking();
 }
@@ -2563,12 +2629,17 @@ function renderSchool(){
     ensureManualTimetable(c);
     const manualViewBtn = document.querySelector(`#manualTimetableViewBtn${id}`);
     if (manualViewBtn) manualViewBtn.classList.toggle("hidden", !hasManualTimetable(c));
-    const tasks=[...c.tasks].sort((a,b)=>(a.done-b.done)||((a.due||"9999").localeCompare(b.due||"9999")));
+    const deletedTaskIds = new Set(c.deletedTaskIds || []);
+    const deletedLinkIds = new Set(c.deletedLinkIds || []);
+    const tasks=[...c.tasks]
+      .filter(t => !deletedTaskIds.has(t.id))
+      .sort((a,b)=>(a.done-b.done)||((a.due||"9999").localeCompare(b.due||"9999")));
     te.innerHTML=tasks.length?tasks.map(t=>`<div class="school-task ${t.done?"done":""}">
       <input class="check school-check" data-child="${id}" data-id="${t.id}" type="checkbox" ${t.done?"checked":""}>
       <div><div class="school-task-text">${escapeHtml(t.text)}</div><div class="school-meta"><span>${{homework:"☀ Hausübung",test:"✎ Test",bring:"♥ Mitbringen",appointment:"○ Termin",other:"✦ Schule"}[t.type] || "✦ Schule"}</span>${t.subject?`<span>${escapeHtml(t.subject)}</span>`:""}${t.due?`<span>bis ${parseLocalDate(t.due).toLocaleDateString("de-AT",{day:"2-digit",month:"2-digit"})}</span>`:""}</div></div>
       <button class="school-del" data-kind="task" data-child="${id}" data-id="${t.id}">×</button></div>`).join(""):'<div class="school-empty">Gerade ist hier nichts offen. 🌿</div>';
-    le.innerHTML=c.links.length?c.links.map(x=>`<div class="school-link"><a href="${escapeHtml(x.url)}" target="_blank" rel="noopener">${escapeHtml(x.name)}</a><button class="school-del" data-kind="link" data-child="${id}" data-id="${x.id}">×</button></div>`).join(""):'<span class="school-empty-inline">Noch keine Lernlinks hinterlegt.</span>';
+    const visibleLinks = c.links.filter(x => !deletedLinkIds.has(x.id));
+    le.innerHTML=visibleLinks.length?visibleLinks.map(x=>`<div class="school-link"><a href="${escapeHtml(x.url)}" target="_blank" rel="noopener">${escapeHtml(x.name)}</a><button class="school-del" data-kind="link" data-child="${id}" data-id="${x.id}">×</button></div>`).join(""):'<span class="school-empty-inline">Noch keine Lernlinks hinterlegt.</span>';
     const ti=document.querySelector(`#timetableUrl${id}`),to=document.querySelector(`#timetableOpen${id}`);
     if(ti && document.activeElement!==ti) ti.value=c.timetableUrl||"";
     if(to){
@@ -2587,7 +2658,17 @@ function renderSchool(){
   }));
   document.querySelectorAll(".school-del").forEach(x=>x.addEventListener("click",e=>{
     const d=e.currentTarget.dataset,c=state.school.children[d.child];
-    if(d.kind==="task")c.tasks=c.tasks.filter(z=>z.id!==d.id);else c.links=c.links.filter(z=>z.id!==d.id);
+
+    if(d.kind==="task"){
+      c.deletedTaskIds = Array.isArray(c.deletedTaskIds) ? c.deletedTaskIds : [];
+      if(!c.deletedTaskIds.includes(d.id)) c.deletedTaskIds.push(d.id);
+      c.tasks = c.tasks.filter(z=>z.id!==d.id);
+    } else {
+      c.deletedLinkIds = Array.isArray(c.deletedLinkIds) ? c.deletedLinkIds : [];
+      if(!c.deletedLinkIds.includes(d.id)) c.deletedLinkIds.push(d.id);
+      c.links = c.links.filter(z=>z.id!==d.id);
+    }
+
     c.updatedAt = Date.now();
     save();
     renderAll();
@@ -5710,12 +5791,26 @@ function mergeSchool(localSchool, cloudSchool) {
     const l = localSchool.children[id] || {};
     const c = cloudSchool.children[id] || {};
 
+    const deletedTaskIds = [...new Set([
+      ...(Array.isArray(l.deletedTaskIds) ? l.deletedTaskIds : []),
+      ...(Array.isArray(c.deletedTaskIds) ? c.deletedTaskIds : [])
+    ])];
+
+    const deletedLinkIds = [...new Set([
+      ...(Array.isArray(l.deletedLinkIds) ? l.deletedLinkIds : []),
+      ...(Array.isArray(c.deletedLinkIds) ? c.deletedLinkIds : [])
+    ])];
+
     merged.children[id] = {
       ...c,
       ...l,
       name: l.name || c.name || (id === "1" ? "Lou" : "Fina"),
-      tasks: mergeByIdPreferNewer(l.tasks, c.tasks),
-      links: mergeByIdPreferNewer(l.links, c.links),
+      deletedTaskIds,
+      deletedLinkIds,
+      tasks: mergeByIdPreferNewer(l.tasks, c.tasks)
+        .filter(task => !deletedTaskIds.includes(task.id)),
+      links: mergeByIdPreferNewer(l.links, c.links)
+        .filter(link => !deletedLinkIds.includes(link.id)),
       timetableUrl: l.timetableUrl || c.timetableUrl || "",
       manualTimetable: l.manualTimetable || c.manualTimetable || null
     };
@@ -5754,10 +5849,23 @@ shoppingItems = state.shopping;
     }
     if (data.timeTracking && typeof data.timeTracking === "object") {
       const cloudEntries = Array.isArray(data.timeTracking.entries) ? data.timeTracking.entries : [];
+      const localActive = state.timeTracking.active;
+      const cloudActive = data.timeTracking.active && typeof data.timeTracking.active === "object"
+        ? data.timeTracking.active
+        : null;
+
+      let active = localActive || cloudActive || null;
+      if (localActive && cloudActive) {
+        active = Number(localActive.startedAt || 0) >= Number(cloudActive.startedAt || 0)
+          ? localActive
+          : cloudActive;
+      }
+
       state.timeTracking = {
         entries: mergeByIdPreferNewer(state.timeTracking.entries, cloudEntries),
-        active: data.timeTracking.active || state.timeTracking.active || null
+        active
       };
+      saveTimeTrackingImmediately();
     }
     if (data.recipeLinkFeedback && typeof data.recipeLinkFeedback === "object") {
       state.recipeLinkFeedback = {
@@ -6818,4 +6926,5 @@ document.addEventListener("click", e => {
   if (!wasOpen) card.classList.add("open");
 });
 
+restoreTimeTrackingFromLocal();
 renderAll();
