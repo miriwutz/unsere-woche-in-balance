@@ -7501,38 +7501,58 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
 function ensureRecipeFormAndMobileActionStyles() {
-  if (document.querySelector("#recipeFormAndMobileActionStyles")) return;
+  let style = document.querySelector("#recipeFormAndMobileActionStyles");
+  if (!style) {
+    style = document.createElement("style");
+    style.id = "recipeFormAndMobileActionStyles";
+    document.head.appendChild(style);
+  }
 
-  const style = document.createElement("style");
-  style.id = "recipeFormAndMobileActionStyles";
   style.textContent = `
     /* =========================================================
-       REZEPTFORMULAR – klarere Gruppen
+       REZEPTFORMULAR – ruhig, übersichtlich, ausgewogen
        ========================================================= */
+
     #recipeForm{
       display:grid !important;
-      grid-template-columns:1.2fr .75fr .75fr;
-      gap:10px 12px !important;
+      grid-template-columns:minmax(220px,1.15fr) minmax(150px,.72fr) minmax(150px,.72fr) minmax(170px,.85fr) !important;
+      gap:12px !important;
       align-items:start !important;
+      padding:16px !important;
+    }
+
+    #recipeForm > *{
+      min-width:0 !important;
+      box-sizing:border-box !important;
     }
 
     #recipeTitle{
-      grid-column:1 !important;
+      grid-column:1 / 2 !important;
+      min-height:42px !important;
     }
 
     #recipeCategory{
-      grid-column:2 !important;
+      grid-column:2 / 3 !important;
+      min-height:42px !important;
     }
 
     #recipeDifficulty{
-      grid-column:3 !important;
+      grid-column:3 / 4 !important;
+      min-height:42px !important;
     }
 
-    /* Kinder + Gesund sauber in einer gemeinsamen Zeile */
-    #recipeKids,
-    #recipeHealthy{
-      width:auto !important;
-      margin:0 !important;
+    #recipeTime{
+      grid-column:4 / 5 !important;
+      min-height:42px !important;
+    }
+
+    .recipe-flags-row{
+      grid-column:1 / -1 !important;
+      display:flex !important;
+      gap:8px !important;
+      align-items:center !important;
+      flex-wrap:wrap !important;
+      margin-top:-2px !important;
     }
 
     #recipeKidsLabel,
@@ -7540,66 +7560,188 @@ function ensureRecipeFormAndMobileActionStyles() {
       display:inline-flex !important;
       align-items:center !important;
       gap:7px !important;
-      min-height:38px;
-      padding:8px 10px;
-      border:1px solid rgba(216,205,198,.55);
-      border-radius:12px;
-      background:#fffdfb;
-      white-space:nowrap;
+      min-height:38px !important;
+      padding:8px 12px !important;
+      border:1px solid rgba(210,198,191,.52) !important;
+      border-radius:999px !important;
+      background:rgba(255,253,251,.86) !important;
+      color:#6f6762 !important;
+      white-space:nowrap !important;
+      font-size:.76rem !important;
     }
 
-    .recipe-flags-row{
-      grid-column:1 / -1;
-      display:flex;
-      gap:8px;
-      flex-wrap:wrap;
-      align-items:center;
-    }
-
-    #recipeTime{
-      grid-column:2 !important;
+    #recipeKids,
+    #recipeHealthy{
+      flex:0 0 auto !important;
+      width:auto !important;
+      margin:0 !important;
     }
 
     #recipeIngredients{
-      grid-column:3 !important;
-      min-height:108px !important;
+      grid-column:1 / 3 !important;
+      min-height:150px !important;
+      resize:vertical !important;
     }
 
     #recipeSteps{
-      grid-column:1 / 3 !important;
-      min-height:108px !important;
+      grid-column:3 / 5 !important;
+      min-height:150px !important;
+      resize:vertical !important;
     }
 
     #recipeWebUrl{
-      grid-column:3 !important;
+      grid-column:1 / 3 !important;
+      min-height:42px !important;
     }
 
     #recipeYoutubeUrl{
-      grid-column:3 !important;
+      grid-column:3 / 5 !important;
+      min-height:42px !important;
     }
 
     .recipe-card-mark-field{
-      grid-column:1 / 3 !important;
+      grid-column:1 / 4 !important;
+      display:grid !important;
+      gap:5px !important;
       min-width:0 !important;
-      align-self:end;
+      color:#756d68 !important;
+      font-size:.7rem !important;
+      align-self:end !important;
+    }
+
+    .recipe-card-mark-field select{
+      min-height:42px !important;
+      width:100% !important;
     }
 
     #saveRecipeBtn{
-      grid-column:3 !important;
-      justify-self:end;
-      align-self:end;
+      grid-column:4 / 5 !important;
+      justify-self:stretch !important;
+      align-self:end !important;
+      min-height:42px !important;
+      margin:0 !important;
+    }
+
+    /* Die großen Textfelder sollen nicht wie nackte Browserfelder wirken */
+    #recipeIngredients,
+    #recipeSteps{
+      padding:12px 14px !important;
+      border:1px solid rgba(190,202,198,.68) !important;
+      border-radius:14px !important;
+      background:rgba(255,255,255,.72) !important;
+      color:var(--ink,#514944) !important;
+      line-height:1.45 !important;
+      font:inherit !important;
+    }
+
+    #recipeTitle,
+    #recipeCategory,
+    #recipeDifficulty,
+    #recipeTime,
+    #recipeWebUrl,
+    #recipeYoutubeUrl,
+    .recipe-card-mark-field select{
+      border-radius:12px !important;
+      border:1px solid rgba(216,205,198,.60) !important;
+      background:#fffdfb !important;
     }
 
     /* =========================================================
-       MOBILE WOCHENPLAN-AKTIONEN – wirklich schön rund und mittig
+       TABLET
+       ========================================================= */
+    @media(max-width:980px){
+      #recipeForm{
+        grid-template-columns:1fr 1fr !important;
+      }
+
+      #recipeTitle{
+        grid-column:1 / -1 !important;
+      }
+
+      #recipeCategory{
+        grid-column:1 !important;
+      }
+
+      #recipeDifficulty{
+        grid-column:2 !important;
+      }
+
+      #recipeTime{
+        grid-column:1 !important;
+      }
+
+      .recipe-flags-row{
+        grid-column:1 / -1 !important;
+      }
+
+      #recipeIngredients,
+      #recipeSteps,
+      #recipeWebUrl,
+      #recipeYoutubeUrl,
+      .recipe-card-mark-field,
+      #saveRecipeBtn{
+        grid-column:1 / -1 !important;
+      }
+
+      #saveRecipeBtn{
+        justify-self:end !important;
+        width:auto !important;
+        min-width:170px !important;
+      }
+    }
+
+    /* =========================================================
+       HANDY
        ========================================================= */
     @media(max-width:600px){
+      #recipeForm{
+        grid-template-columns:1fr !important;
+        padding:12px !important;
+        gap:10px !important;
+      }
+
+      #recipeTitle,
+      #recipeCategory,
+      #recipeDifficulty,
+      #recipeTime,
+      #recipeIngredients,
+      #recipeSteps,
+      #recipeWebUrl,
+      #recipeYoutubeUrl,
+      .recipe-card-mark-field,
+      #saveRecipeBtn,
+      .recipe-flags-row{
+        grid-column:1 !important;
+      }
+
+      #recipeIngredients,
+      #recipeSteps{
+        min-height:130px !important;
+      }
+
+      #saveRecipeBtn{
+        width:100% !important;
+        min-width:0 !important;
+      }
+
+      .recipe-flags-row{
+        display:grid !important;
+        grid-template-columns:1fr 1fr !important;
+      }
+
+      #recipeKidsLabel,
+      #recipeHealthyLabel{
+        width:100% !important;
+        justify-content:center !important;
+      }
+
+      /* Wochenplan-Aktionen bleiben echte, gleich große Kreise */
       .week-head-actions{
         width:100% !important;
         display:flex !important;
         justify-content:center !important;
         align-items:center !important;
-        gap:10px !important;
+        gap:9px !important;
         flex-wrap:nowrap !important;
         margin-top:10px !important;
       }
@@ -7617,133 +7759,64 @@ function ensureRecipeFormAndMobileActionStyles() {
         height:44px !important;
         min-height:44px !important;
         max-height:44px !important;
-        aspect-ratio:1/1 !important;
-        border-radius:999px !important;
+        border-radius:50% !important;
         padding:0 !important;
         margin:0 !important;
         display:flex !important;
         align-items:center !important;
         justify-content:center !important;
         line-height:1 !important;
-        overflow:visible !important;
         box-sizing:border-box !important;
+      }
+
+      #openPinboardBtn .pinboard-label{
+        display:none !important;
       }
 
       #openPinboardBtn{
         font-size:0 !important;
       }
-      #openPinboardBtn .pinboard-label{
-        display:none !important;
-      }
+
       #openPinboardBtn .pinboard-icon{
         font-size:1rem !important;
         line-height:1 !important;
         width:auto !important;
         height:auto !important;
         margin:0 !important;
-        padding:0 !important;
         transform:none !important;
       }
 
       #openPapaOverviewBtn{
         font-size:0 !important;
       }
+
       #openPapaOverviewBtn::before{
         content:"♡";
         font-size:1.05rem !important;
         line-height:1 !important;
-        display:block;
       }
 
       #addVideoBtn{
         font-size:0 !important;
       }
+
       #addVideoBtn::before{
         content:"+";
-        font-size:1.2rem !important;
+        font-size:1.18rem !important;
         line-height:1 !important;
-        display:block;
       }
 
       #openFamilyTimetableBtn,
       #printWeekBtn{
-        font-size:.95rem !important;
-        line-height:1 !important;
+        font-size:.92rem !important;
       }
 
       #openPinboardBtn .pinboard-badge{
-        position:absolute !important;
         top:-4px !important;
         right:-4px !important;
       }
     }
-
-    @media(max-width:850px){
-      #recipeForm{
-        grid-template-columns:1fr 1fr !important;
-      }
-
-      #recipeTitle,
-      #recipeSteps,
-      .recipe-card-mark-field{
-        grid-column:1 / -1 !important;
-      }
-
-      #recipeCategory{
-        grid-column:1 !important;
-      }
-
-      #recipeDifficulty{
-        grid-column:2 !important;
-      }
-
-      #recipeTime{
-        grid-column:1 !important;
-      }
-
-      #recipeIngredients{
-        grid-column:2 !important;
-      }
-
-      #recipeWebUrl,
-      #recipeYoutubeUrl{
-        grid-column:auto !important;
-      }
-
-      #saveRecipeBtn{
-        grid-column:1 / -1 !important;
-        justify-self:end;
-      }
-    }
-
-    @media(max-width:560px){
-      #recipeForm{
-        grid-template-columns:1fr !important;
-      }
-
-      #recipeTitle,
-      #recipeCategory,
-      #recipeDifficulty,
-      #recipeTime,
-      #recipeIngredients,
-      #recipeSteps,
-      #recipeWebUrl,
-      #recipeYoutubeUrl,
-      .recipe-card-mark-field,
-      #saveRecipeBtn{
-        grid-column:1 !important;
-      }
-
-      .recipe-flags-row{
-        grid-column:1 !important;
-      }
-
-      #saveRecipeBtn{
-        width:100%;
-      }
-    }
   `;
-  document.head.appendChild(style);
 }
 
 function normalizeRecipeFlagLayout() {
