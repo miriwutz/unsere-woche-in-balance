@@ -6711,3 +6711,20 @@ a.day-meal{
     grid-template-columns:repeat(5,minmax(0,1fr)) !important;
   }
 }
+
+.schoolyear-schedule-fields{
+  display:grid;
+  grid-template-columns:minmax(180px,1fr) minmax(140px,.65fr) minmax(140px,.65fr);
+  gap:12px;
+  max-width:720px;
+  margin-top:10px;
+  padding:12px;
+  border:1px solid rgba(197,184,173,.55);
+  border-radius:14px;
+  background:rgba(239,245,236,.72);
+}
+.schoolyear-schedule-fields.hidden{display:none !important;}
+.schoolyear-schedule-fields label{display:grid;gap:6px;}
+@media(max-width:700px){
+  .schoolyear-schedule-fields{grid-template-columns:1fr;max-width:none;}
+}
