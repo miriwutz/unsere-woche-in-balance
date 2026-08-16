@@ -67,6 +67,11 @@ if (Array.isArray(state.timeTracking.active)) {
 } else {
   state.timeTracking.active = [];
 }
+
+state.timeTracking.stopped =
+  state.timeTracking.stopped && typeof state.timeTracking.stopped === "object"
+    ? state.timeTracking.stopped
+    : {};
 state.recipeLinkFeedback = state.recipeLinkFeedback && typeof state.recipeLinkFeedback === "object"
   ? state.recipeLinkFeedback
   : {};
@@ -1933,20 +1938,38 @@ function restoreTimeTrackingFromLocal() {
       localEntries
     );
 
-    // Lokal laufende Stoppuhren niemals durch einen leeren Cloud-Stand verlieren.
+    const localStopped =
+      local.stopped && typeof local.stopped === "object" ? local.stopped : {};
+    const currentStopped =
+      state.timeTracking.stopped && typeof state.timeTracking.stopped === "object"
+        ? state.timeTracking.stopped
+        : {};
+
+    state.timeTracking.stopped = {
+      ...localStopped,
+      ...currentStopped
+    };
+
     const localActive = Array.isArray(local.active)
       ? local.active
       : (local.active && typeof local.active === "object" ? [local.active] : []);
     const currentActive = Array.isArray(state.timeTracking.active) ? state.timeTracking.active : [];
 
+    const stopped = state.timeTracking.stopped || {};
     const activeMap = new Map();
+
     [...currentActive, ...localActive].forEach(timer => {
       if (!timer?.id) return;
+
+      const stoppedAt = Number(stopped[timer.id] || 0);
+      if (stoppedAt && stoppedAt >= Number(timer.startedAt || 0)) return;
+
       const prev = activeMap.get(timer.id);
       if (!prev || Number(timer.startedAt || 0) >= Number(prev.startedAt || 0)) {
         activeMap.set(timer.id, timer);
       }
     });
+
     state.timeTracking.active = [...activeMap.values()];
   } catch (err) {
     console.warn("Lokale Zeitdaten konnten nicht wiederhergestellt werden:", err);
@@ -2001,6 +2024,40 @@ function trackingPersonColor(key) {
   return "#" + [r,g,b]
     .map(v => Math.max(0,Math.min(255,v)).toString(16).padStart(2,"0"))
     .join("");
+}
+
+
+function hexToRgb(hex) {
+  const clean = String(hex || "").replace("#","").trim();
+  if (!/^[0-9a-fA-F]{6}$/.test(clean)) return {r:180,g:180,b:180};
+  return {
+    r:parseInt(clean.slice(0,2),16),
+    g:parseInt(clean.slice(2,4),16),
+    b:parseInt(clean.slice(4,6),16)
+  };
+}
+
+function rgbToHex({r,g,b}) {
+  return "#" + [r,g,b]
+    .map(v => Math.max(0,Math.min(255,Math.round(v))).toString(16).padStart(2,"0"))
+    .join("");
+}
+
+function mixHex(a, b, weightB = .5) {
+  const A = hexToRgb(a);
+  const B = hexToRgb(b);
+  const w = Math.max(0,Math.min(1,Number(weightB || 0)));
+  return rgbToHex({
+    r:A.r*(1-w)+B.r*w,
+    g:A.g*(1-w)+B.g*w,
+    b:A.b*(1-w)+B.b*w
+  });
+}
+
+function timeRingSegmentColor(personKey, categoryColor) {
+  const person = familyColor(personKey) || "#aaa29c";
+  const blended = mixHex(categoryColor || "#d6d0c8", person, .72);
+  return mixHex(blended, "#ffffff", .18);
 }
 
 function renderTimeTracking() {
@@ -2148,7 +2205,10 @@ function renderTimeTracking() {
           const start = cursor;
           const end = cursor + (Number(minutes) / personTotal) * 100;
           cursor = end;
-          const color = categoryPalette[category] || "#d6d0c8";
+          const color = timeRingSegmentColor(
+            personInfo.key,
+            categoryPalette[category] || "#d6d0c8"
+          );
           segments.push(`${color} ${start}% ${end}%`);
         });
 
@@ -2166,7 +2226,7 @@ function renderTimeTracking() {
           </div>
           ${pairs.map(([category,minutes]) => `
             <div class="time-donut-legend-row">
-              <span class="time-donut-dot" style="background:${categoryPalette[category] || "#d6d0c8"}"></span>
+              <span class="time-donut-dot" style="background:${timeRingSegmentColor(personInfo.key, categoryPalette[category] || "#d6d0c8")}"></span>
               <span>${escapeHtml(timeCategoryLabel(category))}</span>
               <strong>${formatMinutes(minutes)}</strong>
             </div>
@@ -2218,6 +2278,11 @@ function startTimeTracking() {
   const note = document.querySelector("#timeTrackNote")?.value.trim() || "";
 
   state.timeTracking.active = Array.isArray(state.timeTracking.active) ? state.timeTracking.active : [];
+  state.timeTracking.stopped =
+    state.timeTracking.stopped && typeof state.timeTracking.stopped === "object"
+      ? state.timeTracking.stopped
+      : {};
+
   state.timeTracking.active.push({
     id: uid(),
     person,
@@ -2250,6 +2315,12 @@ function stopTimeTracking(timerId) {
     updatedAt: endedAt,
     minutes
   });
+
+  state.timeTracking.stopped =
+    state.timeTracking.stopped && typeof state.timeTracking.stopped === "object"
+      ? state.timeTracking.stopped
+      : {};
+  state.timeTracking.stopped[timerId] = endedAt;
 
   state.timeTracking.active = state.timeTracking.active.filter(timer => timer.id !== timerId);
 
@@ -6258,9 +6329,24 @@ shoppingItems = state.shopping;
             ? [data.timeTracking.active]
             : []);
 
+      const localStopped =
+        state.timeTracking.stopped && typeof state.timeTracking.stopped === "object"
+          ? state.timeTracking.stopped
+          : {};
+      const cloudStopped =
+        data.timeTracking.stopped && typeof data.timeTracking.stopped === "object"
+          ? data.timeTracking.stopped
+          : {};
+
+      const stopped = {...localStopped, ...cloudStopped};
+
       const activeMap = new Map();
       [...cloudActive, ...localActive].forEach(timer => {
         if (!timer?.id) return;
+
+        const stoppedAt = Number(stopped[timer.id] || 0);
+        if (stoppedAt && stoppedAt >= Number(timer.startedAt || 0)) return;
+
         const prev = activeMap.get(timer.id);
         if (!prev || Number(timer.startedAt || 0) >= Number(prev.startedAt || 0)) {
           activeMap.set(timer.id, timer);
@@ -6269,9 +6355,17 @@ shoppingItems = state.shopping;
 
       state.timeTracking = {
         entries: mergeByIdPreferNewer(state.timeTracking.entries, cloudEntries),
-        active: [...activeMap.values()]
+        active: [...activeMap.values()],
+        stopped
       };
+
       restoreTimeTrackingFromLocal();
+
+      state.timeTracking.active = (state.timeTracking.active || []).filter(timer => {
+        const stoppedAt = Number(state.timeTracking.stopped?.[timer.id] || 0);
+        return !(stoppedAt && stoppedAt >= Number(timer.startedAt || 0));
+      });
+
       saveTimeTrackingImmediately();
     }
     if (data.recipeLinkFeedback && typeof data.recipeLinkFeedback === "object") {
