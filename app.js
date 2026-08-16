@@ -59,7 +59,39 @@ let cloudApplying = false;
 let cloudSaveTimer = null;
 let cloudUnsubscribe = null;
 
+
+function snapshotPersistentState() {
+  return {
+    savedAt: Date.now(),
+    videos: state.videos,
+    todos: state.todos,
+    archive: state.archive,
+    shopping: state.shopping,
+    recipes: state.recipes,
+    meals: state.meals,
+    workroom: state.workroom,
+    school: state.school,
+    familySettings: state.familySettings,
+    settings: state.settings || {}
+  };
+}
+
+function makeLocalSafetyBackup() {
+  try {
+    const current = JSON.stringify(snapshotPersistentState());
+    const last = localStorage.getItem("balanceProd.safetyBackup.1");
+    if (last !== current) {
+      localStorage.setItem("balanceProd.safetyBackup.3", localStorage.getItem("balanceProd.safetyBackup.2") || "");
+      localStorage.setItem("balanceProd.safetyBackup.2", localStorage.getItem("balanceProd.safetyBackup.1") || "");
+      localStorage.setItem("balanceProd.safetyBackup.1", current);
+    }
+  } catch (err) {
+    console.warn("Lokales Sicherheitsbackup fehlgeschlagen:", err);
+  }
+}
+
 function saveLocal() {
+  makeLocalSafetyBackup();
   localStorage.setItem("balanceProd.videos", JSON.stringify(state.videos));
   localStorage.setItem("balanceProd.todos", JSON.stringify(state.todos));
   localStorage.setItem("balanceProd.archive", JSON.stringify(state.archive));
@@ -1122,6 +1154,7 @@ if (!item.recurrence || item.recurrence === "none") {
 
     const wasDone = !!task.done;
     task.done = e.currentTarget.checked;
+    task.updatedAt = Date.now();
 
     save();
     renderAll();
@@ -1890,6 +1923,7 @@ function renderSchool(){
     const c=state.school.children[e.currentTarget.dataset.child],t=c.tasks.find(z=>z.id===e.currentTarget.dataset.id); if(!t)return;
     const was=t.done;
     t.done=e.currentTarget.checked;
+    t.updatedAt = Date.now();
     save();
     renderAll();
     if(!was && t.done) showMotivation(schoolMotivationalMessage(childHasNoOpenHomework(c)));
@@ -1897,7 +1931,9 @@ function renderSchool(){
   document.querySelectorAll(".school-del").forEach(x=>x.addEventListener("click",e=>{
     const d=e.currentTarget.dataset,c=state.school.children[d.child];
     if(d.kind==="task")c.tasks=c.tasks.filter(z=>z.id!==d.id);else c.links=c.links.filter(z=>z.id!==d.id);
-    save();renderSchool();
+    c.updatedAt = Date.now();
+    save();
+    renderAll();
   }));
 }
 function addSchoolTask(id){
@@ -1916,7 +1952,9 @@ function addSchoolTask(id){
     subject,
     due:d.value,
     type:y.value,
-    done:false
+    done:false,
+    createdAt: Date.now(),
+    updatedAt: Date.now()
   });
 
   t.value="";
@@ -1931,7 +1969,7 @@ function addSchoolTask(id){
 function addSchoolLink(id){
   const n=document.querySelector(`#schoolLinkName${id}`),u=document.querySelector(`#schoolLinkUrl${id}`);let url=u.value.trim();
   if(!n.value.trim()||!url)return;if(!/^https?:\/\//i.test(url))url="https://"+url;
-  state.school.children[id].links.push({id:uid(),name:n.value.trim(),url});n.value="";u.value="";save();renderSchool();
+  state.school.children[id].links.push({id:uid(),name:n.value.trim(),url,createdAt:Date.now(),updatedAt:Date.now()});n.value="";u.value="";save();renderAll();
 }
 
 ["1","2"].forEach(id=>{
@@ -3672,6 +3710,71 @@ function showLoginGate(show) {
   document.querySelector("#logoutBtn")?.classList.toggle("hidden", show);
 }
 
+
+function nonEmptyWorkroomScore(w) {
+  if (!w || typeof w !== "object") return 0;
+  return ["todos","prints","links","substitutions"].reduce(
+    (sum, key) => sum + (Array.isArray(w[key]) ? w[key].length : 0), 0
+  );
+}
+
+function normalizeWorkroom(w) {
+  const src = w && typeof w === "object" ? w : {};
+  return {
+    todos: Array.isArray(src.todos) ? src.todos : [],
+    prints: Array.isArray(src.prints) ? src.prints : [],
+    links: Array.isArray(src.links) ? src.links : [],
+    substitutions: Array.isArray(src.substitutions) ? src.substitutions : [],
+    plans: src.plans && typeof src.plans === "object"
+      ? src.plans
+      : {week:[], year:[]}
+  };
+}
+
+function mergeByIdPreferNewer(localList, cloudList) {
+  const local = Array.isArray(localList) ? localList : [];
+  const cloud = Array.isArray(cloudList) ? cloudList : [];
+  const map = new Map();
+
+  [...cloud, ...local].forEach(item => {
+    if (!item || !item.id) return;
+    const previous = map.get(item.id);
+    if (!previous) {
+      map.set(item.id, item);
+      return;
+    }
+    const prevTime = Number(previous.updatedAt || previous.createdAt || 0);
+    const itemTime = Number(item.updatedAt || item.createdAt || 0);
+    if (itemTime >= prevTime) map.set(item.id, item);
+  });
+
+  return [...map.values()];
+}
+
+function mergeSchool(localSchool, cloudSchool) {
+  if (!localSchool?.children) return cloudSchool?.children ? cloudSchool : localSchool;
+  if (!cloudSchool?.children) return localSchool;
+
+  const merged = structuredClone(localSchool);
+
+  ["1","2"].forEach(id => {
+    const l = localSchool.children[id] || {};
+    const c = cloudSchool.children[id] || {};
+
+    merged.children[id] = {
+      ...c,
+      ...l,
+      name: l.name || c.name || (id === "1" ? "Lou" : "Fina"),
+      tasks: mergeByIdPreferNewer(l.tasks, c.tasks),
+      links: mergeByIdPreferNewer(l.links, c.links),
+      timetableUrl: l.timetableUrl || c.timetableUrl || "",
+      manualTimetable: l.manualTimetable || c.manualTimetable || null
+    };
+  });
+
+  return merged;
+}
+
 function applyCloudData(data) {
   cloudApplying = true;
   try {
@@ -3696,15 +3799,27 @@ shoppingItems = state.shopping;
       state.meals,
       data.meals && typeof data.meals === "object" ? data.meals : {}
     );
-    state.workroom = data.workroom && typeof data.workroom === "object"
-  ? {
-      todos: Array.isArray(data.workroom.todos) ? data.workroom.todos : [],
-      prints: Array.isArray(data.workroom.prints) ? data.workroom.prints : [],
-      links: Array.isArray(data.workroom.links) ? data.workroom.links : [],
-      substitutions: Array.isArray(data.workroom.substitutions) ? data.workroom.substitutions : []
+    const localWorkroom = normalizeWorkroom(state.workroom);
+    const cloudWorkroom = normalizeWorkroom(data.workroom);
+
+    // Sicherheitsregel:
+    // Ein leerer Cloud-Stand darf vorhandene lokale Werkraumdaten niemals löschen.
+    if (nonEmptyWorkroomScore(localWorkroom) > 0 && nonEmptyWorkroomScore(cloudWorkroom) === 0) {
+      state.workroom = localWorkroom;
+    } else if (nonEmptyWorkroomScore(localWorkroom) === 0) {
+      state.workroom = cloudWorkroom;
+    } else {
+      state.workroom = {
+        todos: mergeByIdPreferNewer(localWorkroom.todos, cloudWorkroom.todos),
+        prints: mergeByIdPreferNewer(localWorkroom.prints, cloudWorkroom.prints),
+        links: mergeByIdPreferNewer(localWorkroom.links, cloudWorkroom.links),
+        substitutions: mergeByIdPreferNewer(localWorkroom.substitutions, cloudWorkroom.substitutions),
+        plans: localWorkroom.plans || cloudWorkroom.plans || {week:[], year:[]}
+      };
     }
-  : state.workroom;
-    if (data.school?.children) state.school = data.school;
+    if (data.school?.children) {
+      state.school = mergeSchool(state.school, data.school);
+    }
     if (data.familySettings) state.familySettings = data.familySettings;
     state.settings = {...(state.settings || {}), ...(data.settings || {})};
     saveLocal();
@@ -4677,6 +4792,44 @@ store.value = "";
   setTimeout(checkPlings, 1000);
 
 })();
+
+
+// ===== NOTFALL-HILFE: lokale Sicherheitsbackups prüfen/wiederherstellen =====
+window.balanceDataSafety = {
+  listBackups() {
+    return [1,2,3].map(n => {
+      const raw = localStorage.getItem(`balanceProd.safetyBackup.${n}`);
+      if (!raw) return null;
+      try {
+        const data = JSON.parse(raw);
+        return {
+          slot:n,
+          savedAt:data.savedAt ? new Date(data.savedAt).toLocaleString("de-AT") : "unbekannt",
+          workroomTodos:data.workroom?.todos?.length || 0,
+          workroomPrints:data.workroom?.prints?.length || 0,
+          workroomLinks:data.workroom?.links?.length || 0,
+          school1:data.school?.children?.["1"]?.tasks?.length || 0,
+          school2:data.school?.children?.["2"]?.tasks?.length || 0
+        };
+      } catch {
+        return {slot:n, error:true};
+      }
+    }).filter(Boolean);
+  },
+  restoreBackup(slot=1) {
+    const raw = localStorage.getItem(`balanceProd.safetyBackup.${slot}`);
+    if (!raw) return false;
+    const data = JSON.parse(raw);
+    if (data.workroom) state.workroom = normalizeWorkroom(data.workroom);
+    if (data.school?.children) state.school = data.school;
+    if (Array.isArray(data.recipes)) state.recipes = data.recipes;
+    if (data.meals && typeof data.meals === "object") state.meals = data.meals;
+    saveLocal();
+    renderAll();
+    return true;
+  }
+};
+
 
 // =============================
 // WERKRAUM – BEREICHE AUF/ZU
