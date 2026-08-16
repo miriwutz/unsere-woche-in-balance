@@ -3424,3 +3424,27 @@ a.day-meal{
 /* =========================================================
    Linksammlung – beim Öffnen standardmäßig alle Zeiträume
    ========================================================= */
+
+
+/* =========================================================
+   Wochenplan-Aktionsleiste – Papa + Stundenplan ruhig wie Montag
+   ========================================================= */
+#openPapaOverviewBtn,
+#openFamilyTimetableBtn{
+  background:rgba(255,253,251,.82) !important;
+  border:0 !important;
+  color:var(--ink) !important;
+  box-shadow:0 0 0 1px rgba(216,180,173,.20) !important;
+}
+
+#openPapaOverviewBtn:hover,
+#openFamilyTimetableBtn:hover{
+  background:var(--paper) !important;
+  border:0 !important;
+  box-shadow:0 0 0 1px rgba(216,180,173,.34) !important;
+}
+
+/* Stundenplansymbol ruhig, ohne kräftige Farbkante */
+#openFamilyTimetableBtn{
+  color:#6f6662 !important;
+}
