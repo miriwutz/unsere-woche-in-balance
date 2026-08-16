@@ -892,6 +892,16 @@ if (item.type === "event" && recurrence === "none") {
     return item.weekKey === dateKey(getMonday(date)) && item.day === weekdayNameForDate(date);
   }
 
+  if (recurrence === "schoolyear-noe") {
+    const sy = activeSchoolYear();
+    if (!sy.start || !sy.end) return false;
+    if (key < sy.start || key > sy.end) return false;
+    const wantedDay = item.schoolDay || (anchor ? weekdayNameForDate(anchor) : "");
+    if (!wantedDay || weekdayNameForDate(date) !== wantedDay) return false;
+    if (isNoeSchoolFree(date)) return false;
+    return true;
+  }
+
   if (!anchor || date < anchor) return false;
 
   if (recurrence === "weekly") {
@@ -909,15 +919,6 @@ if (recurrence === "yearly") {
   return date.getMonth() === anchor.getMonth()
     && date.getDate() === anchor.getDate();
 }
-  if (recurrence === "schoolyear-noe") {
-    const sy = activeSchoolYear();
-    if (!sy.start || !sy.end) return false;
-    if (key < sy.start || key > sy.end) return false;
-    if (date.getDay() !== anchor.getDay()) return false;
-    if (isNoeSchoolFree(date)) return false;
-    return true;
-  }
-
   return false;
 }
 
@@ -1369,7 +1370,9 @@ const eventHtml = events.length ? `
 
             let displayTime = "";
 
-            if (startKey === endKey) {
+            if ((t.recurrence || "none") === "schoolyear-noe") {
+              displayTime = t.time ? t.time + (t.endTime ? "–" + t.endTime : "") : "";
+            } else if (startKey === endKey) {
               if (t.time) {
                 displayTime = t.time + (t.endTime ? "–" + t.endTime : "");
               }
@@ -1862,6 +1865,13 @@ if (isExpanded) {
 document.querySelector("#eventEndDate").value = item.endDate || "";
 document.querySelector("#eventTime").value = item.time || "";
 document.querySelector("#eventEndTime").value = item.endTime || "";
+const schoolyearWeekdayEdit = document.querySelector("#schoolyearWeekday");
+const schoolyearTimeEdit = document.querySelector("#schoolyearTime");
+const schoolyearEndTimeEdit = document.querySelector("#schoolyearEndTime");
+if (schoolyearWeekdayEdit) schoolyearWeekdayEdit.value = item.schoolDay || "";
+if (schoolyearTimeEdit) schoolyearTimeEdit.value = item.time || "";
+if (schoolyearEndTimeEdit) schoolyearEndTimeEdit.value = item.endTime || "";
+
 
 const plingEnabled = document.querySelector("#eventPlingEnabled");
 const plingMinutes = document.querySelector("#eventPlingMinutes");
@@ -6018,6 +6028,13 @@ function resetTodoEditor() {
   document.querySelector("#eventEndDate").value = "";
   document.querySelector("#eventTime").value = "";
 document.querySelector("#eventEndTime").value = "";
+const schoolyearWeekdayReset = document.querySelector("#schoolyearWeekday");
+const schoolyearTimeReset = document.querySelector("#schoolyearTime");
+const schoolyearEndTimeReset = document.querySelector("#schoolyearEndTime");
+if (schoolyearWeekdayReset) schoolyearWeekdayReset.value = "";
+if (schoolyearTimeReset) schoolyearTimeReset.value = "";
+if (schoolyearEndTimeReset) schoolyearEndTimeReset.value = "";
+
 
 const plingEnabled = document.querySelector("#eventPlingEnabled");
 const plingMinutes = document.querySelector("#eventPlingMinutes");
@@ -6038,6 +6055,11 @@ function updateEntryTypeUI() {
   const type = document.querySelector("#entryType").value;
   const isEvent = type === "event";
 const eventCategory = document.querySelector("#eventCategory")?.value || "normal";
+const schoolyearWeekday = document.querySelector("#schoolyearWeekday")?.value || "";
+const schoolyearTime = document.querySelector("#schoolyearTime")?.value || "";
+const schoolyearEndTime = document.querySelector("#schoolyearEndTime")?.value || "";
+const isSchoolyearEvent = type === "event" && recurrence === "schoolyear-noe";
+
 const recurrenceSelect = document.querySelector("#recurrence");
 
 if (
@@ -6045,6 +6067,16 @@ if (
   ["birthday", "nameday", "anniversary", "holiday"].includes(eventCategory)
 ) {
   recurrenceSelect.value = "yearly";
+  const recurrenceValue = document.querySelector("#recurrence")?.value || "none";
+  const isSchoolyearEvent = isEvent && recurrenceValue === "schoolyear-noe";
+  const schoolyearFields = document.querySelector("#schoolyearScheduleFields");
+  if (schoolyearFields) schoolyearFields.classList.toggle("hidden", !isSchoolyearEvent);
+
+  ["#eventDate", "#eventEndDate", "#eventTime", "#eventEndTime"].forEach(selector => {
+    const field = document.querySelector(selector)?.closest("label");
+    if (field) field.classList.toggle("hidden", isSchoolyearEvent);
+  });
+
 }
   document.querySelector("#eventFields").classList.toggle("hidden", !isEvent);
   document.querySelector("#entryTextLabel").textContent = isEvent ? "Termin" : "Aufgabe";
@@ -6139,16 +6171,22 @@ const eventCategory = document.querySelector("#eventCategory")?.value || "normal
   const selectedTodoDate = selectedDay ? dateForWeekday(plannedMonday, selectedDay) : null;
   const newWeekKey = selectedDay ? dateKey(plannedMonday) : null;
   const anchorDate = type === "event"
-    ? eventDate
+    ? (isSchoolyearEvent ? activeSchoolYear().start : eventDate)
     : (selectedTodoDate ? dateKey(selectedTodoDate) : null);
 
-  if (type === "event" && !eventDate) {
+  if (isSchoolyearEvent && !schoolyearWeekday) {
+    alert("Bitte für den Schuljahr-Termin einen Wochentag auswählen.");
+    document.querySelector("#schoolyearWeekday")?.focus();
+    return;
+  }
+
+  if (type === "event" && !isSchoolyearEvent && !eventDate) {
     alert("Bitte für den Termin ein Datum auswählen.");
     document.querySelector("#eventDate")?.focus();
     return;
   }
 
-  if (type === "event" && eventEndDate && eventEndDate < eventDate) {
+  if (type === "event" && !isSchoolyearEvent && eventEndDate && eventEndDate < eventDate) {
     alert("Das Enddatum kann nicht vor dem Startdatum liegen.");
     document.querySelector("#eventEndDate")?.focus();
     return;
@@ -6156,6 +6194,7 @@ const eventCategory = document.querySelector("#eventCategory")?.value || "normal
 
   if (
     type === "event" &&
+    !isSchoolyearEvent &&
     eventEndDate &&
     eventEndDate === eventDate &&
     eventTime &&
@@ -6185,10 +6224,11 @@ const eventCategory = document.querySelector("#eventCategory")?.value || "normal
     item.day = selectedDay;
     item.family = selectedFamily;
     item.weekKey = type === "event" ? null : newWeekKey;
-    item.date = type === "event" ? eventDate : null;
-    item.time = type === "event" ? eventTime : "";
-    item.endDate = type === "event" ? eventEndDate : null;
-item.endTime = type === "event" ? eventEndTime : "";
+    item.schoolDay = isSchoolyearEvent ? schoolyearWeekday : "";
+    item.date = type === "event" ? (isSchoolyearEvent ? null : eventDate) : null;
+    item.time = type === "event" ? (isSchoolyearEvent ? schoolyearTime : eventTime) : "";
+    item.endDate = type === "event" ? (isSchoolyearEvent ? null : eventEndDate) : null;
+item.endTime = type === "event" ? (isSchoolyearEvent ? schoolyearEndTime : eventEndTime) : "";
 item.plingEnabled = type === "event" ? plingEnabled : false;
 item.plingMinutes = type === "event" ? plingMinutes : 15;
 item.eventCategory = type === "event" ? eventCategory : "normal";
@@ -6210,10 +6250,11 @@ item.eventCategory = type === "event" ? eventCategory : "normal";
       day: selectedDay,
       family: selectedFamily,
       weekKey: type === "event" ? null : newWeekKey,
-      date: type === "event" ? eventDate : null,
-      time: type === "event" ? eventTime : "",
-      endDate: type === "event" ? eventEndDate : null,
-endTime: type === "event" ? eventEndTime : "",
+      schoolDay: isSchoolyearEvent ? schoolyearWeekday : "",
+      date: type === "event" ? (isSchoolyearEvent ? null : eventDate) : null,
+      time: type === "event" ? (isSchoolyearEvent ? schoolyearTime : eventTime) : "",
+      endDate: type === "event" ? (isSchoolyearEvent ? null : eventEndDate) : null,
+endTime: type === "event" ? (isSchoolyearEvent ? schoolyearEndTime : eventEndTime) : "",
 plingEnabled: type === "event" ? plingEnabled : false,
 plingMinutes: type === "event" ? plingMinutes : 15,
 eventCategory: type === "event" ? eventCategory : "normal",
