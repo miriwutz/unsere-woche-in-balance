@@ -1013,12 +1013,15 @@ ${isNewEntry(t) ? `<span class="new-entry-badge">NEU</span>` : ""}
 
     // Essen bewusst ganz unten im Tag, direkt vor dem Video.
     const mealStored = state.meals?.[dateKey(date)];
-    const mealLabel = typeof mealStored === "string"
+    const rawMealLabel = typeof mealStored === "string"
       ? mealStored
       : (mealStored?.label || "");
     const mealUrl = mealStored && typeof mealStored === "object"
       ? (mealStored.url || "")
       : "";
+    const mealLabel = /^https?:\/\//i.test(rawMealLabel)
+      ? "Rezeptlink"
+      : (rawMealLabel || (mealUrl ? "Rezeptlink" : ""));
 
     const mealRecipe = mealStored && typeof mealStored === "object" && mealStored.recipeId
       ? state.recipes.find(r => r.id === mealStored.recipeId)
@@ -2393,6 +2396,13 @@ document.querySelectorAll(".tab").forEach(btn => btn.addEventListener("click", (
   document.querySelectorAll(".view").forEach(x => x.classList.remove("active"));
   btn.classList.add("active");
   document.querySelector(`#${btn.dataset.view}`).classList.add("active");
+
+  // Der Rezeptbereich wird beim Öffnen von Einkauf immer aus dem aktuellen State neu aufgebaut.
+  // So bleiben gespeicherte Rezepte nach Login/Cloud-Sync zuverlässig sichtbar.
+  if (btn.dataset.view === "shopping") {
+    renderRecipes();
+    renderMealPlan();
+  }
 }));
 
 document.querySelector("#prevWeekBtn").addEventListener("click", () => {
@@ -2491,6 +2501,12 @@ function recipeCategoryLabel(value) {
   }[value] || "🍝 Hauptgerichte";
 }
 
+function recipeCategoryClass(value) {
+  const key = ["breakfast","spread","soup","main","small","salad","sweet","drink","other"]
+    .includes(value) ? value : "main";
+  return `recipe-category-${key}`;
+}
+
 function recipeLines(value) {
   const source = Array.isArray(value) ? value.join("\n") : String(value || "");
   return source
@@ -2533,7 +2549,7 @@ function showRecipeDetail(recipeOrTitle) {
   title.textContent = recipe.title || "Rezept";
 
   body.innerHTML = `
-    <div class="recipe-detail-banner">
+    <div class="recipe-detail-banner ${recipeCategoryClass(recipe.category || "main")}">
       <div class="recipe-detail-time">
         <span class="recipe-detail-clock">◔</span>
         <span>${escapeHtml(recipe.time || "–")}</span>
@@ -2553,11 +2569,25 @@ function showRecipeDetail(recipeOrTitle) {
     <div class="recipe-detail-grid">
       <section>
         <h3>Zutaten</h3>
-        <ul>${normalizedRecipeLines(recipe.ingredients).map(x => `<li>${escapeHtml(x)}</li>`).join("")}</ul>
+        <div class="recipe-cook-checklist">
+          ${normalizedRecipeLines(recipe.ingredients).map(x => `
+            <button type="button" class="recipe-cook-line">
+              <span class="recipe-cook-dot">○</span>
+              <span>${escapeHtml(x)}</span>
+            </button>
+          `).join("")}
+        </div>
       </section>
       <section>
         <h3>Zubereitung</h3>
-        <div class="recipe-prep-lines">${normalizedRecipeLines(recipe.steps).map(x => `<div class="recipe-prep-line">${escapeHtml(x)}</div>`).join("")}</div>
+        <div class="recipe-cook-checklist">
+          ${normalizedRecipeLines(recipe.steps).map(x => `
+            <button type="button" class="recipe-cook-line">
+              <span class="recipe-cook-dot">○</span>
+              <span>${escapeHtml(x)}</span>
+            </button>
+          `).join("")}
+        </div>
       </section>
     </div>
 
@@ -2566,6 +2596,14 @@ function showRecipeDetail(recipeOrTitle) {
       ${recipe.youtubeUrl ? `<a href="${escapeHtml(recipe.youtubeUrl)}" target="_blank" rel="noopener">▶ YouTube öffnen</a>` : ""}
     </div>
   `;
+
+  body.querySelectorAll(".recipe-cook-line").forEach(line => {
+    line.addEventListener("click", () => {
+      const done = line.classList.toggle("done");
+      const dot = line.querySelector(".recipe-cook-dot");
+      if (dot) dot.textContent = done ? "✓" : "○";
+    });
+  });
 
   dialog.showModal();
   return true;
@@ -2645,7 +2683,7 @@ function renderRecipes() {
   }
 
   host.innerHTML = visibleRecipes.map(r => `
-    <article class="recipe-card" id="recipe-${r.id}">
+    <article class="recipe-card ${recipeCategoryClass(r.category || "main")}" id="recipe-${r.id}">
       <header class="recipe-card-head">
         <div class="recipe-time-mark"><span class="recipe-clock">◔</span><span>${escapeHtml(r.time || "–")}</span></div>
         <div class="recipe-title-wrap">
@@ -2811,24 +2849,31 @@ function renderMealPlan() {
     .slice()
     .sort((a,b) => String(a.title || "").localeCompare(String(b.title || ""), "de"));
 
+  const isUrl = value => /^https?:\/\//i.test(String(value || "").trim());
+
   host.innerHTML = days.map((dayName, index) => {
     const date = new Date(monday);
     date.setDate(monday.getDate() + index);
     const key = dateKey(date);
 
     const stored = state.meals?.[key];
-    const value = typeof stored === "string"
+    let value = typeof stored === "string"
       ? stored
       : (stored?.label || "");
-
-    const customUrl = typeof stored === "object" ? (stored.url || "") : "";
+    let customUrl = typeof stored === "object" ? (stored.url || "") : "";
     const recipeId = typeof stored === "object" ? (stored.recipeId || "") : "";
+
+    // Alte Fehleingaben reparierbar machen:
+    // Wenn im Bezeichnungsfeld versehentlich nur eine URL gespeichert wurde,
+    // wandert sie automatisch in das Linkfeld und die Bezeichnung wird wieder frei.
+    if (isUrl(value) && !customUrl) {
+      customUrl = value;
+      value = "";
+    }
 
     const matched = recipeId
       ? recipes.find(r => r.id === recipeId)
       : recipeByTitle(value);
-
-    const hasLink = !!customUrl || !!matched;
 
     return `
       <div class="meal-plan-day">
@@ -2843,7 +2888,7 @@ function renderMealPlan() {
                  data-date="${key}"
                  list="mealRecipeSuggestions"
                  value="${escapeHtml(value)}"
-                 placeholder="Bezeichnung, z. B. Pizza">
+                 placeholder="Bezeichnung, z. B. Pommes">
 
           <button type="button"
                   class="meal-plan-link-toggle ${customUrl ? "active" : ""}"
@@ -2869,7 +2914,7 @@ function renderMealPlan() {
                  class="meal-plan-url-input"
                  data-date="${key}"
                  value="${escapeHtml(customUrl)}"
-                 placeholder="https://…">
+                 placeholder="Link einfügen, z. B. https://…">
         </div>
       </div>
     `;
@@ -2886,14 +2931,23 @@ function renderMealPlan() {
     .map(r => `<option value="${escapeHtml(r.title || "")}"></option>`)
     .join("");
 
-  function saveMealForDate(key) {
-    const labelInput = host.querySelector(`.meal-plan-input[data-date="${CSS.escape(key)}"]`);
-    const urlInput = host.querySelector(`.meal-plan-url-input[data-date="${CSS.escape(key)}"]`);
+  function persistMealForDate(key, {rerender = false} = {}) {
+    const esc = CSS.escape(key);
+    const labelInput = host.querySelector(`.meal-plan-input[data-date="${esc}"]`);
+    const urlInput = host.querySelector(`.meal-plan-url-input[data-date="${esc}"]`);
 
-    const label = labelInput?.value.trim() || "";
-    const url = urlInput?.value.trim() || "";
+    let label = labelInput?.value.trim() || "";
+    let url = urlInput?.value.trim() || "";
+
+    // Falls doch eine URL im Bezeichnungsfeld landet, nicht als hässlichen Text anzeigen.
+    if (isUrl(label) && !url) {
+      url = label;
+      label = "";
+      if (labelInput) labelInput.value = "";
+      if (urlInput) urlInput.value = url;
+    }
+
     const matched = recipeByTitle(label);
-
     state.meals = state.meals && typeof state.meals === "object" ? state.meals : {};
 
     if (!label && !url) {
@@ -2902,29 +2956,31 @@ function renderMealPlan() {
       state.meals[key] = {
         label: matched.title,
         recipeId: matched.id,
-        url: url || ""
+        url
       };
     } else {
       state.meals[key] = {
-        label: label || "Link",
+        label,
         recipeId: "",
         url
       };
     }
 
     save();
-    renderMealPlan();
     renderWeek();
+
+    if (rerender) renderMealPlan();
   }
 
+  // Während des Tippens speichern, ohne das Eingabefeld neu aufzubauen.
   host.querySelectorAll(".meal-plan-input").forEach(input => {
-    input.addEventListener("change", () => saveMealForDate(input.dataset.date));
-    input.addEventListener("blur", () => saveMealForDate(input.dataset.date));
+    input.addEventListener("input", () => persistMealForDate(input.dataset.date));
+    input.addEventListener("change", () => persistMealForDate(input.dataset.date, {rerender:true}));
   });
 
   host.querySelectorAll(".meal-plan-url-input").forEach(input => {
-    input.addEventListener("change", () => saveMealForDate(input.dataset.date));
-    input.addEventListener("blur", () => saveMealForDate(input.dataset.date));
+    input.addEventListener("input", () => persistMealForDate(input.dataset.date));
+    input.addEventListener("change", () => persistMealForDate(input.dataset.date, {rerender:true}));
   });
 
   host.querySelectorAll(".meal-plan-link-toggle").forEach(btn => {
@@ -3583,9 +3639,14 @@ function applyCloudData(data) {
 
 shoppingItems = state.shopping;
     
-    state.recipes = Array.isArray(data.recipes)
-      ? data.recipes
-      : (Array.isArray(state.recipes) ? state.recipes : []);
+    const localRecipes = Array.isArray(state.recipes) ? state.recipes : [];
+    const cloudRecipes = Array.isArray(data.recipes) ? data.recipes : null;
+
+    // Ältere Cloud-Stände hatten teilweise noch keine Rezeptdaten.
+    // Eine leere Cloud-Liste darf deshalb vorhandene lokale Rezepte nicht löschen.
+    state.recipes = cloudRecipes && cloudRecipes.length
+      ? cloudRecipes
+      : localRecipes;
     state.meals = data.meals && typeof data.meals === "object"
       ? data.meals
       : (state.meals && typeof state.meals === "object" ? state.meals : {});
