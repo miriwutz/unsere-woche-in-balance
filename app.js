@@ -6102,10 +6102,17 @@ document.querySelector("#todoPeriod")?.addEventListener("change", updateEntryTyp
 document.querySelector("#cancelTodoEditBtn").addEventListener("click", resetTodoEditor);
 
 document.querySelector("#addTodoBtn").addEventListener("click", () => {
-  const text = document.querySelector("#todoText").value.trim();
-  if (!text) return;
-
+  const todoTextInput = document.querySelector("#todoText");
+  const text = todoTextInput?.value.trim() || "";
   const type = document.querySelector("#entryType").value;
+
+  if (!text) {
+    alert(type === "event"
+      ? "Bitte dem Termin noch einen Namen geben."
+      : "Bitte das To-do noch kurz benennen.");
+    todoTextInput?.focus();
+    return;
+  }
   const selectedDay = document.querySelector("#todoDay").value;
   const selectedFamily = selectedFamilyMembers();
   const recurrence = document.querySelector("#recurrence").value;
@@ -6137,6 +6144,26 @@ const eventCategory = document.querySelector("#eventCategory")?.value || "normal
 
   if (type === "event" && !eventDate) {
     alert("Bitte für den Termin ein Datum auswählen.");
+    document.querySelector("#eventDate")?.focus();
+    return;
+  }
+
+  if (type === "event" && eventEndDate && eventEndDate < eventDate) {
+    alert("Das Enddatum kann nicht vor dem Startdatum liegen.");
+    document.querySelector("#eventEndDate")?.focus();
+    return;
+  }
+
+  if (
+    type === "event" &&
+    eventEndDate &&
+    eventEndDate === eventDate &&
+    eventTime &&
+    eventEndTime &&
+    eventEndTime < eventTime
+  ) {
+    alert("Die Endzeit kann am selben Tag nicht vor der Startzeit liegen.");
+    document.querySelector("#eventEndTime")?.focus();
     return;
   }
 
