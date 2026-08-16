@@ -1978,7 +1978,6 @@ function renderTimeTracking() {
   const activeBox = document.querySelector("#activeTimeTracker");
   const weekChips = document.querySelector("#timeSummaryChips");
   const todayChips = document.querySelector("#timeTodayChips");
-  const donut = document.querySelector("#timeDonut");
   const donutLegend = document.querySelector("#timeDonutLegend");
   const donutTotal = document.querySelector("#timeDonutTotal");
   if (!list || !activeBox || !weekChips || !todayChips) return;
@@ -1988,9 +1987,12 @@ function renderTimeTracking() {
   if (activeTimers.length) {
     activeBox.classList.remove("hidden");
     activeBox.innerHTML = activeTimers.map(active => `
-      <div class="active-time-item" data-id="${active.id}">
+      <div class="active-time-item" data-id="${active.id}" style="--person-color:${escapeHtml(familyColor(active.person))}">
         <div>
-          <span class="active-time-person">${escapeHtml(familyName(active.person))}</span>
+          <span class="active-time-person">
+            <span class="time-person-dot" style="background:${escapeHtml(familyColor(active.person))}"></span>
+            ${escapeHtml(familyName(active.person))}
+          </span>
           <strong>${escapeHtml(timeCategoryLabel(active.category))}</strong>
           <small>${escapeHtml(active.note || "")}</small>
         </div>
@@ -2020,64 +2022,134 @@ function renderTimeTracking() {
     Number(entry.endedAt || entry.createdAt || 0) >= todayStart.getTime()
   );
 
-  function totalsByCategory(entries) {
+  function totalsByPersonAndCategory(entries) {
     const totals = {};
     entries.forEach(entry => {
-      totals[entry.category] = (totals[entry.category] || 0) + Number(entry.minutes || 0);
+      const person = entry.person || "a";
+      totals[person] = totals[person] || {};
+      totals[person][entry.category] =
+        (totals[person][entry.category] || 0) + Number(entry.minutes || 0);
     });
     return totals;
   }
 
-  function renderSummary(host, totals) {
-    host.innerHTML = Object.entries(totals)
-      .sort((a,b) => b[1] - a[1])
-      .map(([category, minutes]) => `
-        <span class="time-summary-chip">
-          ${escapeHtml(timeCategoryLabel(category))}
-          <strong>${formatMinutes(minutes)}</strong>
-        </span>
-      `).join("") || `<span class="time-summary-empty">Noch keine Zeiten.</span>`;
+  function renderPersonSummary(host, entries) {
+    const totals = totalsByPersonAndCategory(entries);
+    const people = ["a","b","c","d"];
+
+    const html = people.map(person => {
+      const categoryTotals = totals[person] || {};
+      const pairs = Object.entries(categoryTotals).sort((a,b) => b[1] - a[1]);
+      if (!pairs.length) return "";
+
+      const personTotal = pairs.reduce((sum, [,minutes]) => sum + minutes, 0);
+
+      return `
+        <div class="time-person-summary">
+          <div class="time-person-summary-head">
+            <span class="time-person-dot" style="background:${escapeHtml(familyColor(person))}"></span>
+            <strong>${escapeHtml(familyName(person))}</strong>
+            <span>${formatMinutes(personTotal)}</span>
+          </div>
+          <div class="time-summary-chips-inner">
+            ${pairs.map(([category, minutes]) => `
+              <span class="time-summary-chip">
+                ${escapeHtml(timeCategoryLabel(category))}
+                <strong>${formatMinutes(minutes)}</strong>
+              </span>
+            `).join("")}
+          </div>
+        </div>
+      `;
+    }).join("");
+
+    host.innerHTML = html || `<span class="time-summary-empty">Noch keine Zeiten.</span>`;
   }
 
-  const weekTotals = totalsByCategory(weekEntries);
-  const todayTotals = totalsByCategory(todayEntries);
+  renderPersonSummary(weekChips, weekEntries);
+  renderPersonSummary(todayChips, todayEntries);
 
-  renderSummary(weekChips, weekTotals);
-  renderSummary(todayChips, todayTotals);
+  // Kategorien behalten ihre Pastellfarbe.
+  // Jede Person bekommt aber einen eigenen Ring:
+  // Mama außen -> Papa -> Lou -> Fina innen.
+  const categoryPalette = {
+    pc: "#b9cfd0",
+    prep: "#d8c9d7",
+    household: "#c5d7bf",
+    repair: "#d8c0b8",
+    organize: "#c6d4e0",
+    errands: "#ead9bc",
+    garden: "#a9cbbb",
+    help: "#e5c3c8",
+    school: "#c9c0df",
+    other: "#d6d0c8"
+  };
 
-  // CSS donut chart with neutral pastel palette
-  const palette = [
-    "#b9cfd0","#c5d7bf","#e5c3c8","#d8c9d7","#ead9bc",
-    "#a9cbbb","#c6d4e0","#d8c0b8","#d6d0c8"
+  const weekTotals = totalsByPersonAndCategory(weekEntries);
+  const people = [
+    {key:"a", ring:"#timeRingMama"},
+    {key:"b", ring:"#timeRingPapa"},
+    {key:"c", ring:"#timeRingLou"},
+    {key:"d", ring:"#timeRingFina"}
   ];
-  const weekPairs = Object.entries(weekTotals).filter(([,m]) => m > 0);
-  const totalWeek = weekPairs.reduce((sum,[,m]) => sum + m, 0);
 
-  if (donut && donutLegend && donutTotal) {
-    donutTotal.textContent = formatMinutes(totalWeek);
+  let grandTotal = 0;
+  const legendParts = [];
 
-    if (!totalWeek) {
-      donut.style.background = "#f0eeea";
-      donutLegend.innerHTML = `<span class="time-summary-empty">Noch keine Verteilung.</span>`;
-    } else {
-      let cursor = 0;
-      const parts = [];
-      donutLegend.innerHTML = weekPairs.map(([category, minutes], i) => {
-        const start = cursor;
-        const end = cursor + (minutes / totalWeek) * 100;
-        cursor = end;
-        const color = palette[i % palette.length];
-        parts.push(`${color} ${start}% ${end}%`);
-        return `
-          <div class="time-donut-legend-row">
-            <span class="time-donut-dot" style="background:${color}"></span>
-            <span>${escapeHtml(timeCategoryLabel(category))}</span>
-            <strong>${formatMinutes(minutes)}</strong>
-          </div>
-        `;
-      }).join("");
-      donut.style.background = `conic-gradient(${parts.join(",")})`;
+  people.forEach(personInfo => {
+    const categoryTotals = weekTotals[personInfo.key] || {};
+    const pairs = Object.entries(categoryTotals)
+      .filter(([,minutes]) => Number(minutes) > 0)
+      .sort((a,b) => b[1] - a[1]);
+
+    const personTotal = pairs.reduce((sum,[,minutes]) => sum + Number(minutes), 0);
+    grandTotal += personTotal;
+
+    const ring = document.querySelector(personInfo.ring);
+
+    if (ring) {
+      if (!personTotal) {
+        ring.style.background = "rgba(229,226,220,.48)";
+      } else {
+        let cursor = 0;
+        const segments = [];
+
+        pairs.forEach(([category, minutes]) => {
+          const start = cursor;
+          const end = cursor + (Number(minutes) / personTotal) * 100;
+          cursor = end;
+          const color = categoryPalette[category] || "#d6d0c8";
+          segments.push(`${color} ${start}% ${end}%`);
+        });
+
+        ring.style.background = `conic-gradient(${segments.join(",")})`;
+      }
     }
+
+    if (personTotal) {
+      legendParts.push(`
+        <div class="time-person-legend">
+          <div class="time-person-legend-head">
+            <span class="time-person-dot" style="background:${escapeHtml(familyColor(personInfo.key))}"></span>
+            <strong>${escapeHtml(familyName(personInfo.key))}</strong>
+            <span>${formatMinutes(personTotal)}</span>
+          </div>
+          ${pairs.map(([category,minutes]) => `
+            <div class="time-donut-legend-row">
+              <span class="time-donut-dot" style="background:${categoryPalette[category] || "#d6d0c8"}"></span>
+              <span>${escapeHtml(timeCategoryLabel(category))}</span>
+              <strong>${formatMinutes(minutes)}</strong>
+            </div>
+          `).join("")}
+        </div>
+      `);
+    }
+  });
+
+  if (donutTotal) donutTotal.textContent = formatMinutes(grandTotal);
+  if (donutLegend) {
+    donutLegend.innerHTML = legendParts.join("") ||
+      `<span class="time-summary-empty">Noch keine Verteilung.</span>`;
   }
 
   const entries = state.timeTracking.entries
@@ -2086,8 +2158,11 @@ function renderTimeTracking() {
     .slice(0, 20);
 
   list.innerHTML = entries.length ? entries.map(entry => `
-    <div class="time-log-row">
-      <span class="time-log-person">${escapeHtml(familyName(entry.person))}</span>
+    <div class="time-log-row" style="--person-color:${escapeHtml(familyColor(entry.person))}">
+      <span class="time-log-person">
+        <span class="time-person-dot" style="background:${escapeHtml(familyColor(entry.person))}"></span>
+        ${escapeHtml(familyName(entry.person))}
+      </span>
       <span class="time-log-category">${escapeHtml(timeCategoryLabel(entry.category))}</span>
       <span class="time-log-note">${escapeHtml(entry.note || "")}</span>
       <strong>${formatMinutes(entry.minutes)}</strong>
@@ -3191,6 +3266,8 @@ function renderAll() {
   renderWeek();
   renderTodos();
   renderArchive();
+  renderTimeTracking();
+  renderRecipeLinkTracker();
   renderSchool();
   renderSchoolWorkTodos();
   renderSchoolPrints();
