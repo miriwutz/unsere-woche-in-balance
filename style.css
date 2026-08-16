@@ -3713,3 +3713,27 @@ a.day-meal{
     grid-column:1 / -1;
   }
 }
+
+
+/* Papa + Stundenplan – gewünschte rote Umrandung mit ruhiger Hinterlegung */
+#openPapaOverviewBtn,
+#openFamilyTimetableBtn{
+  background:rgba(233,150,122,.28) !important;
+  border:1.5px solid #8D021F !important;
+  color:#7b1027 !important;
+  box-shadow:none !important;
+}
+
+#openPapaOverviewBtn:hover,
+#openFamilyTimetableBtn:hover{
+  background:rgba(233,150,122,.40) !important;
+  border-color:#8D021F !important;
+}
+
+/* laufende Zeit besser lesbar */
+.active-time-elapsed{
+  min-width:72px;
+  font-variant-numeric:tabular-nums;
+  font-weight:700;
+  letter-spacing:.03em;
+}
