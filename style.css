@@ -3163,3 +3163,264 @@ a.day-meal{
     width:100%;
   }
 }
+
+
+/* =========================================================
+   TERMIN-PLING – Gerätezeile sauber und gleich hoch
+   ========================================================= */
+.pling-device-row{
+  display:grid !important;
+  grid-template-columns:minmax(220px,1fr) auto auto auto auto;
+  align-items:end !important;
+  gap:10px !important;
+}
+
+.pling-device-status{
+  min-height:38px;
+  display:flex;
+  align-items:center;
+  padding:0 2px;
+}
+
+.pling-device-btn,
+.pling-test-btn{
+  height:38px !important;
+  min-height:38px !important;
+  padding:0 13px !important;
+  display:inline-flex !important;
+  align-items:center;
+  justify-content:center;
+  border-radius:12px !important;
+}
+
+.pling-sound-control,
+.pling-volume-control{
+  display:grid !important;
+  grid-template-columns:auto !important;
+  gap:4px !important;
+  align-items:end !important;
+  margin:0 !important;
+  min-width:118px;
+  color:#81766f;
+  font-size:.70rem;
+  line-height:1;
+}
+
+.pling-sound-control select,
+.pling-volume-control select{
+  width:100% !important;
+  height:38px !important;
+  min-height:38px !important;
+  margin:0 !important;
+  padding:0 30px 0 11px !important;
+  border-radius:12px !important;
+  font-size:.76rem !important;
+}
+
+@media(max-width:900px){
+  .pling-device-row{
+    grid-template-columns:1fr 1fr !important;
+    align-items:stretch !important;
+  }
+
+  .pling-device-status{
+    grid-column:1 / -1;
+    min-height:auto;
+  }
+
+  .pling-device-btn,
+  .pling-test-btn,
+  .pling-sound-control,
+  .pling-volume-control{
+    width:100%;
+    min-width:0;
+  }
+}
+
+@media(max-width:560px){
+  .pling-device-row{
+    grid-template-columns:1fr !important;
+  }
+}
+
+/* =========================================================
+   PINNWAND – Gerätefreigabe / Lautstärke
+   ========================================================= */
+.pinboard-device-controls{
+  grid-column:1 / -1;
+  display:grid;
+  grid-template-columns:auto minmax(180px,1fr) auto;
+  gap:8px;
+  align-items:center;
+  margin-top:2px;
+  padding-top:9px;
+  border-top:1px solid rgba(150,135,145,.12);
+}
+.pinboard-enable-btn,
+.pinboard-test-btn{
+  min-height:38px;
+  padding:0 12px;
+  border-radius:12px;
+  white-space:nowrap;
+}
+.pinboard-device-status{
+  color:#81766f;
+  font-size:.7rem;
+}
+.pinboard-device-status[data-state="granted"]{
+  color:#607166;
+}
+.pinboard-device-status[data-state="denied"]{
+  color:#8a625d;
+}
+
+@media(max-width:700px){
+  .pinboard-device-controls{
+    grid-template-columns:1fr;
+  }
+  .pinboard-enable-btn,
+  .pinboard-test-btn{
+    width:100%;
+  }
+}
+
+
+/* =========================================================
+   TERMIN-PLING – jetzt wirklich eine einheitliche Bedienleiste
+   ========================================================= */
+.pling-device-row{
+  display:grid !important;
+  grid-template-columns:180px 150px 130px 120px !important;
+  justify-content:start !important;
+  align-items:end !important;
+  gap:9px !important;
+}
+
+.pling-device-status{
+  display:none !important;
+}
+
+.pling-device-btn,
+.pling-test-btn{
+  width:100% !important;
+  height:42px !important;
+  min-height:42px !important;
+  margin:0 !important;
+  padding:0 12px !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  border-radius:12px !important;
+  font-size:.73rem !important;
+  line-height:1.1 !important;
+  white-space:normal !important;
+  text-align:center !important;
+}
+
+.pling-sound-control,
+.pling-volume-control{
+  display:grid !important;
+  grid-template-columns:1fr !important;
+  grid-template-rows:15px 42px !important;
+  align-items:end !important;
+  gap:4px !important;
+  width:100% !important;
+  min-width:0 !important;
+  margin:0 !important;
+  font-size:.68rem !important;
+  line-height:1 !important;
+}
+
+.pling-sound-control select,
+.pling-volume-control select{
+  width:100% !important;
+  height:42px !important;
+  min-height:42px !important;
+  margin:0 !important;
+  padding:0 30px 0 10px !important;
+  border-radius:12px !important;
+  font-size:.76rem !important;
+}
+
+@media(max-width:760px){
+  .pling-device-row{
+    grid-template-columns:1fr 1fr !important;
+  }
+}
+
+@media(max-width:460px){
+  .pling-device-row{
+    grid-template-columns:1fr !important;
+  }
+}
+
+/* =========================================================
+   PINNWAND – Gerätefreigabe oben sichtbar
+   ========================================================= */
+.pinboard-device-strip{
+  display:grid;
+  grid-template-columns:auto minmax(180px,1fr) auto;
+  align-items:center;
+  gap:8px;
+  margin:8px 0 14px;
+  padding:9px 10px;
+  border:1px solid rgba(175,153,164,.20);
+  border-radius:13px;
+  background:linear-gradient(90deg,rgba(249,244,246,.92),rgba(252,249,246,.92));
+}
+
+.pinboard-enable-btn,
+.pinboard-test-btn{
+  height:38px !important;
+  min-height:38px !important;
+  padding:0 12px !important;
+  display:flex !important;
+  align-items:center;
+  justify-content:center;
+  border-radius:11px !important;
+  white-space:nowrap;
+}
+
+.pinboard-device-status{
+  color:#81766f;
+  font-size:.69rem;
+  line-height:1.25;
+}
+
+.pinboard-device-status[data-state="granted"]{
+  color:#5f7368;
+  font-weight:600;
+}
+
+@media(max-width:650px){
+  .pinboard-device-strip{
+    grid-template-columns:1fr;
+  }
+  .pinboard-enable-btn,
+  .pinboard-test-btn{
+    width:100%;
+  }
+}
+
+/* =========================================================
+   Wochenplan-Aktionsleiste – Papa + Stundenplan gemeinsam
+   Testfarben nach deinen Mustern:
+   Rand Burgundy #8D021F, innen Dark Salmon #E9967A
+   ========================================================= */
+#openPapaOverviewBtn,
+#openFamilyTimetableBtn{
+  background:#E9967A !important;
+  border:2px solid #8D021F !important;
+  color:#6f0018 !important;
+  box-shadow:none !important;
+}
+
+#openPapaOverviewBtn:hover,
+#openFamilyTimetableBtn:hover{
+  background:#efa58f !important;
+  border-color:#8D021F !important;
+}
+
+/* =========================================================
+   Linksammlung – beim Öffnen standardmäßig alle Zeiträume
+   ========================================================= */
