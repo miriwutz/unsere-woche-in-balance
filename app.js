@@ -3479,6 +3479,7 @@ let activeRecipeCategory = "all";
 let recipeCategoryTouched = false;
 let recipeKidsOnly = false;
 let recipeHealthyOnly = false;
+let recipeFavoriteOnly = false;
 let activeRecipeSearch = "";
 let mealPlanWeekOffset = 0;
 let recipePage = 0;
@@ -3510,6 +3511,7 @@ function resetRecipeForm() {
 
   const favorite = document.querySelector("#recipeFavorite");
   if (favorite) favorite.checked = false;
+  syncRecipeFavoriteToggleVisual();
 
   editingRecipeId = null;
 
@@ -3533,6 +3535,7 @@ function startRecipeEdit(recipe) {
   document.querySelector("#recipeKids").checked = !!recipe.kids;
   document.querySelector("#recipeHealthy").checked = !!recipe.healthy;
   document.querySelector("#recipeFavorite").checked = !!recipe.favorite;
+  syncRecipeFavoriteToggleVisual();
   document.querySelector("#recipeTime").value = recipe.time || "";
   document.querySelector("#recipeBakeTime").value = recipe.bakeTime || "";
   document.querySelector("#recipeTemperature").value = recipe.temperature || "";
@@ -3883,12 +3886,13 @@ function renderRecipes() {
         activeRecipeDifficulty === "all" || r.difficulty === activeRecipeDifficulty;
       const matchesKids = !recipeKidsOnly || !!r.kids;
       const matchesHealthy = !recipeHealthyOnly || !!r.healthy;
+      const matchesFavorite = !recipeFavoriteOnly || !!r.favorite;
       const haystack = [
         r.title,
         ...(Array.isArray(r.ingredients) ? r.ingredients : [])
       ].join(" ").toLowerCase();
       const matchesSearch = !query || haystack.includes(query);
-      return matchesCategory && matchesDifficulty && matchesKids && matchesHealthy && matchesSearch;
+      return matchesCategory && matchesDifficulty && matchesKids && matchesHealthy && matchesFavorite && matchesSearch;
     })
     .sort((a,b) => (b.createdAt || 0) - (a.createdAt || 0));
 
@@ -4426,6 +4430,12 @@ document.querySelector("#recipeHealthyOnlyFilter")?.addEventListener("change", e
   renderRecipes();
 });
 
+document.querySelector("#recipeFavoriteOnlyFilter")?.addEventListener("change", e => {
+  recipeFavoriteOnly = !!e.currentTarget.checked;
+  recipePage = 0;
+  renderRecipes();
+});
+
 document.querySelector("#mealPlanThisWeekBtn")?.addEventListener("click", () => {
   mealPlanWeekOffset = 0;
   renderMealPlan();
@@ -4435,6 +4445,19 @@ document.querySelector("#mealPlanNextWeekBtn")?.addEventListener("click", () => 
   mealPlanWeekOffset = 1;
   renderMealPlan();
 });
+function syncRecipeFavoriteToggleVisual() {
+  const label = document.querySelector(".recipe-favorite-toggle");
+  const input = document.querySelector("#recipeFavorite");
+  if (!label || !input) return;
+  label.classList.toggle("is-favorite", !!input.checked);
+
+  const text = label.querySelector("span");
+  if (text) text.textContent = input.checked ? "★ Favorit" : "☆ Favorit";
+}
+
+document.querySelector("#recipeFavorite")?.addEventListener("change", syncRecipeFavoriteToggleVisual);
+syncRecipeFavoriteToggleVisual();
+
 document.querySelector("#saveRecipeBtn")?.addEventListener("click", () => {
   const title = document.querySelector("#recipeTitle")?.value.trim() || "";
   if (!title) return showMotivation("Bitte zuerst einen Rezeptnamen eintragen.");
