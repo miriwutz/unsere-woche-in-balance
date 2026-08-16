@@ -6196,3 +6196,89 @@ a.day-meal{
     width:100% !important;
   }
 }
+
+
+/* =========================================================
+   ZEITTRACKING – LAUFENDE TIMER STABIL GLEICH GROSS
+   ========================================================= */
+#activeTimeTracker,
+.active-time-tracker{
+  display:grid !important;
+  grid-template-columns:1fr !important;
+  gap:8px !important;
+  width:390px !important;
+  max-width:390px !important;
+  min-width:390px !important;
+  justify-self:end !important;
+  align-self:start !important;
+}
+
+.active-time-item{
+  box-sizing:border-box !important;
+  width:390px !important;
+  min-width:390px !important;
+  max-width:390px !important;
+  height:110px !important;
+  min-height:110px !important;
+  max-height:110px !important;
+  padding:12px 14px !important;
+  display:grid !important;
+  grid-template-columns:minmax(0,1fr) auto !important;
+  align-items:center !important;
+  gap:12px !important;
+  overflow:hidden !important;
+}
+
+.active-time-item > div:first-child{
+  min-width:0 !important;
+  display:grid !important;
+  gap:3px !important;
+  align-content:center !important;
+}
+
+.active-time-item > div:first-child strong,
+.active-time-item > div:first-child small{
+  overflow:hidden !important;
+  text-overflow:ellipsis !important;
+  white-space:nowrap !important;
+}
+
+.active-time-right{
+  display:grid !important;
+  grid-template-columns:auto auto !important;
+  align-items:center !important;
+  gap:10px !important;
+  min-width:max-content !important;
+}
+
+.active-time-elapsed{
+  min-width:76px !important;
+  text-align:right !important;
+  font-variant-numeric:tabular-nums !important;
+}
+
+.stop-time-track-btn{
+  min-width:92px !important;
+  height:38px !important;
+  padding:0 14px !important;
+  white-space:nowrap !important;
+}
+
+/* Egal ob 1, 2, 3 oder 4 Timer laufen: Karten bleiben identisch. */
+@media(max-width:760px){
+  #activeTimeTracker,
+  .active-time-tracker{
+    width:100% !important;
+    min-width:0 !important;
+    max-width:none !important;
+  }
+
+  .active-time-item{
+    width:100% !important;
+    min-width:0 !important;
+    max-width:none !important;
+    height:104px !important;
+    min-height:104px !important;
+    max-height:104px !important;
+  }
+}
