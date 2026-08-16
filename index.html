@@ -112,7 +112,7 @@
       <button class="tab" data-view="shopping">🛒 Einkauf</button>
       <button class="tab" data-view="school">Schule</button>
       <button class="tab" data-view="workroom">Werkraum</button>
-      <button class="tab" data-view="archive">Meine Übungen</button>
+      <button class="tab" data-view="archive">Unser Überblick</button>
     </nav>
 
     <section id="week" class="view active">
@@ -1030,25 +1030,106 @@
 </div>
 </section>
     <section id="archive" class="view">
-      <div class="section-head">
+      <div class="section-head overview-page-head">
         <div>
-          <p class="small-label">MEINE ÜBUNGEN</p>
-          <h2>Was sich bewährt hat</h2>
+          <p class="small-label">UNSER ÜBERBLICK</p>
+          <h2>Zeit & Dinge, die sich bewähren</h2>
+          <p class="overview-intro">Ein ruhiger Überblick darüber, wofür unsere Zeit draufgeht und was wir gerne wieder nutzen.</p>
         </div>
-        <button id="deleteAllExercisesBtn" class="secondary-btn danger-soft" type="button">Alle Übungen löschen</button>
       </div>
 
-      <div class="filters">
-        <button class="archive-filter active" data-archive="all">Alle</button>
-        <button class="archive-filter" data-archive="favorite">♡ Favoriten</button>
-        <button class="archive-filter" data-archive="wanted">🔥 Most wanted</button>
-        <button class="archive-filter" data-archive="super">😊 Super</button>
-        <button class="archive-filter" data-archive="okay">🙂 Okay</button>
-        <button class="archive-filter" data-archive="nope">😕 Nicht meins</button>
-      </div>
-      <p class="archive-hint">Most wanted passt sich automatisch an: anfangs reichen 2 Durchführungen, später bleiben nur die am häufigsten genutzten Übungen oben.</p>
+      <article class="card time-tracker-card">
+        <div class="overview-card-head">
+          <div>
+            <p class="small-label">ZEIT IM BLICK</p>
+            <h3>Wofür war heute Zeit?</h3>
+            <p>Einfach starten und später stoppen – oder Zeit nachträglich eintragen.</p>
+          </div>
+          <div id="activeTimeTracker" class="active-time-tracker hidden"></div>
+        </div>
 
-      <div id="archiveList" class="archive-grid"></div>
+        <div class="time-tracker-form">
+          <label>
+            Für wen?
+            <select id="timeTrackPerson">
+              <option value="a">Mama</option>
+              <option value="b">Papa</option>
+              <option value="c">Lou</option>
+              <option value="d">Fina</option>
+            </select>
+          </label>
+
+          <label>
+            Bereich
+            <select id="timeTrackCategory">
+              <option value="pc">🖥 PC & Büro</option>
+              <option value="prep">✂ Vorbereitung</option>
+              <option value="household">🏡 Haushalt</option>
+              <option value="repair">🔧 Reparaturen</option>
+              <option value="organize">🗂 Organisieren</option>
+              <option value="errands">🛒 Erledigungen</option>
+              <option value="garden">🌿 Garten & draußen</option>
+              <option value="school">✏ Lernen & Schule</option>
+              <option value="other">✨ Sonstiges</option>
+            </select>
+          </label>
+
+          <label class="time-note-field">
+            Notiz – optional
+            <input id="timeTrackNote" type="text" placeholder="z. B. Arbeitsblätter, Kellerregal …">
+          </label>
+
+          <button id="startTimeTrackBtn" class="primary-btn" type="button">▶ Starten</button>
+        </div>
+
+        <details class="manual-time-details">
+          <summary>Zeit nachträglich eintragen</summary>
+          <div class="manual-time-row">
+            <input id="manualTimeMinutes" type="number" min="1" step="5" placeholder="Minuten">
+            <button id="addManualTimeBtn" class="secondary-btn" type="button">+ Eintragen</button>
+          </div>
+        </details>
+
+        <div class="time-summary-row">
+          <strong>Diese Woche</strong>
+          <div id="timeSummaryChips" class="time-summary-chips"></div>
+        </div>
+
+        <div id="timeLogList" class="time-log-list"></div>
+      </article>
+
+      <article class="card recipe-link-tracker-card">
+        <div class="overview-card-head">
+          <div>
+            <p class="small-label">ONLINE-REZEPTE</p>
+            <h3>Was möchten wir wieder kochen?</h3>
+            <p>Internetrezepte aus deinen Rezeptkarten und dem Essensplan – mit einer einfachen Einschätzung.</p>
+          </div>
+        </div>
+        <div id="recipeLinkTrackerList" class="recipe-link-tracker-list"></div>
+      </article>
+
+      <article class="card exercise-overview-card">
+        <div class="section-head compact-section-head">
+          <div>
+            <p class="small-label">ÜBUNGEN & VIDEOS</p>
+            <h3>Was sich bewährt hat</h3>
+          </div>
+          <button id="deleteAllExercisesBtn" class="secondary-btn danger-soft" type="button">Alle Übungen löschen</button>
+        </div>
+
+        <div class="filters">
+          <button class="archive-filter active" data-archive="all">Alle</button>
+          <button class="archive-filter" data-archive="favorite">♡ Favoriten</button>
+          <button class="archive-filter" data-archive="wanted">🔥 Most wanted</button>
+          <button class="archive-filter" data-archive="super">💛 Sehr gern</button>
+          <button class="archive-filter" data-archive="okay">🙂 Passt gut</button>
+          <button class="archive-filter" data-archive="nope">🌿 Eher nicht</button>
+        </div>
+        <p class="archive-hint">Most wanted passt sich automatisch an: anfangs reichen 2 Durchführungen, später bleiben nur die am häufigsten genutzten Übungen oben.</p>
+
+        <div id="archiveList" class="archive-grid"></div>
+      </article>
     </section>
   </main>
 
