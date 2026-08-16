@@ -4840,3 +4840,256 @@ a.day-meal{
     justify-self:end !important;
   }
 }
+
+/* =========================================================
+   REZEPTFORMULAR – FINAL AUF BASIS DER ECHTEN STRUKTUR
+   ========================================================= */
+
+.recipe-form{
+  padding:16px !important;
+}
+
+.recipe-form-grid{
+  display:grid !important;
+  grid-template-columns:
+    minmax(220px,1.28fr)
+    minmax(190px,1.08fr)
+    minmax(140px,.72fr)
+    minmax(160px,.82fr) !important;
+  gap:12px !important;
+  width:100% !important;
+  align-items:start !important;
+}
+
+.recipe-form-grid > *{
+  min-width:0 !important;
+  width:100% !important;
+  box-sizing:border-box !important;
+}
+
+/* Obere Eingabezeile: gleiche Gesamtbreite wie darunter */
+#recipeTitle{grid-column:1 !important}
+#recipeCategory{grid-column:2 !important}
+#recipeDifficulty{grid-column:3 !important}
+#recipeTime{grid-column:4 !important}
+
+/* Kennzeichnungen gemeinsam darunter */
+.recipe-kids-toggle,
+.recipe-healthy-toggle{
+  width:max-content !important;
+  min-height:38px !important;
+  display:inline-flex !important;
+  align-items:center !important;
+  gap:7px !important;
+  padding:8px 12px !important;
+  border:1px solid rgba(210,198,191,.55) !important;
+  border-radius:999px !important;
+  background:rgba(255,253,251,.88) !important;
+}
+.recipe-kids-toggle{grid-column:1 !important}
+.recipe-healthy-toggle{grid-column:2 !important}
+
+#recipeKids,
+#recipeHealthy{
+  width:15px !important;
+  height:15px !important;
+  min-width:15px !important;
+  flex:0 0 15px !important;
+  margin:0 !important;
+}
+
+/* Zutaten + Zubereitung nehmen zusammen die KOMPLETTE Formularbreite ein */
+#recipeIngredients{
+  grid-column:1 / 3 !important;
+  min-height:190px !important;
+}
+#recipeSteps{
+  grid-column:3 / 5 !important;
+  min-height:190px !important;
+}
+
+#recipeIngredients,
+#recipeSteps{
+  width:100% !important;
+  padding:12px 14px !important;
+  border:1px solid rgba(171,193,187,.55) !important;
+  border-radius:14px !important;
+  background:rgba(255,255,255,.78) !important;
+  color:var(--ink) !important;
+  font-family:"DM Sans",system-ui,sans-serif !important;
+  font-size:.86rem !important;
+  line-height:1.5 !important;
+  resize:vertical !important;
+}
+
+/* Links fluchten exakt mit den zwei großen Textfeldern */
+#recipeWebUrl{grid-column:1 / 3 !important}
+#recipeYoutubeUrl{grid-column:3 / 5 !important}
+
+/* Zusatzzeile: bewusst klein und ruhig */
+.recipe-extra-row{
+  display:grid !important;
+  grid-template-columns:190px 150px 140px !important;
+  gap:10px !important;
+  align-items:end !important;
+  margin-top:12px !important;
+  width:max-content !important;
+  max-width:100% !important;
+}
+
+.recipe-extra-row label{
+  display:grid !important;
+  gap:5px !important;
+  min-width:0 !important;
+  font-size:.68rem !important;
+  color:#756d68 !important;
+}
+
+.recipe-card-mark-field{
+  width:190px !important;
+  max-width:190px !important;
+  min-width:190px !important;
+}
+
+#recipeCardMark{
+  width:190px !important;
+  max-width:190px !important;
+  min-width:190px !important;
+}
+
+.recipe-bake-field{
+  width:150px !important;
+}
+
+.recipe-temp-field{
+  width:140px !important;
+}
+
+#recipeBakeTime,
+#recipeTemperature{
+  width:100% !important;
+  min-height:40px !important;
+}
+
+/* Aktionen rechts unten */
+.recipe-form-actions{
+  display:flex !important;
+  justify-content:flex-end !important;
+  gap:8px !important;
+  margin-top:-42px !important;
+}
+
+/* Backinfos auf Karte/Detail */
+.recipe-bake-meta{
+  display:block;
+  margin-top:3px;
+  color:var(--muted) !important;
+  font-size:.62rem !important;
+  font-weight:500 !important;
+  white-space:nowrap;
+}
+
+/* Tablet */
+@media(max-width:980px){
+  .recipe-form-grid{
+    grid-template-columns:1fr 1fr !important;
+  }
+
+  #recipeTitle,
+  #recipeCategory,
+  #recipeDifficulty,
+  #recipeTime{
+    grid-column:auto !important;
+  }
+
+  .recipe-kids-toggle{grid-column:1 !important}
+  .recipe-healthy-toggle{grid-column:2 !important}
+
+  #recipeIngredients,
+  #recipeWebUrl{
+    grid-column:1 !important;
+  }
+
+  #recipeSteps,
+  #recipeYoutubeUrl{
+    grid-column:2 !important;
+  }
+
+  .recipe-extra-row{
+    grid-template-columns:180px 145px 135px !important;
+  }
+
+  .recipe-card-mark-field,
+  #recipeCardMark{
+    width:180px !important;
+    min-width:180px !important;
+    max-width:180px !important;
+  }
+
+  .recipe-form-actions{
+    margin-top:12px !important;
+  }
+}
+
+/* Handy */
+@media(max-width:600px){
+  .recipe-form-grid{
+    grid-template-columns:1fr !important;
+    gap:10px !important;
+  }
+
+  #recipeTitle,
+  #recipeCategory,
+  #recipeDifficulty,
+  #recipeTime,
+  .recipe-kids-toggle,
+  .recipe-healthy-toggle,
+  #recipeIngredients,
+  #recipeSteps,
+  #recipeWebUrl,
+  #recipeYoutubeUrl{
+    grid-column:1 !important;
+  }
+
+  .recipe-kids-toggle,
+  .recipe-healthy-toggle{
+    width:100% !important;
+    border-radius:12px !important;
+  }
+
+  #recipeIngredients,
+  #recipeSteps{
+    min-height:145px !important;
+  }
+
+  .recipe-extra-row{
+    grid-template-columns:1fr 1fr !important;
+    width:100% !important;
+  }
+
+  .recipe-card-mark-field{
+    grid-column:1 / -1 !important;
+    width:170px !important;
+    min-width:170px !important;
+    max-width:170px !important;
+  }
+
+  #recipeCardMark{
+    width:170px !important;
+    min-width:170px !important;
+    max-width:170px !important;
+  }
+
+  .recipe-bake-field,
+  .recipe-temp-field{
+    width:100% !important;
+  }
+
+  .recipe-form-actions{
+    margin-top:12px !important;
+  }
+
+  #saveRecipeBtn{
+    width:100% !important;
+  }
+}
