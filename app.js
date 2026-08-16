@@ -2179,74 +2179,67 @@ function renderTimeTracking() {
     other: "#d6d0c8"
   };
 
-  const weekTotals = totalsByPersonAndCategory(weekEntries);
-  const people = [
-    {key:"a", ring:"#timeRingMama"},
-    {key:"b", ring:"#timeRingPapa"},
-    {key:"c", ring:"#timeRingLou"},
-    {key:"d", ring:"#timeRingFina"}
-  ];
-
-  let grandTotal = 0;
-  const legendParts = [];
-
-  people.forEach(personInfo => {
-    const categoryTotals = weekTotals[personInfo.key] || {};
-    const pairs = Object.entries(categoryTotals)
-      .filter(([,minutes]) => Number(minutes) > 0)
-      .sort((a,b) => b[1] - a[1]);
-
-    const personTotal = pairs.reduce((sum,[,minutes]) => sum + Number(minutes), 0);
-    grandTotal += personTotal;
-
-    const ring = document.querySelector(personInfo.ring);
-
-    if (ring) {
-      if (!personTotal) {
-        ring.style.background = "rgba(229,226,220,.48)";
-      } else {
-        let cursor = 0;
-        const segments = [];
-
-        pairs.forEach(([category, minutes]) => {
-          const start = cursor;
-          const end = cursor + (Number(minutes) / personTotal) * 100;
-          cursor = end;
-          const color = timeRingSegmentColor(
-            personInfo.key,
-            categoryPalette[category] || "#d6d0c8"
-          );
-          segments.push(`${color} ${start}% ${end}%`);
-        });
-
-        ring.style.background = `conic-gradient(${segments.join(",")})`;
-      }
-    }
-
-    if (personTotal) {
-      legendParts.push(`
-        <div class="time-person-legend">
-          <div class="time-person-legend-head">
-            <span class="time-person-dot" style="background:${escapeHtml(trackingPersonColor(personInfo.key))}"></span>
-            <strong>${escapeHtml(familyName(personInfo.key))}</strong>
-            <span>${formatMinutes(personTotal)}</span>
-          </div>
-          ${pairs.map(([category,minutes]) => `
-            <div class="time-donut-legend-row">
-              <span class="time-donut-dot" style="background:${timeRingSegmentColor(personInfo.key, categoryPalette[category] || "#d6d0c8")}"></span>
-              <span>${escapeHtml(timeCategoryLabel(category))}</span>
-              <strong>${formatMinutes(minutes)}</strong>
-            </div>
-          `).join("")}
-        </div>
-      `);
-    }
+  // Verteilung nach BEREICH – unabhängig von der Person.
+  // So zeigt das Diagramm, wofür die Zeit diese Woche tatsächlich aufgewendet wurde.
+  const categoryTotals = {};
+  weekEntries.forEach(entry => {
+    const category = entry.category || "other";
+    categoryTotals[category] =
+      (categoryTotals[category] || 0) + Number(entry.minutes || 0);
   });
 
+  const categoryPairs = Object.entries(categoryTotals)
+    .filter(([,minutes]) => Number(minutes) > 0)
+    .sort((a,b) => Number(b[1]) - Number(a[1]));
+
+  const grandTotal = categoryPairs.reduce(
+    (sum,[,minutes]) => sum + Number(minutes || 0),
+    0
+  );
+
+  const mainRing = document.querySelector("#timeRingMama");
+  const hiddenRings = [
+    document.querySelector("#timeRingPapa"),
+    document.querySelector("#timeRingLou"),
+    document.querySelector("#timeRingFina")
+  ];
+
+  hiddenRings.forEach(ring => {
+    if (ring) ring.style.background = "transparent";
+  });
+
+  if (mainRing) {
+    if (!grandTotal) {
+      mainRing.style.background = "rgba(229,226,220,.48)";
+    } else {
+      let cursor = 0;
+      const segments = [];
+
+      categoryPairs.forEach(([category,minutes]) => {
+        const start = cursor;
+        const end = cursor + (Number(minutes) / grandTotal) * 100;
+        cursor = end;
+        const color = categoryPalette[category] || "#d6d0c8";
+        segments.push(`${color} ${start}% ${end}%`);
+      });
+
+      mainRing.style.background = `conic-gradient(${segments.join(",")})`;
+    }
+  }
+
   if (donutTotal) donutTotal.textContent = formatMinutes(grandTotal);
+
   if (donutLegend) {
-    donutLegend.innerHTML = legendParts.join("") ||
-      `<span class="time-summary-empty">Noch keine Verteilung.</span>`;
+    donutLegend.innerHTML = categoryPairs.length
+      ? categoryPairs.map(([category,minutes]) => `
+          <div class="time-donut-legend-row">
+            <span class="time-donut-dot"
+                  style="background:${categoryPalette[category] || "#d6d0c8"}"></span>
+            <span>${escapeHtml(timeCategoryLabel(category))}</span>
+            <strong>${formatMinutes(minutes)}</strong>
+          </div>
+        `).join("")
+      : `<span class="time-summary-empty">Noch keine Verteilung.</span>`;
   }
 
   const entries = state.timeTracking.entries
@@ -2395,7 +2388,7 @@ function collectInternetRecipeLinks() {
   });
 
   Object.values(state.meals || {}).forEach(meal => {
-    if (!meal || typeof meal !== "object" || !meal.url) return;
+    if (!meal || typeof meal !== "object" || meal.deleted || !meal.url) return;
     const key = String(meal.url).trim();
     if (!key) return;
 
@@ -4194,6 +4187,7 @@ function normalizeMealEntry(entry) {
     label,
     recipeId: String(entry.recipeId || ""),
     url,
+    deleted: !!entry.deleted,
     updatedAt: Number(entry.updatedAt) || 0
   };
 }
@@ -4218,7 +4212,12 @@ function mergeMeals(localMeals, cloudMeals) {
       return;
     }
 
-    // Migration alter Daten: die vollständigere Fassung behalten.
+    // Migration alter Daten: eine explizite Löschung ist ebenfalls ein gültiger Zustand.
+    if (l.deleted || c.deleted) {
+      merged[key] = l.deleted ? l : c;
+      return;
+    }
+
     const localScore = Number(!!l.label) * 3 + Number(!!l.recipeId) * 2 + Number(!!l.url);
     const cloudScore = Number(!!c.label) * 3 + Number(!!c.recipeId) * 2 + Number(!!c.url);
     merged[key] = localScore >= cloudScore ? l : c;
@@ -4244,9 +4243,10 @@ function renderMealPlan() {
     const key = dateKey(date);
 
     const stored = normalizeMealEntry ? normalizeMealEntry(state.meals?.[key]) : state.meals?.[key];
-    const value = typeof stored === "string" ? stored : (stored?.label || "");
-    const customUrl = typeof stored === "object" ? (stored?.url || "") : "";
-    const recipeId = typeof stored === "object" ? (stored?.recipeId || "") : "";
+    const isDeleted = !!stored?.deleted;
+    const value = isDeleted ? "" : (typeof stored === "string" ? stored : (stored?.label || ""));
+    const customUrl = isDeleted ? "" : (typeof stored === "object" ? (stored?.url || "") : "");
+    const recipeId = isDeleted ? "" : (typeof stored === "object" ? (stored?.recipeId || "") : "");
 
     const matched = recipeId
       ? recipes.find(r => r.id === recipeId)
@@ -4319,12 +4319,21 @@ function renderMealPlan() {
     state.meals = state.meals && typeof state.meals === "object" ? state.meals : {};
 
     if (!label && !url) {
-      delete state.meals[key];
+      // Nicht einfach den Key löschen: sonst kann ein älterer Cloud-Eintrag
+      // beim nächsten Laden wieder auftauchen.
+      state.meals[key] = {
+        label:"",
+        recipeId:"",
+        url:"",
+        deleted:true,
+        updatedAt:Date.now()
+      };
     } else {
       state.meals[key] = {
         label: matched ? matched.title : label,
         recipeId: matched ? matched.id : "",
         url,
+        deleted:false,
         updatedAt: Date.now()
       };
     }
@@ -6111,6 +6120,7 @@ if (confirmReplanBtn) confirmReplanBtn.addEventListener("click", () => {
       label:link.label || "Rezept",
       recipeId:link.recipeId || "",
       url:link.url,
+      deleted:false,
       updatedAt:Date.now()
     };
 
