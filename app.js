@@ -3457,46 +3457,53 @@ document.querySelector("#todayWeekBtn").addEventListener("click", () => {
 
 
 function ensureRecipeCardMarkPicker() {
-  if (document.querySelector("#recipeCardMark")) return;
+  if (document.querySelector("#recipeExtraRow")) return;
 
-  const category = document.querySelector("#recipeCategory");
-  if (!category) return;
+  const recipeForm = document.querySelector("#recipeForm");
+  const actions = recipeForm?.querySelector(".recipe-form-actions");
+  if (!recipeForm || !actions) return;
 
-  const wrapper = document.createElement("label");
-  wrapper.className = "recipe-card-mark-field";
-  wrapper.innerHTML = `
-    <span>Kartenzeichen</span>
-    <select id="recipeCardMark">
-      <optgroup label="Ruhig & geschmackvoll">
-        <option value="⌁">⌁ Feine Linie</option>
-        <option value="✦">✦ Stern</option>
-        <option value="☾">☾ Mond</option>
-        <option value="♡">♡ Herz</option>
-        <option value="❋">❋ Blüte</option>
-        <option value="◌">◌ Kreis</option>
-        <option value="≈">≈ Welle</option>
-        <option value="∞">∞ Unendlich</option>
-      </optgroup>
-      <optgroup label="Cool">
-        <option value="⚡︎">⚡ Blitz</option>
-        <option value="★">★ Star</option>
-        <option value="☻">☻ Smiley</option>
-        <option value="♬">♬ Musik</option>
-        <option value="✌︎">✌ Peace</option>
-        <option value="✪">✪ Cool Star</option>
-      </optgroup>
-    </select>
+  const row = document.createElement("div");
+  row.id = "recipeExtraRow";
+  row.className = "recipe-extra-row";
+  row.innerHTML = `
+    <label class="recipe-card-mark-field">
+      <span>Kartenzeichen</span>
+      <select id="recipeCardMark">
+        <optgroup label="Ruhig & geschmackvoll">
+          <option value="⌁">⌁ Feine Linie</option>
+          <option value="✦">✦ Stern</option>
+          <option value="☾">☾ Mond</option>
+          <option value="♡">♡ Herz</option>
+          <option value="❋">❋ Blüte</option>
+          <option value="◌">◌ Kreis</option>
+          <option value="≈">≈ Welle</option>
+          <option value="∞">∞ Unendlich</option>
+        </optgroup>
+        <optgroup label="Cool">
+          <option value="⚡︎">⚡ Blitz</option>
+          <option value="★">★ Star</option>
+          <option value="☻">☻ Smiley</option>
+          <option value="♬">♬ Musik</option>
+          <option value="✌︎">✌ Peace</option>
+          <option value="✪">✪ Cool Star</option>
+        </optgroup>
+      </select>
+    </label>
+
+    <label class="recipe-bake-field">
+      <span>Backzeit</span>
+      <input id="recipeBakeTime" type="text" inputmode="numeric" placeholder="z. B. 35 Min.">
+    </label>
+
+    <label class="recipe-temp-field">
+      <span>Grad</span>
+      <input id="recipeTemperature" type="text" inputmode="numeric" placeholder="z. B. 180 °C">
+    </label>
   `;
 
-  // Direkt hinter der Kategorie – so gehört es logisch zur Rezeptgestaltung.
-  const parent = category.closest("label") || category.parentElement;
-  if (parent?.parentElement) {
-    parent.insertAdjacentElement("afterend", wrapper);
-  } else {
-    category.insertAdjacentElement("afterend", wrapper);
-  }
+  actions.parentElement.insertBefore(row, actions);
 }
-
 function recipeCardMark(recipe) {
   return recipe?.cardMark || "⌁";
 }
@@ -3569,7 +3576,7 @@ const RECIPE_PAGE_SIZE = 10;
 let editingRecipeId = null;
 
 function resetRecipeForm() {
-  ["#recipeTitle","#recipeTime","#recipeIngredients","#recipeSteps","#recipeWebUrl","#recipeYoutubeUrl"]
+  ["#recipeTitle","#recipeTime","#recipeIngredients","#recipeSteps","#recipeWebUrl","#recipeYoutubeUrl","#recipeBakeTime","#recipeTemperature"]
     .forEach(sel => {
       const el = document.querySelector(sel);
       if (el) el.value = "";
@@ -3613,6 +3620,8 @@ function startRecipeEdit(recipe) {
   document.querySelector("#recipeKids").checked = !!recipe.kids;
   document.querySelector("#recipeHealthy").checked = !!recipe.healthy;
   document.querySelector("#recipeTime").value = recipe.time || "";
+  document.querySelector("#recipeBakeTime").value = recipe.bakeTime || "";
+  document.querySelector("#recipeTemperature").value = recipe.temperature || "";
   document.querySelector("#recipeIngredients").value = normalizedRecipeLines(recipe.ingredients).join("\n");
   document.querySelector("#recipeSteps").value = normalizedRecipeLines(recipe.steps).join("\n");
   document.querySelector("#recipeWebUrl").value = recipe.webUrl || "";
@@ -3851,6 +3860,12 @@ function showRecipeDetail(recipeOrTitle) {
       <div class="recipe-detail-time">
         <span class="recipe-detail-clock">◔</span>
         <span>${escapeHtml(recipe.time || "–")}</span>
+        ${(recipe.bakeTime || recipe.temperature) ? `
+          <small class="recipe-bake-meta">
+            ${recipe.bakeTime ? `♨ ${escapeHtml(recipe.bakeTime)}` : ""}
+            ${recipe.temperature ? ` · ${escapeHtml(recipe.temperature)}` : ""}
+          </small>
+        ` : ""}
       </div>
       <div class="recipe-detail-center">
         <span class="recipe-detail-ribbon">REZEPT</span>
@@ -3983,7 +3998,16 @@ function renderRecipes() {
   host.innerHTML = visibleRecipes.map(r => `
     <article class="recipe-card ${recipeCategoryClass(r.category || "main")} ${r.kids ? "recipe-card-kids" : ""}" id="recipe-${r.id}">
       <header class="recipe-card-head">
-        <div class="recipe-time-mark"><span class="recipe-clock">◔</span><span>${escapeHtml(r.time || "–")}</span></div>
+        <div class="recipe-time-mark">
+          <span class="recipe-clock">◔</span>
+          <span>${escapeHtml(r.time || "–")}</span>
+          ${(r.bakeTime || r.temperature) ? `
+            <small class="recipe-bake-meta">
+              ${r.bakeTime ? `♨ ${escapeHtml(r.bakeTime)}` : ""}
+              ${r.temperature ? ` · ${escapeHtml(r.temperature)}` : ""}
+            </small>
+          ` : ""}
+        </div>
         <div class="recipe-title-wrap">
           <span class="recipe-ribbon">REZEPT</span>
           <button type="button" class="recipe-title-button" data-recipe-id="${r.id}">
@@ -4508,6 +4532,8 @@ document.querySelector("#saveRecipeBtn")?.addEventListener("click", () => {
     kids: !!document.querySelector("#recipeKids")?.checked,
     healthy: !!document.querySelector("#recipeHealthy")?.checked,
     time: document.querySelector("#recipeTime")?.value.trim() || "",
+    bakeTime: document.querySelector("#recipeBakeTime")?.value.trim() || "",
+    temperature: document.querySelector("#recipeTemperature")?.value.trim() || "",
     ingredients: recipeLines(document.querySelector("#recipeIngredients")?.value),
     steps: recipeLines(document.querySelector("#recipeSteps")?.value),
     webUrl: document.querySelector("#recipeWebUrl")?.value.trim() || "",
@@ -7847,4 +7873,3 @@ document.addEventListener("DOMContentLoaded", () => {
   ensureRecipeFormAndMobileActionStyles();
   normalizeRecipeFlagLayout();
 });
-
