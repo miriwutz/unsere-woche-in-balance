@@ -2655,19 +2655,130 @@ a.day-meal{
 }
 
 
-/* Essensplan – Link und Bezeichnung bleiben visuell klar getrennt */
-.meal-plan-day{
-  min-width:0;
+/* =========================================================
+   REZEPTKARTEN – Kategorie = immer dieselbe Pastellfarbe
+   ========================================================= */
+.recipe-card{
+  border-width:1px !important;
+  font-family:"Trebuchet MS","Segoe UI",Arial,sans-serif;
 }
-.meal-plan-input,
-.meal-plan-url-input{
-  min-width:0;
+.recipe-card-body,
+.recipe-detail-grid{
+  font-size:.92rem;
 }
-.meal-plan-url-row:not(.hidden){
-  display:block;
+.recipe-column li,
+.recipe-prep-line,
+.recipe-cook-line{
+  font-size:.92rem !important;
+  line-height:1.55 !important;
+}
+.recipe-title-button,
+.recipe-title-wrap h3,
+#recipeDetailTitle{
+  font-family:Georgia,"Times New Roman",serif !important;
+  letter-spacing:.01em;
 }
 
-/* Wochenplan zeigt niemals eine rohe URL als Essensnamen. */
-.day-meal strong{
-  overflow-wrap:anywhere;
+/* Kinderrezept: süßer, aber nicht greller Regenbogenrahmen */
+.recipe-card.recipe-card-kids{
+  border:2px solid transparent !important;
+  background:
+    linear-gradient(#fffdfb,#fffdfb) padding-box,
+    linear-gradient(90deg,
+      #efb8c8,
+      #f1d39a,
+      #c8dda9,
+      #a9d8d0,
+      #b9c6ec,
+      #d7b7e5,
+      #efb8c8) border-box !important;
+  box-shadow:0 7px 24px rgba(88,104,100,.07);
+}
+.recipe-card.recipe-card-kids .recipe-card-body{
+  background:rgba(255,253,251,.97);
+}
+.recipe-card.recipe-card-kids .recipe-kids-badge{
+  transform:scale(1.05);
+}
+
+/* Im geöffneten Kinderrezept ebenfalls ein dezenter Regenbogenrand */
+.recipe-detail-banner.recipe-detail-kids{
+  outline:2px solid transparent;
+  box-shadow:
+    0 0 0 2px #efb8c8,
+    0 0 0 4px rgba(241,211,154,.55);
+}
+
+/* Kategorie-Farben bewusst fest und wiederholbar */
+.recipe-category-breakfast.recipe-card .recipe-card-head,
+.recipe-detail-banner.recipe-category-breakfast{background:linear-gradient(90deg,#ead9bc,#f1e7d3,#e6d0ab)!important}
+.recipe-category-spread.recipe-card .recipe-card-head,
+.recipe-detail-banner.recipe-category-spread{background:linear-gradient(90deg,#d8ccb7,#e7ddcd,#d2c2a9)!important}
+.recipe-category-soup.recipe-card .recipe-card-head,
+.recipe-detail-banner.recipe-category-soup{background:linear-gradient(90deg,#b7d0c8,#ccddd7,#abc7be)!important}
+.recipe-category-main.recipe-card .recipe-card-head,
+.recipe-detail-banner.recipe-category-main{background:linear-gradient(90deg,#b9cfd0,#cddddd,#afc8ca)!important}
+.recipe-category-small.recipe-card .recipe-card-head,
+.recipe-detail-banner.recipe-category-small{background:linear-gradient(90deg,#d8c9d7,#e6dbe5,#cebccb)!important}
+.recipe-category-salad.recipe-card .recipe-card-head,
+.recipe-detail-banner.recipe-category-salad{background:linear-gradient(90deg,#c5d7bf,#dbe7d7,#b8cfb1)!important}
+.recipe-category-sweet.recipe-card .recipe-card-head,
+.recipe-detail-banner.recipe-category-sweet{background:linear-gradient(90deg,#e5c3c8,#efd8dc,#dcb5bc)!important}
+.recipe-category-drink.recipe-card .recipe-card-head,
+.recipe-detail-banner.recipe-category-drink{background:linear-gradient(90deg,#c6d4e0,#d9e2ea,#b9cbd9)!important}
+.recipe-category-other.recipe-card .recipe-card-head,
+.recipe-detail-banner.recipe-category-other{background:linear-gradient(90deg,#d6d0c8,#e5e0da,#ccc4bb)!important}
+
+/* =========================================================
+   REZEPTFORMULAR – direkt unter "Rezept hinzufügen"
+   ========================================================= */
+.recipes-head + .recipe-form{
+  margin-top:4px;
+  margin-bottom:12px;
+}
+
+/* =========================================================
+   ESSENSPLAN – stabile eigene Autovervollständigung
+   ========================================================= */
+.meal-plan-name-wrap{
+  position:relative;
+  min-width:0;
+}
+.meal-plan-name-wrap .meal-plan-input{
+  width:100%;
+}
+.meal-plan-autocomplete{
+  position:absolute;
+  z-index:60;
+  left:0;
+  right:0;
+  top:calc(100% + 4px);
+  padding:5px;
+  border:1px solid rgba(100,145,136,.28);
+  border-radius:11px;
+  background:#fffdfb;
+  box-shadow:0 10px 24px rgba(61,82,76,.13);
+}
+.meal-plan-autocomplete.hidden{display:none}
+.meal-plan-autocomplete-item{
+  display:grid;
+  gap:2px;
+  width:100%;
+  padding:7px 8px;
+  border:0;
+  border-radius:8px;
+  background:transparent;
+  color:#425b55;
+  text-align:left;
+  cursor:pointer;
+}
+.meal-plan-autocomplete-item:hover{
+  background:#e4f0ed;
+}
+.meal-plan-autocomplete-item strong{
+  font-size:.73rem;
+}
+.meal-plan-autocomplete-item span{
+  color:#83918e;
+  font-size:.61rem;
 }
