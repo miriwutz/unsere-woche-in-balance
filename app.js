@@ -32,6 +32,7 @@ const state = {
   shopping: JSON.parse(localStorage.getItem("balanceProd.shopping") || "[]"),
   recipes: JSON.parse(localStorage.getItem("balanceProd.recipes") || "[]"),
   meals: JSON.parse(localStorage.getItem("balanceProd.meals") || "{}"),
+  pinboard: JSON.parse(localStorage.getItem("balanceProd.pinboard") || "[]"),
 
   workroom: JSON.parse(
     localStorage.getItem("balanceProd.workroom") ||
@@ -52,6 +53,7 @@ state.workroom.links = Array.isArray(state.workroom.links) ? state.workroom.link
 state.workroom.substitutions = Array.isArray(state.workroom.substitutions) ? state.workroom.substitutions : [];
 state.recipes = Array.isArray(state.recipes) ? state.recipes : [];
 state.meals = state.meals && typeof state.meals === "object" ? state.meals : {};
+state.pinboard = Array.isArray(state.pinboard) ? state.pinboard : [];
 
 let shoppingItems = state.shopping;
 let cloudReady = false;
@@ -69,6 +71,7 @@ function snapshotPersistentState() {
     shopping: state.shopping,
     recipes: state.recipes,
     meals: state.meals,
+    pinboard: state.pinboard,
     workroom: state.workroom,
     school: state.school,
     familySettings: state.familySettings,
@@ -98,6 +101,7 @@ function saveLocal() {
   localStorage.setItem("balanceProd.shopping", JSON.stringify(state.shopping));
   localStorage.setItem("balanceProd.recipes", JSON.stringify(state.recipes));
   localStorage.setItem("balanceProd.meals", JSON.stringify(state.meals));
+  localStorage.setItem("balanceProd.pinboard", JSON.stringify(state.pinboard));
   localStorage.setItem("balanceProd.workroom", JSON.stringify(state.workroom));
   localStorage.setItem("balanceProd.school", JSON.stringify(state.school));
   localStorage.setItem("balanceProd.familySettings", JSON.stringify(state.familySettings));
@@ -114,6 +118,7 @@ function cloudPayload() {
     shopping: state.shopping,
     recipes: state.recipes,
     meals: state.meals,
+    pinboard: state.pinboard,
     workroom: state.workroom,
     school: state.school,
     familySettings: state.familySettings,
@@ -148,6 +153,207 @@ function save() {
   saveLocal();
   scheduleCloudSave();
 }
+
+
+// =========================================================
+// PINNWAND – flüchtige Familiennachrichten
+// =========================================================
+const pinboardSeenIds = new Set();
+let pinboardCloudInitialized = false;
+let pinboardAudioContext = null;
+
+function pinboardRecipientName(key) {
+  if (key === "all") return "Alle";
+  return familyName(key) || "Familie";
+}
+
+function pinboardSoundLabel(sound) {
+  return {
+    letter: "💌 Briefchen",
+    sparkle: "✨ Funkeln",
+    bubble: "🫧 Blubb"
+  }[sound] || "💌 Briefchen";
+}
+
+async function playPinboardSound(sound = "letter") {
+  try {
+    pinboardAudioContext =
+      pinboardAudioContext ||
+      new (window.AudioContext || window.webkitAudioContext)();
+
+    if (pinboardAudioContext.state === "suspended") {
+      await pinboardAudioContext.resume();
+    }
+
+    const ctx = pinboardAudioContext;
+    if (!ctx || ctx.state !== "running") return false;
+
+    const now = ctx.currentTime;
+    const master = ctx.createGain();
+    master.connect(ctx.destination);
+    master.gain.setValueAtTime(0.0001, now);
+    master.gain.exponentialRampToValueAtTime(0.34, now + 0.01);
+
+    function note(freq, start, duration, type = "sine", gainValue = 0.7, endFreq = null) {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, now + start);
+      if (endFreq) {
+        osc.frequency.exponentialRampToValueAtTime(Math.max(30, endFreq), now + start + duration);
+      }
+      gain.gain.setValueAtTime(0.0001, now + start);
+      gain.gain.exponentialRampToValueAtTime(gainValue, now + start + 0.01);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + start + duration);
+      osc.connect(gain);
+      gain.connect(master);
+      osc.start(now + start);
+      osc.stop(now + start + duration + 0.03);
+    }
+
+    if (sound === "sparkle") {
+      note(1047, 0.00, 0.18, "sine", 0.58);
+      note(1319, 0.10, 0.22, "sine", 0.54);
+      note(1568, 0.22, 0.28, "sine", 0.50);
+      master.gain.exponentialRampToValueAtTime(0.0001, now + 0.58);
+    } else if (sound === "bubble") {
+      note(240, 0.00, 0.20, "sine", 0.72, 120);
+      note(360, 0.17, 0.16, "sine", 0.48, 180);
+      master.gain.exponentialRampToValueAtTime(0.0001, now + 0.42);
+    } else {
+      note(660, 0.00, 0.20, "triangle", 0.66);
+      note(880, 0.19, 0.26, "triangle", 0.62);
+      master.gain.exponentialRampToValueAtTime(0.0001, now + 0.52);
+    }
+
+    return true;
+  } catch (err) {
+    console.warn("Pinnwand-Ton konnte nicht abgespielt werden:", err);
+    return false;
+  }
+}
+
+function renderPinboard() {
+  const list = document.querySelector("#pinboardList");
+  const badge = document.querySelector("#pinboardBadge");
+  const countText = document.querySelector("#pinboardCountText");
+  if (!list) return;
+
+  state.pinboard = Array.isArray(state.pinboard) ? state.pinboard : [];
+  const messages = state.pinboard
+    .slice()
+    .sort((a,b) => Number(b.createdAt || 0) - Number(a.createdAt || 0));
+
+  if (badge) {
+    badge.textContent = String(messages.length);
+    badge.classList.toggle("hidden", messages.length === 0);
+  }
+
+  if (countText) {
+    countText.textContent =
+      messages.length === 0 ? "Keine Nachrichten" :
+      messages.length === 1 ? "1 Nachricht" :
+      `${messages.length} Nachrichten`;
+  }
+
+  if (!messages.length) {
+    list.innerHTML = `<div class="pinboard-empty">Die Pinnwand ist gerade leer.</div>`;
+    return;
+  }
+
+  list.innerHTML = messages.map(message => `
+    <article class="pinboard-note" data-id="${message.id}">
+      <div class="pinboard-note-top">
+        <span class="pinboard-note-recipient">💌 ${escapeHtml(pinboardRecipientName(message.recipient))}</span>
+        <span class="pinboard-note-sound">${escapeHtml(pinboardSoundLabel(message.sound))}</span>
+        <button type="button" class="pinboard-note-x" data-id="${message.id}" title="Nachricht löschen">×</button>
+      </div>
+      <div class="pinboard-note-text">${escapeHtml(message.text || "")}</div>
+      <button type="button" class="pinboard-read-delete" data-id="${message.id}">
+        ✓ Gelesen & löschen
+      </button>
+    </article>
+  `).join("");
+
+  list.querySelectorAll(".pinboard-read-delete, .pinboard-note-x").forEach(btn => {
+    btn.addEventListener("click", () => {
+      state.pinboard = state.pinboard.filter(message => message.id !== btn.dataset.id);
+      save();
+      renderPinboard();
+    });
+  });
+}
+
+function handleIncomingPinboard(cloudMessages) {
+  const incoming = Array.isArray(cloudMessages) ? cloudMessages : [];
+
+  if (!pinboardCloudInitialized) {
+    incoming.forEach(message => message?.id && pinboardSeenIds.add(message.id));
+    pinboardCloudInitialized = true;
+    return;
+  }
+
+  const fresh = incoming.filter(message =>
+    message?.id && !pinboardSeenIds.has(message.id)
+  );
+
+  incoming.forEach(message => message?.id && pinboardSeenIds.add(message.id));
+
+  if (fresh.length) {
+    const newest = fresh
+      .slice()
+      .sort((a,b) => Number(b.createdAt || 0) - Number(a.createdAt || 0))[0];
+
+    setTimeout(() => {
+      playPinboardSound(newest?.sound || "letter");
+    }, 80);
+  }
+}
+
+function openPinboard() {
+  renderPinboard();
+  document.querySelector("#pinboardDialog")?.showModal();
+}
+
+document.querySelector("#openPinboardBtn")?.addEventListener("click", openPinboard);
+document.querySelector("#closePinboardBtn")?.addEventListener("click", () => {
+  document.querySelector("#pinboardDialog")?.close();
+});
+
+document.querySelector("#pinboardDialog")?.addEventListener("click", e => {
+  if (e.target === e.currentTarget) e.currentTarget.close();
+});
+
+document.querySelector("#sendPinboardBtn")?.addEventListener("click", async () => {
+  const recipient = document.querySelector("#pinboardRecipient")?.value || "all";
+  const textInput = document.querySelector("#pinboardMessage");
+  const sound = document.querySelector("#pinboardSound")?.value || "letter";
+  const text = textInput?.value.trim() || "";
+
+  if (!text) {
+    textInput?.focus();
+    return;
+  }
+
+  const message = {
+    id: uid(),
+    recipient,
+    text,
+    sound,
+    createdAt: Date.now()
+  };
+
+  state.pinboard.push(message);
+
+  // Der Sender bekommt nicht gleich seinen eigenen Cloud-Echo-Ton.
+  pinboardSeenIds.add(message.id);
+
+  save();
+  renderPinboard();
+
+  if (textInput) textInput.value = "";
+  showMotivation("💌 Nachricht an die Pinnwand geheftet.");
+});
 
 function uid() {
   return crypto.randomUUID ? crypto.randomUUID() : String(Date.now() + Math.random());
@@ -2377,6 +2583,7 @@ function renderAll() {
   renderWorkroomLinks();
   renderRecipes();
   renderMealPlan();
+  renderPinboard();
   renderSubstitutions();
   renderShopping();
 
@@ -4899,6 +5106,10 @@ shoppingItems = state.shopping;
       state.meals,
       data.meals && typeof data.meals === "object" ? data.meals : {}
     );
+    if (Array.isArray(data.pinboard)) {
+      handleIncomingPinboard(data.pinboard);
+      state.pinboard = data.pinboard;
+    }
     const localWorkroom = normalizeWorkroom(state.workroom);
     const cloudWorkroom = normalizeWorkroom(data.workroom);
 
