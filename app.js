@@ -1846,6 +1846,18 @@ if (isExpanded) {
     document.querySelector("#todoArea").value = item.area;
     document.querySelector("#todoPeriod").value = item.period;
     document.querySelector("#todoDay").value = item.day || "";
+
+    const todoWeekOffsetSelect = document.querySelector("#todoWeekOffset");
+    if (todoWeekOffsetSelect) {
+      let offset = 0;
+      if (item.weekKey) {
+        const itemMonday = parseLocalDate(item.weekKey);
+        const currentMonday = new Date(currentWeekMonday);
+        offset = Math.round((itemMonday - currentMonday) / (7 * 24 * 60 * 60 * 1000));
+      }
+      todoWeekOffsetSelect.value = ["0","1","2"].includes(String(offset)) ? String(offset) : "0";
+    }
+
   document.querySelector("#eventDate").value = item.date || "";
 document.querySelector("#eventEndDate").value = item.endDate || "";
 document.querySelector("#eventTime").value = item.time || "";
@@ -2114,8 +2126,8 @@ function restoreTimeTrackingFromLocal() {
   }
 }
 
-function formatElapsedWithSeconds(startedAt) {
-  const seconds = Math.max(0, Math.floor((Date.now() - Number(startedAt || Date.now())) / 1000));
+function formatElapsedWithSeconds(startedAt, nowOverride = Date.now()) {
+  const seconds = Math.max(0, Math.floor((Number(nowOverride) - Number(startedAt || nowOverride)) / 1000));
   const h = Math.floor(seconds / 3600);
   const m = Math.floor((seconds % 3600) / 60);
   const s = seconds % 60;
@@ -2124,14 +2136,28 @@ function formatElapsedWithSeconds(startedAt) {
 
 let liveTimeTicker = null;
 
+const TIME_TRACKING_MAX_MS = 5 * 60 * 60 * 1000;
+
 function startLiveTimeTicker() {
   clearInterval(liveTimeTicker);
   const activeTimers = Array.isArray(state.timeTracking.active) ? state.timeTracking.active : [];
   if (!activeTimers.length) return;
 
   liveTimeTicker = setInterval(() => {
+    const now = Date.now();
+
     document.querySelectorAll(".active-time-elapsed").forEach(el => {
-      el.textContent = formatElapsedWithSeconds(Number(el.dataset.startedAt || Date.now()));
+      const startedAt = Number(el.dataset.startedAt || now);
+      const cappedNow = Math.min(now, startedAt + TIME_TRACKING_MAX_MS);
+      el.textContent = formatElapsedWithSeconds(startedAt, cappedNow);
+    });
+
+    const expired = (state.timeTracking.active || []).filter(timer =>
+      now - Number(timer.startedAt || now) >= TIME_TRACKING_MAX_MS
+    );
+
+    expired.forEach(timer => {
+      stopTimeTracking(timer.id, Number(timer.startedAt) + TIME_TRACKING_MAX_MS);
     });
   }, 1000);
 }
@@ -2437,13 +2463,13 @@ function startTimeTracking() {
   renderTimeTracking();
 }
 
-function stopTimeTracking(timerId) {
+function stopTimeTracking(timerId, endedAtOverride = null) {
   state.timeTracking.active = Array.isArray(state.timeTracking.active) ? state.timeTracking.active : [];
   const active = state.timeTracking.active.find(timer => timer.id === timerId);
   if (!active) return;
 
-  const endedAt = Date.now();
-  const minutes = Math.max(1, Math.round((endedAt - Number(active.startedAt || endedAt)) / 60000));
+  const endedAt = endedAtOverride == null ? Date.now() : Number(endedAtOverride);
+  const minutes = Math.max(1, Math.min(300, Math.round((endedAt - Number(active.startedAt || endedAt)) / 60000)));
 
   state.timeTracking.entries.push({
     id: active.id || uid(),
@@ -5973,6 +5999,7 @@ function resetTodoEditor() {
   document.querySelector("#todoPriority").value = "medium";
   document.querySelector("#todoArea").value = "work";
   document.querySelector("#todoPeriod").value = "week";
+  document.querySelector("#todoWeekOffset").value = "0";
   document.querySelector("#todoDay").value = "";
   document.querySelector("#eventDate").value = "";
   document.querySelector("#eventEndDate").value = "";
@@ -6044,15 +6071,20 @@ const recurrence = document.querySelector("#recurrence").value;
   // Wochentag bei To-dos nur für "Diese Woche" anzeigen
   const period = document.querySelector("#todoPeriod")?.value;
   const todoDayField = document.querySelector("#todoDay")?.closest("label, .field, .form-field");
+  const todoWeekOffsetField = document.querySelector("#todoWeekOffset")?.closest("label, .field, .form-field");
 
   if (todoDayField) {
     todoDayField.classList.toggle("hidden", isEvent || period !== "week");
+  }
+  if (todoWeekOffsetField) {
+    todoWeekOffsetField.classList.toggle("hidden", isEvent || period !== "week");
   }
 }
 
 document.querySelector("#entryType").addEventListener("change", updateEntryTypeUI);
 document.querySelector("#recurrence").addEventListener("change", updateEntryTypeUI);
 document.querySelector("#eventCategory").addEventListener("change", updateEntryTypeUI);
+document.querySelector("#todoPeriod")?.addEventListener("change", updateEntryTypeUI);
 
 document.querySelector("#cancelTodoEditBtn").addEventListener("click", resetTodoEditor);
 
@@ -6080,8 +6112,12 @@ const eventCategory = document.querySelector("#eventCategory")?.value || "normal
   const superImportant = document.querySelector("#superImportant").checked;
 
   const activeMonday = new Date(currentWeekMonday);
-  const selectedTodoDate = selectedDay ? dateForWeekday(activeMonday, selectedDay) : null;
-  const newWeekKey = selectedDay ? dateKey(activeMonday) : null;
+  const todoWeekOffset = Math.max(0, Math.min(2, Number(document.querySelector("#todoWeekOffset")?.value || 0)));
+  const plannedMonday = new Date(activeMonday);
+  plannedMonday.setDate(plannedMonday.getDate() + (todoWeekOffset * 7));
+
+  const selectedTodoDate = selectedDay ? dateForWeekday(plannedMonday, selectedDay) : null;
+  const newWeekKey = selectedDay ? dateKey(plannedMonday) : null;
   const anchorDate = type === "event"
     ? eventDate
     : (selectedTodoDate ? dateKey(selectedTodoDate) : null);
