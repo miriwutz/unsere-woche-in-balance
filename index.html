@@ -571,10 +571,45 @@
         <textarea id="recipeSteps" rows="6" placeholder="Zubereitung – ein Schritt pro Zeile"></textarea>
         <input id="recipeWebUrl" type="url" placeholder="Link zum Onlinerezept – optional">
         <input id="recipeYoutubeUrl" type="url" placeholder="YouTube-Link – optional">
-      </div>
-      <div class="recipe-form-actions">
-        <button id="cancelRecipeEditBtn" class="secondary-btn hidden" type="button">Bearbeiten abbrechen</button>
-        <button id="saveRecipeBtn" class="primary-btn" type="button">Rezept speichern</button>
+
+        <label class="recipe-card-mark-field">
+          <span>Kartenzeichen</span>
+          <select id="recipeCardMark">
+            <optgroup label="Ruhig & geschmackvoll">
+              <option value="⌁">⌁ Feine Linie</option>
+              <option value="✦">✦ Stern</option>
+              <option value="☾">☾ Mond</option>
+              <option value="♡">♡ Herz</option>
+              <option value="❋">❋ Blüte</option>
+              <option value="◌">◌ Kreis</option>
+              <option value="≈">≈ Welle</option>
+              <option value="∞">∞ Unendlich</option>
+            </optgroup>
+            <optgroup label="Cool">
+              <option value="⚡︎">⚡ Blitz</option>
+              <option value="★">★ Star</option>
+              <option value="☻">☻ Smiley</option>
+              <option value="♬">♬ Musik</option>
+              <option value="✌︎">✌ Peace</option>
+              <option value="✪">✪ Cool Star</option>
+            </optgroup>
+          </select>
+        </label>
+
+        <label class="recipe-bake-field">
+          <span>Backzeit</span>
+          <input id="recipeBakeTime" type="text" inputmode="numeric" placeholder="z. B. 35 Min.">
+        </label>
+
+        <label class="recipe-temp-field">
+          <span>Grad</span>
+          <input id="recipeTemperature" type="text" inputmode="numeric" placeholder="z. B. 180 °C">
+        </label>
+
+        <div class="recipe-form-actions">
+          <button id="cancelRecipeEditBtn" class="secondary-btn hidden" type="button">Bearbeiten abbrechen</button>
+          <button id="saveRecipeBtn" class="primary-btn" type="button">Rezept speichern</button>
+        </div>
       </div>
     </div>
 
