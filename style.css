@@ -5423,3 +5423,81 @@ a.day-meal{
     display:none !important;
   }
 }
+
+
+/* =========================================================
+   REZEPTE – FAVORIT
+   ========================================================= */
+.recipe-favorite-toggle{
+  grid-column:3 !important;
+  grid-row:2 !important;
+  width:max-content !important;
+  min-height:38px !important;
+  display:inline-flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  padding:8px 13px !important;
+  border:1px solid rgba(201,184,142,.42) !important;
+  border-radius:999px !important;
+  background:rgba(255,253,248,.90) !important;
+  color:#786d5d !important;
+  cursor:pointer !important;
+  user-select:none;
+  transition:background .15s ease,border-color .15s ease,transform .15s ease;
+}
+
+.recipe-favorite-toggle:hover{
+  background:#fbf5e8 !important;
+  border-color:rgba(190,159,87,.52) !important;
+}
+
+.recipe-favorite-toggle input{
+  position:absolute !important;
+  opacity:0 !important;
+  pointer-events:none !important;
+}
+
+.recipe-favorite-toggle span{
+  display:inline-flex;
+  align-items:center;
+  gap:5px;
+  white-space:nowrap;
+}
+
+.recipe-favorite-toggle:has(input:checked){
+  background:#fff3cf !important;
+  border-color:#e5c66e !important;
+  color:#755c23 !important;
+  box-shadow:0 3px 12px rgba(190,150,55,.10);
+}
+
+.recipe-favorite-toggle:has(input:checked) span{
+  font-weight:650;
+}
+
+.recipe-favorite-toggle:has(input:checked) span::first-letter{
+  color:#d5a524;
+}
+
+/* Auf gespeicherten Rezeptkarten sichtbar */
+.recipe-favorite-badge{
+  background:#fff2c8 !important;
+  border:1px solid #e8cb78 !important;
+  color:#775d20 !important;
+  font-weight:650 !important;
+}
+
+/* Tablet / Handy sauber umbrechen */
+@media(max-width:980px){
+  .recipe-favorite-toggle{
+    grid-column:1 / -1 !important;
+    grid-row:auto !important;
+  }
+}
+
+@media(max-width:600px){
+  .recipe-favorite-toggle{
+    width:100% !important;
+    border-radius:12px !important;
+  }
+}
