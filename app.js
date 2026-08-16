@@ -72,6 +72,10 @@ state.timeTracking.stopped =
   state.timeTracking.stopped && typeof state.timeTracking.stopped === "object"
     ? state.timeTracking.stopped
     : {};
+state.timeTracking.deletedEntries =
+  state.timeTracking.deletedEntries && typeof state.timeTracking.deletedEntries === "object"
+    ? state.timeTracking.deletedEntries
+    : {};
 state.recipeLinkFeedback = state.recipeLinkFeedback && typeof state.recipeLinkFeedback === "object"
   ? state.recipeLinkFeedback
   : {};
@@ -1967,7 +1971,11 @@ function normalizeTimeTrackingData(value) {
     active: Array.isArray(source.active)
       ? source.active
       : (source.active && typeof source.active === "object" ? [source.active] : []),
-    stopped: source.stopped && typeof source.stopped === "object" ? source.stopped : {}
+    stopped: source.stopped && typeof source.stopped === "object" ? source.stopped : {},
+    deletedEntries:
+      source.deletedEntries && typeof source.deletedEntries === "object"
+        ? source.deletedEntries
+        : {}
   };
 }
 
@@ -1979,17 +1987,42 @@ function mergeStoppedMaps(a, b) {
   return result;
 }
 
+function mergeTimeDeletionMaps(a, b) {
+  const result = {...(a || {})};
+  Object.entries(b || {}).forEach(([id, ts]) => {
+    result[id] = Math.max(Number(result[id] || 0), Number(ts || 0));
+  });
+  return result;
+}
+
 function mergeTimeTrackingData(a, b) {
   const A = normalizeTimeTrackingData(a);
   const B = normalizeTimeTrackingData(b);
+
   const stopped = mergeStoppedMaps(A.stopped, B.stopped);
-  const entries = mergeByIdPreferNewer(A.entries, B.entries);
+  const deletedEntries = mergeTimeDeletionMaps(A.deletedEntries, B.deletedEntries);
+
+  // Zuerst nach ID zusammenführen, danach echte Löschungen anwenden.
+  const mergedEntries = mergeByIdPreferNewer(A.entries, B.entries);
+  const entries = mergedEntries.filter(entry => {
+    if (!entry?.id) return true;
+    const deletedAt = Number(deletedEntries[entry.id] || 0);
+    const entryUpdatedAt = Number(entry.updatedAt || entry.endedAt || entry.createdAt || 0);
+
+    // Eine neuere Löschmarke gewinnt gegen einen alten Datensatz auf einem anderen Gerät.
+    return !(deletedAt && deletedAt >= entryUpdatedAt);
+  });
 
   const finishedIds = new Set(entries.map(entry => entry?.id).filter(Boolean));
   const activeMap = new Map();
 
   [...A.active, ...B.active].forEach(timer => {
     if (!timer?.id || finishedIds.has(timer.id)) return;
+
+    // Auch ein bereits gelöschter fertiger Eintrag soll nicht durch einen
+    // alten Active-Stand wieder auferstehen.
+    if (deletedEntries[timer.id]) return;
+
     const stoppedAt = Number(stopped[timer.id] || 0);
     if (stoppedAt && stoppedAt >= Number(timer.startedAt || 0)) return;
 
@@ -1999,7 +2032,12 @@ function mergeTimeTrackingData(a, b) {
     }
   });
 
-  return {entries, active:[...activeMap.values()], stopped};
+  return {
+    entries,
+    active:[...activeMap.values()],
+    stopped,
+    deletedEntries
+  };
 }
 
 async function saveTimeTrackingToCloudNow() {
@@ -2439,9 +2477,23 @@ function renderTimeTracking() {
 
   list.querySelectorAll(".time-log-delete").forEach(btn => {
     btn.addEventListener("click", () => {
-      state.timeTracking.entries = state.timeTracking.entries.filter(entry => entry.id !== btn.dataset.id);
+      const id = btn.dataset.id;
+      if (!id) return;
+
+      const now = Date.now();
+
+      state.timeTracking.deletedEntries =
+        state.timeTracking.deletedEntries && typeof state.timeTracking.deletedEntries === "object"
+          ? state.timeTracking.deletedEntries
+          : {};
+
+      // Löschmarke statt nur lokalem Entfernen:
+      // So kann ein zweiter Rechner den alten Eintrag nicht wieder zurückschreiben.
+      state.timeTracking.deletedEntries[id] = now;
+      state.timeTracking.entries =
+        state.timeTracking.entries.filter(entry => entry.id !== id);
+
       saveTimeTrackingImmediately();
-      save();
       renderTimeTracking();
     });
   });
@@ -6162,6 +6214,10 @@ const plingMinutes =
   Number(document.querySelector("#eventPlingMinutes")?.value || 15);
 
 const eventCategory = document.querySelector("#eventCategory")?.value || "normal";
+const schoolyearWeekday = document.querySelector("#schoolyearWeekday")?.value || "";
+const schoolyearTime = document.querySelector("#schoolyearTime")?.value || "";
+const schoolyearEndTime = document.querySelector("#schoolyearEndTime")?.value || "";
+const isSchoolyearEvent = type === "event" && recurrence === "schoolyear-noe";
   const superImportant = document.querySelector("#superImportant").checked;
 
   const activeMonday = new Date(currentWeekMonday);
