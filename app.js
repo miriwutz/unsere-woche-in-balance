@@ -1012,18 +1012,11 @@ ${isNewEntry(t) ? `<span class="new-entry-badge">NEU</span>` : ""}
     ` : "";
 
     // Essen bewusst ganz unten im Tag, direkt vor dem Video.
-    const mealStored = state.meals?.[dateKey(date)];
-    const rawMealLabel = typeof mealStored === "string"
-      ? mealStored
-      : (mealStored?.label || "");
-    const mealUrl = mealStored && typeof mealStored === "object"
-      ? (mealStored.url || "")
-      : "";
-    const mealLabel = /^https?:\/\//i.test(rawMealLabel)
-      ? "Rezeptlink"
-      : (rawMealLabel || (mealUrl ? "Rezeptlink" : ""));
+    const mealStored = normalizeMealEntry(state.meals?.[dateKey(date)]);
+    const mealLabel = mealStored?.label || "";
+    const mealUrl = mealStored?.url || "";
 
-    const mealRecipe = mealStored && typeof mealStored === "object" && mealStored.recipeId
+    const mealRecipe = mealStored?.recipeId
       ? state.recipes.find(r => r.id === mealStored.recipeId)
       : recipeByTitle(mealLabel);
 
@@ -2348,6 +2341,12 @@ function renderAll() {
   renderMealPlan();
   renderSubstitutions();
   renderShopping();
+
+  // Defensive Aktualisierung: wenn Einkauf sichtbar ist, Rezeptkarten immer neu aufbauen.
+  if (document.querySelector("#shopping")?.classList.contains("active")) {
+    renderRecipes();
+    renderMealPlan();
+  }
 }
 
 async function updateVideoPreview() {
@@ -2840,6 +2839,66 @@ function mealPlanMonday(offset = 0) {
   return monday;
 }
 
+
+function normalizeMealEntry(entry) {
+  if (!entry) return null;
+
+  if (typeof entry === "string") {
+    return {
+      label: /^https?:\/\//i.test(entry.trim()) ? "" : entry.trim(),
+      recipeId: "",
+      url: /^https?:\/\//i.test(entry.trim()) ? entry.trim() : "",
+      updatedAt: 0
+    };
+  }
+
+  if (typeof entry !== "object") return null;
+
+  let label = String(entry.label || "").trim();
+  let url = String(entry.url || "").trim();
+
+  if (/^https?:\/\//i.test(label) && !url) {
+    url = label;
+    label = "";
+  }
+
+  return {
+    label,
+    recipeId: String(entry.recipeId || ""),
+    url,
+    updatedAt: Number(entry.updatedAt) || 0
+  };
+}
+
+function mergeMeals(localMeals, cloudMeals) {
+  const local = localMeals && typeof localMeals === "object" ? localMeals : {};
+  const cloud = cloudMeals && typeof cloudMeals === "object" ? cloudMeals : {};
+  const merged = {};
+  const keys = new Set([...Object.keys(local), ...Object.keys(cloud)]);
+
+  keys.forEach(key => {
+    const l = normalizeMealEntry(local[key]);
+    const c = normalizeMealEntry(cloud[key]);
+
+    if (!l && !c) return;
+    if (!l) { merged[key] = c; return; }
+    if (!c) { merged[key] = l; return; }
+
+    // Neue Einträge tragen updatedAt. Dann gewinnt immer die neuere Fassung.
+    if (l.updatedAt || c.updatedAt) {
+      merged[key] = l.updatedAt >= c.updatedAt ? l : c;
+      return;
+    }
+
+    // Migration alter Daten: die vollständigere Fassung behalten.
+    const localScore = Number(!!l.label) * 3 + Number(!!l.recipeId) * 2 + Number(!!l.url);
+    const cloudScore = Number(!!c.label) * 3 + Number(!!c.recipeId) * 2 + Number(!!c.url);
+    merged[key] = localScore >= cloudScore ? l : c;
+  });
+
+  return merged;
+}
+
 function renderMealPlan() {
   const host = document.querySelector("#mealPlanGrid");
   if (!host) return;
@@ -2849,27 +2908,15 @@ function renderMealPlan() {
     .slice()
     .sort((a,b) => String(a.title || "").localeCompare(String(b.title || ""), "de"));
 
-  const isUrl = value => /^https?:\/\//i.test(String(value || "").trim());
-
   host.innerHTML = days.map((dayName, index) => {
     const date = new Date(monday);
     date.setDate(monday.getDate() + index);
     const key = dateKey(date);
 
-    const stored = state.meals?.[key];
-    let value = typeof stored === "string"
-      ? stored
-      : (stored?.label || "");
-    let customUrl = typeof stored === "object" ? (stored.url || "") : "";
-    const recipeId = typeof stored === "object" ? (stored.recipeId || "") : "";
-
-    // Alte Fehleingaben reparierbar machen:
-    // Wenn im Bezeichnungsfeld versehentlich nur eine URL gespeichert wurde,
-    // wandert sie automatisch in das Linkfeld und die Bezeichnung wird wieder frei.
-    if (isUrl(value) && !customUrl) {
-      customUrl = value;
-      value = "";
-    }
+    const stored = normalizeMealEntry(state.meals?.[key]);
+    const value = stored?.label || "";
+    const customUrl = stored?.url || "";
+    const recipeId = stored?.recipeId || "";
 
     const matched = recipeId
       ? recipes.find(r => r.id === recipeId)
@@ -2931,7 +2978,7 @@ function renderMealPlan() {
     .map(r => `<option value="${escapeHtml(r.title || "")}"></option>`)
     .join("");
 
-  function persistMealForDate(key, {rerender = false} = {}) {
+  function persistMealForDate(key, {refresh = false} = {}) {
     const esc = CSS.escape(key);
     const labelInput = host.querySelector(`.meal-plan-input[data-date="${esc}"]`);
     const urlInput = host.querySelector(`.meal-plan-url-input[data-date="${esc}"]`);
@@ -2939,8 +2986,9 @@ function renderMealPlan() {
     let label = labelInput?.value.trim() || "";
     let url = urlInput?.value.trim() || "";
 
-    // Falls doch eine URL im Bezeichnungsfeld landet, nicht als hässlichen Text anzeigen.
-    if (isUrl(label) && !url) {
+    // URL versehentlich im Namensfeld? Dann in Link verschieben,
+    // aber niemals als sichtbare Essensbezeichnung verwenden.
+    if (/^https?:\/\//i.test(label) && !url) {
       url = label;
       label = "";
       if (labelInput) labelInput.value = "";
@@ -2952,38 +3000,35 @@ function renderMealPlan() {
 
     if (!label && !url) {
       delete state.meals[key];
-    } else if (matched) {
-      state.meals[key] = {
-        label: matched.title,
-        recipeId: matched.id,
-        url
-      };
     } else {
       state.meals[key] = {
-        label,
-        recipeId: "",
-        url
+        label: matched ? matched.title : label,
+        recipeId: matched ? matched.id : "",
+        url,
+        updatedAt: Date.now()
       };
     }
 
     save();
     renderWeek();
 
-    if (rerender) renderMealPlan();
+    if (refresh) renderMealPlan();
   }
 
-  // Während des Tippens speichern, ohne das Eingabefeld neu aufzubauen.
+  // Sofort speichern. Kein blur-Handler mehr, damit beim Klick auf 🔗
+  // nicht mitten im Bedienvorgang das ganze Feld neu aufgebaut wird.
   host.querySelectorAll(".meal-plan-input").forEach(input => {
     input.addEventListener("input", () => persistMealForDate(input.dataset.date));
-    input.addEventListener("change", () => persistMealForDate(input.dataset.date, {rerender:true}));
+    input.addEventListener("change", () => persistMealForDate(input.dataset.date, {refresh:true}));
   });
 
   host.querySelectorAll(".meal-plan-url-input").forEach(input => {
     input.addEventListener("input", () => persistMealForDate(input.dataset.date));
-    input.addEventListener("change", () => persistMealForDate(input.dataset.date, {rerender:true}));
+    input.addEventListener("change", () => persistMealForDate(input.dataset.date, {refresh:true}));
   });
 
   host.querySelectorAll(".meal-plan-link-toggle").forEach(btn => {
+    btn.addEventListener("mousedown", e => e.preventDefault());
     btn.addEventListener("click", () => {
       const row = host.querySelector(`.meal-plan-url-row[data-date="${CSS.escape(btn.dataset.date)}"]`);
       row?.classList.toggle("hidden");
@@ -3647,9 +3692,10 @@ shoppingItems = state.shopping;
     state.recipes = cloudRecipes && cloudRecipes.length
       ? cloudRecipes
       : localRecipes;
-    state.meals = data.meals && typeof data.meals === "object"
-      ? data.meals
-      : (state.meals && typeof state.meals === "object" ? state.meals : {});
+    state.meals = mergeMeals(
+      state.meals,
+      data.meals && typeof data.meals === "object" ? data.meals : {}
+    );
     state.workroom = data.workroom && typeof data.workroom === "object"
   ? {
       todos: Array.isArray(data.workroom.todos) ? data.workroom.todos : [],
@@ -4631,11 +4677,12 @@ store.value = "";
   setTimeout(checkPlings, 1000);
 
 })();
-renderAll();
+
 // =============================
 // WERKRAUM – BEREICHE AUF/ZU
+// Handler VOR dem ersten renderAll registrieren.
+// So funktionieren die drei Bereiche auch dann, wenn ein späterer Render einmal scheitert.
 // =============================
-
 document.addEventListener("click", e => {
   const head = e.target.closest(".workroom-fold-head");
   if (!head) return;
@@ -4643,9 +4690,13 @@ document.addEventListener("click", e => {
   const card = head.closest(".workroom-fold-card");
   if (!card) return;
 
+  const wasOpen = card.classList.contains("open");
+
   document.querySelectorAll(".workroom-fold-card").forEach(otherCard => {
     otherCard.classList.remove("open");
   });
 
-  card.classList.add("open");
+  if (!wasOpen) card.classList.add("open");
 });
+
+renderAll();
