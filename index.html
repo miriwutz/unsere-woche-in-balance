@@ -517,6 +517,50 @@
       <button id="toggleRecipeFormBtn" class="secondary-btn" type="button">＋ Rezept hinzufügen</button>
     </div>
 
+    <div id="recipeForm" class="card recipe-form hidden">
+      <div class="recipe-form-grid">
+        <input id="recipeTitle" type="text" placeholder="Rezeptname …">
+
+        <select id="recipeCategory">
+          <option value="main" selected>🍝 Hauptgericht</option>
+          <option value="breakfast">🥣 Frühstück & Morgenideen</option>
+          <option value="spread">🥖 Aufstriche & Dips</option>
+          <option value="soup">🍲 Suppen & Eintöpfe</option>
+          <option value="small">🥙 Kleine Sachen & Jause</option>
+          <option value="salad">🥗 Salate & Frisches</option>
+          <option value="sweet">🍓 Süßes & Backen</option>
+          <option value="drink">🥤 Getränke & Smoothies</option>
+          <option value="other">✨ Sonstiges</option>
+        </select>
+
+        <select id="recipeDifficulty">
+          <option value="easy">Einfach</option>
+          <option value="medium" selected>Mittel</option>
+          <option value="advanced">Etwas aufwendiger</option>
+        </select>
+
+        <label class="recipe-kids-toggle">
+          <input id="recipeKids" type="checkbox">
+          <span>🧒 Für Kinder geeignet</span>
+        </label>
+
+        <label class="recipe-healthy-toggle">
+          <input id="recipeHealthy" type="checkbox">
+          <span>🌿 Gesund & bunt</span>
+        </label>
+
+        <input id="recipeTime" type="text" placeholder="Zeit, z. B. 20 Min.">
+        <textarea id="recipeIngredients" rows="6" placeholder="Zutaten – eine Zutat pro Zeile"></textarea>
+        <textarea id="recipeSteps" rows="6" placeholder="Zubereitung – ein Schritt pro Zeile"></textarea>
+        <input id="recipeWebUrl" type="url" placeholder="Link zum Onlinerezept – optional">
+        <input id="recipeYoutubeUrl" type="url" placeholder="YouTube-Link – optional">
+      </div>
+      <div class="recipe-form-actions">
+        <button id="cancelRecipeEditBtn" class="secondary-btn hidden" type="button">Bearbeiten abbrechen</button>
+        <button id="saveRecipeBtn" class="primary-btn" type="button">Rezept speichern</button>
+      </div>
+    </div>
+
     <div class="recipe-filters card">
       <div class="recipe-search-wrap">
         <input id="recipeSearch" type="search" list="recipeSearchSuggestions"
@@ -576,49 +620,6 @@
       <div id="mealPlanGrid" class="meal-plan-grid"></div>
     </section>
 
-    <div id="recipeForm" class="card recipe-form hidden">
-      <div class="recipe-form-grid">
-        <input id="recipeTitle" type="text" placeholder="Rezeptname …">
-
-        <select id="recipeCategory">
-          <option value="main" selected>🍝 Hauptgericht</option>
-          <option value="breakfast">🥣 Frühstück & Morgenideen</option>
-          <option value="spread">🥖 Aufstriche & Dips</option>
-          <option value="soup">🍲 Suppen & Eintöpfe</option>
-          <option value="small">🥙 Kleine Sachen & Jause</option>
-          <option value="salad">🥗 Salate & Frisches</option>
-          <option value="sweet">🍓 Süßes & Backen</option>
-          <option value="drink">🥤 Getränke & Smoothies</option>
-          <option value="other">✨ Sonstiges</option>
-        </select>
-
-        <select id="recipeDifficulty">
-          <option value="easy">Einfach</option>
-          <option value="medium" selected>Mittel</option>
-          <option value="advanced">Etwas aufwendiger</option>
-        </select>
-
-        <label class="recipe-kids-toggle">
-          <input id="recipeKids" type="checkbox">
-          <span>🧒 Für Kinder geeignet</span>
-        </label>
-
-        <label class="recipe-healthy-toggle">
-          <input id="recipeHealthy" type="checkbox">
-          <span>🌿 Gesund & bunt</span>
-        </label>
-
-        <input id="recipeTime" type="text" placeholder="Zeit, z. B. 20 Min.">
-        <textarea id="recipeIngredients" rows="6" placeholder="Zutaten – eine Zutat pro Zeile"></textarea>
-        <textarea id="recipeSteps" rows="6" placeholder="Zubereitung – ein Schritt pro Zeile"></textarea>
-        <input id="recipeWebUrl" type="url" placeholder="Link zum Onlinerezept – optional">
-        <input id="recipeYoutubeUrl" type="url" placeholder="YouTube-Link – optional">
-      </div>
-      <div class="recipe-form-actions">
-        <button id="cancelRecipeEditBtn" class="secondary-btn hidden" type="button">Bearbeiten abbrechen</button>
-        <button id="saveRecipeBtn" class="primary-btn" type="button">Rezept speichern</button>
-      </div>
-    </div>
 
     <div id="recipeList" class="recipe-list">
       <div class="workroom-empty">Noch keine Rezepte gespeichert.</div>
