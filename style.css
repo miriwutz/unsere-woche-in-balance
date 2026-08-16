@@ -3448,3 +3448,268 @@ a.day-meal{
 #openFamilyTimetableBtn{
   color:#6f6662 !important;
 }
+
+
+/* Papa + Stundenplan: ruhiger Montagston */
+#openPapaOverviewBtn,
+#openFamilyTimetableBtn{
+  background:rgba(255,253,251,.82) !important;
+  border:1px solid rgba(216,180,173,.42) !important;
+  color:var(--ink) !important;
+  box-shadow:none !important;
+}
+#openPapaOverviewBtn:hover,
+#openFamilyTimetableBtn:hover{
+  background:#fffdfb !important;
+  border-color:rgba(216,180,173,.62) !important;
+}
+
+/* =========================================================
+   UNSER ÜBERBLICK
+   ========================================================= */
+.overview-intro{
+  margin:.3rem 0 0;
+  color:var(--muted);
+  font-size:.82rem;
+}
+.time-tracker-card,
+.recipe-link-tracker-card,
+.exercise-overview-card{
+  margin-bottom:14px;
+}
+.overview-card-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:14px;
+  margin-bottom:14px;
+}
+.overview-card-head h3,
+.compact-section-head h3{
+  margin:.1rem 0 .2rem;
+  font-family:Georgia,"Times New Roman",serif;
+  font-size:1.25rem;
+}
+.overview-card-head p{
+  margin:0;
+  color:var(--muted);
+  font-size:.76rem;
+}
+.time-tracker-form{
+  display:grid;
+  grid-template-columns:150px 190px minmax(230px,1fr) auto;
+  gap:9px;
+  align-items:end;
+}
+.time-tracker-form label{
+  display:grid;
+  gap:5px;
+  font-size:.7rem;
+  color:#7d726c;
+}
+.time-tracker-form select,
+.time-tracker-form input{
+  width:100%;
+}
+.active-time-tracker{
+  display:flex;
+  align-items:center;
+  gap:14px;
+  padding:9px 11px;
+  border-radius:13px;
+  background:#e7f1ee;
+  border:1px solid rgba(114,156,147,.23);
+}
+.active-time-tracker.hidden{display:none}
+.active-time-tracker > div:first-child{
+  display:grid;
+  gap:2px;
+}
+.active-time-person{
+  color:#637771;
+  font-size:.65rem;
+}
+.active-time-tracker small{
+  color:#7f8c88;
+}
+.active-time-right{
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+.manual-time-details{
+  margin-top:10px;
+  padding-top:9px;
+  border-top:1px dashed var(--line);
+}
+.manual-time-details summary{
+  cursor:pointer;
+  color:#6e7773;
+  font-size:.72rem;
+}
+.manual-time-row{
+  display:flex;
+  gap:8px;
+  margin-top:8px;
+  max-width:300px;
+}
+.time-summary-row{
+  margin-top:14px;
+  padding-top:12px;
+  border-top:1px solid rgba(180,190,185,.18);
+}
+.time-summary-row > strong{
+  display:block;
+  margin-bottom:8px;
+  color:#625b57;
+  font-size:.78rem;
+}
+.time-summary-chips{
+  display:flex;
+  flex-wrap:wrap;
+  gap:6px;
+}
+.time-summary-chip{
+  display:inline-flex;
+  gap:6px;
+  align-items:center;
+  padding:6px 9px;
+  border-radius:999px;
+  background:#f3f1ed;
+  color:#64706c;
+  font-size:.67rem;
+}
+.time-summary-chip strong{
+  color:#4f5b57;
+}
+.time-summary-empty,
+.overview-empty{
+  color:var(--muted);
+  font-size:.74rem;
+}
+.time-log-list{
+  display:grid;
+  gap:5px;
+  margin-top:11px;
+}
+.time-log-row{
+  display:grid;
+  grid-template-columns:80px 180px minmax(100px,1fr) auto 24px;
+  gap:8px;
+  align-items:center;
+  padding:7px 8px;
+  border:1px solid rgba(180,190,185,.17);
+  border-radius:10px;
+  background:#fffdfb;
+  font-size:.7rem;
+}
+.time-log-person{
+  font-weight:700;
+}
+.time-log-note{
+  color:#7d8582;
+}
+.time-log-delete{
+  border:0;
+  background:transparent;
+  color:#aaa09a;
+  cursor:pointer;
+}
+
+/* Internetrezepte bewerten */
+.recipe-link-tracker-list{
+  display:grid;
+  gap:7px;
+}
+.recipe-link-track-row{
+  display:grid;
+  grid-template-columns:minmax(180px,1fr) auto minmax(330px,auto);
+  gap:10px;
+  align-items:center;
+  padding:9px 10px;
+  border:1px solid rgba(177,193,187,.22);
+  border-radius:12px;
+  background:#fffdfb;
+}
+.recipe-link-track-main{
+  display:grid;
+  gap:2px;
+}
+.recipe-link-track-main a{
+  color:#4d655f;
+  font-weight:700;
+  text-decoration:none;
+}
+.recipe-link-track-main a:hover{
+  text-decoration:underline;
+}
+.recipe-link-track-main span{
+  color:var(--muted);
+  font-size:.64rem;
+}
+.recipe-link-used{
+  border:1px solid rgba(115,155,147,.24);
+  border-radius:999px;
+  background:#e7f1ee;
+  color:#4f6962;
+  padding:6px 9px;
+  cursor:pointer;
+  font-size:.66rem;
+}
+.recipe-link-rating{
+  display:flex;
+  gap:5px;
+  justify-content:flex-end;
+}
+.recipe-link-rate{
+  border:1px solid rgba(180,190,185,.24);
+  border-radius:999px;
+  background:#f8f6f2;
+  color:#6d716f;
+  padding:6px 8px;
+  cursor:pointer;
+  font-size:.64rem;
+}
+.recipe-link-rate.active{
+  background:#dfece8;
+  border-color:#adc9c1;
+  color:#466159;
+  font-weight:700;
+}
+.compact-section-head{
+  margin-bottom:8px;
+}
+
+@media(max-width:900px){
+  .time-tracker-form{
+    grid-template-columns:1fr 1fr;
+  }
+  .time-note-field{
+    grid-column:1 / -1;
+  }
+  .recipe-link-track-row{
+    grid-template-columns:1fr;
+  }
+  .recipe-link-rating{
+    justify-content:flex-start;
+    flex-wrap:wrap;
+  }
+}
+@media(max-width:600px){
+  .time-tracker-form{
+    grid-template-columns:1fr;
+  }
+  .time-note-field{
+    grid-column:auto;
+  }
+  .overview-card-head{
+    flex-direction:column;
+  }
+  .time-log-row{
+    grid-template-columns:1fr auto;
+  }
+  .time-log-category,
+  .time-log-note{
+    grid-column:1 / -1;
+  }
+}
