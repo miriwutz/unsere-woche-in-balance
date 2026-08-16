@@ -1923,6 +1923,13 @@ function saveTimeTrackingImmediately() {
   } catch (err) {
     console.warn("Zeitdaten konnten lokal nicht gespeichert werden:", err);
   }
+
+  // Wichtig für Geräte-Synchronisation:
+  // Start/Stop/Änderungen dürfen nicht nur lokal gespeichert werden.
+  // scheduleCloudSave() schreibt den aktuellen gemeinsamen Stand nach Firestore.
+  if (!cloudApplying) {
+    scheduleCloudSave();
+  }
 }
 
 function restoreTimeTrackingFromLocal() {
