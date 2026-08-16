@@ -158,6 +158,88 @@ function save() {
 // =========================================================
 // PINNWAND – flüchtige Familiennachrichten
 // =========================================================
+const PINBOARD_DEVICE_KEY = "balanceProd.pinboardDeviceEnabled";
+
+function pinboardDeviceEnabled() {
+  return localStorage.getItem(PINBOARD_DEVICE_KEY) === "1";
+}
+
+function setPinboardDeviceEnabled(value) {
+  localStorage.setItem(PINBOARD_DEVICE_KEY, value ? "1" : "0");
+}
+
+function updatePinboardDeviceStatus() {
+  const btn = document.querySelector("#enablePinboardNotifications");
+  const status = document.querySelector("#pinboardDeviceStatus");
+  if (!btn || !status) return;
+
+  const enabled = pinboardDeviceEnabled();
+  const notificationSupported = "Notification" in window;
+  const permission = notificationSupported ? Notification.permission : "unsupported";
+
+  if (enabled && (permission === "granted" || permission === "unsupported")) {
+    btn.textContent = "Benachrichtigungen aktiv";
+    status.textContent = permission === "unsupported"
+      ? "🔊 Ton auf diesem Gerät aktiviert"
+      : "🔔 Ton & Benachrichtigung aktiviert";
+    status.dataset.state = "granted";
+    return;
+  }
+
+  if (permission === "denied") {
+    btn.textContent = "Ton aktivieren";
+    status.textContent = "🔊 Ton möglich · System-Benachrichtigungen blockiert";
+    status.dataset.state = "denied";
+    return;
+  }
+
+  btn.textContent = "Benachrichtigungen aktivieren";
+  status.textContent = "Noch nicht aktiviert";
+  status.dataset.state = "default";
+}
+
+async function enablePinboardOnThisDevice() {
+  try {
+    // Der Klick selbst entsperrt Audio auf iPhone/iPad/Android.
+    pinboardAudioContext =
+      pinboardAudioContext ||
+      new (window.AudioContext || window.webkitAudioContext)();
+
+    if (pinboardAudioContext.state === "suspended") {
+      await pinboardAudioContext.resume();
+    }
+
+    // Mini-stummer Impuls hält das AudioContext-Unlock auf mobilen Browsern stabiler.
+    const osc = pinboardAudioContext.createOscillator();
+    const gain = pinboardAudioContext.createGain();
+    gain.gain.value = 0.00001;
+    osc.connect(gain);
+    gain.connect(pinboardAudioContext.destination);
+    osc.start();
+    osc.stop(pinboardAudioContext.currentTime + 0.03);
+
+    if ("Notification" in window && Notification.permission === "default") {
+      try {
+        await Notification.requestPermission();
+      } catch (err) {
+        console.warn("Pinnwand Notification-Permission:", err);
+      }
+    }
+
+    setPinboardDeviceEnabled(true);
+    updatePinboardDeviceStatus();
+
+    // Sofort hörbarer Bestätigungston: wenn der kommt, ist das Gerät entsperrt.
+    await playPinboardSound(document.querySelector("#pinboardSound")?.value || "letter");
+    return true;
+  } catch (err) {
+    console.warn("Pinnwand konnte auf diesem Gerät nicht aktiviert werden:", err);
+    setPinboardDeviceEnabled(false);
+    updatePinboardDeviceStatus();
+    return false;
+  }
+}
+
 const PINBOARD_VOLUME_KEY = "balanceProd.pinboardVolume";
 
 function getPinboardVolumeSetting() {
@@ -171,10 +253,10 @@ function setPinboardVolumeSetting(value) {
 function pinboardVolumeGain() {
   return {
     soft: 0.22,
-    normal: 0.42,
-    loud: 0.72,
-    max: 1.0
-  }[getPinboardVolumeSetting()] || 0.72;
+    normal: 0.48,
+    loud: 0.88,
+    max: 1.65
+  }[getPinboardVolumeSetting()] || 0.88;
 }
 
 const pinboardSeenIds = new Set();
@@ -209,8 +291,17 @@ async function playPinboardSound(sound = "letter") {
 
     const now = ctx.currentTime;
     const master = ctx.createGain();
-    master.connect(ctx.destination);
+    const compressor = ctx.createDynamicsCompressor();
+    compressor.threshold.setValueAtTime(-18, now);
+    compressor.knee.setValueAtTime(12, now);
+    compressor.ratio.setValueAtTime(6, now);
+    compressor.attack.setValueAtTime(0.003, now);
+    compressor.release.setValueAtTime(0.18, now);
+    master.connect(compressor);
+    compressor.connect(ctx.destination);
+
     const volumeGain = pinboardVolumeGain();
+    const isSuperLoud = getPinboardVolumeSetting() === "max";
     master.gain.setValueAtTime(0.0001, now);
     master.gain.exponentialRampToValueAtTime(volumeGain, now + 0.01);
 
@@ -231,19 +322,32 @@ async function playPinboardSound(sound = "letter") {
       osc.stop(now + start + duration + 0.03);
     }
 
-    if (sound === "sparkle") {
-      note(1047, 0.00, 0.18, "sine", 0.82);
-      note(1319, 0.10, 0.22, "sine", 0.78);
-      note(1568, 0.22, 0.28, "sine", 0.74);
-      master.gain.exponentialRampToValueAtTime(0.0001, now + 0.58);
-    } else if (sound === "bubble") {
-      note(260, 0.00, 0.20, "sine", 0.92, 140);
-      note(410, 0.17, 0.18, "sine", 0.68, 210);
-      master.gain.exponentialRampToValueAtTime(0.0001, now + 0.42);
+    function pattern(offset = 0) {
+      if (sound === "sparkle") {
+        note(1180, offset + 0.00, 0.18, "triangle", 0.98);
+        note(1540, offset + 0.10, 0.22, "triangle", 0.92);
+        note(1980, offset + 0.22, 0.30, "sine", 0.88);
+      } else if (sound === "bubble") {
+        note(330, offset + 0.00, 0.20, "triangle", 1.0, 180);
+        note(520, offset + 0.15, 0.18, "triangle", 0.86, 260);
+        note(760, offset + 0.27, 0.13, "sine", 0.62, 430);
+      } else {
+        note(820, offset + 0.00, 0.18, "square", 0.78);
+        note(1180, offset + 0.16, 0.26, "triangle", 1.0);
+        note(1640, offset + 0.28, 0.20, "sine", 0.62);
+      }
+    }
+
+    pattern(0);
+
+    // Super laut wiederholt den kurzen Hinweis einmal.
+    // Das ist auf kleinen Handy-/Tablet-Lautsprechern deutlich besser wahrnehmbar
+    // als nur den Pegel immer weiter zu übersteuern.
+    if (isSuperLoud) {
+      pattern(0.52);
+      master.gain.exponentialRampToValueAtTime(0.0001, now + 1.10);
     } else {
-      note(720, 0.00, 0.20, "triangle", 0.92);
-      note(980, 0.19, 0.27, "triangle", 0.88);
-      master.gain.exponentialRampToValueAtTime(0.0001, now + 0.52);
+      master.gain.exponentialRampToValueAtTime(0.0001, now + 0.62);
     }
 
     return true;
@@ -324,9 +428,11 @@ function handleIncomingPinboard(cloudMessages) {
       .slice()
       .sort((a,b) => Number(b.createdAt || 0) - Number(a.createdAt || 0))[0];
 
-    setTimeout(() => {
-      playPinboardSound(newest?.sound || "letter");
-    }, 80);
+    if (pinboardDeviceEnabled()) {
+      setTimeout(() => {
+        playPinboardSound(newest?.sound || "letter");
+      }, 80);
+    }
   }
 }
 
@@ -334,16 +440,25 @@ function openPinboard() {
   renderPinboard();
   const volume = document.querySelector("#pinboardVolume");
   if (volume) volume.value = getPinboardVolumeSetting();
+  updatePinboardDeviceStatus();
   document.querySelector("#pinboardDialog")?.showModal();
 }
+
+document.querySelector("#enablePinboardNotifications")?.addEventListener("click", async () => {
+  await enablePinboardOnThisDevice();
+});
 
 document.querySelector("#pinboardVolume")?.addEventListener("change", e => {
   setPinboardVolumeSetting(e.currentTarget.value || "loud");
 });
 
-document.querySelector("#testPinboardSoundBtn")?.addEventListener("click", () => {
+document.querySelector("#testPinboardSoundBtn")?.addEventListener("click", async () => {
+  if (!pinboardDeviceEnabled()) {
+    await enablePinboardOnThisDevice();
+    return;
+  }
   const sound = document.querySelector("#pinboardSound")?.value || "letter";
-  playPinboardSound(sound);
+  await playPinboardSound(sound);
 });
 
 document.querySelector("#openPinboardBtn")?.addEventListener("click", openPinboard);
@@ -4385,7 +4500,7 @@ document.querySelector("#addSchoolPrintBtn")?.addEventListener("click", () => {
 // =============================
 
 let activeWorkroomLinkCategory = "all";
-let activeWorkroomLinkUse = "soon";
+let activeWorkroomLinkUse = "all";
 let workroomImportantOnly = false;
 
 function renderWorkroomLinks() {
@@ -4707,7 +4822,7 @@ document.querySelectorAll(".workroom-link-use-filter").forEach(btn => {
 });
 
 document.querySelector("#workroomLinkUseFilterSelect")?.addEventListener("change", e => {
-  activeWorkroomLinkUse = e.currentTarget.value || "soon";
+  activeWorkroomLinkUse = e.currentTarget.value || "all";
   workroomLinkPage = 1;
   renderWorkroomLinks();
 });
