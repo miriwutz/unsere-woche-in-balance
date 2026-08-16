@@ -134,10 +134,22 @@
     <span class="pinboard-label">Pinnwand</span>
     <span id="pinboardBadge" class="pinboard-badge hidden">0</span>
   </button>
+
   <button id="openPapaOverviewBtn" class="secondary-btn papa-overview-btn" type="button">♡ Papa</button>
-  <button id="printWeekBtn" class="secondary-btn print-week-btn" type="button">♡ Wochenplan drucken</button>
-  <button id="openFamilyTimetableBtn" class="secondary-btn" type="button">🗓 Stundenplan</button>
+
   <button id="addVideoBtn" class="primary-btn" type="button">＋ Übung eintragen</button>
+
+  <button id="openFamilyTimetableBtn"
+          class="secondary-btn week-icon-btn"
+          type="button"
+          title="Stundenplan"
+          aria-label="Stundenplan">▣</button>
+
+  <button id="printWeekBtn"
+          class="secondary-btn week-icon-btn print-week-btn"
+          type="button"
+          title="Wochenplan drucken"
+          aria-label="Wochenplan drucken">🖨</button>
 </div>
       </div>
 
@@ -642,7 +654,10 @@
         <p class="small-label">REZEPT</p>
         <h2 id="recipeDetailTitle">Rezept</h2>
       </div>
-      <button id="closeRecipeDetailBtn" class="recipe-detail-close" type="button" aria-label="Rezept schließen">×</button>
+      <div class="recipe-detail-head-actions">
+        <button id="printRecipeDetailBtn" class="recipe-detail-print" type="button" title="Rezept drucken" aria-label="Rezept drucken">🖨</button>
+        <button id="closeRecipeDetailBtn" class="recipe-detail-close" type="button" aria-label="Rezept schließen">×</button>
+      </div>
     </div>
     <div id="recipeDetailBody"></div>
   </div>
