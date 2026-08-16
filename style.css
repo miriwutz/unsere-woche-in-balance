@@ -5368,3 +5368,58 @@ a.day-meal{
     width:100% !important;
   }
 }
+
+
+/* =========================================================
+   ZEIT IM BLICK – fertige Einträge nur bei Bedarf aufklappen
+   ========================================================= */
+.time-log-details{
+  margin-top:8px;
+  border:0;
+}
+
+.time-log-summary{
+  list-style:none;
+  width:30px;
+  height:24px;
+  margin:0 auto;
+  padding:0;
+  display:grid;
+  place-items:center;
+  cursor:pointer;
+  color:#9a908a;
+  border-radius:999px;
+  transition:background .15s ease,color .15s ease;
+}
+
+.time-log-summary::-webkit-details-marker{
+  display:none;
+}
+
+.time-log-summary::before{
+  content:"⌄";
+  font-size:1rem;
+  line-height:1;
+  transform:translateY(-1px);
+}
+
+.time-log-details[open] .time-log-summary::before{
+  content:"⌃";
+  transform:translateY(1px);
+}
+
+.time-log-summary:hover{
+  background:rgba(239,235,231,.75);
+  color:#6f6662;
+}
+
+.time-log-details .time-log-list{
+  margin-top:7px;
+}
+
+/* Handy: Druckfunktion bewusst nicht anbieten */
+@media(max-width:760px){
+  #printWeekBtn{
+    display:none !important;
+  }
+}
