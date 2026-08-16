@@ -7326,8 +7326,7 @@ function ensureMobileWeekActionCircleStyles() {
       #openPinboardBtn,
       #openPapaOverviewBtn,
       #addVideoBtn,
-      #openFamilyTimetableBtn,
-      #printWeekBtn{
+      #openFamilyTimetableBtn{
         box-sizing:border-box !important;
         flex:0 0 42px !important;
         width:42px !important;
@@ -7685,8 +7684,7 @@ function ensureRecipeFormAndMobileActionStyles() {
       #openPinboardBtn,
       #openPapaOverviewBtn,
       #addVideoBtn,
-      #openFamilyTimetableBtn,
-      #printWeekBtn{
+      #openFamilyTimetableBtn{
         position:relative !important;
         flex:0 0 44px !important;
         width:44px !important;
@@ -7742,9 +7740,12 @@ function ensureRecipeFormAndMobileActionStyles() {
         line-height:1 !important;
       }
 
-      #openFamilyTimetableBtn,
-      #printWeekBtn{
+      #openFamilyTimetableBtn{
         font-size:.92rem !important;
+      }
+
+      #printWeekBtn{
+        display:none !important;
       }
 
       #openPinboardBtn .pinboard-badge{
@@ -7783,3 +7784,17 @@ document.addEventListener("DOMContentLoaded", () => {
   ensureRecipeFormAndMobileActionStyles();
   normalizeRecipeFlagLayout();
 });
+
+/* MOBILE PRINT FINAL OVERRIDE */
+(function ensurePhonePrintHidden(){
+  const id = "phonePrintHiddenFinal";
+  if (document.getElementById(id)) return;
+  const s = document.createElement("style");
+  s.id = id;
+  s.textContent = `
+    @media (max-width:760px){
+      #printWeekBtn{display:none !important;}
+    }
+  `;
+  document.head.appendChild(s);
+})();
