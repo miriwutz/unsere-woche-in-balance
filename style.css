@@ -2782,3 +2782,57 @@ a.day-meal{
   color:#83918e;
   font-size:.61rem;
 }
+
+
+/* Kinderrezepte: Regenbogenrahmen etwas klarer sichtbar */
+.recipe-card.recipe-card-kids{
+  border-width:3px !important;
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,.65) inset,
+    0 8px 26px rgba(93,106,103,.08) !important;
+}
+.recipe-detail-banner.recipe-detail-kids{
+  outline:none !important;
+  border:3px solid transparent !important;
+  background:
+    linear-gradient(var(--recipe-kids-banner-bg, #c6ddd8), var(--recipe-kids-banner-bg, #c6ddd8)) padding-box,
+    linear-gradient(90deg,
+      #ed9eb7,
+      #efc873,
+      #b7d68d,
+      #83cec2,
+      #9bb8e5,
+      #c9a2dd,
+      #ed9eb7) border-box !important;
+}
+
+/* Nachfragen-To-dos sollen sofort ins Auge fallen, aber ruhig bleiben */
+.workroom-todo-row.workroom-todo-ask{
+  border-color:#d9b8df !important;
+  background:linear-gradient(90deg,#fbf4fc,#fffdfb) !important;
+  box-shadow:inset 4px 0 0 #c99bd3;
+}
+.workroom-todo-row.workroom-todo-ask .workroom-todo-text{
+  font-weight:650;
+}
+.workroom-todo-row.workroom-todo-ask .workroom-todo-type{
+  background:#f1e2f4;
+  color:#725779;
+  border-radius:999px;
+  padding:4px 8px;
+  font-weight:650;
+}
+
+/* Links ohne URL sind normale gespeicherte Merker, kein kaputter Link */
+.workroom-link-title-static{
+  cursor:default;
+  text-decoration:none !important;
+}
+
+/* Bei der Linksammlung auch unter 10 Einträgen dezent zeigen: Seite 1 */
+.workroom-links-card .workroom-pager{
+  min-height:30px;
+}
+.workroom-links-card .workroom-page-btn:disabled{
+  opacity:.35;
+}
