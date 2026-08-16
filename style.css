@@ -6546,3 +6546,141 @@ a.day-meal{
     justify-content:flex-start !important;
   }
 }
+
+
+/* =========================================================
+   REZEPTFORMULAR – UNTERE ZEILE PHYSISCH FIXIERT
+   Reihenfolge:
+   Kartenzeichen | Backzeit | Grad | Kindgerecht |
+   Gesund & bunt | Favorit | Speichern
+   ========================================================= */
+
+.recipe-bottom-row{
+  grid-column:1 / -1 !important;
+  grid-row:4 !important;
+  display:flex !important;
+  align-items:flex-end !important;
+  gap:12px !important;
+  width:100% !important;
+  min-width:0 !important;
+  margin:0 !important;
+  padding:0 !important;
+  flex-wrap:nowrap !important;
+}
+
+.recipe-bottom-row > *{
+  grid-column:auto !important;
+  grid-row:auto !important;
+  margin:0 !important;
+  align-self:flex-end !important;
+}
+
+/* kompakte technischen Felder */
+.recipe-bottom-row .recipe-card-mark-field{
+  flex:0 0 150px !important;
+  width:150px !important;
+  min-width:150px !important;
+  max-width:150px !important;
+}
+
+.recipe-bottom-row .recipe-bake-field{
+  flex:0 0 120px !important;
+  width:120px !important;
+  min-width:120px !important;
+  max-width:120px !important;
+}
+
+.recipe-bottom-row .recipe-temp-field{
+  flex:0 0 110px !important;
+  width:110px !important;
+  min-width:110px !important;
+  max-width:110px !important;
+}
+
+/* die drei gewünschten Schalter direkt danach */
+.recipe-bottom-row .recipe-kids-toggle,
+.recipe-bottom-row .recipe-healthy-toggle,
+.recipe-bottom-row .recipe-favorite-toggle{
+  flex:0 0 auto !important;
+  width:auto !important;
+  min-width:0 !important;
+  max-width:none !important;
+  min-height:40px !important;
+  display:inline-flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  gap:6px !important;
+  padding:7px 11px !important;
+  border-radius:999px !important;
+  white-space:nowrap !important;
+  position:static !important;
+}
+
+/* Checkboxen sichtbar lassen */
+.recipe-bottom-row .recipe-kids-toggle input,
+.recipe-bottom-row .recipe-healthy-toggle input,
+.recipe-bottom-row .recipe-favorite-toggle input{
+  position:static !important;
+  opacity:1 !important;
+  width:16px !important;
+  height:16px !important;
+  pointer-events:auto !important;
+  margin:0 !important;
+}
+
+/* Speichern immer ganz rechts */
+.recipe-bottom-row .recipe-form-actions{
+  margin-left:auto !important;
+  flex:0 0 auto !important;
+  display:flex !important;
+  justify-content:flex-end !important;
+}
+
+/* Die Hauptfelder bleiben 50/50 */
+#recipeIngredients{
+  grid-column:1 / span 6 !important;
+  grid-row:3 !important;
+}
+#recipeSteps{
+  grid-column:7 / span 6 !important;
+  grid-row:3 !important;
+}
+
+/* Tablet: darf umbrechen */
+@media(max-width:1050px){
+  .recipe-bottom-row{
+    flex-wrap:wrap !important;
+  }
+
+  .recipe-bottom-row .recipe-form-actions{
+    margin-left:0 !important;
+  }
+}
+
+/* Handy: sauber untereinander */
+@media(max-width:600px){
+  .recipe-bottom-row{
+    display:grid !important;
+    grid-template-columns:1fr !important;
+    gap:9px !important;
+  }
+
+  .recipe-bottom-row .recipe-card-mark-field,
+  .recipe-bottom-row .recipe-bake-field,
+  .recipe-bottom-row .recipe-temp-field,
+  .recipe-bottom-row .recipe-kids-toggle,
+  .recipe-bottom-row .recipe-healthy-toggle,
+  .recipe-bottom-row .recipe-favorite-toggle,
+  .recipe-bottom-row .recipe-form-actions{
+    width:100% !important;
+    min-width:0 !important;
+    max-width:none !important;
+  }
+
+  .recipe-bottom-row .recipe-kids-toggle,
+  .recipe-bottom-row .recipe-healthy-toggle,
+  .recipe-bottom-row .recipe-favorite-toggle{
+    justify-content:flex-start !important;
+    border-radius:12px !important;
+  }
+}
