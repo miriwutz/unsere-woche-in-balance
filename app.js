@@ -58,11 +58,15 @@ state.meals = state.meals && typeof state.meals === "object" ? state.meals : {};
 state.pinboard = Array.isArray(state.pinboard) ? state.pinboard : [];
 state.timeTracking = state.timeTracking && typeof state.timeTracking === "object"
   ? state.timeTracking
-  : {entries:[], active:null};
+  : {entries:[], active:[]};
 state.timeTracking.entries = Array.isArray(state.timeTracking.entries) ? state.timeTracking.entries : [];
-state.timeTracking.active = state.timeTracking.active && typeof state.timeTracking.active === "object"
-  ? state.timeTracking.active
-  : null;
+if (Array.isArray(state.timeTracking.active)) {
+  state.timeTracking.active = state.timeTracking.active;
+} else if (state.timeTracking.active && typeof state.timeTracking.active === "object") {
+  state.timeTracking.active = [state.timeTracking.active];
+} else {
+  state.timeTracking.active = [];
+}
 state.recipeLinkFeedback = state.recipeLinkFeedback && typeof state.recipeLinkFeedback === "object"
   ? state.recipeLinkFeedback
   : {};
@@ -1927,13 +1931,21 @@ function restoreTimeTrackingFromLocal() {
       localEntries
     );
 
-    // Eine lokal laufende Stoppuhr niemals durch einen leeren Cloud-Stand verlieren.
-    if (local.active && typeof local.active === "object") {
-      if (!state.timeTracking.active ||
-          Number(local.active.startedAt || 0) >= Number(state.timeTracking.active.startedAt || 0)) {
-        state.timeTracking.active = local.active;
+    // Lokal laufende Stoppuhren niemals durch einen leeren Cloud-Stand verlieren.
+    const localActive = Array.isArray(local.active)
+      ? local.active
+      : (local.active && typeof local.active === "object" ? [local.active] : []);
+    const currentActive = Array.isArray(state.timeTracking.active) ? state.timeTracking.active : [];
+
+    const activeMap = new Map();
+    [...currentActive, ...localActive].forEach(timer => {
+      if (!timer?.id) return;
+      const prev = activeMap.get(timer.id);
+      if (!prev || Number(timer.startedAt || 0) >= Number(prev.startedAt || 0)) {
+        activeMap.set(timer.id, timer);
       }
-    }
+    });
+    state.timeTracking.active = [...activeMap.values()];
   } catch (err) {
     console.warn("Lokale Zeitdaten konnten nicht wiederhergestellt werden:", err);
   }
@@ -1951,66 +1963,127 @@ let liveTimeTicker = null;
 
 function startLiveTimeTicker() {
   clearInterval(liveTimeTicker);
-  if (!state.timeTracking.active) return;
+  const activeTimers = Array.isArray(state.timeTracking.active) ? state.timeTracking.active : [];
+  if (!activeTimers.length) return;
 
   liveTimeTicker = setInterval(() => {
-    const el = document.querySelector("#activeTimeElapsed");
-    if (el && state.timeTracking.active) {
-      el.textContent = formatElapsedWithSeconds(state.timeTracking.active.startedAt);
-    }
+    document.querySelectorAll(".active-time-elapsed").forEach(el => {
+      el.textContent = formatElapsedWithSeconds(Number(el.dataset.startedAt || Date.now()));
+    });
   }, 1000);
 }
 
 function renderTimeTracking() {
   const list = document.querySelector("#timeLogList");
   const activeBox = document.querySelector("#activeTimeTracker");
-  const chips = document.querySelector("#timeSummaryChips");
-  if (!list || !activeBox || !chips) return;
+  const weekChips = document.querySelector("#timeSummaryChips");
+  const todayChips = document.querySelector("#timeTodayChips");
+  const donut = document.querySelector("#timeDonut");
+  const donutLegend = document.querySelector("#timeDonutLegend");
+  const donutTotal = document.querySelector("#timeDonutTotal");
+  if (!list || !activeBox || !weekChips || !todayChips) return;
 
-  const active = state.timeTracking.active;
+  const activeTimers = Array.isArray(state.timeTracking.active) ? state.timeTracking.active : [];
 
-  if (active) {
+  if (activeTimers.length) {
     activeBox.classList.remove("hidden");
-    activeBox.innerHTML = `
-      <div>
-        <span class="active-time-person">${escapeHtml(familyName(active.person))}</span>
-        <strong>${escapeHtml(timeCategoryLabel(active.category))}</strong>
-        <small>${escapeHtml(active.note || "")}</small>
+    activeBox.innerHTML = activeTimers.map(active => `
+      <div class="active-time-item" data-id="${active.id}">
+        <div>
+          <span class="active-time-person">${escapeHtml(familyName(active.person))}</span>
+          <strong>${escapeHtml(timeCategoryLabel(active.category))}</strong>
+          <small>${escapeHtml(active.note || "")}</small>
+        </div>
+        <div class="active-time-right">
+          <span class="active-time-elapsed" data-started-at="${active.startedAt}">${formatElapsedWithSeconds(active.startedAt)}</span>
+          <button class="secondary-btn stop-time-track-btn" data-id="${active.id}" type="button">■ Stoppen</button>
+        </div>
       </div>
-      <div class="active-time-right">
-        <span id="activeTimeElapsed" class="active-time-elapsed">${formatElapsedWithSeconds(active.startedAt)}</span>
-        <button id="stopTimeTrackBtn" class="secondary-btn" type="button">■ Stoppen</button>
-      </div>
-    `;
-    activeBox.querySelector("#stopTimeTrackBtn")?.addEventListener("click", stopTimeTracking);
+    `).join("");
+
+    activeBox.querySelectorAll(".stop-time-track-btn").forEach(btn => {
+      btn.addEventListener("click", () => stopTimeTracking(btn.dataset.id));
+    });
   } else {
     activeBox.classList.add("hidden");
     activeBox.innerHTML = "";
   }
 
   const weekStart = weekStartForDate();
+  const todayStart = new Date();
+  todayStart.setHours(0,0,0,0);
+
   const weekEntries = state.timeTracking.entries.filter(entry =>
     Number(entry.endedAt || entry.createdAt || 0) >= weekStart.getTime()
   );
+  const todayEntries = state.timeTracking.entries.filter(entry =>
+    Number(entry.endedAt || entry.createdAt || 0) >= todayStart.getTime()
+  );
 
-  const totals = {};
-  weekEntries.forEach(entry => {
-    totals[entry.category] = (totals[entry.category] || 0) + Number(entry.minutes || 0);
-  });
+  function totalsByCategory(entries) {
+    const totals = {};
+    entries.forEach(entry => {
+      totals[entry.category] = (totals[entry.category] || 0) + Number(entry.minutes || 0);
+    });
+    return totals;
+  }
 
-  chips.innerHTML = Object.entries(totals)
-    .sort((a,b) => b[1] - a[1])
-    .map(([category, minutes]) => `
-      <span class="time-summary-chip">
-        ${escapeHtml(timeCategoryLabel(category))}
-        <strong>${formatMinutes(minutes)}</strong>
-      </span>
-    `).join("") || `<span class="time-summary-empty">Noch keine Zeiten diese Woche.</span>`;
+  function renderSummary(host, totals) {
+    host.innerHTML = Object.entries(totals)
+      .sort((a,b) => b[1] - a[1])
+      .map(([category, minutes]) => `
+        <span class="time-summary-chip">
+          ${escapeHtml(timeCategoryLabel(category))}
+          <strong>${formatMinutes(minutes)}</strong>
+        </span>
+      `).join("") || `<span class="time-summary-empty">Noch keine Zeiten.</span>`;
+  }
+
+  const weekTotals = totalsByCategory(weekEntries);
+  const todayTotals = totalsByCategory(todayEntries);
+
+  renderSummary(weekChips, weekTotals);
+  renderSummary(todayChips, todayTotals);
+
+  // CSS donut chart with neutral pastel palette
+  const palette = [
+    "#b9cfd0","#c5d7bf","#e5c3c8","#d8c9d7","#ead9bc",
+    "#a9cbbb","#c6d4e0","#d8c0b8","#d6d0c8"
+  ];
+  const weekPairs = Object.entries(weekTotals).filter(([,m]) => m > 0);
+  const totalWeek = weekPairs.reduce((sum,[,m]) => sum + m, 0);
+
+  if (donut && donutLegend && donutTotal) {
+    donutTotal.textContent = formatMinutes(totalWeek);
+
+    if (!totalWeek) {
+      donut.style.background = "#f0eeea";
+      donutLegend.innerHTML = `<span class="time-summary-empty">Noch keine Verteilung.</span>`;
+    } else {
+      let cursor = 0;
+      const parts = [];
+      donutLegend.innerHTML = weekPairs.map(([category, minutes], i) => {
+        const start = cursor;
+        const end = cursor + (minutes / totalWeek) * 100;
+        cursor = end;
+        const color = palette[i % palette.length];
+        parts.push(`${color} ${start}% ${end}%`);
+        return `
+          <div class="time-donut-legend-row">
+            <span class="time-donut-dot" style="background:${color}"></span>
+            <span>${escapeHtml(timeCategoryLabel(category))}</span>
+            <strong>${formatMinutes(minutes)}</strong>
+          </div>
+        `;
+      }).join("");
+      donut.style.background = `conic-gradient(${parts.join(",")})`;
+    }
+  }
 
   const entries = state.timeTracking.entries
     .slice()
     .sort((a,b) => Number(b.endedAt || b.createdAt || 0) - Number(a.endedAt || a.createdAt || 0))
-    .slice(0, 14);
+    .slice(0, 20);
 
   list.innerHTML = entries.length ? entries.map(entry => `
     <div class="time-log-row">
@@ -2035,26 +2108,27 @@ function renderTimeTracking() {
 }
 
 function startTimeTracking() {
-  if (state.timeTracking.active) {
-    showMotivation("Es läuft bereits eine Zeit.");
-    return;
-  }
+  const person = document.querySelector("#timeTrackPerson")?.value || "a";
+  const category = document.querySelector("#timeTrackCategory")?.value || "pc";
+  const note = document.querySelector("#timeTrackNote")?.value.trim() || "";
 
-  state.timeTracking.active = {
+  state.timeTracking.active = Array.isArray(state.timeTracking.active) ? state.timeTracking.active : [];
+  state.timeTracking.active.push({
     id: uid(),
-    person: document.querySelector("#timeTrackPerson")?.value || "a",
-    category: document.querySelector("#timeTrackCategory")?.value || "pc",
-    note: document.querySelector("#timeTrackNote")?.value.trim() || "",
+    person,
+    category,
+    note,
     startedAt: Date.now()
-  };
+  });
 
   saveTimeTrackingImmediately();
   save();
   renderTimeTracking();
 }
 
-function stopTimeTracking() {
-  const active = state.timeTracking.active;
+function stopTimeTracking(timerId) {
+  state.timeTracking.active = Array.isArray(state.timeTracking.active) ? state.timeTracking.active : [];
+  const active = state.timeTracking.active.find(timer => timer.id === timerId);
   if (!active) return;
 
   const endedAt = Date.now();
@@ -2072,17 +2146,22 @@ function stopTimeTracking() {
     minutes
   });
 
-  state.timeTracking.active = null;
+  state.timeTracking.active = state.timeTracking.active.filter(timer => timer.id !== timerId);
+
   saveTimeTrackingImmediately();
   save();
   renderTimeTracking();
 }
 
 function addManualTimeEntry() {
+  const hoursInput = document.querySelector("#manualTimeHours");
   const minutesInput = document.querySelector("#manualTimeMinutes");
-  const minutes = Math.round(Number(minutesInput?.value || 0));
-  if (!minutes || minutes < 1) {
-    minutesInput?.focus();
+  const hours = Math.max(0, Math.round(Number(hoursInput?.value || 0)));
+  const mins = Math.max(0, Math.round(Number(minutesInput?.value || 0)));
+  const totalMinutes = hours * 60 + mins;
+
+  if (!totalMinutes) {
+    (minutesInput || hoursInput)?.focus();
     return;
   }
 
@@ -2092,18 +2171,21 @@ function addManualTimeEntry() {
     person: document.querySelector("#timeTrackPerson")?.value || "a",
     category: document.querySelector("#timeTrackCategory")?.value || "pc",
     note: document.querySelector("#timeTrackNote")?.value.trim() || "",
-    startedAt: now - minutes * 60000,
+    startedAt: now - totalMinutes * 60000,
     endedAt: now,
     createdAt: now,
     updatedAt: now,
-    minutes
+    minutes: totalMinutes
   });
 
+  if (hoursInput) hoursInput.value = "";
   if (minutesInput) minutesInput.value = "";
+
   saveTimeTrackingImmediately();
   save();
   renderTimeTracking();
 }
+
 
 function collectInternetRecipeLinks() {
   const map = new Map();
@@ -2154,7 +2236,7 @@ function renderRecipeLinkTracker() {
   const links = collectInternetRecipeLinks();
 
   if (!links.length) {
-    host.innerHTML = `<div class="overview-empty">Noch keine Internetrezepte hinterlegt.</div>`;
+    host.innerHTML = `<div class="overview-empty">Noch keine Internetrezepte hinterlegt. Sobald eine Rezeptkarte oder ein Essensplan-Eintrag einen Web-/YouTube-Link hat, erscheint er hier zum Bewerten.</div>`;
     return;
   }
 
@@ -5849,22 +5931,29 @@ shoppingItems = state.shopping;
     }
     if (data.timeTracking && typeof data.timeTracking === "object") {
       const cloudEntries = Array.isArray(data.timeTracking.entries) ? data.timeTracking.entries : [];
-      const localActive = state.timeTracking.active;
-      const cloudActive = data.timeTracking.active && typeof data.timeTracking.active === "object"
+      const localActive = Array.isArray(state.timeTracking.active)
+        ? state.timeTracking.active
+        : (state.timeTracking.active ? [state.timeTracking.active] : []);
+      const cloudActive = Array.isArray(data.timeTracking.active)
         ? data.timeTracking.active
-        : null;
+        : (data.timeTracking.active && typeof data.timeTracking.active === "object"
+            ? [data.timeTracking.active]
+            : []);
 
-      let active = localActive || cloudActive || null;
-      if (localActive && cloudActive) {
-        active = Number(localActive.startedAt || 0) >= Number(cloudActive.startedAt || 0)
-          ? localActive
-          : cloudActive;
-      }
+      const activeMap = new Map();
+      [...cloudActive, ...localActive].forEach(timer => {
+        if (!timer?.id) return;
+        const prev = activeMap.get(timer.id);
+        if (!prev || Number(timer.startedAt || 0) >= Number(prev.startedAt || 0)) {
+          activeMap.set(timer.id, timer);
+        }
+      });
 
       state.timeTracking = {
         entries: mergeByIdPreferNewer(state.timeTracking.entries, cloudEntries),
-        active
+        active: [...activeMap.values()]
       };
+      restoreTimeTrackingFromLocal();
       saveTimeTrackingImmediately();
     }
     if (data.recipeLinkFeedback && typeof data.recipeLinkFeedback === "object") {
