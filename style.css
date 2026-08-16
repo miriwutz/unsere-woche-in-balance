@@ -6728,3 +6728,82 @@ a.day-meal{
 @media(max-width:700px){
   .schoolyear-schedule-fields{grid-template-columns:1fr;max-width:none;}
 }
+
+
+/* =========================================================
+   ZEITTRACKING – kleine Korrekturfunktion
+   ========================================================= */
+
+.time-log-edit,
+.time-log-delete{
+  appearance:none;
+  border:0;
+  background:transparent;
+  padding:3px 5px;
+  min-width:24px;
+  height:26px;
+  border-radius:999px;
+  cursor:pointer;
+  color:#8c827b;
+  line-height:1;
+}
+
+.time-log-edit:hover,
+.time-log-delete:hover{
+  background:rgba(109,93,82,.08);
+  color:#554c46;
+}
+
+.time-log-edit-panel{
+  display:grid;
+  grid-template-columns:120px 190px minmax(220px,1fr) 90px 90px auto;
+  gap:10px;
+  align-items:end;
+  margin:4px 0 8px;
+  padding:12px;
+  border:1px solid rgba(199,185,175,.55);
+  border-radius:14px;
+  background:rgba(250,248,245,.96);
+}
+
+.time-log-edit-panel label{
+  display:grid;
+  gap:5px;
+  font-size:.78rem;
+  color:#756a63;
+}
+
+.time-log-edit-panel input,
+.time-log-edit-panel select{
+  width:100%;
+  min-height:36px;
+}
+
+.time-edit-actions{
+  display:flex;
+  gap:8px;
+  justify-content:flex-end;
+  align-items:end;
+}
+
+@media(max-width:900px){
+  .time-log-edit-panel{
+    grid-template-columns:1fr 1fr;
+  }
+
+  .time-edit-note-wrap,
+  .time-edit-actions{
+    grid-column:1 / -1;
+  }
+}
+
+@media(max-width:560px){
+  .time-log-edit-panel{
+    grid-template-columns:1fr;
+  }
+
+  .time-edit-note-wrap,
+  .time-edit-actions{
+    grid-column:1;
+  }
+}
