@@ -1973,6 +1973,15 @@ function startLiveTimeTicker() {
   }, 1000);
 }
 
+function trackingPersonColor(key) {
+  return {
+    a:"#8fcfbe",
+    b:"#e6a1a1",
+    c:"#e9c6df",
+    d:"#cdb8e8"
+  }[key] || "#c8c1bc";
+}
+
 function renderTimeTracking() {
   const list = document.querySelector("#timeLogList");
   const activeBox = document.querySelector("#activeTimeTracker");
@@ -1987,10 +1996,10 @@ function renderTimeTracking() {
   if (activeTimers.length) {
     activeBox.classList.remove("hidden");
     activeBox.innerHTML = activeTimers.map(active => `
-      <div class="active-time-item" data-id="${active.id}" style="--person-color:${escapeHtml(familyColor(active.person))}">
+      <div class="active-time-item" data-id="${active.id}" style="--person-color:${escapeHtml(trackingPersonColor(active.person))}">
         <div>
           <span class="active-time-person">
-            <span class="time-person-dot" style="background:${escapeHtml(familyColor(active.person))}"></span>
+            <span class="time-person-dot" style="background:${escapeHtml(trackingPersonColor(active.person))}"></span>
             ${escapeHtml(familyName(active.person))}
           </span>
           <strong>${escapeHtml(timeCategoryLabel(active.category))}</strong>
@@ -2047,7 +2056,7 @@ function renderTimeTracking() {
       return `
         <div class="time-person-summary">
           <div class="time-person-summary-head">
-            <span class="time-person-dot" style="background:${escapeHtml(familyColor(person))}"></span>
+            <span class="time-person-dot" style="background:${escapeHtml(trackingPersonColor(person))}"></span>
             <strong>${escapeHtml(familyName(person))}</strong>
             <span>${formatMinutes(personTotal)}</span>
           </div>
@@ -2130,7 +2139,7 @@ function renderTimeTracking() {
       legendParts.push(`
         <div class="time-person-legend">
           <div class="time-person-legend-head">
-            <span class="time-person-dot" style="background:${escapeHtml(familyColor(personInfo.key))}"></span>
+            <span class="time-person-dot" style="background:${escapeHtml(trackingPersonColor(personInfo.key))}"></span>
             <strong>${escapeHtml(familyName(personInfo.key))}</strong>
             <span>${formatMinutes(personTotal)}</span>
           </div>
@@ -2158,9 +2167,9 @@ function renderTimeTracking() {
     .slice(0, 20);
 
   list.innerHTML = entries.length ? entries.map(entry => `
-    <div class="time-log-row" style="--person-color:${escapeHtml(familyColor(entry.person))}">
+    <div class="time-log-row" style="--person-color:${escapeHtml(trackingPersonColor(entry.person))}">
       <span class="time-log-person">
-        <span class="time-person-dot" style="background:${escapeHtml(familyColor(entry.person))}"></span>
+        <span class="time-person-dot" style="background:${escapeHtml(trackingPersonColor(entry.person))}"></span>
         ${escapeHtml(familyName(entry.person))}
       </span>
       <span class="time-log-category">${escapeHtml(timeCategoryLabel(entry.category))}</span>
@@ -2293,7 +2302,15 @@ function collectInternetRecipeLinks() {
     }
   });
 
-  return [...map.values()].sort((a,b) => String(a.label).localeCompare(String(b.label), "de"));
+  const hidden = new Set(
+    Object.entries(state.recipeLinkFeedback || {})
+      .filter(([,v]) => v?.hidden)
+      .map(([url]) => url)
+  );
+
+  return [...map.values()]
+    .filter(item => !hidden.has(item.url))
+    .sort((a,b) => String(a.label).localeCompare(String(b.label), "de"));
 }
 
 function recipeFeedbackLabel(value) {
@@ -2334,6 +2351,7 @@ function renderRecipeLinkTracker() {
           <button type="button" class="recipe-link-rate ${feedback.rating === "love" ? "active" : ""}" data-url="${escapeHtml(link.url)}" data-rating="love">💛 Sehr gern wieder</button>
           <button type="button" class="recipe-link-rate ${feedback.rating === "okay" ? "active" : ""}" data-url="${escapeHtml(link.url)}" data-rating="okay">🙂 Passt gut</button>
           <button type="button" class="recipe-link-rate ${feedback.rating === "no" ? "active" : ""}" data-url="${escapeHtml(link.url)}" data-rating="no">🌿 Eher nicht</button>
+          <button type="button" class="recipe-link-remove" data-url="${escapeHtml(link.url)}" title="Aus Übersicht entfernen">×</button>
         </div>
       </article>
     `;
@@ -2361,6 +2379,20 @@ function renderRecipeLinkTracker() {
       state.recipeLinkFeedback[url] = {
         ...current,
         rating: btn.dataset.rating,
+        updatedAt: Date.now()
+      };
+      save();
+      renderRecipeLinkTracker();
+    });
+  });
+
+  host.querySelectorAll(".recipe-link-remove").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const url = btn.dataset.url;
+      const current = state.recipeLinkFeedback[url] || {};
+      state.recipeLinkFeedback[url] = {
+        ...current,
+        hidden: true,
         updatedAt: Date.now()
       };
       save();
