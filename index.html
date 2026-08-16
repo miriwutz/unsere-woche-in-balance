@@ -412,9 +412,17 @@
             Zeitraum
             <select id="todoPeriod">
               <option value="today">Heute</option>
-              <option value="week" selected>Diese Woche</option>
+              <option value="week" selected>Woche</option>
               <option value="month">Diesen Monat</option>
               <option value="later">Irgendwann</option>
+            </select>
+          </label>
+          <label class="todo-week-offset-field">
+            Welche Woche?
+            <select id="todoWeekOffset">
+              <option value="0" selected>Diese Woche</option>
+              <option value="1">Nächste Woche</option>
+              <option value="2">Übernächste Woche</option>
             </select>
           </label>
           <label>
