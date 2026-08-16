@@ -7579,9 +7579,41 @@ function normalizeRecipeFlagLayout() {
 ensureRecipeFormAndMobileActionStyles();
 normalizeRecipeFlagLayout();
 
+function normalizeRecipeBottomRow() {
+  const grid = document.querySelector(".recipe-form-grid");
+  if (!grid) return;
+
+  let row = grid.querySelector(".recipe-bottom-row");
+  if (!row) {
+    row = document.createElement("div");
+    row.className = "recipe-bottom-row";
+    grid.appendChild(row);
+  }
+
+  const selectors = [
+    ".recipe-card-mark-field",
+    ".recipe-bake-field",
+    ".recipe-temp-field",
+    ".recipe-kids-toggle",
+    ".recipe-healthy-toggle",
+    ".recipe-favorite-toggle",
+    ".recipe-form-actions"
+  ];
+
+  selectors.forEach(selector => {
+    const el = grid.querySelector(selector);
+    if (el && el.parentElement !== row) {
+      row.appendChild(el);
+    }
+  });
+}
+
+normalizeRecipeBottomRow();
+
 document.addEventListener("DOMContentLoaded", () => {
   ensureRecipeFormAndMobileActionStyles();
   normalizeRecipeFlagLayout();
+  normalizeRecipeBottomRow();
 });
 
 /* MOBILE PRINT FINAL OVERRIDE */
