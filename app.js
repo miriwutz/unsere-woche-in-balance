@@ -3457,106 +3457,16 @@ document.querySelector("#todayWeekBtn").addEventListener("click", () => {
 
 
 function ensureRecipeCardMarkPicker() {
-  if (document.querySelector("#recipeExtraRow")) return;
-
-  const recipeForm = document.querySelector("#recipeForm");
-  const actions = recipeForm?.querySelector(".recipe-form-actions");
-  if (!recipeForm || !actions) return;
-
-  const row = document.createElement("div");
-  row.id = "recipeExtraRow";
-  row.className = "recipe-extra-row";
-  row.innerHTML = `
-    <label class="recipe-card-mark-field">
-      <span>Kartenzeichen</span>
-      <select id="recipeCardMark">
-        <optgroup label="Ruhig & geschmackvoll">
-          <option value="⌁">⌁ Feine Linie</option>
-          <option value="✦">✦ Stern</option>
-          <option value="☾">☾ Mond</option>
-          <option value="♡">♡ Herz</option>
-          <option value="❋">❋ Blüte</option>
-          <option value="◌">◌ Kreis</option>
-          <option value="≈">≈ Welle</option>
-          <option value="∞">∞ Unendlich</option>
-        </optgroup>
-        <optgroup label="Cool">
-          <option value="⚡︎">⚡ Blitz</option>
-          <option value="★">★ Star</option>
-          <option value="☻">☻ Smiley</option>
-          <option value="♬">♬ Musik</option>
-          <option value="✌︎">✌ Peace</option>
-          <option value="✪">✪ Cool Star</option>
-        </optgroup>
-      </select>
-    </label>
-
-    <label class="recipe-bake-field">
-      <span>Backzeit</span>
-      <input id="recipeBakeTime" type="text" inputmode="numeric" placeholder="z. B. 35 Min.">
-    </label>
-
-    <label class="recipe-temp-field">
-      <span>Grad</span>
-      <input id="recipeTemperature" type="text" inputmode="numeric" placeholder="z. B. 180 °C">
-    </label>
-  `;
-
-  actions.parentElement.insertBefore(row, actions);
+  // Felder stehen jetzt fest im HTML.
+  return document.querySelector("#recipeCardMark");
 }
+
 function recipeCardMark(recipe) {
   return recipe?.cardMark || "⌁";
 }
 
 function ensureRecipeCardMarkStyles() {
-  if (document.querySelector("#recipeCardMarkStyles")) return;
-
-  const style = document.createElement("style");
-  style.id = "recipeCardMarkStyles";
-  style.textContent = `
-    .recipe-card-mark-field{
-      display:grid;
-      gap:5px;
-      min-width:145px;
-      color:#786f69;
-      font-size:.7rem;
-    }
-
-    .recipe-card-mark-field select{
-      width:100%;
-      min-height:38px;
-      border:1px solid var(--line, #e7ddd7);
-      border-radius:12px;
-      background:#fffdfb;
-      color:var(--ink, #514944);
-      padding:8px 10px;
-      font:inherit;
-    }
-
-    .recipe-tools,
-    .recipe-detail-utensil{
-      font-family:Georgia, "Times New Roman", serif !important;
-      font-size:1.45rem !important;
-      line-height:1 !important;
-      letter-spacing:0 !important;
-      opacity:.74;
-      transform:none !important;
-    }
-
-    .recipe-detail-utensil{
-      display:grid;
-      place-items:center;
-      min-width:32px;
-      min-height:32px;
-    }
-
-    @media(max-width:700px){
-      .recipe-card-mark-field{
-        min-width:0;
-      }
-    }
-  `;
-  document.head.appendChild(style);
+  // Gestaltung liegt jetzt vollständig in style.css.
 }
 
 ensureRecipeCardMarkPicker();
