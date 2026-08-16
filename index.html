@@ -556,6 +556,1597 @@
           <option value="advanced">Etwas aufwendiger</option>
         </select>
 
+        <input id="recipeTime" type="text" placeholder="Zeit, z. B. 20 Min.">
+        <textarea id="recipeIngredients" rows="6" placeholder="Zutaten – eine Zutat pro Zeile"></textarea>
+        <textarea id="recipeSteps" rows="6" placeholder="Zubereitung – ein Schritt pro Zeile"></textarea>
+        <input id="recipeWebUrl" type="url" placeholder="Link zum Onlinerezept – optional">
+        <input id="recipeYoutubeUrl" type="url" placeholder="YouTube-Link – optional">
+
+        <label class="recipe-card-mark-field">
+          <span>Kartenzeichen</span>
+          <select id="recipeCardMark">
+            <optgroup label="Ruhig & geschmackvoll">
+              <option value="⌁">⌁ Feine Linie</option>
+              <option value="✦">✦ Stern</option>
+              <option value="☾">☾ Mond</option>
+              <option value="♡">♡ Herz</option>
+              <option value="❋">❋ Blüte</option>
+              <option value="◌">◌ Kreis</option>
+              <option value="≈">≈ Welle</option>
+              <option value="∞">∞ Unendlich</option>
+            </optgroup>
+            <optgroup label="Cool">
+              <option value="⚡︎">⚡ Blitz</option>
+              <option value="★">★ Star</option>
+              <option value="☻">☻ Smiley</option>
+              <option value="♬">♬ Musik</option>
+              <option value="✌︎">✌ Peace</option>
+              <option value="✪">✪ Cool Star</option>
+            </optgroup>
+          </select>
+        </label>
+
+        <label class="recipe-bake-field">
+          <span>Backzeit</span>
+          <input id="recipeBakeTime" type="text" inputmode="numeric" placeholder="z. B. 35 Min.">
+        </label>
+
+        <label class="recipe-temp-field">
+          <span>Grad</span>
+          <input id="recipeTemperature" type="text" inputmode="numeric" placeholder="z. B. 180 °C">
+        </label>
+
+        <label class="recipe-kids-toggle">
+          <input id="recipeKids" type="checkbox">
+          <span>🧒 Kindgerecht</span>
+        </label>
+
+        <label class="recipe-healthy-toggle">
+          <input id="recipeHealthy" type="checkbox">
+          <span>🌿 Gesund & bunt</span>
+        </label>
+
+        <label class="recipe-favorite-toggle" title="Als Lieblingsrezept markieren">
+          <input id="recipeFavorite" type="checkbox">
+          <span>☆ Favorit</span>
+        </label>
+
+        <div class="recipe-form-actions">
+          <button id="cancelRecipeEditBtn" class="secondary-btn hidden" type="button">Bearbeiten abbrechen</button>
+          <button id="saveRecipeBtn" class="primary-btn" type="button">Rezept speichern</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="recipe-filters card">
+      <div class="recipe-search-wrap">
+        <input id="recipeSearch" type="search" list="recipeSearchSuggestions"
+               placeholder="Rezept suchen …" autocomplete="off">
+        <datalist id="recipeSearchSuggestions"></datalist>
+        <div id="recipeAutocomplete" class="recipe-autocomplete hidden"></div>
+      </div>
+
+      <select id="recipeCategoryFilter">
+        <option value="all">Alle Rezeptideen</option>
+        <option value="breakfast">🥣 Frühstück & Morgenideen</option>
+        <option value="spread">🥖 Aufstriche & Dips</option>
+        <option value="soup">🍲 Suppen & Eintöpfe</option>
+        <option value="main">🍝 Hauptgerichte</option>
+        <option value="small">🥙 Kleine Sachen & Jause</option>
+        <option value="salad">🥗 Salate & Frisches</option>
+        <option value="sweet">🍓 Süßes & Backen</option>
+        <option value="drink">🥤 Getränke & Smoothies</option>
+        <option value="other">✨ Sonstiges</option>
+      </select>
+
+      <select id="recipeDifficultyFilter">
+        <option value="all">Alle Schwierigkeitsstufen</option>
+        <option value="easy">Einfach</option>
+        <option value="medium">Mittel</option>
+        <option value="advanced">Etwas aufwendiger</option>
+      </select>
+
+      <label class="recipe-kids-filter">
+        <input id="recipeKidsOnlyFilter" type="checkbox">
+        <span>🧒 Kindergerichte</span>
+      </label>
+
+      <label class="recipe-healthy-filter">
+        <input id="recipeHealthyOnlyFilter" type="checkbox">
+        <span>🌿 Gesund & bunt</span>
+      </label>
+
+      <label class="recipe-favorite-filter">
+        <input id="recipeFavoriteOnlyFilter" type="checkbox">
+        <span>★ Lieblingsrezepte</span>
+      </label>
+    </div>
+
+    <details class="recipe-toc card">
+      <summary>Inhaltsverzeichnis</summary>
+      <div id="recipeTocList" class="recipe-toc-list"></div>
+    </details>
+
+    <section class="meal-plan-card card">
+      <div class="meal-plan-head">
+        <div>
+          <p class="small-label">ESSENSPLAN</p>
+          <h3>Was essen wir diese Woche?</h3>
+          <p>Rezept auswählen oder einfach frei etwas eintragen.</p>
+        </div>
+        <div class="meal-plan-week-switch">
+          <button id="mealPlanThisWeekBtn" class="secondary-btn active" type="button">Diese Woche</button>
+          <button id="mealPlanNextWeekBtn" class="secondary-btn" type="button">Nächste Woche</button>
+        </div>
+      </div>
+      <div id="mealPlanGrid" class="meal-plan-grid"></div>
+    </section>
+
+
+    <div id="recipeList" class="recipe-list">
+      <div class="workroom-empty">Noch keine Rezepte gespeichert.</div>
+    </div>
+    <div id="recipePager" class="recipe-pager"></div>
+  </section>
+
+</section>
+    
+    
+<dialog id="recipeDetailDialog" class="recipe-detail-dialog">
+  <div class="dialog-card recipe-detail-card">
+    <div class="dialog-head">
+      <div>
+        <p class="small-label">REZEPT</p>
+        <h2 id="recipeDetailTitle">Rezept</h2>
+      </div>
+      <div class="recipe-detail-head-actions">
+        <button id="printRecipeDetailBtn" class="recipe-detail-print" type="button" title="Rezept drucken" aria-label="Rezept drucken">🖨</button>
+        <button id="closeRecipeDetailBtn" class="recipe-detail-close" type="button" aria-label="Rezept schließen">×</button>
+      </div>
+    </div>
+    <div id="recipeDetailBody"></div>
+  </div>
+</dialog>
+
+
+<dialog id="recipeDeleteDialog" class="recipe-delete-dialog">
+  <div class="dialog-card recipe-delete-confirm-card">
+    <p class="small-label">REZEPT LÖSCHEN</p>
+    <h2>Rezept wirklich löschen?</h2>
+    <p id="recipeDeleteText">Dieses Rezept wird dauerhaft entfernt.</p>
+    <div class="recipe-delete-confirm-actions">
+      <button id="cancelRecipeDeleteBtn" class="secondary-btn" type="button">Abbrechen</button>
+      <button id="confirmRecipeDeleteBtn" class="recipe-danger-btn" type="button">Wirklich löschen</button>
+    </div>
+  </div>
+</dialog>
+
+<section id="school" class="view">
+      <div class="section-head"><div><p class="small-label">SCHULE</p><h2>Lernen & Schule</h2>
+      <p class="school-intro">Deine Lernaufgaben, Termine und Lieblings-Lernseiten – alles an einem Ort.</p></div>
+      <button id="openSchoolTimetableEditorBtn" class="secondary-btn school-timetable-editor-btn" type="button">🗓 Stundenpläne bearbeiten</button>
+      </div>
+      <div class="school-kind-note">💛 Trag ein, was du erledigen oder nicht vergessen möchtest. Wenn du fertig bist, darfst du abhaken.</div>
+      <div class="school-grid">
+<article class="card school-card">
+      <div class="school-head"><div><input id="schoolName1" class="school-name" value="Lou"><span class="school-question">Was steht als Nächstes an?</span></div><span class="school-icon">✦</span></div>
+      <div class="school-add">
+        <input id="schoolTask1" placeholder="✨ Neue Lernaufgabe eintragen">
+        <select id="schoolSubject1" aria-label="Fach">
+          <option value="">Fach wählen</option>
+          <option value="Deutsch">Deutsch</option>
+          <option value="Mathematik">Mathematik</option>
+          <option value="Englisch">Englisch</option>
+          <option value="Latein">Latein</option>
+          <option value="Biologie">Biologie</option>
+          <option value="Geografie">Geografie</option>
+          <option value="Geschichte">Geschichte</option>
+          <option value="other">Anderes Fach …</option>
+        </select>
+        <input id="schoolSubjectOther1" class="school-subject-other hidden" placeholder="Anderes Fach">
+        <input id="schoolDue1" type="date">
+        <select id="schoolType1"><option value="homework">☀ Hausübung</option><option value="test">✎ Test / Schularbeit</option><option value="bring">♥ Mitbringen</option><option value="appointment">○ Termin</option><option value="other">✦ Sonstiges</option></select>
+        <button class="secondary-btn add-school-task" data-child="1">✨ Eintragen</button>
+      </div>
+      <div id="schoolTasks1" class="school-tasks"></div>
+      <div class="school-links-title"><strong>Lernlinks</strong><span>Direkt zu euren Lernseiten</span></div>
+      <div class="school-link-add"><input id="schoolLinkName1" placeholder="Name, z. B. ANTON"><input id="schoolLinkUrl1" placeholder="https://…"><button class="secondary-btn add-school-link" data-child="1">+ Link</button></div>
+      <div id="schoolLinks1" class="school-links"></div><div class="timetable-box"><div><strong>Aktueller Stundenplan</strong><span>Damit du schnell nachsehen kannst.</span></div><div class="timetable-actions"><input id="timetableUrl1" placeholder="Link zum Stundenplan"><button class="secondary-btn save-timetable" data-child="1">♥ Speichern</button><a id="timetableOpen1" class="secondary-btn timetable-open hidden" target="_blank" rel="noopener">☀ Stundenplan öffnen</a></div></div>
+        <div class="manual-timetable-section">
+          <button class="secondary-btn toggle-manual-timetable" data-child="1" type="button">✦ Stundenplan selbst eintragen</button>
+          <div id="manualTimetableWrap1" class="manual-timetable-wrap hidden">
+      <p class="manual-timetable-hint">Unterrichtszeiten einmal festlegen, danach nur noch die Fächer auswählen.</p>
+      <div id="ttMatrix1" class="tt-matrix-host"></div>
+<div class="manual-timetable-actions">
+
+  <button class="secondary-btn add-tt-row"
+          data-child="1"
+          type="button">
+    + Stunde
+  </button>
+
+  <button class="secondary-btn remove-tt-row"
+          data-child="1"
+          type="button">
+    − Letzte Stunde
+  </button>
+
+  <button class="primary-btn save-tt-matrix"
+          data-child="1"
+          type="button">
+    Speichern
+  </button>
+
+  <button class="secondary-btn close-manual-timetable"
+          data-child="1"
+          type="button">
+    Schließen
+  </button>
+
+</div>
+    </div><button id="manualTimetableViewBtn1" class="timetable-view-btn hidden" data-child="1" type="button">♡ Stundenplan ansehen</button>
+        </div>
+
+    </article><article class="card school-card">
+      <div class="school-head"><div><input id="schoolName2" class="school-name" value="Fina"><span class="school-question">Was steht als Nächstes an?</span></div><span class="school-icon">☾</span></div>
+      <div class="school-add">
+        <input id="schoolTask2" placeholder="✨ Neue Lernaufgabe eintragen">
+        <select id="schoolSubject2" aria-label="Fach">
+          <option value="">Fach wählen</option>
+          <option value="Deutsch">Deutsch</option>
+          <option value="Mathematik">Mathematik</option>
+          <option value="Englisch">Englisch</option>
+          <option value="Sachunterricht">Sachunterricht</option>
+          <option value="Biologie">Biologie</option>
+          <option value="Geografie">Geografie</option>
+          <option value="Geschichte">Geschichte</option>
+          <option value="other">Anderes Fach …</option>
+        </select>
+        <input id="schoolSubjectOther2" class="school-subject-other hidden" placeholder="Anderes Fach">
+        <input id="schoolDue2" type="date">
+        <select id="schoolType2"><option value="homework">☀ Hausübung</option><option value="test">✎ Test / Schularbeit</option><option value="bring">♥ Mitbringen</option><option value="appointment">○ Termin</option><option value="other">✦ Sonstiges</option></select>
+        <button class="secondary-btn add-school-task" data-child="2">✨ Eintragen</button>
+      </div>
+      <div id="schoolTasks2" class="school-tasks"></div>
+      <div class="school-links-title"><strong>Lernlinks</strong><span>Direkt zu euren Lernseiten</span></div>
+      <div class="school-link-add"><input id="schoolLinkName2" placeholder="Name, z. B. ANTON"><input id="schoolLinkUrl2" placeholder="https://…"><button class="secondary-btn add-school-link" data-child="2">+ Link</button></div>
+      <div id="schoolLinks2" class="school-links"></div><div class="timetable-box"><div><strong>Aktueller Stundenplan</strong><span>Damit du schnell nachsehen kannst.</span></div><div class="timetable-actions"><input id="timetableUrl2" placeholder="Link zum Stundenplan"><button class="secondary-btn save-timetable" data-child="2">♥ Speichern</button><a id="timetableOpen2" class="secondary-btn timetable-open hidden" target="_blank" rel="noopener">☀ Stundenplan öffnen</a></div></div>
+        <div class="manual-timetable-section">
+          <button class="secondary-btn toggle-manual-timetable" data-child="2" type="button">✦ Stundenplan selbst eintragen</button>
+          <div id="manualTimetableWrap2" class="manual-timetable-wrap hidden">
+      <p class="manual-timetable-hint">Unterrichtszeiten einmal festlegen, danach nur noch die Fächer auswählen.</p>
+      <div id="ttMatrix2" class="tt-matrix-host"></div>
+<div class="manual-timetable-actions">
+
+  <button class="secondary-btn add-tt-row"
+          data-child="2"
+          type="button">
+    + Stunde
+  </button>
+
+  <button class="secondary-btn remove-tt-row"
+          data-child="2"
+          type="button">
+    − Letzte Stunde
+  </button>
+
+  <button class="primary-btn save-tt-matrix"
+          data-child="2"
+          type="button">
+    Speichern
+  </button>
+
+  <button class="secondary-btn close-manual-timetable"
+          data-child="2"
+          type="button">
+    Schließen
+  </button>
+
+</div>
+        </div>
+
+        <button
+          id="manualTimetableViewBtn2"
+          class="timetable-view-btn hidden"
+          data-child="2"
+          type="button"
+        >♡ Stundenplan ansehen</button>
+      </div>
+
+    </article></div></section>
+<section id="workroom" class="view">
+  <div class="section-head">
+    <div>
+      <p class="small-label">WERKRAUM</p>
+      <h2>Mein Werkraum</h2>
+      <p>Alles für Schule, Vorbereitung und meine Ideen an einem Ort.</p>
+    </div>
+  </div>
+
+  <div class="school-kind-note">
+    ✨ Hier sammle ich, was ich für meinen Schulalltag brauche.
+  </div>
+
+ <div class="workroom-grid">
+
+  <!-- SCHUL-TO-DOS -->
+  <article class="card workroom-main-card workroom-fold-card open" data-workroom-fold="todos">
+  <div class="workroom-card-head workroom-fold-head">
+      <div>
+        <span class="workroom-fold-arrow">▾</span>
+        <h3>✓ Schul-To-dos</h3>
+        <p>Was möchte ich für die Schule erledigen?</p>
+      </div>
+    </div>
+
+<div id="schoolWorkTodoList" class="workroom-list">
+  <div class="workroom-empty">Noch keine Schul-To-dos eingetragen.</div>
+</div>
+
+<details class="workroom-archive">
+  <summary>
+    Erledigte Schul-To-dos
+  </summary>
+
+  <div id="schoolWorkTodoArchive" class="workroom-archive-list">
+  </div>
+</details>
+
+<div class="workroom-quick-add school-work-todo-add">
+
+  <input id="schoolWorkTodoInput"
+         type="text"
+         placeholder="Neue Schulaufgabe eintragen …">
+
+  <select id="schoolWorkTodoType" aria-label="Art der Vorbereitung">
+    <option value="">Art – optional</option>
+    <option value="draw">🖍 Vorzeichnen</option>
+    <option value="prepare">🛠 Vorbereiten</option>
+    <option value="create">📄 Erstellen</option>
+    <option value="ask">💬 Nachfragen</option>
+    </select>
+
+  <input id="schoolWorkTodoLink"
+         type="url"
+         placeholder="Link – optional">
+
+  <button id="addSchoolWorkTodoBtn"
+          class="secondary-btn"
+          type="button">+ Eintragen</button>
+
+</div>
+    
+  </article>
+
+<!-- DRUCKEN -->
+<article class="card workroom-main-card workroom-fold-card" data-workroom-fold="prints">
+ <div class="workroom-card-head workroom-fold-head">
+    <div>
+      <span class="workroom-fold-arrow">▾</span>
+      <h3>🖨 Drucken</h3>
+      <p>Was möchte ich in der Schule noch ausdrucken?</p>
+    </div>
+  </div>
+
+  <div id="schoolPrintList" class="workroom-list">
+    <div class="workroom-empty">
+      Im Moment steht nichts auf der Druckliste.
+    </div>
+  </div>
+
+  <div class="workroom-quick-add school-print-add">
+    <input id="schoolPrintInput"
+           type="text"
+           placeholder="Neuen Druckauftrag eintragen …">
+
+    <input id="schoolPrintLink"
+           type="url"
+           placeholder="Link – optional">
+
+    <button id="addSchoolPrintBtn"
+            class="secondary-btn"
+            type="button">+ Eintragen</button>
+  </div>
+</article>
+
+<!-- LINKSAMMLUNG -->
+<article class="card workroom-main-card workroom-links-card workroom-fold-card" data-workroom-fold="links">
+
+ <div class="workroom-card-head workroom-fold-head">
+    <div>
+      <span class="workroom-fold-arrow">▾</span>
+      <h3>🔗 Linksammlung</h3>
+      <p>Ideen und Fundstücke für später aufbewahren.</p>
+    </div>
+  </div>
+
+  <!-- Kategorien -->
+  <div class="workroom-link-filter-row">
+    <label class="workroom-link-filter-select-label">
+      Kategorie
+      <select id="workroomLinkCategoryFilter">
+        <option value="all">Alle Kategorien</option>
+        <option value="wood">🪵 Holz</option>
+        <option value="paper">📄 Papier</option>
+        <option value="free">✂️ Freies Arbeiten</option>
+        <option value="experiment">🧪 Experimentieren</option>
+        <option value="documents">📎 Unterlagen & Belege</option>
+        <option value="bureaucracy">🗂 Bürokratie</option>
+        <option value="current">📌 Aktuell</option>
+        <option value="other">✨ Sonstiges</option>
+      </select>
+    </label>
+  </div>
+
+  <div class="workroom-link-use-filters" aria-label="Verwendungszeitraum">
+    <label class="workroom-link-filter-select-label">
+      Zeitraum
+      <select id="workroomLinkUseFilterSelect">
+        <option value="soon">Demnächst</option>
+        <option value="current">📌 Aktuell</option>
+        <option value="bureaucracy">🗂 Bürokratie</option>
+        <option value="year">🗓 Jahresplanung</option>
+        <option value="later">🌙 Später vorgemerkt</option>
+        <option value="all" selected>Alle Zeiträume</option>
+      </select>
+    </label>
+    <button type="button" class="workroom-link-important-filter" id="workroomLinkImportantFilter">⭐ Wichtig</button>
+  </div>
+
+  <!-- gespeicherte Links -->
+  <div id="workroomLinkList" class="workroom-link-list">
+    <div class="workroom-empty">
+      Noch keine Links gespeichert.
+    </div>
+  </div>
+
+  <!-- neuen Link eintragen -->
+  <div class="workroom-link-add">
+
+<input id="workroomLinkTitle"
+       type="text"
+       placeholder="Kurzer Titel …">
+
+<input id="workroomLinkNote"
+       type="text"
+       placeholder="Kurze Notiz – optional">
+
+<input id="workroomLinkUrl"
+       type="url"
+       placeholder="Link einfügen …">
+
+<select id="workroomLinkCategory">
+  <option value="wood">🪵 Holz</option>
+  <option value="paper">📄 Papier</option>
+  <option value="free">✂️ Freies Arbeiten</option>
+  <option value="experiment">🧪 Experimentieren</option>
+  <option value="documents">📎 Unterlagen & Belege</option>
+  <option value="bureaucracy">🗂 Bürokratie</option>
+  <option value="current">📌 Aktuell</option>
+  <option value="other">✨ Sonstiges</option>
+</select>
+
+<select id="workroomLinkUse">
+  <option value="soon" selected>Demnächst</option>
+  <option value="current">📌 Aktuell</option>
+  <option value="bureaucracy">🗂 Bürokratie</option>
+  <option value="year">🗓 Jahresplanung</option>
+  <option value="later">🌙 Später vorgemerkt</option>
+</select>
+
+<label class="workroom-link-important-toggle">
+  <input id="workroomLinkImportant" type="checkbox">
+  <span>⭐ Wichtig</span>
+</label>
+    
+    <button id="addWorkroomLinkBtn"
+            class="secondary-btn"
+            type="button">
+      + Speichern
+    </button>
+
+  </div>
+
+</article>
+
+
+  <!-- SELTENER BENÖTIGTE BEREICHE -->
+  <div class="workroom-small-grid">
+
+    <article class="card workroom-small-card substitution-card">
+      <h3>↻ Supplierungen</h3>
+      <p>Gehaltene Supplierstunden übersichtlich erfassen.</p>
+      <div id="substitutionList" class="substitution-list"></div>
+      <button id="openSubstitutionBtn"
+              class="secondary-btn"
+              type="button">+ Supplierung erfassen</button>
+    </article>
+
+    <article class="card workroom-small-card">
+      <h3>▣ Mein Stundenplan</h3>
+      <p>Unterrichtszeiten und Fächer bearbeiten.</p>
+      <button id="openWorkTimetableBtn"
+              class="secondary-btn"
+              type="button">Stundenplan bearbeiten</button>
+    </article>
+
+  </div>
+
+</div>
+</section>
+    <section id="archive" class="view">
+      <div class="section-head overview-page-head">
+        <div>
+          <p class="small-label">UNSER ÜBERBLICK</p>
+          <h2>Zeit & Dinge, die sich bewähren</h2>
+          <p class="overview-intro">Ein ruhiger Überblick darüber, wofür unsere Zeit draufgeht und was wir gerne wieder nutzen.</p>
+        </div>
+      </div>
+
+      <article class="card time-tracker-card">
+        <div class="overview-card-head">
+          <div>
+            <p class="small-label">ZEIT IM BLICK</p>
+            <h3>Wofür war heute Zeit?</h3>
+            <p>Einfach starten und später stoppen – oder Zeit nachträglich eintragen.</p>
+          </div>
+          <div id="activeTimeTracker" class="active-time-tracker hidden"></div>
+        </div>
+
+        <div class="time-tracker-form">
+          <label>
+            Für wen?
+            <select id="timeTrackPerson">
+              <option value="a">Mama</option>
+              <option value="b">Papa</option>
+              <option value="c">Lou</option>
+              <option value="d">Fina</option>
+            </select>
+          </label>
+
+          <label>
+            Bereich
+            <select id="timeTrackCategory">
+              <option value="pc">🖥 PC & Büro</option>
+              <option value="prep">✂ Vorbereitung</option>
+              <option value="household">🏡 Haushalt</option>
+              <option value="repair">🔧 Reparaturen</option>
+              <option value="organize">🗂 Organisieren</option>
+              <option value="errands">🛒 Erledigungen</option>
+              <option value="garden">🌿 Garten & draußen</option>
+              <option value="help">🤝 Helfen & Unterstützen</option>
+              <option value="school">✏ Lernen & Schule</option>
+              <option value="other">✨ Sonstiges</option>
+            </select>
+          </label>
+
+          <label class="time-note-field">
+            Notiz – optional
+            <input id="timeTrackNote" type="text" placeholder="z. B. Arbeitsblätter, Kellerregal …">
+          </label>
+
+          <button id="startTimeTrackBtn" class="primary-btn" type="button">▶ Starten</button>
+        </div>
+
+        <details class="manual-time-details">
+          <summary>Zeit nachträglich eintragen</summary>
+          <div class="manual-time-row">
+            <input id="manualTimeHours" type="number" min="0" step="1" placeholder="Std.">
+            <input id="manualTimeMinutes" type="number" min="0" max="59" step="5" placeholder="Min.">
+            <button id="addManualTimeBtn" class="secondary-btn" type="button">+ Eintragen</button>
+          </div>
+          <p class="manual-time-hint">Wird einfach als fertiger Eintrag gespeichert – unabhängig von laufenden Stoppuhren.</p>
+        </details>
+
+        <div class="time-overview-grid">
+          <div class="time-summary-panel">
+            <strong>Heute</strong>
+            <div id="timeTodayChips" class="time-summary-chips"></div>
+          </div>
+
+          <div class="time-summary-panel">
+            <strong>Diese Woche</strong>
+            <div id="timeSummaryChips" class="time-summary-chips"></div>
+          </div>
+
+          <div class="time-chart-panel">
+            <strong>Verteilung diese Woche</strong>
+            <div class="time-donut-wrap">
+              <div class="family-time-rings" aria-label="Zeitverteilung nach Person">
+                <div id="timeRingMama" class="family-time-ring ring-mama"></div>
+                <div id="timeRingPapa" class="family-time-ring ring-papa"></div>
+                <div id="timeRingLou" class="family-time-ring ring-lou"></div>
+                <div id="timeRingFina" class="family-time-ring ring-fina"></div>
+                <div class="family-time-ring-center">
+                  <span id="timeDonutTotal">0 Min.</span>
+                  <small>gesamt</small>
+                </div>
+              </div>
+              <div id="timeDonutLegend" class="time-donut-legend"></div>
+            </div>
+          </div>
+        </div>
+
+        <details class="time-log-details">
+          <summary class="time-log-summary" aria-label="Zeiteinträge anzeigen" title="Zeiteinträge anzeigen"></summary>
+          <div id="timeLogList" class="time-log-list"></div>
+        </details>
+      </article>
+
+      <article class="card recipe-link-tracker-card">
+        <div class="overview-card-head">
+          <div>
+            <p class="small-label">ONLINE-REZEPTE</p>
+            <h3>Was möchten wir wieder kochen?</h3>
+            <p>Internetrezepte aus deinen Rezeptkarten und dem Essensplan. Hier kannst du sie als gekocht markieren und direkt einschätzen.</p>
+          </div>
+        </div>
+        <div id="recipeLinkTrackerList" class="recipe-link-tracker-list"></div>
+      </article>
+
+      <article class="card exercise-overview-card">
+        <div class="section-head compact-section-head">
+          <div>
+            <p class="small-label">ÜBUNGEN & VIDEOS</p>
+            <h3>Was sich bewährt hat</h3>
+          </div>
+          <button id="deleteAllExercisesBtn" class="secondary-btn danger-soft" type="button">Alle Übungen löschen</button>
+        </div>
+
+        <div class="filters">
+          <button class="archive-filter active" data-archive="all">Alle</button>
+          <button class="archive-filter" data-archive="favorite">♡ Favoriten</button>
+          <button class="archive-filter" data-archive="wanted">🔥 Most wanted</button>
+          <button class="archive-filter" data-archive="super">💛 Sehr gern</button>
+          <button class="archive-filter" data-archive="okay">🙂 Passt gut</button>
+          <button class="archive-filter" data-archive="nope">🌿 Eher nicht</button>
+        </div>
+        <p class="archive-hint">Most wanted passt sich automatisch an: anfangs reichen 2 Durchführungen, später bleiben nur die am häufigsten genutzten Übungen oben.</p>
+
+        <div id="archiveList" class="archive-grid"></div>
+      </article>
+    </section>
+  </main>
+
+
+  <dialog id="pinboardDialog" class="pinboard-dialog">
+    <div class="dialog-card pinboard-dialog-card">
+      <div class="dialog-head">
+        <div>
+          <p class="small-label">PINNWAND</p>
+          <h2>💌 Kleine Nachricht</h2>
+          <p class="pinboard-subtitle">Wie ein Zettel am Kühlschrank: schreiben, lesen, löschen.</p>
+        </div>
+        <button id="closePinboardBtn" class="icon-btn" type="button" aria-label="Pinnwand schließen">×</button>
+      </div>
+
+      <div class="pinboard-list-head">
+        <strong>Auf der Pinnwand</strong>
+        <span id="pinboardCountText">Keine Nachrichten</span>
+      </div>
+
+      <div id="pinboardList" class="pinboard-list">
+        <div class="pinboard-empty">Die Pinnwand ist gerade leer.</div>
+      </div>
+
+      <div class="pinboard-divider"></div>
+
+      <div class="pinboard-device-strip">
+        <button id="enablePinboardNotifications"
+                class="secondary-btn pinboard-enable-btn"
+                type="button">
+          Benachrichtigungen aktivieren
+        </button>
+        <span id="pinboardDeviceStatus" class="pinboard-device-status" aria-live="polite">
+          Noch nicht aktiviert
+        </span>
+        <button id="testPinboardSoundBtn" class="secondary-btn pinboard-test-btn" type="button">♪ Test-Ton</button>
+      </div>
+
+      <div class="pinboard-compose">
+        <label>
+          Für wen?
+          <select id="pinboardRecipient">
+            <option value="all">🌈 Alle</option>
+            <option value="a">Mama</option>
+            <option value="b">Papa</option>
+            <option value="c">Lou</option>
+            <option value="d">Fina</option>
+          </select>
+        </label>
+
+        <label class="pinboard-message-field">
+          Nachricht
+          <textarea id="pinboardMessage" rows="3" maxlength="280" placeholder="z. B. Bitte Milch mitbringen."></textarea>
+        </label>
+
+        <label>
+          Nachrichtenton
+          <select id="pinboardSound">
+            <option value="letter">💌 Briefchen</option>
+            <option value="sparkle">✨ Funkeln</option>
+            <option value="bubble">🫧 Blubb</option>
+          </select>
+        </label>
+
+        <label>
+          Lautstärke auf diesem Gerät
+          <select id="pinboardVolume">
+            <option value="soft">Leise</option>
+            <option value="normal">Normal</option>
+            <option value="loud" selected>Laut</option>
+            <option value="max">Super laut</option>
+          </select>
+        </label>
+
+        <button id="sendPinboardBtn" class="primary-btn pinboard-send-btn" type="button">Nachricht senden</button>
+      </div>
+
+    </div>
+  </dialog>
+
+  <dialog id="videoDialog">
+    <div class="dialog-card">
+      <div class="dialog-head">
+        <div>
+          <p class="small-label">ÜBUNG EINTRAGEN</p>
+          <h2>Für deine Woche</h2>
+        </div>
+        <button id="closeVideoDialogBtn" class="icon-btn" type="button" aria-label="Schließen">×</button>
+      </div>
+
+      <label>
+        YouTube-Link
+        <input id="videoUrl" type="url" placeholder="https://youtube.com/...">
+      </label>
+
+      <div id="videoPreview" class="video-preview empty-preview">
+        <div class="preview-placeholder">▶</div>
+        <div>
+          <strong>Vorschau</strong>
+          <p>Füge einen YouTube-Link ein. Titel und Bild erscheinen automatisch.</p>
+        </div>
+      </div>
+
+      <label>
+        Titel <span class="optional-note">(nur falls er nicht automatisch erkannt wird)</span>
+        <input id="videoTitle" type="text" placeholder="Optionaler eigener Titel">
+      </label>
+
+      <label>
+        Wochentag
+        <select id="videoDay">
+          <option>Montag</option>
+          <option>Dienstag</option>
+          <option>Mittwoch</option>
+          <option>Donnerstag</option>
+          <option>Freitag</option>
+          <option>Samstag</option>
+          <option>Sonntag</option>
+        </select>
+      </label>
+
+      <div class="dialog-actions">
+        <button id="cancelVideoBtn" type="button" class="secondary-btn">Abbrechen</button>
+        <button id="saveVideoBtn" type="button" class="primary-btn">Speichern</button>
+      </div>
+    </div>
+  </dialog>
+
+  <dialog id="replanDialog">
+    <div class="dialog-card">
+      <div class="dialog-head">
+        <div>
+          <p class="small-label">ÜBUNG EINPLANEN</p>
+          <h2 id="replanTitle">Wieder einplanen</h2>
+        </div>
+        <button id="closeReplanDialogBtn" class="icon-btn" type="button" aria-label="Schließen">×</button>
+      </div>
+
+      <label>
+        Woche
+        <select id="replanWeek">
+          <option value="0">Diese Woche</option>
+          <option value="1">Nächste Woche</option>
+          <option value="2">In 2 Wochen</option>
+          <option value="3">In 3 Wochen</option>
+          <option value="4">In 4 Wochen</option>
+        </select>
+      </label>
+
+      <label>
+        Wochentag
+        <select id="replanDay">
+          <option>Montag</option>
+          <option>Dienstag</option>
+          <option>Mittwoch</option>
+          <option>Donnerstag</option>
+          <option>Freitag</option>
+          <option>Samstag</option>
+          <option>Sonntag</option>
+        </select>
+      </label>
+
+      <div class="dialog-actions">
+        <button id="cancelReplanBtn" type="button" class="secondary-btn">Abbrechen</button>
+        <button id="confirmReplanBtn" type="button" class="primary-btn">Einplanen</button>
+      </div>
+    </div>
+  </dialog>
+
+  <div id="motivationToast" class="motivation-toast" role="status" aria-live="polite">
+    <div id="motivationIcon" class="motivation-icon">✨</div>
+    <div class="motivation-copy">
+      <div class="motivation-kicker">Gut für dich</div>
+      <div id="motivationText" class="motivation-text"></div>
+    </div>
+  </div>
+  <dialog id="manualTimetableDialog">
+    <div class="dialog-card timetable-dialog-card">
+      <div class="dialog-head">
+        <div>
+          <p class="small-label">STUNDENPLAN</p>
+          <h2 id="manualTimetableDialogTitle">Stundenplan</h2>
+        </div>
+        <button id="closeManualTimetableDialog" class="icon-btn" type="button">×</button>
+      </div>
+      <div class="timetable-switcher">
+  <button class="secondary-btn timetable-switch" data-person="1" type="button">Lou</button>
+  <button class="secondary-btn timetable-switch" data-person="2" type="button">Fina</button>
+  <button class="secondary-btn timetable-switch" data-person="mama" type="button">Mama</button>
+</div>
+      <div id="manualTimetableDisplay" class="manual-timetable-display"></div>
+      <div class="dialog-actions">
+        <button id="closeManualTimetableDialog2" class="secondary-btn" type="button">Schließen</button>
+      </div>
+    </div>
+  </dialog>
+<dialog id="familyTimetableDialog" class="family-timetable-dialog">
+  <div class="family-timetable-chooser">
+    <div class="dialog-head">
+      <div>
+        <p class="small-label">STUNDENPLAN</p>
+        <h2 id="familyTimetableDialogTitle">Welchen Stundenplan?</h2>
+      </div>
+
+      <button id="closeFamilyTimetableDialog"
+              class="text-btn"
+              type="button"
+              aria-label="Schließen">×</button>
+    </div>
+
+    <div class="family-timetable-buttons">
+      <button class="secondary-btn family-timetable-person"
+              data-person="1"
+              type="button">Lou</button>
+
+      <button class="secondary-btn family-timetable-person"
+              data-person="2"
+              type="button">Fina</button>
+
+      <button class="secondary-btn family-timetable-person"
+              data-person="mama"
+              type="button">Mama</button>
+    </div>
+    <div id="manualTimetableWrapmama" class="manual-timetable-wrap hidden">
+  <p class="manual-timetable-hint">
+    Unterrichtszeiten einmal festlegen, danach nur noch die Fächer auswählen.
+  </p>
+
+  <div id="ttMatrixmama" class="tt-matrix-host"></div>
+
+  <div class="manual-timetable-actions">
+    <button class="secondary-btn add-tt-row"
+        data-child="mama"
+        type="button">
+  + Stunde
+</button>
+
+<button class="secondary-btn remove-tt-row"
+        data-child="mama"
+        type="button">
+  − Letzte Stunde
+</button>
+    <button class="primary-btn save-tt-matrix"
+            data-child="mama"
+            type="button">
+      Speichern
+    </button>
+
+    <button class="secondary-btn close-manual-timetable"
+            data-child="mama"
+            type="button">
+      Schließen
+    </button>
+  </div>
+</div>
+  </div>
+</dialog>
+
+
+<dialog id="substitutionDialog" class="substitution-dialog">
+  <div class="dialog-card">
+    <div class="dialog-head">
+      <div>
+        <p class="small-label">SUPPLIERUNG</p>
+        <h2>Supplierstunde eintragen</h2>
+      </div>
+      <button id="closeSubstitutionDialogBtn" class="icon-btn" type="button" aria-label="Schließen">×</button>
+    </div>
+
+    <div class="substitution-form">
+      <label>
+        Tag
+        <input id="substitutionDate" type="date">
+      </label>
+
+      <label>
+        Klasse
+        <input id="substitutionClass" type="text" placeholder="z. B. 4c">
+      </label>
+
+      <label>
+        Was wird suppliert?
+        <input id="substitutionSubject" type="text" placeholder="z. B. Werken / Mathematik">
+      </label>
+
+      <label>
+        Für wen?
+        <input id="substitutionForWhom" type="text" placeholder="Name der Kollegin / des Kollegen">
+      </label>
+
+      <label>
+        Stundenanzahl
+        <input id="substitutionHours" type="number" min="0.5" max="12" step="0.5" value="1">
+      </label>
+
+      <label class="substitution-note-label">
+        Notiz – optional
+        <textarea id="substitutionNote" rows="3" placeholder="z. B. 3. Stunde, besondere Hinweise"></textarea>
+      </label>
+    </div>
+
+    <div class="dialog-actions">
+      <button id="saveSubstitutionBtn" class="primary-btn" type="button">Speichern</button>
+    </div>
+  </div>
+</dialog>
+
+<dialog id="papaOverviewDialog" class="papa-overview-dialog">
+  <div class="papa-overview-header">
+    <div>
+      <p class="small-label">PAPA</p>
+      <h2>Alles auf einen Blick</h2>
+
+    <div class="papa-quote-panel">
+
+  <div class="papa-triquetra-wrap">
+<div class="papa-triquetra-ring">
+  <img
+    src="triquetra.png.png"
+    class="papa-triquetra-image"
+    alt="Das Leben fließt – wir fließen mit"
+  >
+</div>
+  </div>
+
+  <p id="papaQuote" class="papa-quote"></p>
+
+</div>
+      
+    </div>
+
+    <button id="closePapaOverviewBtn"
+            class="text-btn"
+            type="button"
+            aria-label="Schließen">×</button>
+  </div>
+
+  <div class="papa-overview-tabs">
+    <button class="secondary-btn papa-tab" data-week-offset="0" type="button">
+      Diese Woche
+    </button>
+    <button class="secondary-btn papa-tab" data-week-offset="1" type="button">
+      Nächste Woche
+    </button>
+    <button class="secondary-btn papa-tab" data-week-offset="2" type="button">
+      +2 Wochen
+    </button>
+    <button class="secondary-btn papa-tab" data-week-offset="3" type="button">
+      +3 Wochen
+    </button>
+  </div>
+
+  <div id="papaOverviewList" class="papa-overview-list"></div>
+</dialog>
+  
+  <script src="https://www.gstatic.com/firebasejs/12.17.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/12.17.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore-compat.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyAvL88BN9jov4S9oWwYAEpQHUl-d-zqG4Y",
+      authDomain: "meine-woche-in-balance.firebaseapp.com",
+      projectId: "meine-woche-in-balance",
+      storageBucket: "meine-woche-in-balance.firebasestorage.app",
+      messagingSenderId: "441032237922",
+      appId: "1:441032237922:web:c15fba8ed5f6b3ec13423b"
+    };
+    firebase.initializeApp(firebaseConfig);
+    firebase.firestore().enablePersistence()
+  .catch((err) => {
+    console.warn("Firestore Offline-Speicherung konnte nicht aktiviert werden:", err.code);
+  });
+  </script>
+<script>
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => {
+      navigator.serviceWorker.register("./service-worker.js")
+        .catch(err => console.warn("Service Worker konnte nicht registriert werden:", err));
+    });
+  }
+</script>
+  <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.6/Sortable.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html><!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f6f1ee">
+  <title>Unsere Woche in Balance</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <div id="loginGate" class="login-gate">
+    <section class="login-card" aria-labelledby="loginTitle">
+      <div class="login-mark">☀</div>
+      <p class="eyebrow">UNSERE WOCHE IN BALANCE</p>
+      <h2 id="loginTitle">Willkommen zu Hause</h2>
+      <p class="login-copy">Melde dich an, damit eure gemeinsame Woche auf allen Geräten gleich bleibt.</p>
+      <form id="familyLoginForm">
+        <label>E-Mail
+          <input id="familyLoginEmail" type="email" autocomplete="email" required>
+        </label>
+        <label>Passwort
+          <input id="familyLoginPassword" type="password" autocomplete="current-password" required>
+        </label>
+        <button class="primary-btn login-submit" type="submit">Anmelden</button>
+      </form>
+      <p id="loginError" class="login-error" role="alert"></p>
+    </section>
+  </div>
+  <button id="logoutBtn" class="logout-btn hidden" type="button">Abmelden</button>
+
+  <main class="page-shell">
+    <header class="hero">
+      <div>
+        <p class="eyebrow">DEIN RUHIGER ORT</p>
+        <h1>Unsere Woche in Balance</h1>
+        <p id="dailySubtitle" class="subtitle">🌞 Heute ist ein guter Tag für kleine Schritte.</p>
+      </div>
+      <div class="celestial-mark" aria-hidden="true">
+        <svg viewBox="0 0 220 220" role="img" aria-label="">
+          <defs>
+            <linearGradient id="goldGradient" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#efd58f"/>
+              <stop offset="48%" stop-color="#d4a84d"/>
+              <stop offset="100%" stop-color="#b9822d"/>
+            </linearGradient>
+
+            <!-- Sauberer Mond: Goldkreis minus versetzter Ausschnitt -->
+            <mask id="crescentMask">
+              <rect width="220" height="220" fill="black"/>
+              <circle cx="100" cy="82" r="43" fill="white"/>
+              <circle cx="116" cy="73" r="43" fill="black"/>
+            </mask>
+          </defs>
+
+          <!-- gemeinsamer Mittelpunkt für Sonne und Mond -->
+          <g fill="none" stroke="url(#goldGradient)" stroke-linecap="round">
+            <circle cx="100" cy="82" r="43" stroke-width="2.2"/>
+
+            <!-- Sonnenstrahlen -->
+            <g stroke-width="2">
+              <line x1="100" y1="27" x2="100" y2="7"/>
+              <line x1="116" y1="30" x2="122" y2="11"/>
+              <line x1="131" y1="37" x2="143" y2="20"/>
+              <line x1="143" y1="48" x2="160" y2="34"/>
+              <line x1="151" y1="63" x2="172" y2="56"/>
+              <line x1="155" y1="81" x2="178" y2="81"/>
+              <line x1="152" y1="99" x2="173" y2="106"/>
+              <line x1="145" y1="114" x2="162" y2="127"/>
+              <line x1="133" y1="126" x2="146" y2="144"/>
+            </g>
+
+            <!-- feinere Zwischenstrahlen -->
+            <g stroke-width="1.2" opacity=".78">
+              <line x1="108" y1="28" x2="111" y2="17"/>
+              <line x1="124" y1="33" x2="130" y2="22"/>
+              <line x1="137" y1="42" x2="146" y2="33"/>
+              <line x1="148" y1="55" x2="159" y2="50"/>
+              <line x1="154" y1="72" x2="166" y2="70"/>
+              <line x1="154" y1="91" x2="166" y2="94"/>
+              <line x1="149" y1="108" x2="160" y2="114"/>
+              <line x1="139" y1="121" x2="148" y2="131"/>
+            </g>
+
+            <!-- Ketten -->
+            <g stroke-width="1.25" stroke-dasharray="1 5">
+              <line x1="72" y1="119" x2="72" y2="166"/>
+              <line x1="91" y1="124" x2="91" y2="190"/>
+              <line x1="110" y1="123" x2="110" y2="158"/>
+            </g>
+          </g>
+
+          <!-- Mond exakt im Sonnenkreis -->
+          <circle cx="100" cy="82" r="43" fill="url(#goldGradient)" mask="url(#crescentMask)"/>
+
+          <!-- Sterne -->
+          <g fill="url(#goldGradient)">
+            <path d="M72 167 l2.3 5.6 6 .5-4.6 3.8 1.5 5.8-5.2-3.2-5.2 3.2 1.5-5.8-4.6-3.8 6-.5Z"/>
+            <path d="M91 191 l3.1 7.5 8.1.7-6.2 5.1 1.9 7.9-6.9-4.3-6.9 4.3 1.9-7.9-6.2-5.1 8.1-.7Z"/>
+            <path d="M110 160 l1.9 4.7 5.1.4-3.9 3.2 1.2 4.9-4.3-2.7-4.3 2.7 1.2-4.9-3.9-3.2 5.1-.4Z"/>
+            <circle cx="60" cy="148" r="1.8"/>
+            <circle cx="123" cy="150" r="1.4"/>
+            <circle cx="55" cy="129" r="1.2"/>
+          </g>
+        </svg>
+      </div>
+    </header>
+
+    <nav class="tabs" aria-label="Bereiche">
+      <button class="tab active" data-view="week">Wochenplan</button>
+      <button class="tab" data-view="todos">To-dos & Termine</button>
+      <button class="tab" data-view="shopping">🛒 Einkauf</button>
+      <button class="tab" data-view="school">Schule</button>
+      <button class="tab" data-view="workroom">Werkraum</button>
+      <button class="tab" data-view="archive">Unser Überblick</button>
+    </nav>
+
+    <section id="week" class="view active">
+      <div class="section-head week-section-head">
+        <div>
+          <p class="small-label">WOCHENPLAN</p>
+          <div class="week-nav">
+            <button id="prevWeekBtn" class="week-arrow" type="button" aria-label="Vorige Woche">‹</button>
+            <div>
+              <h2 id="weekTitle">Diese Woche</h2>
+              <button id="todayWeekBtn" class="today-link" type="button">Zur aktuellen Woche</button>
+            </div>
+            <button id="nextWeekBtn" class="week-arrow" type="button" aria-label="Nächste Woche">›</button>
+          </div>
+        </div>
+       <div class="week-head-actions">
+  <button id="openPinboardBtn" class="secondary-btn pinboard-open-btn" type="button">
+    <span class="pinboard-icon">💌</span>
+    <span class="pinboard-label">Pinnwand</span>
+    <span id="pinboardBadge" class="pinboard-badge hidden">0</span>
+  </button>
+
+  <button id="openPapaOverviewBtn" class="secondary-btn papa-overview-btn" type="button">♡ Papa</button>
+
+  <button id="addVideoBtn" class="primary-btn" type="button">＋ Übung eintragen</button>
+
+  <button id="openFamilyTimetableBtn"
+          class="secondary-btn week-icon-btn"
+          type="button"
+          title="Stundenplan"
+          aria-label="Stundenplan">▣</button>
+
+  <button id="printWeekBtn"
+          class="secondary-btn week-icon-btn print-week-btn"
+          type="button"
+          title="Wochenplan drucken"
+          aria-label="Wochenplan drucken">🖨</button>
+</div>
+      </div>
+
+      <div id="weekGrid" class="week-grid"></div>
+    </section>
+
+    <section id="todos" class="view">
+      <div class="section-head">
+        <div>
+          <p class="small-label">PLANUNG</p>
+          <h2>To-dos & Termine</h2>
+        </div>
+      </div>
+
+      <div class="quick-links card">
+  <div class="quick-links-title">🔗 Schnellzugriff</div>
+
+<div class="quick-links-row">
+    <a href="https://gymkatzelsdorf.webuntis.com/today" target="_blank" class="quick-link">WebUntis</a>
+    <a href="https://www.eduflow.at/EduFlow/" target="_blank" class="quick-link">EduFlow</a>
+    <a href="https://my.schoolfox.app/#/home" target="_blank" class="quick-link">SchoolFox 1</a>
+    <a href="https://my.schoolfox.app/#/home" target="_blank" class="quick-link">SchoolFox 2</a>
+    <a href="https://teams.microsoft.com" target="_blank" class="quick-link">Teams</a>
+</div>
+</div>
+      
+      <details class="family-settings card">
+        <summary>🎨 Unsere Farben</summary>
+        <p class="family-settings-hint">Namen und Farben könnt ihr jederzeit ändern. Die Farben gelten überall auf der Seite.</p>
+        <div class="schoolyear-setting">
+          <label for="schoolYearSelect">🎒 Schuljahr</label>
+          <select id="schoolYearSelect" aria-label="Schuljahr auswählen"></select>
+          <span>Für „Schuljahr NÖ“ bei wiederkehrenden Einträgen.</span>
+        </div>
+        <div class="family-settings-grid">
+          <label>
+            <span>Name 1</span>
+            <input id="familyNameA" type="text" value="Mama">
+          </label>
+          <label>
+            <span>Farbe</span>
+            <input id="familyColorA" type="color" value="#c8897e">
+          </label>
+
+          <label>
+            <span>Name 2</span>
+            <input id="familyNameB" type="text" value="Papa">
+          </label>
+          <label>
+            <span>Farbe</span>
+            <input id="familyColorB" type="color" value="#c84d4d">
+          </label>
+
+          <label>
+            <span>Name 3</span>
+            <input id="familyNameC" type="text" value="Lou">
+          </label>
+          <label>
+            <span>Farbe</span>
+            <input id="familyColorC" type="color" value="#8f78b8">
+          </label>
+
+          <label>
+            <span>Name 4</span>
+            <input id="familyNameD" type="text" value="Fina">
+          </label>
+          <label>
+            <span>Farbe</span>
+            <input id="familyColorD" type="color" value="#d58c9b">
+          </label>
+          <label>
+    <span>Rahmenstärke</span>
+    <select id="familyBorderWidth">
+        <option value="1">1 px – fein</option>
+        <option value="2">2 px</option>
+        <option value="3" selected>3 px – deutlich</option>
+        <option value="4">4 px – kräftig</option>
+        <option value="5">5 px – sehr kräftig</option>
+    </select>
+            <button id="applyFamilyBorderWidth" type="button" class="secondary-btn">
+  Rahmenstärke übernehmen
+</button>
+</label>
+        </div>
+      </details>
+
+<div class="card todo-form">
+        <div class="entry-top-row">
+          <label>
+            Art
+            <select id="entryType">
+              <option value="todo">To-do</option>
+              <option value="event">Termin</option>
+            </select>
+          </label>
+
+          <label class="super-important-control">
+            <input id="superImportant" type="checkbox">
+            <span>⭐ Superwichtig</span>
+          </label>
+        </div>
+
+        <label>
+          <span id="entryTextLabel">Aufgabe</span>
+          <input id="todoText" type="text" placeholder="z. B. Elternbrief fertigstellen">
+        </label>
+        <div class="family-picker">
+          <span class="family-picker-label">Für wen?</span>
+          <div class="family-options" id="familyOptions">
+            <label class="family-chip family-a">
+              <input type="checkbox" value="a">
+              <span>Mama</span>
+            </label>
+            <label class="family-chip family-b">
+              <input type="checkbox" value="b">
+              <span>Papa</span>
+            </label>
+            <label class="family-chip family-c">
+              <input type="checkbox" value="c">
+              <span>Lou</span>
+            </label>
+            <label class="family-chip family-d">
+              <input type="checkbox" value="d">
+              <span>Fina</span>
+            </label>
+          </div>
+        </div>
+
+      <div id="eventFields" class="event-fields hidden">
+
+  <label>
+    Startdatum
+    <div class="date-control-wrap">
+      <input id="eventDate" type="date">
+    </div>
+  </label>
+
+  <label>
+    Enddatum
+    <div class="date-control-wrap">
+      <input id="eventEndDate" type="date">
+    </div>
+  </label>
+
+  <label>
+    Von
+    <div class="date-control-wrap">
+      <input id="eventTime" type="time">
+    </div>
+  </label>
+
+  <label>
+    Bis
+    <div class="date-control-wrap">
+      <input id="eventEndTime" type="time">
+    </div>
+  </label>
+
+  <label>
+    Terminart
+    <select id="eventCategory">
+      <option value="normal">Termin</option>
+      <option value="birthday">🎂 Geburtstag</option>
+      <option value="nameday">🌷 Namenstag</option>
+      <option value="anniversary">♡ Jahrestag</option>
+      <option value="holiday">✦ Feiertag / besonderer Tag</option>
+    </select>
+  </label>
+
+<div class="pling-field" style="grid-column:1 / -1">
+    <div class="pling-main-row">
+      <label class="pling-toggle">
+        <input id="eventPlingEnabled" type="checkbox">
+        <span>🔔 Pling</span>
+      </label>
+
+      <select
+        id="eventPlingMinutes"
+        aria-label="Erinnerung vor dem Termin"
+      >
+        <option value="5">5 Minuten vorher</option>
+        <option value="15" selected>15 Minuten vorher</option>
+        <option value="30">30 Minuten vorher</option>
+      </select>
+
+      <span class="pling-note">nur bei eingetragener Uhrzeit</span>
+    </div>
+
+    <div class="pling-device-row">
+      <span id="plingDeviceStatus" class="pling-device-status" aria-live="polite">
+        Benachrichtigungen werden geprüft …
+      </span>
+      <button id="enablePlingNotifications" class="secondary-btn pling-device-btn" type="button">
+        Benachrichtigungen aktivieren
+      </button>
+      <label class="pling-sound-control" for="plingSound">
+        Ton
+        <select id="plingSound" aria-label="Pling-Ton auf diesem Gerät">
+          <option value="pling" selected>Pling</option>
+          <option value="peng">Peng</option>
+          <option value="elf">Elfenzauber</option>
+          <option value="bowl">Klangschale</option>
+          <option value="boing">Boing</option>
+        </select>
+      </label>
+
+      <label class="pling-volume-control" for="plingVolume">
+        Lautstärke
+        <select id="plingVolume" aria-label="Pling-Lautstärke auf diesem Gerät">
+          <option value="soft">Leise</option>
+          <option value="medium">Mittel</option>
+          <option value="loud" selected>Laut</option>
+          <option value="extra">Sehr laut</option>
+          <option value="super">Super laut</option>
+        </select>
+      </label>
+
+      <button id="testPlingBtn" class="secondary-btn pling-test-btn" type="button">
+        ♪ Test-Pling
+      </button>
+    </div>
+  </div>
+        
+</div>
+  
+        <div class="recurrence-row">
+          <label>
+            Wiederholung
+            <select id="recurrence">
+              <option value="none">Keine</option>
+              <option value="weekly">Wöchentlich</option>
+              <option value="biweekly">Alle 2 Wochen</option>
+              <option value="monthly">Monatlich</option>
+              <option value="yearly">Jährlich</option>
+              <option value="schoolyear-noe">Schuljahr NÖ</option>
+            </select>
+          </label>
+          <div id="schoolHolidayHint" class="school-holiday-hint hidden">
+            🎒 Wöchentlich im gewählten Schuljahr NÖ – Ferien und offizielle schulfreie Tage werden ausgelassen.
+          </div>
+        </div>
+
+        <div class="form-row">
+          <label>
+            Priorität
+            <select id="todoPriority">
+              <option value="important">Wichtig</option>
+              <option value="medium" selected>Mittel</option>
+              <option value="low">Kann warten</option>
+            </select>
+          </label>
+          <label>
+            Bereich
+            <select id="todoArea">
+              <option value="work">Arbeit</option>
+              <option value="private">Privat</option>
+            </select>
+          </label>
+          <label>
+            Zeitraum
+            <select id="todoPeriod">
+              <option value="today">Heute</option>
+              <option value="week" selected>Diese Woche</option>
+              <option value="month">Diesen Monat</option>
+              <option value="later">Irgendwann</option>
+            </select>
+          </label>
+          <label>
+            Wochentag
+            <select id="todoDay">
+              <option value="">Nicht einplanen</option>
+              <option>Montag</option>
+              <option>Dienstag</option>
+              <option>Mittwoch</option>
+              <option>Donnerstag</option>
+              <option>Freitag</option>
+              <option>Samstag</option>
+              <option>Sonntag</option>
+            </select>
+          </label>
+        </div>
+        <div class="todo-form-actions">
+          <button id="cancelTodoEditBtn" class="secondary-btn hidden" type="button">Bearbeiten abbrechen</button>
+          <button id="addTodoBtn" class="primary-btn" type="button">To-do hinzufügen</button>
+        </div>
+      </div>
+
+      <div class="filters">
+        <button class="filter active" data-filter="all">Alle</button>
+        <button class="filter" data-filter="todo">To-dos</button>
+        <button class="filter" data-filter="event">Termine</button>
+        <button class="filter" data-filter="work">Arbeit</button>
+        <button class="filter" data-filter="private">Privat</button>
+        <button class="filter" data-filter="latest">Neueste</button>
+      </div>
+
+      <div id="todoList" class="todo-list"></div>
+
+</section>
+    
+<section id="shopping" class="view">
+  <div class="section-head">
+    <div>
+      <p class="small-label">EINKAUF</p>
+      <h2>Unsere Einkaufsliste</h2>
+      <p>Alles, was wir brauchen – übersichtlich sortiert und schnell abgehakt.</p>
+    </div>
+  </div>
+
+  <article class="card shopping-card">
+
+  <div id="shoppingList" class="shopping-list">
+      <div class="workroom-empty">
+        Noch nichts auf der Einkaufsliste.
+      </div>
+    </div>
+    
+    <div class="shopping-add">
+
+      <input
+        id="shoppingItemInput"
+        type="text"
+        placeholder="Was brauchen wir?"
+      >
+
+      <select id="shoppingCategory">
+        <option value="">Kategorie wählen</option>
+        <option value="fruit">🥕 Obst & Gemüse</option>
+        <option value="bakery">🥐 Brot & Gebäck</option>
+        <option value="cooling">🥛 Milch & Kühlung</option>
+        <option value="frozen">🧊 Tiefgekühltes</option>
+        <option value="pantry">🍝 Vorrat & Beilagen</option>
+        <option value="seasoning">🫙 Öle, Essig & Würzen</option>
+        <option value="breakfast">🥣 Frühstück & Aufstriche</option>
+        <option value="baking">🧁 Backen</option>
+        <option value="snacks">🍫 Süßes & Snacks</option>
+        <option value="drinks">🥤 Getränke</option>
+        <option value="beauty">🧴 Pflege & Schönheit</option>
+        <option value="cleaning">🧽 Putzen & Waschen</option>
+        <option value="household">🏠 Haushalt</option>
+        <option value="textile">🧺 Textil</option>
+        <option value="other">📦 Sonstiges</option>
+      </select>
+
+      <select id="shoppingWhen">
+        <option value="now">Jetzt kaufen</option>
+        <option value="later">Später kaufen</option>
+        <option value="sale">Erst in Aktion kaufen</option>
+      </select>
+
+      <select id="shoppingSaleStore">
+        <option value="">Keine Aktion</option>
+        <option value="Billa">Billa</option>
+        <option value="Spar">Spar</option>
+        <option value="Hofer">Hofer</option>
+        <option value="Lidl">Lidl</option>
+        <option value="Bipa">Bipa</option>
+        <option value="dm">dm</option>
+        <option value="Müller">Müller</option>
+        <option value="Penny">Penny</option>
+      </select>
+
+      <button
+        id="addShoppingItemBtn"
+        class="secondary-btn"
+        type="button"
+      >
+        + Eintragen
+      </button>
+
+    </div>
+
+  </article>
+
+  <section class="recipes-section">
+    <div class="recipes-head">
+      <div>
+        <p class="small-label">REZEPTE</p>
+        <h2>Unsere Rezeptkarten</h2>
+        <p>Lieblingsgerichte, einfache Kindergerichte und Ideen für später.</p>
+      </div>
+      <button id="toggleRecipeFormBtn" class="secondary-btn" type="button">＋ Rezept hinzufügen</button>
+    </div>
+
+    <div id="recipeForm" class="card recipe-form hidden">
+      <div class="recipe-form-grid">
+        <input id="recipeTitle" type="text" placeholder="Rezeptname …">
+
+        <select id="recipeCategory">
+          <option value="main" selected>🍝 Hauptgericht</option>
+          <option value="breakfast">🥣 Frühstück & Morgenideen</option>
+          <option value="spread">🥖 Aufstriche & Dips</option>
+          <option value="soup">🍲 Suppen & Eintöpfe</option>
+          <option value="small">🥙 Kleine Sachen & Jause</option>
+          <option value="salad">🥗 Salate & Frisches</option>
+          <option value="sweet">🍓 Süßes & Backen</option>
+          <option value="drink">🥤 Getränke & Smoothies</option>
+          <option value="other">✨ Sonstiges</option>
+        </select>
+
+        <select id="recipeDifficulty">
+          <option value="easy">Einfach</option>
+          <option value="medium" selected>Mittel</option>
+          <option value="advanced">Etwas aufwendiger</option>
+        </select>
+
         <label class="recipe-kids-toggle">
           <input id="recipeKids" type="checkbox">
           <span>🧒 Für Kinder geeignet</span>
