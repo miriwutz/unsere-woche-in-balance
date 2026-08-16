@@ -3457,44 +3457,8 @@ document.querySelector("#todayWeekBtn").addEventListener("click", () => {
 
 
 function ensureRecipeCardMarkPicker() {
-  if (document.querySelector("#recipeCardMark")) return;
-
-  const category = document.querySelector("#recipeCategory");
-  if (!category) return;
-
-  const wrapper = document.createElement("label");
-  wrapper.className = "recipe-card-mark-field";
-  wrapper.innerHTML = `
-    <span>Kartenzeichen</span>
-    <select id="recipeCardMark">
-      <optgroup label="Ruhig & geschmackvoll">
-        <option value="⌁">⌁ Feine Linie</option>
-        <option value="✦">✦ Stern</option>
-        <option value="☾">☾ Mond</option>
-        <option value="♡">♡ Herz</option>
-        <option value="❋">❋ Blüte</option>
-        <option value="◌">◌ Kreis</option>
-        <option value="≈">≈ Welle</option>
-        <option value="∞">∞ Unendlich</option>
-      </optgroup>
-      <optgroup label="Cool">
-        <option value="⚡︎">⚡ Blitz</option>
-        <option value="★">★ Star</option>
-        <option value="☻">☻ Smiley</option>
-        <option value="♬">♬ Musik</option>
-        <option value="✌︎">✌ Peace</option>
-        <option value="✪">✪ Cool Star</option>
-      </optgroup>
-    </select>
-  `;
-
-  // Direkt hinter der Kategorie – so gehört es logisch zur Rezeptgestaltung.
-  const parent = category.closest("label") || category.parentElement;
-  if (parent?.parentElement) {
-    parent.insertAdjacentElement("afterend", wrapper);
-  } else {
-    category.insertAdjacentElement("afterend", wrapper);
-  }
+  // Felder stehen jetzt fest im HTML.
+  return document.querySelector("#recipeCardMark");
 }
 
 function recipeCardMark(recipe) {
@@ -3502,54 +3466,7 @@ function recipeCardMark(recipe) {
 }
 
 function ensureRecipeCardMarkStyles() {
-  if (document.querySelector("#recipeCardMarkStyles")) return;
-
-  const style = document.createElement("style");
-  style.id = "recipeCardMarkStyles";
-  style.textContent = `
-    .recipe-card-mark-field{
-      display:grid;
-      gap:5px;
-      min-width:145px;
-      color:#786f69;
-      font-size:.7rem;
-    }
-
-    .recipe-card-mark-field select{
-      width:100%;
-      min-height:38px;
-      border:1px solid var(--line, #e7ddd7);
-      border-radius:12px;
-      background:#fffdfb;
-      color:var(--ink, #514944);
-      padding:8px 10px;
-      font:inherit;
-    }
-
-    .recipe-tools,
-    .recipe-detail-utensil{
-      font-family:Georgia, "Times New Roman", serif !important;
-      font-size:1.45rem !important;
-      line-height:1 !important;
-      letter-spacing:0 !important;
-      opacity:.74;
-      transform:none !important;
-    }
-
-    .recipe-detail-utensil{
-      display:grid;
-      place-items:center;
-      min-width:32px;
-      min-height:32px;
-    }
-
-    @media(max-width:700px){
-      .recipe-card-mark-field{
-        min-width:0;
-      }
-    }
-  `;
-  document.head.appendChild(style);
+  // Gestaltung liegt jetzt vollständig in style.css.
 }
 
 ensureRecipeCardMarkPicker();
@@ -3569,7 +3486,7 @@ const RECIPE_PAGE_SIZE = 10;
 let editingRecipeId = null;
 
 function resetRecipeForm() {
-  ["#recipeTitle","#recipeTime","#recipeIngredients","#recipeSteps","#recipeWebUrl","#recipeYoutubeUrl"]
+  ["#recipeTitle","#recipeTime","#recipeIngredients","#recipeSteps","#recipeWebUrl","#recipeYoutubeUrl","#recipeBakeTime","#recipeTemperature"]
     .forEach(sel => {
       const el = document.querySelector(sel);
       if (el) el.value = "";
@@ -3590,6 +3507,9 @@ function resetRecipeForm() {
 
   const healthy = document.querySelector("#recipeHealthy");
   if (healthy) healthy.checked = false;
+
+  const favorite = document.querySelector("#recipeFavorite");
+  if (favorite) favorite.checked = false;
 
   editingRecipeId = null;
 
@@ -3612,7 +3532,10 @@ function startRecipeEdit(recipe) {
   document.querySelector("#recipeDifficulty").value = recipe.difficulty || "medium";
   document.querySelector("#recipeKids").checked = !!recipe.kids;
   document.querySelector("#recipeHealthy").checked = !!recipe.healthy;
+  document.querySelector("#recipeFavorite").checked = !!recipe.favorite;
   document.querySelector("#recipeTime").value = recipe.time || "";
+  document.querySelector("#recipeBakeTime").value = recipe.bakeTime || "";
+  document.querySelector("#recipeTemperature").value = recipe.temperature || "";
   document.querySelector("#recipeIngredients").value = normalizedRecipeLines(recipe.ingredients).join("\n");
   document.querySelector("#recipeSteps").value = normalizedRecipeLines(recipe.steps).join("\n");
   document.querySelector("#recipeWebUrl").value = recipe.webUrl || "";
@@ -3851,6 +3774,12 @@ function showRecipeDetail(recipeOrTitle) {
       <div class="recipe-detail-time">
         <span class="recipe-detail-clock">◔</span>
         <span>${escapeHtml(recipe.time || "–")}</span>
+        ${(recipe.bakeTime || recipe.temperature) ? `
+          <small class="recipe-bake-meta">
+            ${recipe.bakeTime ? `♨ ${escapeHtml(recipe.bakeTime)}` : ""}
+            ${recipe.temperature ? ` · ${escapeHtml(recipe.temperature)}` : ""}
+          </small>
+        ` : ""}
       </div>
       <div class="recipe-detail-center">
         <span class="recipe-detail-ribbon">REZEPT</span>
@@ -3983,7 +3912,16 @@ function renderRecipes() {
   host.innerHTML = visibleRecipes.map(r => `
     <article class="recipe-card ${recipeCategoryClass(r.category || "main")} ${r.kids ? "recipe-card-kids" : ""}" id="recipe-${r.id}">
       <header class="recipe-card-head">
-        <div class="recipe-time-mark"><span class="recipe-clock">◔</span><span>${escapeHtml(r.time || "–")}</span></div>
+        <div class="recipe-time-mark">
+          <span class="recipe-clock">◔</span>
+          <span>${escapeHtml(r.time || "–")}</span>
+          ${(r.bakeTime || r.temperature) ? `
+            <small class="recipe-bake-meta">
+              ${r.bakeTime ? `♨ ${escapeHtml(r.bakeTime)}` : ""}
+              ${r.temperature ? ` · ${escapeHtml(r.temperature)}` : ""}
+            </small>
+          ` : ""}
+        </div>
         <div class="recipe-title-wrap">
           <span class="recipe-ribbon">REZEPT</span>
           <button type="button" class="recipe-title-button" data-recipe-id="${r.id}">
@@ -3994,6 +3932,7 @@ function renderRecipes() {
             <span>${escapeHtml(recipeDifficultyLabel(r.difficulty))}</span>
             ${r.kids ? `<span class="recipe-kids-badge">🧒 Das kannst du selbst kochen!</span>` : ""}
             ${r.healthy ? `<span class="recipe-healthy-badge">🌿 Gesund & bunt</span>` : ""}
+            ${r.favorite ? `<span class="recipe-favorite-badge">★ Lieblingsrezept</span>` : ""}
           </div>
         </div>
         <div class="recipe-tools">${escapeHtml(recipeCardMark(r))}</div>
@@ -4507,7 +4446,10 @@ document.querySelector("#saveRecipeBtn")?.addEventListener("click", () => {
     difficulty: document.querySelector("#recipeDifficulty")?.value || "medium",
     kids: !!document.querySelector("#recipeKids")?.checked,
     healthy: !!document.querySelector("#recipeHealthy")?.checked,
+    favorite: !!document.querySelector("#recipeFavorite")?.checked,
     time: document.querySelector("#recipeTime")?.value.trim() || "",
+    bakeTime: document.querySelector("#recipeBakeTime")?.value.trim() || "",
+    temperature: document.querySelector("#recipeTemperature")?.value.trim() || "",
     ingredients: recipeLines(document.querySelector("#recipeIngredients")?.value),
     steps: recipeLines(document.querySelector("#recipeSteps")?.value),
     webUrl: document.querySelector("#recipeWebUrl")?.value.trim() || "",
@@ -7390,8 +7332,7 @@ function ensureMobileWeekActionCircleStyles() {
       #openPinboardBtn,
       #openPapaOverviewBtn,
       #addVideoBtn,
-      #openFamilyTimetableBtn,
-      #printWeekBtn{
+      #openFamilyTimetableBtn{
         box-sizing:border-box !important;
         flex:0 0 42px !important;
         width:42px !important;
@@ -7749,8 +7690,7 @@ function ensureRecipeFormAndMobileActionStyles() {
       #openPinboardBtn,
       #openPapaOverviewBtn,
       #addVideoBtn,
-      #openFamilyTimetableBtn,
-      #printWeekBtn{
+      #openFamilyTimetableBtn{
         position:relative !important;
         flex:0 0 44px !important;
         width:44px !important;
@@ -7806,9 +7746,12 @@ function ensureRecipeFormAndMobileActionStyles() {
         line-height:1 !important;
       }
 
-      #openFamilyTimetableBtn,
-      #printWeekBtn{
+      #openFamilyTimetableBtn{
         font-size:.92rem !important;
+      }
+
+      #printWeekBtn{
+        display:none !important;
       }
 
       #openPinboardBtn .pinboard-badge{
@@ -7848,69 +7791,16 @@ document.addEventListener("DOMContentLoaded", () => {
   normalizeRecipeFlagLayout();
 });
 
-/* ===== ACTIVE TIMER CARDS – FINAL SIZE LOCK ===== */
-(function lockActiveTimerCardSizes(){
-  const id = "activeTimerCardSizeLock";
-  let style = document.getElementById(id);
-  if (!style) {
-    style = document.createElement("style");
-    style.id = id;
-    document.head.appendChild(style);
-  }
-  style.textContent = `
-    /* Container holding the currently running timers */
-    #activeTimeTracking,
-    #activeTimeTimers,
-    #activeTimers,
-    .active-time-tracking,
-    .active-timers,
-    .time-active-list,
-    .time-running-list {
-      display:flex !important;
-      flex-direction:column !important;
-      align-items:flex-end !important;
-      gap:8px !important;
-    }
-
-    /* Individual running timer cards: same dimensions with one or many timers */
-    #activeTimeTracking > *,
-    #activeTimeTimers > *,
-    #activeTimers > *,
-    .active-time-tracking > *,
-    .active-timers > *,
-    .time-active-list > *,
-    .time-running-list > *,
-    .time-active-card,
-    .active-time-card,
-    .running-time-card,
-    .time-tracker-active-card {
-      box-sizing:border-box !important;
-      width:390px !important;
-      max-width:100% !important;
-      min-width:390px !important;
-      min-height:110px !important;
-      height:110px !important;
-      flex:0 0 110px !important;
-    }
-
-    @media(max-width:760px){
-      #activeTimeTracking > *,
-      #activeTimeTimers > *,
-      #activeTimers > *,
-      .active-time-tracking > *,
-      .active-timers > *,
-      .time-active-list > *,
-      .time-running-list > *,
-      .time-active-card,
-      .active-time-card,
-      .running-time-card,
-      .time-tracker-active-card {
-        width:100% !important;
-        min-width:0 !important;
-        height:auto !important;
-        min-height:96px !important;
-        flex:0 0 auto !important;
-      }
+/* MOBILE PRINT FINAL OVERRIDE */
+(function ensurePhonePrintHidden(){
+  const id = "phonePrintHiddenFinal";
+  if (document.getElementById(id)) return;
+  const s = document.createElement("style");
+  s.id = id;
+  s.textContent = `
+    @media (max-width:760px){
+      #printWeekBtn{display:none !important;}
     }
   `;
+  document.head.appendChild(s);
 })();
