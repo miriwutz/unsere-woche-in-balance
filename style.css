@@ -5093,3 +5093,278 @@ a.day-meal{
     width:100% !important;
   }
 }
+
+
+/* =========================================================
+   REZEPTFORMULAR – ENDGÜLTIGES RASTER
+   Keine dynamischen Zusatzzeilen, keine negativen Margins.
+   ========================================================= */
+
+.recipe-form{
+  padding:16px !important;
+}
+
+.recipe-form-grid{
+  display:grid !important;
+  grid-template-columns:
+    minmax(240px, 1.30fr)
+    minmax(210px, 1.12fr)
+    minmax(145px, .76fr)
+    minmax(175px, .92fr) !important;
+  gap:12px !important;
+  width:100% !important;
+  align-items:start !important;
+}
+
+.recipe-form-grid > *{
+  min-width:0 !important;
+  box-sizing:border-box !important;
+}
+
+/* Zeile 1: exakt über die ganze Formularbreite */
+#recipeTitle{
+  grid-column:1 !important;
+  grid-row:1 !important;
+  width:100% !important;
+}
+#recipeCategory{
+  grid-column:2 !important;
+  grid-row:1 !important;
+  width:100% !important;
+}
+#recipeDifficulty{
+  grid-column:3 !important;
+  grid-row:1 !important;
+  width:100% !important;
+}
+#recipeTime{
+  grid-column:4 !important;
+  grid-row:1 !important;
+  width:100% !important;
+}
+
+/* Zeile 2: Kennzeichnungen */
+.recipe-kids-toggle{
+  grid-column:1 !important;
+  grid-row:2 !important;
+}
+.recipe-healthy-toggle{
+  grid-column:2 !important;
+  grid-row:2 !important;
+}
+
+.recipe-kids-toggle,
+.recipe-healthy-toggle{
+  width:max-content !important;
+  min-height:38px !important;
+  display:inline-flex !important;
+  align-items:center !important;
+  gap:7px !important;
+  padding:8px 12px !important;
+  border:1px solid rgba(210,198,191,.55) !important;
+  border-radius:999px !important;
+  background:rgba(255,253,251,.88) !important;
+}
+
+/* Zeile 3: die beiden Hauptfelder – zusammen exakt gleich breit wie Zeile 1 */
+#recipeIngredients{
+  grid-column:1 / 3 !important;
+  grid-row:3 !important;
+}
+#recipeSteps{
+  grid-column:3 / 5 !important;
+  grid-row:3 !important;
+}
+
+#recipeIngredients,
+#recipeSteps{
+  width:100% !important;
+  min-height:205px !important;
+  padding:13px 14px !important;
+  border:1px solid rgba(171,193,187,.55) !important;
+  border-radius:14px !important;
+  background:rgba(255,255,255,.78) !important;
+  color:var(--ink) !important;
+  font-family:"DM Sans",system-ui,sans-serif !important;
+  font-size:.88rem !important;
+  line-height:1.5 !important;
+  resize:vertical !important;
+}
+
+/* Zeile 4: Links – gleiche Teilung wie die Textfelder */
+#recipeWebUrl{
+  grid-column:1 / 3 !important;
+  grid-row:4 !important;
+  width:100% !important;
+}
+#recipeYoutubeUrl{
+  grid-column:3 / 5 !important;
+  grid-row:4 !important;
+  width:100% !important;
+}
+
+/* Zeile 5: kleine Zusatzfelder links, Speichern ganz rechts */
+.recipe-card-mark-field{
+  grid-column:1 !important;
+  grid-row:5 !important;
+  width:180px !important;
+  max-width:180px !important;
+  min-width:180px !important;
+}
+
+.recipe-bake-field{
+  grid-column:2 !important;
+  grid-row:5 !important;
+  width:145px !important;
+  max-width:145px !important;
+  justify-self:start !important;
+}
+
+.recipe-temp-field{
+  grid-column:3 !important;
+  grid-row:5 !important;
+  width:135px !important;
+  max-width:135px !important;
+  justify-self:start !important;
+}
+
+.recipe-card-mark-field,
+.recipe-bake-field,
+.recipe-temp-field{
+  display:grid !important;
+  gap:5px !important;
+  align-self:end !important;
+  font-size:.68rem !important;
+  color:#756d68 !important;
+}
+
+#recipeCardMark,
+#recipeBakeTime,
+#recipeTemperature{
+  width:100% !important;
+  min-width:0 !important;
+  min-height:40px !important;
+}
+
+.recipe-form-actions{
+  grid-column:4 !important;
+  grid-row:5 !important;
+  display:flex !important;
+  justify-content:flex-end !important;
+  align-items:end !important;
+  gap:8px !important;
+  margin:0 !important;
+  align-self:end !important;
+}
+
+/* Hauptgericht soll bequem vollständig lesbar sein */
+#recipeCategory{
+  padding-right:34px !important;
+}
+
+/* Tablet */
+@media(max-width:980px){
+  .recipe-form-grid{
+    grid-template-columns:1fr 1fr !important;
+  }
+
+  #recipeTitle{grid-column:1 / -1 !important;grid-row:auto !important}
+  #recipeCategory{grid-column:1 !important;grid-row:auto !important}
+  #recipeDifficulty{grid-column:2 !important;grid-row:auto !important}
+  #recipeTime{grid-column:1 !important;grid-row:auto !important}
+
+  .recipe-kids-toggle{grid-column:1 !important;grid-row:auto !important}
+  .recipe-healthy-toggle{grid-column:2 !important;grid-row:auto !important}
+
+  #recipeIngredients,
+  #recipeWebUrl{
+    grid-column:1 !important;
+    grid-row:auto !important;
+  }
+
+  #recipeSteps,
+  #recipeYoutubeUrl{
+    grid-column:2 !important;
+    grid-row:auto !important;
+  }
+
+  .recipe-card-mark-field{
+    grid-column:1 !important;
+    grid-row:auto !important;
+  }
+
+  .recipe-bake-field{
+    grid-column:1 !important;
+    grid-row:auto !important;
+    margin-left:190px !important;
+  }
+
+  .recipe-temp-field{
+    grid-column:2 !important;
+    grid-row:auto !important;
+  }
+
+  .recipe-form-actions{
+    grid-column:2 !important;
+    grid-row:auto !important;
+    margin:0 !important;
+  }
+}
+
+/* Handy */
+@media(max-width:600px){
+  .recipe-form-grid{
+    grid-template-columns:1fr !important;
+    gap:10px !important;
+  }
+
+  #recipeTitle,
+  #recipeCategory,
+  #recipeDifficulty,
+  #recipeTime,
+  .recipe-kids-toggle,
+  .recipe-healthy-toggle,
+  #recipeIngredients,
+  #recipeSteps,
+  #recipeWebUrl,
+  #recipeYoutubeUrl,
+  .recipe-card-mark-field,
+  .recipe-bake-field,
+  .recipe-temp-field,
+  .recipe-form-actions{
+    grid-column:1 !important;
+    grid-row:auto !important;
+  }
+
+  .recipe-kids-toggle,
+  .recipe-healthy-toggle{
+    width:100% !important;
+    border-radius:12px !important;
+  }
+
+  #recipeIngredients,
+  #recipeSteps{
+    min-height:150px !important;
+  }
+
+  .recipe-card-mark-field{
+    width:170px !important;
+    min-width:170px !important;
+    max-width:170px !important;
+  }
+
+  .recipe-bake-field,
+  .recipe-temp-field{
+    width:100% !important;
+    max-width:none !important;
+    margin-left:0 !important;
+  }
+
+  .recipe-form-actions{
+    justify-content:stretch !important;
+  }
+
+  #saveRecipeBtn{
+    width:100% !important;
+  }
+}
