@@ -129,8 +129,13 @@
           </div>
         </div>
        <div class="week-head-actions">
+  <button id="openPinboardBtn" class="secondary-btn pinboard-open-btn" type="button">
+    <span class="pinboard-icon">💌</span>
+    <span class="pinboard-label">Pinnwand</span>
+    <span id="pinboardBadge" class="pinboard-badge hidden">0</span>
+  </button>
   <button id="openPapaOverviewBtn" class="secondary-btn papa-overview-btn" type="button">♡ Papa</button>
-         <button id="printWeekBtn" class="secondary-btn print-week-btn" type="button">♡ Wochenplan drucken</button>
+  <button id="printWeekBtn" class="secondary-btn print-week-btn" type="button">♡ Wochenplan drucken</button>
   <button id="openFamilyTimetableBtn" class="secondary-btn" type="button">🗓 Stundenplan</button>
   <button id="addVideoBtn" class="primary-btn" type="button">＋ Übung eintragen</button>
 </div>
@@ -1031,6 +1036,60 @@
       <div id="archiveList" class="archive-grid"></div>
     </section>
   </main>
+
+
+  <dialog id="pinboardDialog" class="pinboard-dialog">
+    <div class="dialog-card pinboard-dialog-card">
+      <div class="dialog-head">
+        <div>
+          <p class="small-label">PINNWAND</p>
+          <h2>💌 Kleine Nachricht</h2>
+          <p class="pinboard-subtitle">Wie ein Zettel am Kühlschrank: schreiben, lesen, löschen.</p>
+        </div>
+        <button id="closePinboardBtn" class="icon-btn" type="button" aria-label="Pinnwand schließen">×</button>
+      </div>
+
+      <div class="pinboard-compose">
+        <label>
+          Für wen?
+          <select id="pinboardRecipient">
+            <option value="all">🌈 Alle</option>
+            <option value="a">Mama</option>
+            <option value="b">Papa</option>
+            <option value="c">Lou</option>
+            <option value="d">Fina</option>
+          </select>
+        </label>
+
+        <label class="pinboard-message-field">
+          Nachricht
+          <textarea id="pinboardMessage" rows="3" maxlength="280" placeholder="z. B. Bitte Milch mitbringen."></textarea>
+        </label>
+
+        <label>
+          Nachrichtenton
+          <select id="pinboardSound">
+            <option value="letter">💌 Briefchen</option>
+            <option value="sparkle">✨ Funkeln</option>
+            <option value="bubble">🫧 Blubb</option>
+          </select>
+        </label>
+
+        <button id="sendPinboardBtn" class="primary-btn pinboard-send-btn" type="button">Nachricht senden</button>
+      </div>
+
+      <div class="pinboard-divider"></div>
+
+      <div class="pinboard-list-head">
+        <strong>Auf der Pinnwand</strong>
+        <span id="pinboardCountText">Keine Nachrichten</span>
+      </div>
+
+      <div id="pinboardList" class="pinboard-list">
+        <div class="pinboard-empty">Die Pinnwand ist gerade leer.</div>
+      </div>
+    </div>
+  </dialog>
 
   <dialog id="videoDialog">
     <div class="dialog-card">
