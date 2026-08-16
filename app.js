@@ -1040,6 +1040,8 @@ if (state.school.children["2"].name === "Kind 2") state.school.children["2"].nam
 let currentWeekMonday = getMonday(new Date());
 let detectedVideoTitle = "";
 let replanArchiveId = null;
+let replanMode = "exercise";
+let replanRecipeLink = null;
 
 function currentWeekKey() {
   return dateKey(currentWeekMonday);
@@ -1974,12 +1976,31 @@ function startLiveTimeTicker() {
 }
 
 function trackingPersonColor(key) {
-  return {
-    a:"#8fcfbe",
-    b:"#e6a1a1",
-    c:"#e9c6df",
-    d:"#cdb8e8"
-  }[key] || "#c8c1bc";
+  const source = familyColor(key) || "#aaa29c";
+
+  const hex = String(source).trim().replace("#","");
+  if (!/^[0-9a-fA-F]{6}$/.test(hex)) return "#d7d2ce";
+
+  let r = parseInt(hex.slice(0,2),16);
+  let g = parseInt(hex.slice(2,4),16);
+  let b = parseInt(hex.slice(4,6),16);
+
+  // Etwas entsättigen → rauchiger.
+  const gray = Math.round(r * 0.299 + g * 0.587 + b * 0.114);
+  const desaturate = 0.34;
+  r = Math.round(r * (1 - desaturate) + gray * desaturate);
+  g = Math.round(g * (1 - desaturate) + gray * desaturate);
+  b = Math.round(b * (1 - desaturate) + gray * desaturate);
+
+  // Deutlich aufhellen, damit die kräftigeren To-do-Farben im Tracking ruhiger wirken.
+  const lighten = 0.62;
+  r = Math.round(r * (1 - lighten) + 255 * lighten);
+  g = Math.round(g * (1 - lighten) + 255 * lighten);
+  b = Math.round(b * (1 - lighten) + 255 * lighten);
+
+  return "#" + [r,g,b]
+    .map(v => Math.max(0,Math.min(255,v)).toString(16).padStart(2,"0"))
+    .join("");
 }
 
 function renderTimeTracking() {
@@ -2279,12 +2300,18 @@ function collectInternetRecipeLinks() {
     urls.forEach(url => {
       const key = String(url).trim();
       if (!key) return;
-      if (!map.has(key)) {
-        map.set(key, {
-          url:key,
-          label:recipe.title || "Rezept",
-          source:"Rezeptkarte"
-        });
+
+      const candidate = {
+        url:key,
+        label:recipe.title || "Rezept",
+        source:"Rezeptkarte",
+        recipeId:recipe.id || "",
+        sourceUpdatedAt:Number(recipe.updatedAt || recipe.createdAt || 0)
+      };
+
+      const previous = map.get(key);
+      if (!previous || candidate.sourceUpdatedAt >= Number(previous.sourceUpdatedAt || 0)) {
+        map.set(key, candidate);
       }
     });
   });
@@ -2293,23 +2320,31 @@ function collectInternetRecipeLinks() {
     if (!meal || typeof meal !== "object" || !meal.url) return;
     const key = String(meal.url).trim();
     if (!key) return;
-    if (!map.has(key)) {
-      map.set(key, {
-        url:key,
-        label:meal.label || "Rezeptlink",
-        source:"Essensplan"
-      });
+
+    const candidate = {
+      url:key,
+      label:meal.label || "Rezeptlink",
+      source:"Essensplan",
+      recipeId:meal.recipeId || "",
+      sourceUpdatedAt:Number(meal.updatedAt || 0)
+    };
+
+    const previous = map.get(key);
+    if (!previous || candidate.sourceUpdatedAt >= Number(previous.sourceUpdatedAt || 0)) {
+      map.set(key, candidate);
     }
   });
 
-  const hidden = new Set(
-    Object.entries(state.recipeLinkFeedback || {})
-      .filter(([,v]) => v?.hidden)
-      .map(([url]) => url)
-  );
-
   return [...map.values()]
-    .filter(item => !hidden.has(item.url))
+    .filter(item => {
+      const feedback = state.recipeLinkFeedback?.[item.url] || {};
+      const hiddenAt = Number(feedback.hiddenAt || 0);
+
+      // × räumt den aktuellen Fund nur aus der Übersicht.
+      // Wird der Link später im Essensplan/Rezept neu gespeichert,
+      // ist sourceUpdatedAt neuer und er darf wieder erscheinen.
+      return !hiddenAt || Number(item.sourceUpdatedAt || 0) > hiddenAt;
+    })
     .sort((a,b) => String(a.label).localeCompare(String(b.label), "de"));
 }
 
@@ -2344,6 +2379,13 @@ function renderRecipeLinkTracker() {
         <div class="recipe-link-times">
           <button type="button" class="recipe-link-used" data-url="${escapeHtml(link.url)}">
             ✓ gekocht ${feedback.timesUsed ? `(${feedback.timesUsed}×)` : ""}
+          </button>
+          <button type="button"
+                  class="recipe-link-reuse"
+                  data-url="${escapeHtml(link.url)}"
+                  data-label="${escapeHtml(link.label)}"
+                  data-recipe-id="${escapeHtml(link.recipeId || "")}">
+            ↻ Wiederverwenden
           </button>
         </div>
 
@@ -2390,13 +2432,27 @@ function renderRecipeLinkTracker() {
     btn.addEventListener("click", () => {
       const url = btn.dataset.url;
       const current = state.recipeLinkFeedback[url] || {};
+      const now = Date.now();
+
       state.recipeLinkFeedback[url] = {
         ...current,
-        hidden: true,
-        updatedAt: Date.now()
+        hidden:false,
+        hiddenAt:now,
+        updatedAt:now
       };
+
       save();
       renderRecipeLinkTracker();
+    });
+  });
+
+  host.querySelectorAll(".recipe-link-reuse").forEach(btn => {
+    btn.addEventListener("click", () => {
+      openRecipeReuseDialog({
+        url:btn.dataset.url || "",
+        label:btn.dataset.label || "Rezept",
+        recipeId:btn.dataset.recipeId || ""
+      });
     });
   });
 }
@@ -2477,11 +2533,18 @@ function bindArchiveButtons() {
   document.querySelectorAll(".replan-btn").forEach(btn => btn.addEventListener("click", e => {
     const item = state.archive.find(a => a.id === e.currentTarget.dataset.id);
     if (!item) return;
+    replanMode = "exercise";
+    replanRecipeLink = null;
     replanArchiveId = item.id;
+
+    const dialog = document.querySelector("#replanDialog");
+    const smallLabel = dialog?.querySelector(".small-label");
+    if (smallLabel) smallLabel.textContent = "ÜBUNG EINPLANEN";
+
     document.querySelector("#replanTitle").textContent = item.title;
     document.querySelector("#replanWeek").value = "0";
     document.querySelector("#replanDay").value = "Montag";
-    document.querySelector("#replanDialog").showModal();
+    dialog?.showModal();
   }));
 
   document.querySelectorAll(".delete-exercise-btn").forEach(btn => btn.addEventListener("click", e => {
@@ -5821,6 +5884,34 @@ document.querySelectorAll(".archive-filter").forEach(btn => btn.addEventListener
 }));
 
 
+function openRecipeReuseDialog(link) {
+  if (!link?.url) return;
+
+  replanMode = "recipe";
+  replanArchiveId = null;
+  replanRecipeLink = {
+    url:link.url,
+    label:link.label || "Rezept",
+    recipeId:link.recipeId || ""
+  };
+
+  const dialog = document.querySelector("#replanDialog");
+  if (!dialog) return;
+
+  const smallLabel = dialog.querySelector(".small-label");
+  if (smallLabel) smallLabel.textContent = "REZEPT EINPLANEN";
+
+  const title = document.querySelector("#replanTitle");
+  if (title) title.textContent = replanRecipeLink.label;
+
+  const week = document.querySelector("#replanWeek");
+  const day = document.querySelector("#replanDay");
+  if (week) week.value = "0";
+  if (day) day.value = "Montag";
+
+  dialog.showModal();
+}
+
 const replanDialog = document.querySelector("#replanDialog");
 const closeReplanDialogBtn = document.querySelector("#closeReplanDialogBtn");
 const cancelReplanBtn = document.querySelector("#cancelReplanBtn");
@@ -5828,6 +5919,12 @@ const confirmReplanBtn = document.querySelector("#confirmReplanBtn");
 
 function closeReplanDialog() {
   replanArchiveId = null;
+  replanRecipeLink = null;
+  replanMode = "exercise";
+
+  const smallLabel = replanDialog?.querySelector(".small-label");
+  if (smallLabel) smallLabel.textContent = "ÜBUNG EINPLANEN";
+
   if (replanDialog && replanDialog.open) replanDialog.close();
 }
 
@@ -5841,16 +5938,54 @@ if (replanDialog) {
 }
 
 if (confirmReplanBtn) confirmReplanBtn.addEventListener("click", () => {
+  const weeksAhead = Number(document.querySelector("#replanWeek")?.value || 0);
+  const day = document.querySelector("#replanDay")?.value || "Montag";
+  const monday = getMonday(new Date());
+  monday.setDate(monday.getDate() + weeksAhead * 7);
+
+  if (replanMode === "recipe") {
+    const link = replanRecipeLink;
+    if (!link?.url) {
+      closeReplanDialog();
+      return;
+    }
+
+    const dayIndex = WEEK_DAYS.indexOf(day);
+    const targetDate = dayDate(monday, dayIndex >= 0 ? dayIndex : 0);
+    const key = dateKey(targetDate);
+
+    state.meals = state.meals && typeof state.meals === "object" ? state.meals : {};
+    state.meals[key] = {
+      label:link.label || "Rezept",
+      recipeId:link.recipeId || "",
+      url:link.url,
+      updatedAt:Date.now()
+    };
+
+    // Falls dieser Link vorher mit × aus dem Tracking geräumt wurde,
+    // darf die neue Verwendung ihn wieder sichtbar machen.
+    const feedback = state.recipeLinkFeedback[link.url] || {};
+    state.recipeLinkFeedback[link.url] = {
+      ...feedback,
+      hidden:false,
+      hiddenAt:0,
+      updatedAt:Date.now()
+    };
+
+    save();
+    currentWeekMonday = monday;
+    closeReplanDialog();
+    renderAll();
+    document.querySelector('[data-view="week"]')?.click();
+    showMotivation("Rezept eingeplant ✓");
+    return;
+  }
+
   const item = state.archive.find(a => a.id === replanArchiveId);
   if (!item) {
     closeReplanDialog();
     return;
   }
-
-  const weeksAhead = Number(document.querySelector("#replanWeek").value || 0);
-  const day = document.querySelector("#replanDay").value;
-  const monday = getMonday(new Date());
-  monday.setDate(monday.getDate() + weeksAhead * 7);
 
   state.videos.push({
     id:uid(),
@@ -5868,7 +6003,7 @@ if (confirmReplanBtn) confirmReplanBtn.addEventListener("click", () => {
   replanDialog.close();
   currentWeekMonday = monday;
   renderAll();
-  document.querySelector('[data-view="week"]').click();
+  document.querySelector('[data-view="week"]')?.click();
 });
 
 const deleteAllExercisesBtn = document.querySelector("#deleteAllExercisesBtn");
@@ -7126,3 +7261,123 @@ document.addEventListener("click", e => {
 
 restoreTimeTrackingFromLocal();
 renderAll();
+
+
+function ensureMobileWeekActionCircleStyles() {
+  if (document.querySelector("#mobileWeekActionCircleFix")) return;
+
+  const style = document.createElement("style");
+  style.id = "mobileWeekActionCircleFix";
+  style.textContent = `
+    @media (max-width:600px){
+      .week-head-actions{
+        display:flex !important;
+        flex-wrap:nowrap !important;
+        justify-content:flex-end !important;
+        align-items:center !important;
+        gap:7px !important;
+      }
+
+      #openPinboardBtn,
+      #openPapaOverviewBtn,
+      #addVideoBtn,
+      #openFamilyTimetableBtn,
+      #printWeekBtn{
+        box-sizing:border-box !important;
+        flex:0 0 42px !important;
+        width:42px !important;
+        min-width:42px !important;
+        max-width:42px !important;
+        height:42px !important;
+        min-height:42px !important;
+        max-height:42px !important;
+        padding:0 !important;
+        margin:0 !important;
+        border-radius:50% !important;
+        display:grid !important;
+        place-items:center !important;
+        align-items:center !important;
+        justify-content:center !important;
+        line-height:1 !important;
+        overflow:visible !important;
+        white-space:nowrap !important;
+      }
+
+      #openPinboardBtn .pinboard-label{
+        display:none !important;
+      }
+
+      #openPinboardBtn{
+        font-size:0 !important;
+      }
+      #openPinboardBtn .pinboard-icon{
+        display:block !important;
+        width:auto !important;
+        height:auto !important;
+        margin:0 !important;
+        padding:0 !important;
+        font-size:1rem !important;
+        line-height:1 !important;
+        transform:none !important;
+      }
+
+      #openPapaOverviewBtn{
+        font-size:0 !important;
+      }
+      #openPapaOverviewBtn::before{
+        content:"♡";
+        display:block;
+        font-size:1rem !important;
+        line-height:1 !important;
+      }
+
+      #addVideoBtn{
+        font-size:0 !important;
+      }
+      #addVideoBtn::before{
+        content:"+";
+        display:block;
+        font-size:1.15rem !important;
+        line-height:1 !important;
+      }
+
+      #openFamilyTimetableBtn,
+      #printWeekBtn{
+        font-size:.9rem !important;
+        line-height:1 !important;
+      }
+
+      #openPinboardBtn .pinboard-badge{
+        position:absolute !important;
+        top:-3px !important;
+        right:-3px !important;
+        margin:0 !important;
+      }
+    }
+
+    .recipe-link-times{
+      display:flex;
+      align-items:center;
+      gap:6px;
+      flex-wrap:wrap;
+    }
+
+    .recipe-link-reuse{
+      border:1px solid rgba(143,165,157,.26);
+      border-radius:999px;
+      background:#edf4f1;
+      color:#506963;
+      padding:6px 9px;
+      cursor:pointer;
+      font-size:.66rem;
+    }
+
+    .recipe-link-reuse:hover{
+      background:#dfece8;
+    }
+  `;
+  document.head.appendChild(style);
+}
+
+ensureMobileWeekActionCircleStyles();
+
