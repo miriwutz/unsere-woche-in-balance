@@ -1086,14 +1086,36 @@
         <details class="manual-time-details">
           <summary>Zeit nachträglich eintragen</summary>
           <div class="manual-time-row">
-            <input id="manualTimeMinutes" type="number" min="1" step="5" placeholder="Minuten">
+            <input id="manualTimeHours" type="number" min="0" step="1" placeholder="Std.">
+            <input id="manualTimeMinutes" type="number" min="0" max="59" step="5" placeholder="Min.">
             <button id="addManualTimeBtn" class="secondary-btn" type="button">+ Eintragen</button>
           </div>
+          <p class="manual-time-hint">Wird einfach als fertiger Eintrag gespeichert – unabhängig von laufenden Stoppuhren.</p>
         </details>
 
-        <div class="time-summary-row">
-          <strong>Diese Woche</strong>
-          <div id="timeSummaryChips" class="time-summary-chips"></div>
+        <div class="time-overview-grid">
+          <div class="time-summary-panel">
+            <strong>Heute</strong>
+            <div id="timeTodayChips" class="time-summary-chips"></div>
+          </div>
+
+          <div class="time-summary-panel">
+            <strong>Diese Woche</strong>
+            <div id="timeSummaryChips" class="time-summary-chips"></div>
+          </div>
+
+          <div class="time-chart-panel">
+            <strong>Verteilung diese Woche</strong>
+            <div class="time-donut-wrap">
+              <div id="timeDonut" class="time-donut">
+                <div class="time-donut-center">
+                  <span id="timeDonutTotal">0 Min.</span>
+                  <small>gesamt</small>
+                </div>
+              </div>
+              <div id="timeDonutLegend" class="time-donut-legend"></div>
+            </div>
+          </div>
         </div>
 
         <div id="timeLogList" class="time-log-list"></div>
@@ -1104,7 +1126,7 @@
           <div>
             <p class="small-label">ONLINE-REZEPTE</p>
             <h3>Was möchten wir wieder kochen?</h3>
-            <p>Internetrezepte aus deinen Rezeptkarten und dem Essensplan – mit einer einfachen Einschätzung.</p>
+            <p>Internetrezepte aus deinen Rezeptkarten und dem Essensplan. Hier kannst du sie als gekocht markieren und direkt einschätzen.</p>
           </div>
         </div>
         <div id="recipeLinkTrackerList" class="recipe-link-tracker-list"></div>
