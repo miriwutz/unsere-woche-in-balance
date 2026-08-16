@@ -2161,16 +2161,16 @@ function renderTimeTracking() {
   // Farbe innerhalb eines Rings = gewählter Bereich/Kategorie.
   // Dieselbe Kategorie hat bei ALLEN Personen exakt dieselbe Farbe.
   const categoryPalette = {
-    pc: "#9fbfc2",          // rauchiges Blaugrün
-    prep: "#c5acd0",        // gedämpftes Lavendel
-    household: "#a9c49e",   // Salbei
-    repair: "#d09c88",      // rauchiges Terrakotta
-    organize: "#9fb4cf",    // gedecktes Blau
-    errands: "#d7b66f",     // warmes Ocker
-    garden: "#79a995",      // ruhiges Grün
-    help: "#d69aa4",        // Altrosa
-    school: "#ad9bc8",      // Mauve
-    other: "#b8ada5"        // warmes Taupe
+    pc: "#7FA7A7",          // PC & Büro – Petrol
+    prep: "#8FA6C8",        // Vorbereitung – rauchiges Blau
+    household: "#8FA67D",   // Haushalt – Salbei/Olive
+    repair: "#B58A9A",      // Reparaturen – Mauve
+    organize: "#8E99B6",    // Organisieren – gedecktes Indigo
+    errands: "#C48B6E",     // Fahrten/Erledigungen – Terrakotta
+    garden: "#6F927C",      // Garten/Draußen – Moosgrün
+    help: "#D2A24E",        // Helfen & Unterstützen – warmes Ocker
+    school: "#A184B8",      // Schule/Vorbereitung – Violett
+    other: "#9C9188"        // Sonstiges – Taupe
   };
 
   const weekTotals = totalsByPersonAndCategory(weekEntries);
