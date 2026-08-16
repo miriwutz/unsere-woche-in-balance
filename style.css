@@ -5758,3 +5758,38 @@ a.day-meal{
     width:100% !important;
   }
 }
+
+
+/* =========================================================
+   REZEPTFILTER – Lieblingsrezepte
+   ========================================================= */
+.recipe-favorite-filter{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  white-space:nowrap;
+  color:#746b62;
+}
+
+.recipe-favorite-filter input{
+  margin:0;
+}
+
+/* Favoriten-Schalter browserunabhängig:
+   JS setzt .is-favorite, daher kein :has() nötig */
+.recipe-favorite-toggle.is-favorite{
+  background:#fff3cf !important;
+  border-color:#e5c66e !important;
+  color:#755c23 !important;
+  box-shadow:0 3px 12px rgba(190,150,55,.10);
+}
+
+.recipe-favorite-toggle.is-favorite span{
+  font-weight:650;
+}
+
+@media(max-width:980px){
+  .recipe-favorite-filter{
+    width:100%;
+  }
+}
