@@ -3737,3 +3737,168 @@ a.day-meal{
   font-weight:700;
   letter-spacing:.03em;
 }
+
+
+/* Mehrere laufende Zeiten unabhängig voneinander */
+.active-time-tracker{
+  display:grid !important;
+  gap:7px !important;
+  background:transparent !important;
+  border:0 !important;
+  padding:0 !important;
+}
+.active-time-tracker.hidden{display:none !important}
+
+.active-time-item{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:14px;
+  padding:10px 12px;
+  border-radius:13px;
+  background:#e7f1ee;
+  border:1px solid rgba(114,156,147,.23);
+}
+.active-time-item > div:first-child{
+  display:grid;
+  gap:2px;
+}
+.active-time-item small{
+  color:#7f8c88;
+}
+.active-time-right{
+  display:flex;
+  align-items:center;
+  gap:9px;
+}
+
+/* Manuelle Zeit ist bewusst unabhängig von den Stoppuhren */
+.manual-time-row{
+  display:grid !important;
+  grid-template-columns:110px 110px auto !important;
+  gap:8px !important;
+  max-width:390px !important;
+}
+.manual-time-hint{
+  margin:6px 0 0;
+  color:var(--muted);
+  font-size:.66rem;
+}
+
+/* Heute / Woche / Tortendiagramm */
+.time-overview-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr 1.25fr;
+  gap:10px;
+  margin-top:14px;
+  padding-top:12px;
+  border-top:1px solid rgba(180,190,185,.18);
+}
+.time-summary-panel,
+.time-chart-panel{
+  padding:10px;
+  border:1px solid rgba(180,190,185,.16);
+  border-radius:12px;
+  background:#fffdfb;
+}
+.time-summary-panel > strong,
+.time-chart-panel > strong{
+  display:block;
+  margin-bottom:8px;
+  color:#625b57;
+  font-size:.75rem;
+}
+.time-donut-wrap{
+  display:grid;
+  grid-template-columns:120px 1fr;
+  gap:12px;
+  align-items:center;
+}
+.time-donut{
+  width:116px;
+  height:116px;
+  border-radius:50%;
+  display:grid;
+  place-items:center;
+  background:#f0eeea;
+}
+.time-donut-center{
+  width:68px;
+  height:68px;
+  border-radius:50%;
+  display:grid;
+  place-items:center;
+  align-content:center;
+  background:#fffdfb;
+  box-shadow:0 0 0 1px rgba(180,190,185,.12);
+}
+.time-donut-center span{
+  font-size:.7rem;
+  font-weight:700;
+  text-align:center;
+}
+.time-donut-center small{
+  color:var(--muted);
+  font-size:.55rem;
+}
+.time-donut-legend{
+  display:grid;
+  gap:5px;
+}
+.time-donut-legend-row{
+  display:grid;
+  grid-template-columns:10px 1fr auto;
+  gap:6px;
+  align-items:center;
+  font-size:.62rem;
+  color:#6c7471;
+}
+.time-donut-dot{
+  width:8px;
+  height:8px;
+  border-radius:50%;
+}
+.time-donut-legend-row strong{
+  color:#4e5b57;
+}
+
+.recipe-link-track-row{
+  border-left:3px solid #c5d7bf !important;
+}
+.recipe-link-rate{
+  transition:.15s ease;
+}
+.recipe-link-rate:hover{
+  transform:translateY(-1px);
+}
+
+@media(max-width:900px){
+  .time-overview-grid{
+    grid-template-columns:1fr 1fr;
+  }
+  .time-chart-panel{
+    grid-column:1 / -1;
+  }
+}
+@media(max-width:600px){
+  .manual-time-row{
+    grid-template-columns:1fr 1fr !important;
+  }
+  .manual-time-row button{
+    grid-column:1 / -1;
+  }
+  .time-overview-grid{
+    grid-template-columns:1fr;
+  }
+  .time-chart-panel{
+    grid-column:auto;
+  }
+  .time-donut-wrap{
+    grid-template-columns:1fr;
+    justify-items:center;
+  }
+  .active-time-item{
+    align-items:flex-start;
+    flex-direction:column;
+  }
+}
