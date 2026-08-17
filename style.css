@@ -6837,3 +6837,36 @@ a.day-meal{
 .time-log-row .time-log-delete{
   right:6px;
 }
+
+
+/* TO-DOS – kompakter + Fertig-Archiv */
+.todo-person-section{margin-bottom:10px !important;}
+.todo-person-heading{margin-bottom:4px !important;}
+.todo-person-items{gap:0 !important;}
+.todo-card.grouped-main-todo{
+  border-radius:0 !important;
+  padding:8px 10px !important;
+  min-height:0 !important;
+}
+.todo-card.grouped-main-todo + .todo-card.grouped-main-todo{
+  border-top:1px solid rgba(130,120,113,.12) !important;
+}
+.todo-meta{margin-top:4px !important;gap:5px !important;}
+.todo-meta .pill{padding:3px 8px !important;}
+.todo-done-pagination{
+  display:flex;align-items:center;justify-content:center;gap:10px;
+  padding:14px 4px 4px;color:var(--muted);font-size:.82rem;
+}
+.todo-done-pagination button{min-width:38px;}
+.todo-reuse-panel{
+  display:grid;grid-template-columns:auto minmax(150px,190px) minmax(150px,190px) auto auto;
+  gap:9px;align-items:end;padding:10px 12px;margin:4px 0 8px;
+  border:1px solid var(--line);border-radius:14px;background:rgba(250,248,245,.96);
+}
+.todo-reuse-panel strong{align-self:center;font-size:.85rem;color:#5f5854;}
+.todo-reuse-panel label{display:grid;gap:4px;font-size:.72rem;color:var(--muted);}
+.todo-reuse-panel select{min-height:36px;}
+@media(max-width:700px){
+  .todo-reuse-panel{grid-template-columns:1fr 1fr;}
+  .todo-reuse-panel strong{grid-column:1/-1;}
+}
