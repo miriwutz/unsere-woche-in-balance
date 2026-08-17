@@ -7010,3 +7010,62 @@ a.day-meal{
     padding-top:0;
   }
 }
+
+
+/* =========================================================
+   FIX – erledigte To-dos raus + Übungen einklappbar
+   ========================================================= */
+
+.day-video-details{
+  margin:0;
+  border:0;
+}
+
+.day-video-details > summary{
+  list-style:none;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:8px;
+  padding:6px 2px;
+  color:var(--muted);
+  font-size:.72rem;
+  cursor:pointer;
+  user-select:none;
+}
+
+.day-video-details > summary::-webkit-details-marker{
+  display:none;
+}
+
+.day-video-details > summary span{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-width:20px;
+  height:20px;
+  padding:0 6px;
+  border-radius:999px;
+  background:rgba(239,235,244,.72);
+  color:#776d7d;
+  font-size:.64rem;
+}
+
+.day-video-details[open] > summary{
+  margin-bottom:6px;
+  color:#6f6662;
+}
+
+.day-video-details[open] > summary::first-letter{
+  /* only visual calm; content remains unchanged */
+}
+
+.day-video-details-content{
+  display:grid;
+  gap:7px;
+}
+
+.day-video-details-content .video-item{
+  margin-bottom:0;
+}
+
