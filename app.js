@@ -713,6 +713,14 @@ function renderWeek() {
     dayEl.className = "day";
 
     const date = dayDate(currentWeekMonday, index);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const compareDate = new Date(date);
+    compareDate.setHours(0, 0, 0, 0);
+
+    if (compareDate < today) dayEl.classList.add("past-day");
+    if (compareDate.getTime() === today.getTime()) dayEl.classList.add("today");
+
     const dateLabel = date.toLocaleDateString("de-AT",{day:"2-digit",month:"2-digit"});
 
     const videos = state.videos.filter(v => v.day === day && v.weekKey === weekKey);
