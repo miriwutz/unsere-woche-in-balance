@@ -6939,7 +6939,7 @@ a.day-meal{
 .event-fields .pling-field{grid-column:1 / -1 !important}
 
 /* To-do: Wochentag als wichtiges Zielfeld hervorheben. */
-#todoWeekday{
+#todoDay{
   font-weight:600;
   border-color:#c8b8d5;
   background:#fdfbff;
