@@ -725,27 +725,9 @@ function renderWeek() {
 
     const videos = state.videos.filter(v => v.day === day && v.weekKey === weekKey);
     const occurrences = state.todos.filter(t => occursOnDate(t, date));
- const todos = occurrences.filter(t => {
-  if ((t.type || "todo") !== "todo") return false;
-
-  // Wiederkehrende To-dos werden weiterhin über ihre einzelnen Vorkommen behandelt
-  if (t.recurrence && t.recurrence !== "none") return true;
-
-  // Nicht erledigt → ganz normal anzeigen
-  if (!t.done) return true;
-
-  // Alte erledigte To-dos ohne completedAt vorerst weiterhin anzeigen
-  if (!t.completedAt) return true;
-
-  // Erledigt: nur am Tag der Erledigung noch anzeigen
-  const completedDay = new Date(t.completedAt);
-  completedDay.setHours(0, 0, 0, 0);
-
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-
-  return completedDay.getTime() === today.getTime();
-});
+ const todos = occurrences.filter(t =>
+  (t.type || "todo") === "todo"
+);
     const events = occurrences.filter(t => t.type === "event");
 
     const videoHtml = videos.map(v => `
@@ -785,7 +767,7 @@ function renderWeek() {
                  : `--group-border:${familyColor(groupKey) || "#c8c0ba"}`}">
             <div class="person-todo-group-title">${todoGroupLabel(groupKey)}</div>
             ${groupItems.map(t => `
-              <label class="todo-mini grouped-todo-row ${t.superImportant ? "super-important" : ""}">
+              <label class="todo-mini grouped-todo-row ${isOccurrenceDone(t, date) ? "done" : ""} ${t.superImportant ? "super-important" : ""}">
                 <input class="check mini-todo-check" data-id="${t.id}" data-date="${dateKey(date)}" type="checkbox" ${isOccurrenceDone(t, date) ? "checked":""}>
                <span>
   ${t.superImportant ? `<span class="tiny-star">★</span>` : ''}
@@ -894,9 +876,11 @@ ${isNewEntry(t) ? `<span class="new-entry-badge">NEU</span>` : ""}
     dayEl.innerHTML = `
       <h3>${day}<span class="day-date">${dateLabel}</span></h3>
       ${(() => { const rows=["1","2"].map(cid=>{const tm=homeByForDate(cid,date),c=state.school.children[cid];return tm?`<span><b>${escapeHtml(c.name)}</b> ${escapeHtml(tm)}</span>`:""}).filter(Boolean);return rows.length?`<div class="home-by-strip home-by-top"><span class="home-by-label">⌂ zu Hause bis</span>${rows.join("")}</div>`:"";})()}
-      ${videoHtml || '<div class="empty print-hide-empty">Heute ist noch Platz für etwas Schönes.</div>'}
       ${eventHtml}
       ${schoolHtml}${todoHtml}
+      <div class="day-bottom-slot">
+        ${videoHtml || '<div class="empty print-hide-empty">Heute ist noch Platz für etwas Schönes.</div>'}
+      </div>
     `;
     grid.appendChild(dayEl);
   });
@@ -1041,13 +1025,36 @@ function isNewEntry(item) {
 const expandedTodoGroups = new Set();
 function renderTodos() {
   const list = document.querySelector("#todoList");
-  let todos = state.todos.filter(t => !t.archived); 
- 
-  if (todoFilter === "work" || todoFilter === "private") todos = todos.filter(t => t.area === todoFilter);
-  if (todoFilter === "todo" || todoFilter === "event") todos = todos.filter(t => (t.type || "todo") === todoFilter);
-  if (todoFilter === "latest") {
-  todos = todos.filter(t => isNewEntry(t));
-}
+  let todos = state.todos.filter(t => !t.archived);
+
+  if (todoFilter === "done") {
+    todos = todos.filter(t =>
+      (t.type || "todo") === "todo" &&
+      (!t.recurrence || t.recurrence === "none") &&
+      !!t.done
+    );
+  } else {
+    // Erledigte normale To-dos werden in "Fertige To-dos" gesammelt.
+    // Im Wochenplan bleiben sie trotzdem sichtbar und nur blasser.
+    todos = todos.filter(t =>
+      !(
+        (t.type || "todo") === "todo" &&
+        (!t.recurrence || t.recurrence === "none") &&
+        !!t.done
+      )
+    );
+
+    if (todoFilter === "work" || todoFilter === "private") {
+      todos = todos.filter(t => t.area === todoFilter);
+    }
+    if (todoFilter === "todo" || todoFilter === "event") {
+      todos = todos.filter(t => (t.type || "todo") === todoFilter);
+    }
+    if (todoFilter === "latest") {
+      todos = todos.filter(t => isNewEntry(t));
+    }
+  }
+
 todos.sort((a, b) => {
   const now = new Date();
 
