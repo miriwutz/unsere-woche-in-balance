@@ -1648,8 +1648,16 @@ function renderTodos() {
   if (todoFilter === "work" || todoFilter === "private") todos = todos.filter(t => t.area === todoFilter);
   if (todoFilter === "todo" || todoFilter === "event") todos = todos.filter(t => (t.type || "todo") === todoFilter);
   if (todoFilter === "latest") {
-  todos = todos.filter(t => isNewEntry(t));
-}
+    todos = todos.filter(t => isNewEntry(t));
+  }
+  if (todoFilter === "done") {
+    todos = state.todos
+      .filter(t => (t.type || "todo") === "todo" && !!t.done)
+      .sort((a,b) => Number(b.completedAt || 0) - Number(a.completedAt || 0));
+  } else {
+    // Erledigte normale To-dos verschwinden sofort aus den aktiven Reitern.
+    todos = todos.filter(t => (t.type || "todo") === "event" || !t.done);
+  }
 todos.sort((a, b) => {
   const now = new Date();
 
@@ -1746,6 +1754,15 @@ todos.sort((a, b) => {
     todo:"To-do", event:"Termin"
   };
 
+  // Fertige To-dos: 20 Einträge pro Seite.
+  const donePageSize = 20;
+  const doneTotalPages = todoFilter === "done" ? Math.max(1, Math.ceil(todos.length / donePageSize)) : 1;
+  if (todoFilter === "done") {
+    window.todoDonePage = Math.min(Math.max(1, Number(window.todoDonePage || 1)), doneTotalPages);
+    const start = (window.todoDonePage - 1) * donePageSize;
+    todos = todos.slice(start, start + donePageSize);
+  }
+
   const grouped = groupTodosByPerson(todos);
   list.innerHTML = grouped.map(([groupKey, groupItems]) => `
     <section class="todo-person-section grouped-family-section ${groupAccentClass(groupKey)}"
@@ -1783,6 +1800,7 @@ ${isNewEntry(t) ? `<span class="new-entry-badge">NEU</span>` : ""}
               </div>
             </div>
             <div class="todo-actions">
+              ${todoFilter === "done" ? `<button class="text-btn reuse-todo" data-id="${t.id}" title="Wiederverwenden">↻</button>` : ""}
               <button class="text-btn edit-todo" data-id="${t.id}" title="Bearbeiten">✎</button>
               <button class="text-btn delete-todo" data-id="${t.id}" title="Löschen">×</button>
             </div>
@@ -1802,6 +1820,18 @@ ${isNewEntry(t) ? `<span class="new-entry-badge">NEU</span>` : ""}
       </div>
     </section>
   `).join("");
+
+  if (todoFilter === "done" && doneTotalPages > 1) {
+    list.insertAdjacentHTML("beforeend", `
+      <nav class="todo-done-pagination" aria-label="Seiten der fertigen To-dos">
+        <button type="button" class="secondary-btn done-page-prev" ${window.todoDonePage <= 1 ? "disabled" : ""}>‹</button>
+        <span>Seite ${window.todoDonePage} von ${doneTotalPages}</span>
+        <button type="button" class="secondary-btn done-page-next" ${window.todoDonePage >= doneTotalPages ? "disabled" : ""}>›</button>
+      </nav>`);
+    list.querySelector(".done-page-prev")?.addEventListener("click", () => { window.todoDonePage--; renderTodos(); });
+    list.querySelector(".done-page-next")?.addEventListener("click", () => { window.todoDonePage++; renderTodos(); });
+  }
+
 document.querySelectorAll(".show-more-todos").forEach(btn => {
   btn.addEventListener("click", () => {
     const container = btn.closest(".todo-person-items");
@@ -1839,6 +1869,58 @@ if (isExpanded) {
     save();
     renderAll();
     if (!wasDone && item.done) showMotivation(todoMotivationalMessage());
+  }));
+
+  document.querySelectorAll(".reuse-todo").forEach(el => el.addEventListener("click", e => {
+    const source = state.todos.find(t => t.id === e.currentTarget.dataset.id);
+    if (!source) return;
+
+    const panel = document.createElement("div");
+    panel.className = "todo-reuse-panel";
+    panel.innerHTML = `
+      <strong>↻ Wiederverwenden</strong>
+      <label>Welche Woche?
+        <select class="reuse-week">
+          <option value="0">Diese Woche</option>
+          <option value="1">Nächste Woche</option>
+        </select>
+      </label>
+      <label>Wochentag
+        <select class="reuse-day">
+          <option value="">Nicht einplanen</option>
+          ${["Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag","Sonntag"].map(d => `<option${source.day === d ? " selected" : ""}>${d}</option>`).join("")}
+        </select>
+      </label>
+      <button type="button" class="secondary-btn reuse-cancel">Abbrechen</button>
+      <button type="button" class="primary-btn reuse-save">Wiederverwenden</button>`;
+
+    document.querySelectorAll(".todo-reuse-panel").forEach(x => x.remove());
+    e.currentTarget.closest(".todo-card")?.insertAdjacentElement("afterend", panel);
+    panel.querySelector(".reuse-cancel")?.addEventListener("click", () => panel.remove());
+    panel.querySelector(".reuse-save")?.addEventListener("click", () => {
+      const offset = Number(panel.querySelector(".reuse-week")?.value || 0);
+      const monday = new Date(currentWeekMonday);
+      monday.setDate(monday.getDate() + offset * 7);
+      const copy = {
+        ...source,
+        id: uid(),
+        done: false,
+        completedAt: null,
+        archived: false,
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+        period: "week",
+        weekKey: localDateKey(monday),
+        day: panel.querySelector(".reuse-day")?.value || "",
+        recurrence: "none"
+      };
+      state.todos.push(copy);
+      save();
+      todoFilter = "all";
+      document.querySelectorAll(".filter").forEach(x => x.classList.toggle("active", x.dataset.filter === "all"));
+      renderAll();
+      showMotivation("To-do wieder eingeplant ✓");
+    });
   }));
 
   document.querySelectorAll(".edit-todo").forEach(el => el.addEventListener("click", e => {
@@ -6434,6 +6516,7 @@ document.querySelectorAll(".filter").forEach(btn => btn.addEventListener("click"
   document.querySelectorAll(".filter").forEach(x => x.classList.remove("active"));
   btn.classList.add("active");
   todoFilter = btn.dataset.filter;
+  if (todoFilter === "done") window.todoDonePage = 1;
   renderTodos();
 }));
 
