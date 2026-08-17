@@ -879,14 +879,14 @@ ${isNewEntry(t) ? `<span class="new-entry-badge">NEU</span>` : ""}
       ${(() => { const rows=["1","2"].map(cid=>{const tm=homeByForDate(cid,date),c=state.school.children[cid];return tm?`<span><b>${escapeHtml(c.name)}</b> ${escapeHtml(tm)}</span>`:""}).filter(Boolean);return rows.length?`<div class="home-by-strip home-by-top"><span class="home-by-label">⌂ zu Hause bis</span>${rows.join("")}</div>`:"";})()}
       ${eventHtml}
       ${schoolHtml}${todoHtml}
-      <div class="day-bottom-slot">
-        ${videoHtml
-          ? `<details class="day-video-details">
+      ${videoHtml
+        ? `<div class="day-bottom-slot">
+             <details class="day-video-details">
                <summary>▷ Übung${videos.length === 1 ? "" : "en"} <span>${videos.length}</span></summary>
                <div class="day-video-details-content">${videoHtml}</div>
-             </details>`
-          : '<div class="empty print-hide-empty">Heute ist noch Platz für etwas Schönes.</div>'}
-      </div>
+             </details>
+           </div>`
+        : ""}
     `;
     grid.appendChild(dayEl);
   });
