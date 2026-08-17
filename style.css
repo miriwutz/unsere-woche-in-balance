@@ -6970,3 +6970,43 @@ a.day-meal{
   .event-fields{grid-template-columns:1fr 1fr}
   .form-row{grid-template-columns:1fr}
 }
+
+/* =========================================================
+   FIX – Fertige To-dos + Wochenplan-Unterkante
+   ========================================================= */
+
+.week-grid .day{
+  display:flex;
+  flex-direction:column;
+}
+
+.day-bottom-slot{
+  margin-top:auto;
+  padding-top:14px;
+}
+
+.day .day-bottom-slot .video-item:first-of-type{
+  margin-top:0;
+}
+
+.todo-mini.done{
+  opacity:.48;
+}
+
+.todo-mini.done > span{
+  text-decoration:line-through;
+  text-decoration-thickness:1px;
+  text-decoration-color:rgba(79,74,72,.42);
+}
+
+/* Im Archiv noch lesbar, aber klar erledigt. */
+#todoList .todo-card.done{
+  opacity:.62;
+}
+
+@media (max-width:760px){
+  .day-bottom-slot{
+    margin-top:14px;
+    padding-top:0;
+  }
+}
