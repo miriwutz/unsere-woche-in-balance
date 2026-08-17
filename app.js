@@ -1,9 +1,6 @@
-// WICHTIGES PROJEKT-PRINZIP:
-// Die App muss vollständig kostenlos nutzbar bleiben.
-// Keine Funktionen einbauen, die Blaze/Billing, Firebase Storage oder andere kostenpflichtige Dienste voraussetzen.
-
 // FINAL LEER – saubere Ausgangsversion für den Online-Start.
 // Lou, Fina, Familienfarben, Fächer und Funktionen bleiben erhalten.
+
 
 
 // FINAL LEER: Beim allerersten Start dieser leeren Ausgabe werden nur Inhalts-/Testdaten entfernt.
@@ -23,22 +20,17 @@
   localStorage.setItem(markerKey, cleanVersion);
 })();
 
-const WEEK_DAYS = ["Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag","Sonntag"];
+const days = ["Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag","Sonntag"];
 
 const state = {
   videos: JSON.parse(localStorage.getItem("balanceProd.videos") || "[]"),
   todos: JSON.parse(localStorage.getItem("balanceProd.todos") || "[]"),
   archive: JSON.parse(localStorage.getItem("balanceProd.archive") || "[]"),
   shopping: JSON.parse(localStorage.getItem("balanceProd.shopping") || "[]"),
-  recipes: JSON.parse(localStorage.getItem("balanceProd.recipes") || "[]"),
-  meals: JSON.parse(localStorage.getItem("balanceProd.meals") || "{}"),
-  pinboard: JSON.parse(localStorage.getItem("balanceProd.pinboard") || "[]"),
-  timeTracking: JSON.parse(localStorage.getItem("balanceProd.timeTracking") || '{"entries":[],"active":null}'),
-  recipeLinkFeedback: JSON.parse(localStorage.getItem("balanceProd.recipeLinkFeedback") || "{}"),
 
   workroom: JSON.parse(
     localStorage.getItem("balanceProd.workroom") ||
-    '{"todos":[],"prints":[],"links":[],"substitutions":[],"plans":{"week":[],"year":[]}}'
+    '{"todos":[],"prints":[],"links":[],"substitutions":[]}'
   ),
 
   settings: {
@@ -47,89 +39,17 @@ const state = {
   }
 };
 
-// Werkraum-Daten aus älteren Versionen sicher ergänzen.
-state.workroom = state.workroom || {};
-state.workroom.todos = Array.isArray(state.workroom.todos) ? state.workroom.todos : [];
-state.workroom.prints = Array.isArray(state.workroom.prints) ? state.workroom.prints : [];
-state.workroom.links = Array.isArray(state.workroom.links) ? state.workroom.links : [];
-state.workroom.substitutions = Array.isArray(state.workroom.substitutions) ? state.workroom.substitutions : [];
-state.recipes = Array.isArray(state.recipes) ? state.recipes : [];
-state.meals = state.meals && typeof state.meals === "object" ? state.meals : {};
-state.pinboard = Array.isArray(state.pinboard) ? state.pinboard : [];
-state.timeTracking = state.timeTracking && typeof state.timeTracking === "object"
-  ? state.timeTracking
-  : {entries:[], active:[]};
-state.timeTracking.entries = Array.isArray(state.timeTracking.entries) ? state.timeTracking.entries : [];
-if (Array.isArray(state.timeTracking.active)) {
-  state.timeTracking.active = state.timeTracking.active;
-} else if (state.timeTracking.active && typeof state.timeTracking.active === "object") {
-  state.timeTracking.active = [state.timeTracking.active];
-} else {
-  state.timeTracking.active = [];
-}
-
-state.timeTracking.stopped =
-  state.timeTracking.stopped && typeof state.timeTracking.stopped === "object"
-    ? state.timeTracking.stopped
-    : {};
-state.timeTracking.deletedEntries =
-  state.timeTracking.deletedEntries && typeof state.timeTracking.deletedEntries === "object"
-    ? state.timeTracking.deletedEntries
-    : {};
-state.recipeLinkFeedback = state.recipeLinkFeedback && typeof state.recipeLinkFeedback === "object"
-  ? state.recipeLinkFeedback
-  : {};
-
 let shoppingItems = state.shopping;
 let cloudReady = false;
 let cloudApplying = false;
 let cloudSaveTimer = null;
 let cloudUnsubscribe = null;
 
-
-function snapshotPersistentState() {
-  return {
-    savedAt: Date.now(),
-    videos: state.videos,
-    todos: state.todos,
-    archive: state.archive,
-    shopping: state.shopping,
-    recipes: state.recipes,
-    meals: state.meals,
-    pinboard: state.pinboard,
-    recipeLinkFeedback: state.recipeLinkFeedback,
-    workroom: state.workroom,
-    school: state.school,
-    familySettings: state.familySettings,
-    settings: state.settings || {}
-  };
-}
-
-function makeLocalSafetyBackup() {
-  try {
-    const current = JSON.stringify(snapshotPersistentState());
-    const last = localStorage.getItem("balanceProd.safetyBackup.1");
-    if (last !== current) {
-      localStorage.setItem("balanceProd.safetyBackup.3", localStorage.getItem("balanceProd.safetyBackup.2") || "");
-      localStorage.setItem("balanceProd.safetyBackup.2", localStorage.getItem("balanceProd.safetyBackup.1") || "");
-      localStorage.setItem("balanceProd.safetyBackup.1", current);
-    }
-  } catch (err) {
-    console.warn("Lokales Sicherheitsbackup fehlgeschlagen:", err);
-  }
-}
-
 function saveLocal() {
-  makeLocalSafetyBackup();
   localStorage.setItem("balanceProd.videos", JSON.stringify(state.videos));
   localStorage.setItem("balanceProd.todos", JSON.stringify(state.todos));
   localStorage.setItem("balanceProd.archive", JSON.stringify(state.archive));
   localStorage.setItem("balanceProd.shopping", JSON.stringify(state.shopping));
-  localStorage.setItem("balanceProd.recipes", JSON.stringify(state.recipes));
-  localStorage.setItem("balanceProd.meals", JSON.stringify(state.meals));
-  localStorage.setItem("balanceProd.pinboard", JSON.stringify(state.pinboard));
-  localStorage.setItem("balanceProd.timeTracking", JSON.stringify(state.timeTracking));
-  localStorage.setItem("balanceProd.recipeLinkFeedback", JSON.stringify(state.recipeLinkFeedback));
   localStorage.setItem("balanceProd.workroom", JSON.stringify(state.workroom));
   localStorage.setItem("balanceProd.school", JSON.stringify(state.school));
   localStorage.setItem("balanceProd.familySettings", JSON.stringify(state.familySettings));
@@ -144,10 +64,6 @@ function cloudPayload() {
     todos: state.todos,
     archive: state.archive,
     shopping: state.shopping,
-    recipes: state.recipes,
-    meals: state.meals,
-    pinboard: state.pinboard,
-    recipeLinkFeedback: state.recipeLinkFeedback,
     workroom: state.workroom,
     school: state.school,
     familySettings: state.familySettings,
@@ -182,356 +98,6 @@ function save() {
   saveLocal();
   scheduleCloudSave();
 }
-
-
-// =========================================================
-// PINNWAND – flüchtige Familiennachrichten
-// =========================================================
-const PINBOARD_DEVICE_KEY = "balanceProd.pinboardDeviceEnabled";
-
-function pinboardDeviceEnabled() {
-  return localStorage.getItem(PINBOARD_DEVICE_KEY) === "1";
-}
-
-function setPinboardDeviceEnabled(value) {
-  localStorage.setItem(PINBOARD_DEVICE_KEY, value ? "1" : "0");
-}
-
-function updatePinboardDeviceStatus() {
-  const btn = document.querySelector("#enablePinboardNotifications");
-  const status = document.querySelector("#pinboardDeviceStatus");
-  if (!btn || !status) return;
-
-  const enabled = pinboardDeviceEnabled();
-  const notificationSupported = "Notification" in window;
-  const permission = notificationSupported ? Notification.permission : "unsupported";
-
-  if (enabled && (permission === "granted" || permission === "unsupported")) {
-    btn.textContent = "Benachrichtigungen aktiv";
-    status.textContent = permission === "unsupported"
-      ? "🔊 Ton auf diesem Gerät aktiviert"
-      : "🔔 Ton & Benachrichtigung aktiviert";
-    status.dataset.state = "granted";
-    return;
-  }
-
-  if (permission === "denied") {
-    btn.textContent = "Ton aktivieren";
-    status.textContent = "🔊 Ton möglich · System-Benachrichtigungen blockiert";
-    status.dataset.state = "denied";
-    return;
-  }
-
-  btn.textContent = "Benachrichtigungen aktivieren";
-  status.textContent = "Noch nicht aktiviert";
-  status.dataset.state = "default";
-}
-
-async function enablePinboardOnThisDevice() {
-  try {
-    // Der Klick selbst entsperrt Audio auf iPhone/iPad/Android.
-    pinboardAudioContext =
-      pinboardAudioContext ||
-      new (window.AudioContext || window.webkitAudioContext)();
-
-    if (pinboardAudioContext.state === "suspended") {
-      await pinboardAudioContext.resume();
-    }
-
-    // Mini-stummer Impuls hält das AudioContext-Unlock auf mobilen Browsern stabiler.
-    const osc = pinboardAudioContext.createOscillator();
-    const gain = pinboardAudioContext.createGain();
-    gain.gain.value = 0.00001;
-    osc.connect(gain);
-    gain.connect(pinboardAudioContext.destination);
-    osc.start();
-    osc.stop(pinboardAudioContext.currentTime + 0.03);
-
-    if ("Notification" in window && Notification.permission === "default") {
-      try {
-        await Notification.requestPermission();
-      } catch (err) {
-        console.warn("Pinnwand Notification-Permission:", err);
-      }
-    }
-
-    setPinboardDeviceEnabled(true);
-    updatePinboardDeviceStatus();
-
-    // Sofort hörbarer Bestätigungston: wenn der kommt, ist das Gerät entsperrt.
-    await playPinboardSound(document.querySelector("#pinboardSound")?.value || "letter");
-    return true;
-  } catch (err) {
-    console.warn("Pinnwand konnte auf diesem Gerät nicht aktiviert werden:", err);
-    setPinboardDeviceEnabled(false);
-    updatePinboardDeviceStatus();
-    return false;
-  }
-}
-
-const PINBOARD_VOLUME_KEY = "balanceProd.pinboardVolume";
-
-function getPinboardVolumeSetting() {
-  return localStorage.getItem(PINBOARD_VOLUME_KEY) || "loud";
-}
-
-function setPinboardVolumeSetting(value) {
-  localStorage.setItem(PINBOARD_VOLUME_KEY, value || "loud");
-}
-
-function pinboardVolumeGain() {
-  return {
-    soft: 0.22,
-    normal: 0.48,
-    loud: 0.88,
-    max: 1.65
-  }[getPinboardVolumeSetting()] || 0.88;
-}
-
-const pinboardSeenIds = new Set();
-let pinboardCloudInitialized = false;
-let pinboardAudioContext = null;
-
-function pinboardRecipientName(key) {
-  if (key === "all") return "Alle";
-  return familyName(key) || "Familie";
-}
-
-function pinboardSoundLabel(sound) {
-  return {
-    letter: "💌 Briefchen",
-    sparkle: "✨ Funkeln",
-    bubble: "🫧 Blubb"
-  }[sound] || "💌 Briefchen";
-}
-
-async function playPinboardSound(sound = "letter") {
-  try {
-    pinboardAudioContext =
-      pinboardAudioContext ||
-      new (window.AudioContext || window.webkitAudioContext)();
-
-    if (pinboardAudioContext.state === "suspended") {
-      await pinboardAudioContext.resume();
-    }
-
-    const ctx = pinboardAudioContext;
-    if (!ctx || ctx.state !== "running") return false;
-
-    const now = ctx.currentTime;
-    const master = ctx.createGain();
-    const compressor = ctx.createDynamicsCompressor();
-    compressor.threshold.setValueAtTime(-18, now);
-    compressor.knee.setValueAtTime(12, now);
-    compressor.ratio.setValueAtTime(6, now);
-    compressor.attack.setValueAtTime(0.003, now);
-    compressor.release.setValueAtTime(0.18, now);
-    master.connect(compressor);
-    compressor.connect(ctx.destination);
-
-    const volumeGain = pinboardVolumeGain();
-    const isSuperLoud = getPinboardVolumeSetting() === "max";
-    master.gain.setValueAtTime(0.0001, now);
-    master.gain.exponentialRampToValueAtTime(volumeGain, now + 0.01);
-
-    function note(freq, start, duration, type = "sine", gainValue = 0.7, endFreq = null) {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.type = type;
-      osc.frequency.setValueAtTime(freq, now + start);
-      if (endFreq) {
-        osc.frequency.exponentialRampToValueAtTime(Math.max(30, endFreq), now + start + duration);
-      }
-      gain.gain.setValueAtTime(0.0001, now + start);
-      gain.gain.exponentialRampToValueAtTime(gainValue, now + start + 0.01);
-      gain.gain.exponentialRampToValueAtTime(0.0001, now + start + duration);
-      osc.connect(gain);
-      gain.connect(master);
-      osc.start(now + start);
-      osc.stop(now + start + duration + 0.03);
-    }
-
-    function pattern(offset = 0) {
-      if (sound === "sparkle") {
-        note(1180, offset + 0.00, 0.18, "triangle", 0.98);
-        note(1540, offset + 0.10, 0.22, "triangle", 0.92);
-        note(1980, offset + 0.22, 0.30, "sine", 0.88);
-      } else if (sound === "bubble") {
-        note(330, offset + 0.00, 0.20, "triangle", 1.0, 180);
-        note(520, offset + 0.15, 0.18, "triangle", 0.86, 260);
-        note(760, offset + 0.27, 0.13, "sine", 0.62, 430);
-      } else {
-        note(820, offset + 0.00, 0.18, "square", 0.78);
-        note(1180, offset + 0.16, 0.26, "triangle", 1.0);
-        note(1640, offset + 0.28, 0.20, "sine", 0.62);
-      }
-    }
-
-    pattern(0);
-
-    // Super laut wiederholt den kurzen Hinweis einmal.
-    // Das ist auf kleinen Handy-/Tablet-Lautsprechern deutlich besser wahrnehmbar
-    // als nur den Pegel immer weiter zu übersteuern.
-    if (isSuperLoud) {
-      pattern(0.52);
-      master.gain.exponentialRampToValueAtTime(0.0001, now + 1.10);
-    } else {
-      master.gain.exponentialRampToValueAtTime(0.0001, now + 0.62);
-    }
-
-    return true;
-  } catch (err) {
-    console.warn("Pinnwand-Ton konnte nicht abgespielt werden:", err);
-    return false;
-  }
-}
-
-function renderPinboard() {
-  const list = document.querySelector("#pinboardList");
-  const badge = document.querySelector("#pinboardBadge");
-  const countText = document.querySelector("#pinboardCountText");
-  if (!list) return;
-
-  state.pinboard = Array.isArray(state.pinboard) ? state.pinboard : [];
-  const messages = state.pinboard
-    .slice()
-    .sort((a,b) => Number(b.createdAt || 0) - Number(a.createdAt || 0));
-
-  if (badge) {
-    badge.textContent = String(messages.length);
-    badge.classList.toggle("hidden", messages.length === 0);
-  }
-
-  if (countText) {
-    countText.textContent =
-      messages.length === 0 ? "Keine Nachrichten" :
-      messages.length === 1 ? "1 Nachricht" :
-      `${messages.length} Nachrichten`;
-  }
-
-  if (!messages.length) {
-    list.innerHTML = `<div class="pinboard-empty">Die Pinnwand ist gerade leer.</div>`;
-    return;
-  }
-
-  list.innerHTML = messages.map(message => `
-    <article class="pinboard-note" data-id="${message.id}">
-      <div class="pinboard-note-top">
-        <span class="pinboard-note-recipient">💌 ${escapeHtml(pinboardRecipientName(message.recipient))}</span>
-        <span class="pinboard-note-sound">${escapeHtml(pinboardSoundLabel(message.sound))}</span>
-        <button type="button" class="pinboard-note-x" data-id="${message.id}" title="Nachricht löschen">×</button>
-      </div>
-      <div class="pinboard-note-text">${escapeHtml(message.text || "")}</div>
-      <button type="button" class="pinboard-read-delete" data-id="${message.id}">
-        ✓ Gelesen & löschen
-      </button>
-    </article>
-  `).join("");
-
-  list.querySelectorAll(".pinboard-read-delete, .pinboard-note-x").forEach(btn => {
-    btn.addEventListener("click", () => {
-      state.pinboard = state.pinboard.filter(message => message.id !== btn.dataset.id);
-      save();
-      renderPinboard();
-    });
-  });
-}
-
-function handleIncomingPinboard(cloudMessages) {
-  const incoming = Array.isArray(cloudMessages) ? cloudMessages : [];
-
-  if (!pinboardCloudInitialized) {
-    incoming.forEach(message => message?.id && pinboardSeenIds.add(message.id));
-    pinboardCloudInitialized = true;
-    return;
-  }
-
-  const fresh = incoming.filter(message =>
-    message?.id && !pinboardSeenIds.has(message.id)
-  );
-
-  incoming.forEach(message => message?.id && pinboardSeenIds.add(message.id));
-
-  if (fresh.length) {
-    const newest = fresh
-      .slice()
-      .sort((a,b) => Number(b.createdAt || 0) - Number(a.createdAt || 0))[0];
-
-    if (pinboardDeviceEnabled()) {
-      setTimeout(() => {
-        playPinboardSound(newest?.sound || "letter");
-      }, 80);
-    }
-  }
-}
-
-function openPinboard() {
-  renderPinboard();
-  const volume = document.querySelector("#pinboardVolume");
-  if (volume) volume.value = getPinboardVolumeSetting();
-  updatePinboardDeviceStatus();
-  document.querySelector("#pinboardDialog")?.showModal();
-}
-
-document.querySelector("#enablePinboardNotifications")?.addEventListener("click", async () => {
-  await enablePinboardOnThisDevice();
-});
-
-document.querySelector("#pinboardVolume")?.addEventListener("change", e => {
-  setPinboardVolumeSetting(e.currentTarget.value || "loud");
-});
-
-document.querySelector("#testPinboardSoundBtn")?.addEventListener("click", async () => {
-  if (!pinboardDeviceEnabled()) {
-    await enablePinboardOnThisDevice();
-    return;
-  }
-  const sound = document.querySelector("#pinboardSound")?.value || "letter";
-  await playPinboardSound(sound);
-});
-
-document.querySelector("#openPinboardBtn")?.addEventListener("click", openPinboard);
-document.querySelector("#closePinboardBtn")?.addEventListener("click", () => {
-  document.querySelector("#pinboardDialog")?.close();
-});
-
-document.querySelector("#pinboardDialog")?.addEventListener("click", e => {
-  if (e.target === e.currentTarget) e.currentTarget.close();
-});
-
-document.querySelector("#sendPinboardBtn")?.addEventListener("click", async () => {
-  const volumeValue = document.querySelector("#pinboardVolume")?.value || getPinboardVolumeSetting();
-  setPinboardVolumeSetting(volumeValue);
-
-  const recipient = document.querySelector("#pinboardRecipient")?.value || "all";
-  const textInput = document.querySelector("#pinboardMessage");
-  const sound = document.querySelector("#pinboardSound")?.value || "letter";
-  const text = textInput?.value.trim() || "";
-
-  if (!text) {
-    textInput?.focus();
-    return;
-  }
-
-  const message = {
-    id: uid(),
-    recipient,
-    text,
-    sound,
-    createdAt: Date.now()
-  };
-
-  state.pinboard.push(message);
-
-  // Der Sender bekommt nicht gleich seinen eigenen Cloud-Echo-Ton.
-  pinboardSeenIds.add(message.id);
-
-  save();
-  renderPinboard();
-
-  if (textInput) textInput.value = "";
-  showMotivation("💌 Nachricht an die Pinnwand geheftet.");
-});
 
 function uid() {
   return crypto.randomUUID ? crypto.randomUUID() : String(Date.now() + Math.random());
@@ -734,78 +300,8 @@ const NOE_SCHOOL_YEARS = {
 state.settings = state.settings || {};
 state.settings.schoolYear = localStorage.getItem("balanceProd.schoolYear") || "2026-27";
 
-function schoolYearKey(startYear) {
-  return `${startYear}-${String((startYear + 1) % 100).padStart(2, "0")}`;
-}
-
-function firstWeekdayOfMonth(year, monthIndex, weekday) {
-  const d = new Date(year, monthIndex, 1, 12, 0, 0, 0);
-  const shift = (weekday - d.getDay() + 7) % 7;
-  d.setDate(1 + shift);
-  return d;
-}
-
-function easterSunday(year) {
-  // Gregorianischer Osteralgorithmus (Meeus/Jones/Butcher).
-  const a = year % 19;
-  const b = Math.floor(year / 100);
-  const c = year % 100;
-  const d = Math.floor(b / 4);
-  const e = b % 4;
-  const f = Math.floor((b + 8) / 25);
-  const g = Math.floor((b - f + 1) / 3);
-  const h = (19 * a + b - d - g + 15) % 30;
-  const i = Math.floor(c / 4);
-  const k = c % 4;
-  const l = (32 + 2 * e + 2 * i - h - k) % 7;
-  const m = Math.floor((a + 11 * h + 22 * l) / 451);
-  const month = Math.floor((h + l - 7 * m + 114) / 31) - 1;
-  const day = ((h + l - 7 * m + 114) % 31) + 1;
-  return new Date(year, month, day, 12, 0, 0, 0);
-}
-
-function addDays(date, amount) {
-  const d = new Date(date);
-  d.setDate(d.getDate() + amount);
-  return d;
-}
-
-function generatedNoeSchoolYear(startYear) {
-  const nextYear = startYear + 1;
-  const start = firstWeekdayOfMonth(startYear, 8, 1); // erster Montag im September
-  const julyFirstSaturday = firstWeekdayOfMonth(nextYear, 6, 6);
-  const end = addDays(julyFirstSaturday, -1);
-  const easter = easterSunday(nextYear);
-  const semesterStart = firstWeekdayOfMonth(nextYear, 1, 1); // erster Montag im Februar
-
-  return {
-    label: `${startYear}/${String(nextYear).slice(-2)}`,
-    start: dateKey(start),
-    end: dateKey(end),
-    generated: true,
-    freeRanges: [
-      [`${startYear}-10-26`, `${startYear}-11-02`],
-      [`${startYear}-11-15`, `${startYear}-11-15`], // Hl. Leopold, NÖ
-      [`${startYear}-12-08`, `${startYear}-12-08`],
-      [`${startYear}-12-24`, `${nextYear}-01-06`],
-      [dateKey(semesterStart), dateKey(addDays(semesterStart, 5))],
-      [dateKey(addDays(easter, -8)), dateKey(addDays(easter, 1))],
-      [`${nextYear}-05-01`, `${nextYear}-05-01`],
-      [dateKey(addDays(easter, 39)), dateKey(addDays(easter, 39))],
-      [dateKey(addDays(easter, 48)), dateKey(addDays(easter, 50))],
-      [dateKey(addDays(easter, 60)), dateKey(addDays(easter, 60))]
-    ]
-  };
-}
-
-function schoolYearConfig(key) {
-  if (NOE_SCHOOL_YEARS[key]?.start) return NOE_SCHOOL_YEARS[key];
-  const startYear = Number(String(key || "").slice(0, 4));
-  return Number.isFinite(startYear) ? generatedNoeSchoolYear(startYear) : NOE_SCHOOL_YEARS["2026-27"];
-}
-
 function activeSchoolYear(){
-  return schoolYearConfig(state.settings.schoolYear || "2026-27");
+  return NOE_SCHOOL_YEARS[state.settings.schoolYear] || NOE_SCHOOL_YEARS["2026-27"];
 }
 
 function parseLocalDate(key) {
@@ -831,11 +327,11 @@ function isNoeSchoolFree(date) {
 }
 
 function weekdayNameForDate(date) {
-  return WEEK_DAYS[(date.getDay() + 6) % 7];
+  return days[(date.getDay() + 6) % 7];
 }
 
 function dateForWeekday(monday, dayName) {
-  const idx = WEEK_DAYS.indexOf(dayName);
+  const idx = days.indexOf(dayName);
   if (idx < 0) return null;
   return dayDate(monday, idx);
 }
@@ -896,16 +392,6 @@ if (item.type === "event" && recurrence === "none") {
     return item.weekKey === dateKey(getMonday(date)) && item.day === weekdayNameForDate(date);
   }
 
-  if (recurrence === "schoolyear-noe") {
-    const sy = activeSchoolYear();
-    if (!sy.start || !sy.end) return false;
-    if (key < sy.start || key > sy.end) return false;
-    const wantedDay = item.schoolDay || (anchor ? weekdayNameForDate(anchor) : "");
-    if (!wantedDay || weekdayNameForDate(date) !== wantedDay) return false;
-    if (isNoeSchoolFree(date)) return false;
-    return true;
-  }
-
   if (!anchor || date < anchor) return false;
 
   if (recurrence === "weekly") {
@@ -923,6 +409,15 @@ if (recurrence === "yearly") {
   return date.getMonth() === anchor.getMonth()
     && date.getDate() === anchor.getDate();
 }
+  if (recurrence === "schoolyear-noe") {
+    const sy = activeSchoolYear();
+    if (!sy.start || !sy.end) return false;
+    if (key < sy.start || key > sy.end) return false;
+    if (date.getDay() !== anchor.getDay()) return false;
+    if (isNoeSchoolFree(date)) return false;
+    return true;
+  }
+
   return false;
 }
 
@@ -957,32 +452,6 @@ function dayDate(monday, index) {
   const d = new Date(monday);
   d.setDate(monday.getDate() + index);
   return d;
-}
-
-function austrianPublicHoliday(date) {
-  const year = date.getFullYear();
-  const key = dateKey(date);
-  const fixed = {
-    [`${year}-01-01`]: "Neujahr",
-    [`${year}-01-06`]: "Heilige Drei Könige",
-    [`${year}-05-01`]: "Staatsfeiertag",
-    [`${year}-08-15`]: "Mariä Himmelfahrt",
-    [`${year}-10-26`]: "Nationalfeiertag",
-    [`${year}-11-01`]: "Allerheiligen",
-    [`${year}-12-08`]: "Mariä Empfängnis",
-    [`${year}-12-25`]: "Christtag",
-    [`${year}-12-26`]: "Stephanitag"
-  };
-  if (fixed[key]) return fixed[key];
-
-  const easter = easterSunday(year);
-  const moving = new Map([
-    [dateKey(addDays(easter, 1)), "Ostermontag"],
-    [dateKey(addDays(easter, 39)), "Christi Himmelfahrt"],
-    [dateKey(addDays(easter, 50)), "Pfingstmontag"],
-    [dateKey(addDays(easter, 60)), "Fronleichnam"]
-  ]);
-  return moving.get(key) || "";
 }
 
 function extractYouTubeId(url) {
@@ -1037,8 +506,6 @@ state.school = (() => {
   state.school.children[id]=state.school.children[id]||{name:(id === "1" ? "Lou" : "Fina"),tasks:[],links:[]};
   state.school.children[id].tasks=Array.isArray(state.school.children[id].tasks)?state.school.children[id].tasks:[];
   state.school.children[id].links=Array.isArray(state.school.children[id].links)?state.school.children[id].links:[];
-  state.school.children[id].deletedTaskIds=Array.isArray(state.school.children[id].deletedTaskIds)?state.school.children[id].deletedTaskIds:[];
-  state.school.children[id].deletedLinkIds=Array.isArray(state.school.children[id].deletedLinkIds)?state.school.children[id].deletedLinkIds:[];
 });
 
 
@@ -1048,8 +515,6 @@ if (state.school.children["2"].name === "Kind 2") state.school.children["2"].nam
 let currentWeekMonday = getMonday(new Date());
 let detectedVideoTitle = "";
 let replanArchiveId = null;
-let replanMode = "exercise";
-let replanRecipeLink = null;
 
 function currentWeekKey() {
   return dateKey(currentWeekMonday);
@@ -1186,6 +651,7 @@ function ratingFor(url) {
 }
 
 
+
 const familyNames = {a:"",b:"",c:"",d:""};
 
 function todoGroupKey(todo) {
@@ -1242,36 +708,35 @@ function renderWeek() {
   grid.innerHTML = "";
   const weekKey = currentWeekKey();
 
-  WEEK_DAYS.forEach((day, index) => {
+  days.forEach((day, index) => {
     const dayEl = document.createElement("article");
     dayEl.className = "day";
 
-const date = dayDate(currentWeekMonday, index);
-
-const today = new Date();
-today.setHours(0, 0, 0, 0);
-
-const compareDate = new Date(date);
-compareDate.setHours(0, 0, 0, 0);
-
-if (compareDate.getTime() === today.getTime()) {
-  dayEl.classList.add("today");
-}
-
-const dateLabel = date.toLocaleDateString("de-AT",{day:"2-digit",month:"2-digit"});
-    const holidayName = austrianPublicHoliday(date);
-    const holidayHtml = holidayName
-      ? `<div class="day-holiday" title="Gesetzlicher Feiertag in Österreich">✦ ${escapeHtml(holidayName)}</div>`
-      : "";
+    const date = dayDate(currentWeekMonday, index);
+    const dateLabel = date.toLocaleDateString("de-AT",{day:"2-digit",month:"2-digit"});
 
     const videos = state.videos.filter(v => v.day === day && v.weekKey === weekKey);
     const occurrences = state.todos.filter(t => occursOnDate(t, date));
  const todos = occurrences.filter(t => {
   if ((t.type || "todo") !== "todo") return false;
 
-  // Ein erledigtes To-do soll SOFORT aus dem Wochenplan verschwinden.
-  // Bei wiederkehrenden To-dos gilt das nur für das konkrete erledigte Vorkommen.
-  return !isOccurrenceDone(t, date);
+  // Wiederkehrende To-dos werden weiterhin über ihre einzelnen Vorkommen behandelt
+  if (t.recurrence && t.recurrence !== "none") return true;
+
+  // Nicht erledigt → ganz normal anzeigen
+  if (!t.done) return true;
+
+  // Alte erledigte To-dos ohne completedAt vorerst weiterhin anzeigen
+  if (!t.completedAt) return true;
+
+  // Erledigt: nur am Tag der Erledigung noch anzeigen
+  const completedDay = new Date(t.completedAt);
+  completedDay.setHours(0, 0, 0, 0);
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  return completedDay.getTime() === today.getTime();
 });
     const events = occurrences.filter(t => t.type === "event");
 
@@ -1360,9 +825,7 @@ const eventHtml = events.length ? `
 
             let displayTime = "";
 
-            if ((t.recurrence || "none") === "schoolyear-noe") {
-              displayTime = t.time ? t.time + (t.endTime ? "–" + t.endTime : "") : "";
-            } else if (startKey === endKey) {
+            if (startKey === endKey) {
               if (t.time) {
                 displayTime = t.time + (t.endTime ? "–" + t.endTime : "");
               }
@@ -1420,72 +883,14 @@ ${isNewEntry(t) ? `<span class="new-entry-badge">NEU</span>` : ""}
       </div>
     ` : "";
 
-    // Essen bewusst ganz unten im Tag, direkt vor dem Video.
-    const mealStored = normalizeMealEntry(state.meals?.[dateKey(date)]);
-    const mealLabel = mealStored?.label || "";
-    const mealUrl = mealStored?.url || "";
-
-    const mealRecipe = mealStored?.recipeId
-      ? state.recipes.find(r => r.id === mealStored.recipeId)
-      : recipeByTitle(mealLabel);
-
-    const mealHtml = mealLabel ? (
-      mealRecipe ? `
-        <button type="button"
-                class="day-meal has-recipe"
-                data-recipe-id="${mealRecipe.id}">
-          <span class="day-meal-label">ESSEN</span>
-          <strong>${escapeHtml(mealLabel)}</strong>
-          <span class="day-meal-open">Rezept ↗</span>
-        </button>
-      ` : mealUrl ? `
-        <a class="day-meal has-link"
-           href="${escapeHtml(mealUrl)}"
-           target="_blank"
-           rel="noopener">
-          <span class="day-meal-label">ESSEN</span>
-          <strong>${escapeHtml(mealLabel)}</strong>
-          <span class="day-meal-open">Öffnen ↗</span>
-        </a>
-      ` : `
-        <div class="day-meal">
-          <span class="day-meal-label">ESSEN</span>
-          <strong>${escapeHtml(mealLabel)}</strong>
-        </div>
-      `
-    ) : "";
-
     dayEl.innerHTML = `
       <h3>${day}<span class="day-date">${dateLabel}</span></h3>
-      ${holidayHtml}
-      ${(() => { const rows=["1","2"].map(cid=>{const tm=homeByForDate(cid,date),c=state.school.children[cid];return tm?`<span><b>${escapeHtml(c.name)}</b> <strong class="home-by-time">${escapeHtml(tm)}</strong></span>`:""}).filter(Boolean);return rows.length?`<div class="home-by-strip home-by-top"><span class="home-by-label">⌂ zu Hause bis</span>${rows.join("")}</div>`:"";})()}
-      ${schoolHtml}
+      ${(() => { const rows=["1","2"].map(cid=>{const tm=homeByForDate(cid,date),c=state.school.children[cid];return tm?`<span><b>${escapeHtml(c.name)}</b> ${escapeHtml(tm)}</span>`:""}).filter(Boolean);return rows.length?`<div class="home-by-strip home-by-top"><span class="home-by-label">⌂ zu Hause bis</span>${rows.join("")}</div>`:"";})()}
+      ${videoHtml || '<div class="empty print-hide-empty">Heute ist noch Platz für etwas Schönes.</div>'}
       ${eventHtml}
-      ${todoHtml}
-      ${mealHtml}
-      ${videoHtml}
+      ${schoolHtml}${todoHtml}
     `;
     grid.appendChild(dayEl);
-  });
-
-  // Am Handy direkt den heutigen Tag zeigen, wenn die aktuelle Woche geöffnet ist.
-  if (
-    window.matchMedia("(max-width:760px)").matches &&
-    currentWeekKey() === dateKey(getMonday(new Date()))
-  ) {
-    requestAnimationFrame(() => {
-      const todayCard = grid.querySelector(".day.today");
-      if (todayCard) {
-        todayCard.scrollIntoView({behavior:"auto", block:"start", inline:"nearest"});
-      }
-    });
-  }
-
-  document.querySelectorAll(".day-meal.has-recipe").forEach(btn => {
-    btn.addEventListener("click", () => {
-      const recipe = state.recipes.find(r => r.id === btn.dataset.recipeId);
-      if (recipe) showRecipeDetail(recipe);
-    });
   });
 
   document.querySelectorAll(".video-check").forEach(el => el.addEventListener("change", e => {
@@ -1516,10 +921,8 @@ ${isNewEntry(t) ? `<span class="new-entry-badge">NEU</span>` : ""}
 if (!item.recurrence || item.recurrence === "none") {
   item.completedAt = e.target.checked ? Date.now() : null;
 }
-    // Sofort lokal neu zeichnen, damit ein erledigtes normales To-do
-    // unmittelbar aus dem Wochenplan verschwindet und im Archiv erscheint.
-    renderAll();
     save();
+    renderAll();
 
     if (!wasDone && e.target.checked) showMotivation(todoMotivationalMessage());
   }));
@@ -1533,7 +936,6 @@ if (!item.recurrence || item.recurrence === "none") {
 
     const wasDone = !!task.done;
     task.done = e.currentTarget.checked;
-    task.updatedAt = Date.now();
 
     save();
     renderAll();
@@ -1636,16 +1038,8 @@ function renderTodos() {
   if (todoFilter === "work" || todoFilter === "private") todos = todos.filter(t => t.area === todoFilter);
   if (todoFilter === "todo" || todoFilter === "event") todos = todos.filter(t => (t.type || "todo") === todoFilter);
   if (todoFilter === "latest") {
-    todos = todos.filter(t => isNewEntry(t));
-  }
-  if (todoFilter === "done") {
-    todos = state.todos
-      .filter(t => (t.type || "todo") === "todo" && !!t.done)
-      .sort((a,b) => Number(b.completedAt || 0) - Number(a.completedAt || 0));
-  } else {
-    // Erledigte normale To-dos verschwinden sofort aus den aktiven Reitern.
-    todos = todos.filter(t => (t.type || "todo") === "event" || !t.done);
-  }
+  todos = todos.filter(t => isNewEntry(t));
+}
 todos.sort((a, b) => {
   const now = new Date();
 
@@ -1742,15 +1136,6 @@ todos.sort((a, b) => {
     todo:"To-do", event:"Termin"
   };
 
-  // Fertige To-dos: 20 Einträge pro Seite.
-  const donePageSize = 20;
-  const doneTotalPages = todoFilter === "done" ? Math.max(1, Math.ceil(todos.length / donePageSize)) : 1;
-  if (todoFilter === "done") {
-    window.todoDonePage = Math.min(Math.max(1, Number(window.todoDonePage || 1)), doneTotalPages);
-    const start = (window.todoDonePage - 1) * donePageSize;
-    todos = todos.slice(start, start + donePageSize);
-  }
-
   const grouped = groupTodosByPerson(todos);
   list.innerHTML = grouped.map(([groupKey, groupItems]) => `
     <section class="todo-person-section grouped-family-section ${groupAccentClass(groupKey)}"
@@ -1782,13 +1167,11 @@ ${isNewEntry(t) ? `<span class="new-entry-badge">NEU</span>` : ""}
                   ${t.type !== "event" && t.period ? `<span class="pill">${labels[t.period]}</span>` : ""}
                   ${t.day ? `<span class="pill">${t.day}</span>` : ""}
                   ${t.recurrence && t.recurrence !== "none" ? `<span class="pill repeat-pill">↻ ${recurrenceLabel(t.recurrence)}</span>` : ""}
-                  ${t.plingEnabled ? `<span class="pill pling-pill" title="Erinnerung aktiviert">🔔 ${Number(t.plingMinutes) || 15} Min.</span>` : ""}
                   ${t.superImportant ? `<span class="pill super-pill">⭐ Superwichtig</span>` : ""}
                 </div>
               </div>
             </div>
             <div class="todo-actions">
-              ${todoFilter === "done" ? `<button class="text-btn reuse-todo" data-id="${t.id}" title="Wiederverwenden">↻</button>` : ""}
               <button class="text-btn edit-todo" data-id="${t.id}" title="Bearbeiten">✎</button>
               <button class="text-btn delete-todo" data-id="${t.id}" title="Löschen">×</button>
             </div>
@@ -1808,18 +1191,6 @@ ${isNewEntry(t) ? `<span class="new-entry-badge">NEU</span>` : ""}
       </div>
     </section>
   `).join("");
-
-  if (todoFilter === "done" && doneTotalPages > 1) {
-    list.insertAdjacentHTML("beforeend", `
-      <nav class="todo-done-pagination" aria-label="Seiten der fertigen To-dos">
-        <button type="button" class="secondary-btn done-page-prev" ${window.todoDonePage <= 1 ? "disabled" : ""}>‹</button>
-        <span>Seite ${window.todoDonePage} von ${doneTotalPages}</span>
-        <button type="button" class="secondary-btn done-page-next" ${window.todoDonePage >= doneTotalPages ? "disabled" : ""}>›</button>
-      </nav>`);
-    list.querySelector(".done-page-prev")?.addEventListener("click", () => { window.todoDonePage--; renderTodos(); });
-    list.querySelector(".done-page-next")?.addEventListener("click", () => { window.todoDonePage++; renderTodos(); });
-  }
-
 document.querySelectorAll(".show-more-todos").forEach(btn => {
   btn.addEventListener("click", () => {
     const container = btn.closest(".todo-person-items");
@@ -1854,63 +1225,9 @@ if (isExpanded) {
 } else {
   item.completedAt = null;
 }
-    // UI zuerst aktualisieren: kein Warten auf Cloud-Speicherung.
-    // So verschwindet das To-do unmittelbar aus der aktiven Ansicht.
-    renderAll();
     save();
+    renderAll();
     if (!wasDone && item.done) showMotivation(todoMotivationalMessage());
-  }));
-
-  document.querySelectorAll(".reuse-todo").forEach(el => el.addEventListener("click", e => {
-    const source = state.todos.find(t => t.id === e.currentTarget.dataset.id);
-    if (!source) return;
-
-    const panel = document.createElement("div");
-    panel.className = "todo-reuse-panel";
-    panel.innerHTML = `
-      <strong>↻ Wiederverwenden</strong>
-      <label>Welche Woche?
-        <select class="reuse-week">
-          <option value="0">Diese Woche</option>
-          <option value="1">Nächste Woche</option>
-        </select>
-      </label>
-      <label>Wochentag
-        <select class="reuse-day">
-          <option value="">Nicht einplanen</option>
-          ${["Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag","Sonntag"].map(d => `<option${source.day === d ? " selected" : ""}>${d}</option>`).join("")}
-        </select>
-      </label>
-      <button type="button" class="secondary-btn reuse-cancel">Abbrechen</button>
-      <button type="button" class="primary-btn reuse-save">Wiederverwenden</button>`;
-
-    document.querySelectorAll(".todo-reuse-panel").forEach(x => x.remove());
-    e.currentTarget.closest(".todo-card")?.insertAdjacentElement("afterend", panel);
-    panel.querySelector(".reuse-cancel")?.addEventListener("click", () => panel.remove());
-    panel.querySelector(".reuse-save")?.addEventListener("click", () => {
-      const offset = Number(panel.querySelector(".reuse-week")?.value || 0);
-      const monday = new Date(currentWeekMonday);
-      monday.setDate(monday.getDate() + offset * 7);
-      const copy = {
-        ...source,
-        id: uid(),
-        done: false,
-        completedAt: null,
-        archived: false,
-        createdAt: Date.now(),
-        updatedAt: Date.now(),
-        period: "week",
-        weekKey: localDateKey(monday),
-        day: panel.querySelector(".reuse-day")?.value || "",
-        recurrence: "none"
-      };
-      state.todos.push(copy);
-      save();
-      todoFilter = "all";
-      document.querySelectorAll(".filter").forEach(x => x.classList.toggle("active", x.dataset.filter === "all"));
-      renderAll();
-      showMotivation("To-do wieder eingeplant ✓");
-    });
   }));
 
   document.querySelectorAll(".edit-todo").forEach(el => el.addEventListener("click", e => {
@@ -1925,36 +1242,10 @@ if (isExpanded) {
     document.querySelector("#todoArea").value = item.area;
     document.querySelector("#todoPeriod").value = item.period;
     document.querySelector("#todoDay").value = item.day || "";
-
-    const todoWeekOffsetSelect = document.querySelector("#todoWeekOffset");
-    if (todoWeekOffsetSelect) {
-      let offset = 0;
-      if (item.weekKey) {
-        const itemMonday = parseLocalDate(item.weekKey);
-        const currentMonday = new Date(currentWeekMonday);
-        offset = Math.round((itemMonday - currentMonday) / (7 * 24 * 60 * 60 * 1000));
-      }
-      todoWeekOffsetSelect.value = ["0","1","2"].includes(String(offset)) ? String(offset) : "0";
-    }
-
   document.querySelector("#eventDate").value = item.date || "";
 document.querySelector("#eventEndDate").value = item.endDate || "";
 document.querySelector("#eventTime").value = item.time || "";
 document.querySelector("#eventEndTime").value = item.endTime || "";
-const schoolyearWeekdayEdit = document.querySelector("#schoolyearWeekday");
-const schoolyearTimeEdit = document.querySelector("#schoolyearTime");
-const schoolyearEndTimeEdit = document.querySelector("#schoolyearEndTime");
-if (schoolyearWeekdayEdit) schoolyearWeekdayEdit.value = item.schoolDay || "";
-if (schoolyearTimeEdit) schoolyearTimeEdit.value = item.time || "";
-if (schoolyearEndTimeEdit) schoolyearEndTimeEdit.value = item.endTime || "";
-
-
-const plingEnabled = document.querySelector("#eventPlingEnabled");
-const plingMinutes = document.querySelector("#eventPlingMinutes");
-
-if (plingEnabled) plingEnabled.checked = !!item.plingEnabled;
-if (plingMinutes) plingMinutes.value = String(item.plingMinutes || 15);
-
 document.querySelector("#eventCategory").value = item.eventCategory || "normal";
     document.querySelector("#recurrence").value = item.recurrence || "none";
     setSelectedFamilyMembers(item.family || []);
@@ -1973,965 +1264,6 @@ document.querySelector("#eventCategory").value = item.eventCategory || "normal";
     renderAll();
   }));
 }
-
-
-// =========================================================
-// UNSER ÜBERBLICK – Zeit im Blick & Online-Rezepte
-// =========================================================
-function timeCategoryLabel(key) {
-  return {
-    pc: "🖥 PC & Büro",
-    prep: "✂ Vorbereitung",
-    household: "🏡 Haushalt",
-    cook: "🍳 Kochen",
-    shopping: "🛒 Einkaufen",
-    repair: "🔧 Reparaturen",
-    garden: "🌿 Garten & draußen",
-    sport: "🏃 Sport & Bewegung",
-    help: "🤝 Helfen & Unterstützen",
-    school: "✏ Lernen & Schule",
-    organize: "🗂 Organisieren", // Altbestand lesbar
-    errands: "🛒 Einkaufen",    // Altbestand sinnvoll umbenannt
-    other: "✨ Sonstiges"
-  }[key] || "✨ Sonstiges";
-}
-
-function formatMinutes(total) {
-  const mins = Math.max(0, Math.round(Number(total) || 0));
-  const h = Math.floor(mins / 60);
-  const m = mins % 60;
-  if (!h) return `${m} Min.`;
-  if (!m) return `${h} Std.`;
-  return `${h} Std. ${m} Min.`;
-}
-
-function weekStartForDate(date = new Date()) {
-  const d = new Date(date);
-  const day = (d.getDay() + 6) % 7;
-  d.setHours(0,0,0,0);
-  d.setDate(d.getDate() - day);
-  return d;
-}
-
-
-const TIME_TRACKING_LOCAL_KEY = "balanceProd.timeTracking";
-
-let timeTrackingUnsubscribe = null;
-let timeTrackingCloudSaveTimer = null;
-let timeTrackingCloudApplying = false;
-
-function writeTimeTrackingLocalOnly() {
-  try {
-    localStorage.setItem(TIME_TRACKING_LOCAL_KEY, JSON.stringify(state.timeTracking));
-  } catch (err) {
-    console.warn("Zeitdaten konnten lokal nicht gespeichert werden:", err);
-  }
-}
-
-function timeTrackingDoc() {
-  return firebase.firestore()
-    .collection("families")
-    .doc("shared")
-    .collection("modules")
-    .doc("timeTracking");
-}
-
-function normalizeTimeTrackingData(value) {
-  const source = value && typeof value === "object" ? value : {};
-  return {
-    entries: Array.isArray(source.entries) ? source.entries : [],
-    active: Array.isArray(source.active)
-      ? source.active
-      : (source.active && typeof source.active === "object" ? [source.active] : []),
-    stopped: source.stopped && typeof source.stopped === "object" ? source.stopped : {},
-    deletedEntries:
-      source.deletedEntries && typeof source.deletedEntries === "object"
-        ? source.deletedEntries
-        : {}
-  };
-}
-
-function mergeStoppedMaps(a, b) {
-  const result = {...(a || {})};
-  Object.entries(b || {}).forEach(([id, ts]) => {
-    result[id] = Math.max(Number(result[id] || 0), Number(ts || 0));
-  });
-  return result;
-}
-
-function mergeTimeDeletionMaps(a, b) {
-  const result = {...(a || {})};
-  Object.entries(b || {}).forEach(([id, ts]) => {
-    result[id] = Math.max(Number(result[id] || 0), Number(ts || 0));
-  });
-  return result;
-}
-
-function mergeTimeTrackingData(a, b) {
-  const A = normalizeTimeTrackingData(a);
-  const B = normalizeTimeTrackingData(b);
-
-  const stopped = mergeStoppedMaps(A.stopped, B.stopped);
-  const deletedEntries = mergeTimeDeletionMaps(A.deletedEntries, B.deletedEntries);
-
-  // Zuerst nach ID zusammenführen, danach echte Löschungen anwenden.
-  const mergedEntries = mergeByIdPreferNewer(A.entries, B.entries);
-  const entries = mergedEntries.filter(entry => {
-    if (!entry?.id) return true;
-    const deletedAt = Number(deletedEntries[entry.id] || 0);
-    const entryUpdatedAt = Number(entry.updatedAt || entry.endedAt || entry.createdAt || 0);
-
-    // Eine neuere Löschmarke gewinnt gegen einen alten Datensatz auf einem anderen Gerät.
-    return !(deletedAt && deletedAt >= entryUpdatedAt);
-  });
-
-  const finishedIds = new Set(entries.map(entry => entry?.id).filter(Boolean));
-  const activeMap = new Map();
-
-  [...A.active, ...B.active].forEach(timer => {
-    if (!timer?.id || finishedIds.has(timer.id)) return;
-
-    // Auch ein bereits gelöschter fertiger Eintrag soll nicht durch einen
-    // alten Active-Stand wieder auferstehen.
-    if (deletedEntries[timer.id]) return;
-
-    const stoppedAt = Number(stopped[timer.id] || 0);
-    if (stoppedAt && stoppedAt >= Number(timer.startedAt || 0)) return;
-
-    const prev = activeMap.get(timer.id);
-    if (!prev || Number(timer.startedAt || 0) >= Number(prev.startedAt || 0)) {
-      activeMap.set(timer.id, timer);
-    }
-  });
-
-  return {
-    entries,
-    active:[...activeMap.values()],
-    stopped,
-    deletedEntries
-  };
-}
-
-async function saveTimeTrackingToCloudNow() {
-  if (timeTrackingCloudApplying || !firebase.auth().currentUser) return;
-
-  const ref = timeTrackingDoc();
-  const localSnapshot = normalizeTimeTrackingData(state.timeTracking);
-
-  try {
-    const merged = await firebase.firestore().runTransaction(async tx => {
-      const snap = await tx.get(ref);
-      const remote = snap.exists ? snap.data() : {};
-      const next = mergeTimeTrackingData(remote, localSnapshot);
-
-      tx.set(ref, {
-        ...next,
-        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-      });
-
-      return next;
-    });
-
-    state.timeTracking = mergeTimeTrackingData(state.timeTracking, merged);
-    writeTimeTrackingLocalOnly();
-  } catch (err) {
-    console.error("Zeittracking-Synchronisation fehlgeschlagen:", err);
-  }
-}
-
-function scheduleTimeTrackingCloudSave() {
-  if (!firebase.auth().currentUser) return;
-  clearTimeout(timeTrackingCloudSaveTimer);
-  timeTrackingCloudSaveTimer = setTimeout(saveTimeTrackingToCloudNow, 120);
-}
-
-function saveTimeTrackingImmediately() {
-  writeTimeTrackingLocalOnly();
-  scheduleTimeTrackingCloudSave();
-}
-
-async function startTimeTrackingSync() {
-  if (timeTrackingUnsubscribe) {
-    timeTrackingUnsubscribe();
-    timeTrackingUnsubscribe = null;
-  }
-
-  const ref = timeTrackingDoc();
-
-  try {
-    const own = await ref.get();
-
-    if (!own.exists) {
-      // Einmalige Migration: alter Cloud-Zeitstand + lokale Daten zusammenführen.
-      const legacySnap = await firebase.firestore().collection("families").doc("shared").get();
-      const legacy = legacySnap.exists ? legacySnap.data()?.timeTracking : null;
-      const initial = mergeTimeTrackingData(state.timeTracking, legacy);
-
-      state.timeTracking = initial;
-      writeTimeTrackingLocalOnly();
-
-      await ref.set({
-        ...initial,
-        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-      });
-    }
-  } catch (err) {
-    console.warn("Zeittracking-Migration konnte nicht abgeschlossen werden:", err);
-  }
-
-  timeTrackingUnsubscribe = ref.onSnapshot(snap => {
-    if (!snap.exists) return;
-
-    timeTrackingCloudApplying = true;
-    try {
-      state.timeTracking = mergeTimeTrackingData(state.timeTracking, snap.data());
-      writeTimeTrackingLocalOnly();
-      renderTimeTracking();
-    } finally {
-      timeTrackingCloudApplying = false;
-    }
-  }, err => {
-    console.error("Zeittracking Live-Sync fehlgeschlagen:", err);
-  });
-}
-
-function restoreTimeTrackingFromLocal() {
-  try {
-    const raw = localStorage.getItem(TIME_TRACKING_LOCAL_KEY);
-    if (!raw) return;
-    const local = JSON.parse(raw);
-    if (!local || typeof local !== "object") return;
-
-    const localEntries = Array.isArray(local.entries) ? local.entries : [];
-    state.timeTracking.entries = mergeByIdPreferNewer(
-      state.timeTracking.entries,
-      localEntries
-    );
-
-    const localStopped =
-      local.stopped && typeof local.stopped === "object" ? local.stopped : {};
-    const currentStopped =
-      state.timeTracking.stopped && typeof state.timeTracking.stopped === "object"
-        ? state.timeTracking.stopped
-        : {};
-
-    state.timeTracking.stopped = {
-      ...localStopped,
-      ...currentStopped
-    };
-
-    const localActive = Array.isArray(local.active)
-      ? local.active
-      : (local.active && typeof local.active === "object" ? [local.active] : []);
-    const currentActive = Array.isArray(state.timeTracking.active) ? state.timeTracking.active : [];
-
-    const stopped = state.timeTracking.stopped || {};
-    const activeMap = new Map();
-
-    [...currentActive, ...localActive].forEach(timer => {
-      if (!timer?.id) return;
-
-      const stoppedAt = Number(stopped[timer.id] || 0);
-      if (stoppedAt && stoppedAt >= Number(timer.startedAt || 0)) return;
-
-      const prev = activeMap.get(timer.id);
-      if (!prev || Number(timer.startedAt || 0) >= Number(prev.startedAt || 0)) {
-        activeMap.set(timer.id, timer);
-      }
-    });
-
-    state.timeTracking.active = [...activeMap.values()];
-  } catch (err) {
-    console.warn("Lokale Zeitdaten konnten nicht wiederhergestellt werden:", err);
-  }
-}
-
-function formatElapsedWithSeconds(startedAt, nowOverride = Date.now()) {
-  const seconds = Math.max(0, Math.floor((Number(nowOverride) - Number(startedAt || nowOverride)) / 1000));
-  const h = Math.floor(seconds / 3600);
-  const m = Math.floor((seconds % 3600) / 60);
-  const s = seconds % 60;
-  return `${String(h).padStart(2,"0")}:${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}`;
-}
-
-let liveTimeTicker = null;
-
-const TIME_TRACKING_MAX_MS = 5 * 60 * 60 * 1000;
-
-function startLiveTimeTicker() {
-  clearInterval(liveTimeTicker);
-  const activeTimers = Array.isArray(state.timeTracking.active) ? state.timeTracking.active : [];
-  if (!activeTimers.length) return;
-
-  liveTimeTicker = setInterval(() => {
-    const now = Date.now();
-
-    document.querySelectorAll(".active-time-elapsed").forEach(el => {
-      const startedAt = Number(el.dataset.startedAt || now);
-      const cappedNow = Math.min(now, startedAt + TIME_TRACKING_MAX_MS);
-      el.textContent = formatElapsedWithSeconds(startedAt, cappedNow);
-    });
-
-    const expired = (state.timeTracking.active || []).filter(timer =>
-      now - Number(timer.startedAt || now) >= TIME_TRACKING_MAX_MS
-    );
-
-    expired.forEach(timer => {
-      stopTimeTracking(timer.id, Number(timer.startedAt) + TIME_TRACKING_MAX_MS);
-    });
-  }, 1000);
-}
-
-function trackingPersonColor(key) {
-  const source = familyColor(key) || "#aaa29c";
-
-  const hex = String(source).trim().replace("#","");
-  if (!/^[0-9a-fA-F]{6}$/.test(hex)) return "#d7d2ce";
-
-  let r = parseInt(hex.slice(0,2),16);
-  let g = parseInt(hex.slice(2,4),16);
-  let b = parseInt(hex.slice(4,6),16);
-
-  // Etwas entsättigen → rauchiger.
-  const gray = Math.round(r * 0.299 + g * 0.587 + b * 0.114);
-  const desaturate = 0.34;
-  r = Math.round(r * (1 - desaturate) + gray * desaturate);
-  g = Math.round(g * (1 - desaturate) + gray * desaturate);
-  b = Math.round(b * (1 - desaturate) + gray * desaturate);
-
-  // Deutlich aufhellen, damit die kräftigeren To-do-Farben im Tracking ruhiger wirken.
-  const lighten = 0.62;
-  r = Math.round(r * (1 - lighten) + 255 * lighten);
-  g = Math.round(g * (1 - lighten) + 255 * lighten);
-  b = Math.round(b * (1 - lighten) + 255 * lighten);
-
-  return "#" + [r,g,b]
-    .map(v => Math.max(0,Math.min(255,v)).toString(16).padStart(2,"0"))
-    .join("");
-}
-
-
-function hexToRgb(hex) {
-  const clean = String(hex || "").replace("#","").trim();
-  if (!/^[0-9a-fA-F]{6}$/.test(clean)) return {r:180,g:180,b:180};
-  return {
-    r:parseInt(clean.slice(0,2),16),
-    g:parseInt(clean.slice(2,4),16),
-    b:parseInt(clean.slice(4,6),16)
-  };
-}
-
-function rgbToHex({r,g,b}) {
-  return "#" + [r,g,b]
-    .map(v => Math.max(0,Math.min(255,Math.round(v))).toString(16).padStart(2,"0"))
-    .join("");
-}
-
-function mixHex(a, b, weightB = .5) {
-  const A = hexToRgb(a);
-  const B = hexToRgb(b);
-  const w = Math.max(0,Math.min(1,Number(weightB || 0)));
-  return rgbToHex({
-    r:A.r*(1-w)+B.r*w,
-    g:A.g*(1-w)+B.g*w,
-    b:A.b*(1-w)+B.b*w
-  });
-}
-
-function timeRingSegmentColor(personKey, categoryColor) {
-  const person = familyColor(personKey) || "#aaa29c";
-  const blended = mixHex(categoryColor || "#d6d0c8", person, .72);
-  return mixHex(blended, "#ffffff", .18);
-}
-
-function renderTimeTracking() {
-  const list = document.querySelector("#timeLogList");
-  const activeBox = document.querySelector("#activeTimeTracker");
-  const weekChips = document.querySelector("#timeSummaryChips");
-  const todayChips = document.querySelector("#timeTodayChips");
-  const donutLegend = document.querySelector("#timeDonutLegend");
-  const donutTotal = document.querySelector("#timeDonutTotal");
-  if (!list || !activeBox || !weekChips || !todayChips) return;
-
-  const activeTimers = Array.isArray(state.timeTracking.active) ? state.timeTracking.active : [];
-
-  if (activeTimers.length) {
-    activeBox.classList.remove("hidden");
-    activeBox.innerHTML = activeTimers.map(active => `
-      <div class="active-time-item" data-id="${active.id}" style="--person-color:${escapeHtml(trackingPersonColor(active.person))}">
-        <div>
-          <span class="active-time-person">
-            <span class="time-person-dot" style="background:${escapeHtml(trackingPersonColor(active.person))}"></span>
-            ${escapeHtml(familyName(active.person))}
-          </span>
-          <strong>${escapeHtml(timeCategoryLabel(active.category))}</strong>
-          <small>${escapeHtml(active.note || "")}</small>
-        </div>
-        <div class="active-time-right">
-          <span class="active-time-elapsed" data-started-at="${active.startedAt}">${formatElapsedWithSeconds(active.startedAt)}</span>
-          <button class="secondary-btn stop-time-track-btn" data-id="${active.id}" type="button">■ Stoppen</button>
-        </div>
-      </div>
-    `).join("");
-
-    activeBox.querySelectorAll(".stop-time-track-btn").forEach(btn => {
-      btn.addEventListener("click", () => stopTimeTracking(btn.dataset.id));
-    });
-  } else {
-    activeBox.classList.add("hidden");
-    activeBox.innerHTML = "";
-  }
-
-  const weekStart = weekStartForDate();
-  const todayStart = new Date();
-  todayStart.setHours(0,0,0,0);
-
-  const weekEntries = state.timeTracking.entries.filter(entry =>
-    Number(entry.endedAt || entry.createdAt || 0) >= weekStart.getTime()
-  );
-  const todayEntries = state.timeTracking.entries.filter(entry =>
-    Number(entry.endedAt || entry.createdAt || 0) >= todayStart.getTime()
-  );
-
-  function totalsByPersonAndCategory(entries) {
-    const totals = {};
-    entries.forEach(entry => {
-      const person = entry.person || "a";
-      totals[person] = totals[person] || {};
-      totals[person][entry.category] =
-        (totals[person][entry.category] || 0) + Number(entry.minutes || 0);
-    });
-    return totals;
-  }
-
-  function renderPersonSummary(host, entries) {
-    const totals = totalsByPersonAndCategory(entries);
-    const people = ["a","b","c","d"];
-
-    const html = people.map(person => {
-      const categoryTotals = totals[person] || {};
-      const pairs = Object.entries(categoryTotals).sort((a,b) => b[1] - a[1]);
-      if (!pairs.length) return "";
-
-      const personTotal = pairs.reduce((sum, [,minutes]) => sum + minutes, 0);
-
-      return `
-        <div class="time-person-summary">
-          <div class="time-person-summary-head">
-            <span class="time-person-dot" style="background:${escapeHtml(trackingPersonColor(person))}"></span>
-            <strong>${escapeHtml(familyName(person))}</strong>
-            <span>${formatMinutes(personTotal)}</span>
-          </div>
-          <div class="time-summary-chips-inner">
-            ${pairs.map(([category, minutes]) => `
-              <span class="time-summary-chip">
-                ${escapeHtml(timeCategoryLabel(category))}
-                <strong>${formatMinutes(minutes)}</strong>
-              </span>
-            `).join("")}
-          </div>
-        </div>
-      `;
-    }).join("");
-
-    host.innerHTML = html || `<span class="time-summary-empty">Noch keine Zeiten.</span>`;
-  }
-
-  renderPersonSummary(weekChips, weekEntries);
-  renderPersonSummary(todayChips, todayEntries);
-
-  // FESTE LOGIK DES DIAGRAMMS:
-  // Ringposition = Person: Mama außen -> Papa -> Lou -> Fina innen.
-  // Farbe innerhalb eines Rings = gewählter Bereich/Kategorie.
-  // Dieselbe Kategorie hat bei ALLEN Personen exakt dieselbe Farbe.
-  const categoryPalette = {
-    pc: "#5F9296",
-    prep: "#7892BF",
-    household: "#7F9E6D",
-    cook: "#C8795C",
-    shopping: "#D29B2F",
-    repair: "#A46F89",
-    garden: "#557F66",
-    sport: "#736DB0",
-    help: "#C99224",
-    school: "#8E73AB",
-    organize: "#91857D",
-    errands: "#D29B2F",
-    other: "#82766F"
-  };
-
-  const weekTotals = totalsByPersonAndCategory(weekEntries);
-  const people = [
-    {key:"a", ring:"#timeRingMama"},
-    {key:"b", ring:"#timeRingPapa"},
-    {key:"c", ring:"#timeRingLou"},
-    {key:"d", ring:"#timeRingFina"}
-  ];
-
-  let grandTotal = 0;
-  const legendParts = [];
-
-  people.forEach(personInfo => {
-    const categoryTotals = weekTotals[personInfo.key] || {};
-    const pairs = Object.entries(categoryTotals)
-      .filter(([,minutes]) => Number(minutes) > 0)
-      .sort((a,b) => b[1] - a[1]);
-
-    const personTotal = pairs.reduce((sum,[,minutes]) => sum + Number(minutes), 0);
-    grandTotal += personTotal;
-
-    const ring = document.querySelector(personInfo.ring);
-
-    if (ring) {
-      if (!personTotal) {
-        ring.style.background = "rgba(229,226,220,.48)";
-      } else {
-        let cursor = 0;
-        const segments = [];
-
-        pairs.forEach(([category, minutes]) => {
-          const start = cursor;
-          const end = cursor + (Number(minutes) / personTotal) * 100;
-          cursor = end;
-          // Der Ring selbst gehört bereits eindeutig einer Person.
-          // Die Segmentfarbe zeigt deshalb ausschließlich den gewählten Bereich.
-          const color = categoryPalette[category] || "#b8ada5";
-          segments.push(`${color} ${start}% ${end}%`);
-        });
-
-        ring.style.background = `conic-gradient(${segments.join(",")})`;
-      }
-    }
-
-    if (personTotal) {
-      legendParts.push(`
-        <div class="time-person-legend">
-          <div class="time-person-legend-head">
-            <span class="time-person-dot" style="background:${escapeHtml(trackingPersonColor(personInfo.key))}"></span>
-            <strong>${escapeHtml(familyName(personInfo.key))}</strong>
-            <span>${formatMinutes(personTotal)}</span>
-          </div>
-          ${pairs.map(([category,minutes]) => `
-            <div class="time-donut-legend-row">
-              <span class="time-donut-dot" style="background:${categoryPalette[category] || "#b8ada5"}"></span>
-              <span>${escapeHtml(timeCategoryLabel(category))}</span>
-              <strong>${formatMinutes(minutes)}</strong>
-            </div>
-          `).join("")}
-        </div>
-      `);
-    }
-  });
-
-  if (donutTotal) donutTotal.textContent = formatMinutes(grandTotal);
-  if (donutLegend) {
-    donutLegend.innerHTML = legendParts.join("") ||
-      `<span class="time-summary-empty">Noch keine Verteilung.</span>`;
-  }
-
-  const entries = state.timeTracking.entries
-    .slice()
-    .sort((a,b) => Number(b.endedAt || b.createdAt || 0) - Number(a.endedAt || a.createdAt || 0))
-    .slice(0, 20);
-
-  list.innerHTML = entries.length ? entries.map(entry => `
-    <div class="time-log-row" style="--person-color:${escapeHtml(trackingPersonColor(entry.person))}">
-      <span class="time-log-person">
-        <span class="time-person-dot" style="background:${escapeHtml(trackingPersonColor(entry.person))}"></span>
-        ${escapeHtml(familyName(entry.person))}
-      </span>
-      <span class="time-log-category">${escapeHtml(timeCategoryLabel(entry.category))}</span>
-      <span class="time-log-note">${escapeHtml(entry.note || "")}</span>
-      <strong>${formatMinutes(entry.minutes)}</strong>
-      <button type="button" class="time-log-edit" data-id="${entry.id}" title="Eintrag korrigieren">✎</button>
-      <button type="button" class="time-log-delete" data-id="${entry.id}" title="Eintrag löschen">×</button>
-    </div>
-  `).join("") : `<div class="overview-empty">Noch keine Zeiten eingetragen.</div>`;
-
-
-  list.querySelectorAll(".time-log-edit").forEach(btn => {
-    btn.addEventListener("click", () => {
-      const id = btn.dataset.id;
-      const entry = state.timeTracking.entries.find(item => item.id === id);
-      if (!entry) return;
-
-      // Falls bereits ein Editor offen ist, zuerst schließen.
-      list.querySelectorAll(".time-log-edit-panel").forEach(panel => panel.remove());
-
-      const row = btn.closest(".time-log-row");
-      if (!row) return;
-
-      const panel = document.createElement("div");
-      panel.className = "time-log-edit-panel";
-
-      const categoryOptions = [
-        ["pc","🖥 PC & Büro"],
-        ["prep","✂ Vorbereitung"],
-        ["household","🏡 Haushalt"],
-        ["cook","🍳 Kochen"],
-        ["shopping","🛒 Einkaufen"],
-        ["repair","🔧 Reparaturen"],
-        ["garden","🌿 Garten & draußen"],
-        ["sport","🏃 Sport & Bewegung"],
-        ["help","🤝 Helfen & Unterstützen"],
-        ["school","✏ Lernen & Schule"],
-        ["other","✨ Sonstiges"]
-      ];
-
-      panel.innerHTML = `
-        <label>
-          Für wen?
-          <select class="time-edit-person">
-            <option value="a"${entry.person === "a" ? " selected" : ""}>Mama</option>
-            <option value="b"${entry.person === "b" ? " selected" : ""}>Papa</option>
-            <option value="c"${entry.person === "c" ? " selected" : ""}>Lou</option>
-            <option value="d"${entry.person === "d" ? " selected" : ""}>Fina</option>
-          </select>
-        </label>
-
-        <label>
-          Bereich
-          <select class="time-edit-category">
-            ${categoryOptions.map(([value,label]) =>
-              `<option value="${value}"${entry.category === value ? " selected" : ""}>${label}</option>`
-            ).join("")}
-          </select>
-        </label>
-
-        <label class="time-edit-note-wrap">
-          Notiz
-          <input class="time-edit-note" type="text" value="${escapeHtml(entry.note || "")}">
-        </label>
-
-        <label>
-          Stunden
-          <input class="time-edit-hours" type="number" min="0" max="5" value="${Math.floor(Number(entry.minutes || 0) / 60)}">
-        </label>
-
-        <label>
-          Minuten
-          <input class="time-edit-minutes" type="number" min="0" max="59" value="${Number(entry.minutes || 0) % 60}">
-        </label>
-
-        <div class="time-edit-actions">
-          <button type="button" class="secondary-btn time-edit-cancel">Abbrechen</button>
-          <button type="button" class="primary-btn time-edit-save">Speichern</button>
-        </div>
-      `;
-
-      row.insertAdjacentElement("afterend", panel);
-
-      panel.querySelector(".time-edit-cancel")?.addEventListener("click", () => panel.remove());
-
-      panel.querySelector(".time-edit-save")?.addEventListener("click", () => {
-        const hours = Math.max(0, Math.min(5, Math.round(Number(panel.querySelector(".time-edit-hours")?.value || 0))));
-        const minutesPart = Math.max(0, Math.min(59, Math.round(Number(panel.querySelector(".time-edit-minutes")?.value || 0))));
-        const totalMinutes = Math.min(300, hours * 60 + minutesPart);
-
-        if (!totalMinutes) {
-          panel.querySelector(".time-edit-minutes")?.focus();
-          return;
-        }
-
-        const editedAt = Date.now();
-        entry.person = panel.querySelector(".time-edit-person")?.value || entry.person;
-        entry.category = panel.querySelector(".time-edit-category")?.value || entry.category;
-        entry.note = panel.querySelector(".time-edit-note")?.value.trim() || "";
-        entry.minutes = totalMinutes;
-        entry.endedAt = editedAt;
-        entry.startedAt = editedAt - totalMinutes * 60000;
-        entry.updatedAt = editedAt;
-
-        saveTimeTrackingImmediately();
-        renderTimeTracking();
-      });
-    });
-  });
-
-  list.querySelectorAll(".time-log-delete").forEach(btn => {
-    btn.addEventListener("click", () => {
-      const id = btn.dataset.id;
-      if (!id) return;
-
-      const now = Date.now();
-
-      state.timeTracking.deletedEntries =
-        state.timeTracking.deletedEntries && typeof state.timeTracking.deletedEntries === "object"
-          ? state.timeTracking.deletedEntries
-          : {};
-
-      // Löschmarke statt nur lokalem Entfernen:
-      // So kann ein zweiter Rechner den alten Eintrag nicht wieder zurückschreiben.
-      state.timeTracking.deletedEntries[id] = now;
-      state.timeTracking.entries =
-        state.timeTracking.entries.filter(entry => entry.id !== id);
-
-      saveTimeTrackingImmediately();
-      renderTimeTracking();
-    });
-  });
-
-  startLiveTimeTicker();
-}
-
-function startTimeTracking() {
-  const person = document.querySelector("#timeTrackPerson")?.value || "a";
-  const category = document.querySelector("#timeTrackCategory")?.value || "pc";
-  const note = document.querySelector("#timeTrackNote")?.value.trim() || "";
-
-  state.timeTracking.active = Array.isArray(state.timeTracking.active) ? state.timeTracking.active : [];
-  state.timeTracking.stopped =
-    state.timeTracking.stopped && typeof state.timeTracking.stopped === "object"
-      ? state.timeTracking.stopped
-      : {};
-
-  state.timeTracking.active.push({
-    id: uid(),
-    person,
-    category,
-    note,
-    startedAt: Date.now()
-  });
-
-  saveTimeTrackingImmediately();
-  save();
-  renderTimeTracking();
-}
-
-function stopTimeTracking(timerId, endedAtOverride = null) {
-  state.timeTracking.active = Array.isArray(state.timeTracking.active) ? state.timeTracking.active : [];
-  const active = state.timeTracking.active.find(timer => timer.id === timerId);
-  if (!active) return;
-
-  const endedAt = endedAtOverride == null ? Date.now() : Number(endedAtOverride);
-  const minutes = Math.max(1, Math.min(300, Math.round((endedAt - Number(active.startedAt || endedAt)) / 60000)));
-
-  state.timeTracking.entries.push({
-    id: active.id || uid(),
-    person: active.person,
-    category: active.category,
-    note: active.note || "",
-    startedAt: active.startedAt,
-    endedAt,
-    createdAt: endedAt,
-    updatedAt: endedAt,
-    minutes
-  });
-
-  state.timeTracking.stopped =
-    state.timeTracking.stopped && typeof state.timeTracking.stopped === "object"
-      ? state.timeTracking.stopped
-      : {};
-  state.timeTracking.stopped[timerId] = endedAt;
-
-  state.timeTracking.active = state.timeTracking.active.filter(timer => timer.id !== timerId);
-
-  saveTimeTrackingImmediately();
-  save();
-  renderTimeTracking();
-}
-
-function addManualTimeEntry() {
-  const hoursInput = document.querySelector("#manualTimeHours");
-  const minutesInput = document.querySelector("#manualTimeMinutes");
-  const hours = Math.max(0, Math.round(Number(hoursInput?.value || 0)));
-  const mins = Math.max(0, Math.round(Number(minutesInput?.value || 0)));
-  const totalMinutes = hours * 60 + mins;
-
-  if (!totalMinutes) {
-    (minutesInput || hoursInput)?.focus();
-    return;
-  }
-
-  const now = Date.now();
-  state.timeTracking.entries.push({
-    id: uid(),
-    person: document.querySelector("#timeTrackPerson")?.value || "a",
-    category: document.querySelector("#timeTrackCategory")?.value || "pc",
-    note: document.querySelector("#timeTrackNote")?.value.trim() || "",
-    startedAt: now - totalMinutes * 60000,
-    endedAt: now,
-    createdAt: now,
-    updatedAt: now,
-    minutes: totalMinutes
-  });
-
-  if (hoursInput) hoursInput.value = "";
-  if (minutesInput) minutesInput.value = "";
-
-  saveTimeTrackingImmediately();
-  save();
-  renderTimeTracking();
-}
-
-
-function collectInternetRecipeLinks() {
-  const map = new Map();
-
-  (state.recipes || []).forEach(recipe => {
-    const urls = [recipe.webUrl, recipe.youtubeUrl].filter(Boolean);
-    urls.forEach(url => {
-      const key = String(url).trim();
-      if (!key) return;
-
-      const candidate = {
-        url:key,
-        label:recipe.title || "Rezept",
-        source:"Rezeptkarte",
-        recipeId:recipe.id || "",
-        sourceUpdatedAt:Number(recipe.updatedAt || recipe.createdAt || 0)
-      };
-
-      const previous = map.get(key);
-      if (!previous || candidate.sourceUpdatedAt >= Number(previous.sourceUpdatedAt || 0)) {
-        map.set(key, candidate);
-      }
-    });
-  });
-
-  Object.values(state.meals || {}).forEach(meal => {
-    if (!meal || typeof meal !== "object" || !meal.url) return;
-    const key = String(meal.url).trim();
-    if (!key) return;
-
-    const candidate = {
-      url:key,
-      label:meal.label || "Rezeptlink",
-      source:"Essensplan",
-      recipeId:meal.recipeId || "",
-      sourceUpdatedAt:Number(meal.updatedAt || 0)
-    };
-
-    const previous = map.get(key);
-    if (!previous || candidate.sourceUpdatedAt >= Number(previous.sourceUpdatedAt || 0)) {
-      map.set(key, candidate);
-    }
-  });
-
-  return [...map.values()]
-    .filter(item => {
-      const feedback = state.recipeLinkFeedback?.[item.url] || {};
-      const hiddenAt = Number(feedback.hiddenAt || 0);
-
-      // × räumt den aktuellen Fund nur aus der Übersicht.
-      // Wird der Link später im Essensplan/Rezept neu gespeichert,
-      // ist sourceUpdatedAt neuer und er darf wieder erscheinen.
-      return !hiddenAt || Number(item.sourceUpdatedAt || 0) > hiddenAt;
-    })
-    .sort((a,b) => String(a.label).localeCompare(String(b.label), "de"));
-}
-
-function recipeFeedbackLabel(value) {
-  return {
-    love: "💛 Sehr gern wieder",
-    okay: "🙂 Passt gut",
-    no: "🌿 Eher nicht nochmal"
-  }[value] || "Noch offen";
-}
-
-function renderRecipeLinkTracker() {
-  const host = document.querySelector("#recipeLinkTrackerList");
-  if (!host) return;
-
-  const links = collectInternetRecipeLinks();
-
-  if (!links.length) {
-    host.innerHTML = `<div class="overview-empty">Noch keine Internetrezepte hinterlegt. Sobald eine Rezeptkarte oder ein Essensplan-Eintrag einen Web-/YouTube-Link hat, erscheint er hier zum Bewerten.</div>`;
-    return;
-  }
-
-  host.innerHTML = links.map(link => {
-    const feedback = state.recipeLinkFeedback[link.url] || {};
-    return `
-      <article class="recipe-link-track-row">
-        <div class="recipe-link-track-main">
-          <a href="${escapeHtml(link.url)}" target="_blank" rel="noopener">${escapeHtml(link.label)}</a>
-          <span>${escapeHtml(link.source)}</span>
-        </div>
-
-        <div class="recipe-link-times">
-          <button type="button" class="recipe-link-used" data-url="${escapeHtml(link.url)}">
-            ✓ gekocht ${feedback.timesUsed ? `(${feedback.timesUsed}×)` : ""}
-          </button>
-          <button type="button"
-                  class="recipe-link-reuse"
-                  data-url="${escapeHtml(link.url)}"
-                  data-label="${escapeHtml(link.label)}"
-                  data-recipe-id="${escapeHtml(link.recipeId || "")}">
-            ↻ Wiederverwenden
-          </button>
-        </div>
-
-        <div class="recipe-link-rating">
-          <button type="button" class="recipe-link-rate ${feedback.rating === "love" ? "active" : ""}" data-url="${escapeHtml(link.url)}" data-rating="love">💛 Sehr gern wieder</button>
-          <button type="button" class="recipe-link-rate ${feedback.rating === "okay" ? "active" : ""}" data-url="${escapeHtml(link.url)}" data-rating="okay">🙂 Passt gut</button>
-          <button type="button" class="recipe-link-rate ${feedback.rating === "no" ? "active" : ""}" data-url="${escapeHtml(link.url)}" data-rating="no">🌿 Eher nicht</button>
-          <button type="button" class="recipe-link-remove" data-url="${escapeHtml(link.url)}" title="Aus Übersicht entfernen">×</button>
-        </div>
-      </article>
-    `;
-  }).join("");
-
-  host.querySelectorAll(".recipe-link-used").forEach(btn => {
-    btn.addEventListener("click", () => {
-      const url = btn.dataset.url;
-      const current = state.recipeLinkFeedback[url] || {};
-      state.recipeLinkFeedback[url] = {
-        ...current,
-        timesUsed: Number(current.timesUsed || 0) + 1,
-        lastUsed: Date.now(),
-        updatedAt: Date.now()
-      };
-      save();
-      renderRecipeLinkTracker();
-    });
-  });
-
-  host.querySelectorAll(".recipe-link-rate").forEach(btn => {
-    btn.addEventListener("click", () => {
-      const url = btn.dataset.url;
-      const current = state.recipeLinkFeedback[url] || {};
-      state.recipeLinkFeedback[url] = {
-        ...current,
-        rating: btn.dataset.rating,
-        updatedAt: Date.now()
-      };
-      save();
-      renderRecipeLinkTracker();
-    });
-  });
-
-  host.querySelectorAll(".recipe-link-remove").forEach(btn => {
-    btn.addEventListener("click", () => {
-      const url = btn.dataset.url;
-      const current = state.recipeLinkFeedback[url] || {};
-      const now = Date.now();
-
-      state.recipeLinkFeedback[url] = {
-        ...current,
-        hidden:false,
-        hiddenAt:now,
-        updatedAt:now
-      };
-
-      save();
-      renderRecipeLinkTracker();
-    });
-  });
-
-  host.querySelectorAll(".recipe-link-reuse").forEach(btn => {
-    btn.addEventListener("click", () => {
-      openRecipeReuseDialog({
-        url:btn.dataset.url || "",
-        label:btn.dataset.label || "Rezept",
-        recipeId:btn.dataset.recipeId || ""
-      });
-    });
-  });
-}
-
-document.querySelector("#startTimeTrackBtn")?.addEventListener("click", startTimeTracking);
-document.querySelector("#addManualTimeBtn")?.addEventListener("click", addManualTimeEntry);
 
 let archiveFilter = "all";
 
@@ -2953,9 +1285,9 @@ function renderArchive() {
 
   if (archiveFilter === "all") {
     const groups = [
-      ["super","💛 Sehr gern", byNewest(items.filter(x => x.rating === "super"))],
-      ["okay","🙂 Passt gut", byNewest(items.filter(x => x.rating === "okay"))],
-      ["nope","🌿 Eher nicht", byNewest(items.filter(x => x.rating === "nope"))]
+      ["super","😊 Super", byNewest(items.filter(x => x.rating === "super"))],
+      ["okay","🙂 Okay", byNewest(items.filter(x => x.rating === "okay"))],
+      ["nope","😕 Nicht meins", byNewest(items.filter(x => x.rating === "nope"))]
     ];
 
     list.className = "archive-columns";
@@ -2977,7 +1309,7 @@ function renderArchive() {
 }
 
 function archiveCardHtml(a) {
-  const ratingLabel = {super:"💛 Sehr gern", okay:"🙂 Passt gut", nope:"🌿 Eher nicht"};
+  const ratingLabel = {super:"😊 Super", okay:"🙂 Okay", nope:"😕 Nicht meins"};
   return `
     <article class="archive-card">
       ${a.thumbnail ? `<img class="archive-thumb" src="${escapeHtml(a.thumbnail)}" alt="">` : ""}
@@ -3006,18 +1338,11 @@ function bindArchiveButtons() {
   document.querySelectorAll(".replan-btn").forEach(btn => btn.addEventListener("click", e => {
     const item = state.archive.find(a => a.id === e.currentTarget.dataset.id);
     if (!item) return;
-    replanMode = "exercise";
-    replanRecipeLink = null;
     replanArchiveId = item.id;
-
-    const dialog = document.querySelector("#replanDialog");
-    const smallLabel = dialog?.querySelector(".small-label");
-    if (smallLabel) smallLabel.textContent = "ÜBUNG EINPLANEN";
-
     document.querySelector("#replanTitle").textContent = item.title;
     document.querySelector("#replanWeek").value = "0";
     document.querySelector("#replanDay").value = "Montag";
-    dialog?.showModal();
+    document.querySelector("#replanDialog").showModal();
   }));
 
   document.querySelectorAll(".delete-exercise-btn").forEach(btn => btn.addEventListener("click", e => {
@@ -3053,6 +1378,8 @@ function childHasNoOpenHomework(child) {
   const homework = child.tasks.filter(t => t.type === "homework");
   return homework.length > 0 && homework.every(t => t.done);
 }
+
+
 
 
 const manualTimetableDayKeys=["Mon","Tue","Wed","Thu","Fri"],manualTimetableDayNames=["Montag","Dienstag","Mittwoch","Donnerstag","Freitag"];
@@ -3242,13 +1569,7 @@ function renderTTMatrix(id) {
     });
 }
 function openManualTimetableEditor(id){renderTTMatrix(id);document.querySelector(`#manualTimetableWrap${id}`)?.classList.remove("hidden")}
-function closeManualTimetableEditor(id){
-  document.querySelector(`#manualTimetableWrap${id}`)?.classList.add("hidden");
-  if (id === "mama" && familyTimetableDialog?.open) {
-    document.querySelector("#familyTimetableDialog .family-timetable-buttons")?.classList.remove("hidden");
-    familyTimetableDialog.close();
-  }
-}
+function closeManualTimetableEditor(id){document.querySelector(`#manualTimetableWrap${id}`)?.classList.add("hidden")}
 function saveTTMatrix(id) {
   const c = timetablePerson(id);
   const t = ensureManualTimetable(c);
@@ -3354,17 +1675,12 @@ function renderSchool(){
     ensureManualTimetable(c);
     const manualViewBtn = document.querySelector(`#manualTimetableViewBtn${id}`);
     if (manualViewBtn) manualViewBtn.classList.toggle("hidden", !hasManualTimetable(c));
-    const deletedTaskIds = new Set(c.deletedTaskIds || []);
-    const deletedLinkIds = new Set(c.deletedLinkIds || []);
-    const tasks=[...c.tasks]
-      .filter(t => !deletedTaskIds.has(t.id))
-      .sort((a,b)=>(a.done-b.done)||((a.due||"9999").localeCompare(b.due||"9999")));
+    const tasks=[...c.tasks].sort((a,b)=>(a.done-b.done)||((a.due||"9999").localeCompare(b.due||"9999")));
     te.innerHTML=tasks.length?tasks.map(t=>`<div class="school-task ${t.done?"done":""}">
       <input class="check school-check" data-child="${id}" data-id="${t.id}" type="checkbox" ${t.done?"checked":""}>
       <div><div class="school-task-text">${escapeHtml(t.text)}</div><div class="school-meta"><span>${{homework:"☀ Hausübung",test:"✎ Test",bring:"♥ Mitbringen",appointment:"○ Termin",other:"✦ Schule"}[t.type] || "✦ Schule"}</span>${t.subject?`<span>${escapeHtml(t.subject)}</span>`:""}${t.due?`<span>bis ${parseLocalDate(t.due).toLocaleDateString("de-AT",{day:"2-digit",month:"2-digit"})}</span>`:""}</div></div>
       <button class="school-del" data-kind="task" data-child="${id}" data-id="${t.id}">×</button></div>`).join(""):'<div class="school-empty">Gerade ist hier nichts offen. 🌿</div>';
-    const visibleLinks = c.links.filter(x => !deletedLinkIds.has(x.id));
-    le.innerHTML=visibleLinks.length?visibleLinks.map(x=>`<div class="school-link"><a href="${escapeHtml(x.url)}" target="_blank" rel="noopener">${escapeHtml(x.name)}</a><button class="school-del" data-kind="link" data-child="${id}" data-id="${x.id}">×</button></div>`).join(""):'<span class="school-empty-inline">Noch keine Lernlinks hinterlegt.</span>';
+    le.innerHTML=c.links.length?c.links.map(x=>`<div class="school-link"><a href="${escapeHtml(x.url)}" target="_blank" rel="noopener">${escapeHtml(x.name)}</a><button class="school-del" data-kind="link" data-child="${id}" data-id="${x.id}">×</button></div>`).join(""):'<span class="school-empty-inline">Noch keine Lernlinks hinterlegt.</span>';
     const ti=document.querySelector(`#timetableUrl${id}`),to=document.querySelector(`#timetableOpen${id}`);
     if(ti && document.activeElement!==ti) ti.value=c.timetableUrl||"";
     if(to){
@@ -3376,27 +1692,14 @@ function renderSchool(){
     const c=state.school.children[e.currentTarget.dataset.child],t=c.tasks.find(z=>z.id===e.currentTarget.dataset.id); if(!t)return;
     const was=t.done;
     t.done=e.currentTarget.checked;
-    t.updatedAt = Date.now();
     save();
     renderAll();
     if(!was && t.done) showMotivation(schoolMotivationalMessage(childHasNoOpenHomework(c)));
   }));
   document.querySelectorAll(".school-del").forEach(x=>x.addEventListener("click",e=>{
     const d=e.currentTarget.dataset,c=state.school.children[d.child];
-
-    if(d.kind==="task"){
-      c.deletedTaskIds = Array.isArray(c.deletedTaskIds) ? c.deletedTaskIds : [];
-      if(!c.deletedTaskIds.includes(d.id)) c.deletedTaskIds.push(d.id);
-      c.tasks = c.tasks.filter(z=>z.id!==d.id);
-    } else {
-      c.deletedLinkIds = Array.isArray(c.deletedLinkIds) ? c.deletedLinkIds : [];
-      if(!c.deletedLinkIds.includes(d.id)) c.deletedLinkIds.push(d.id);
-      c.links = c.links.filter(z=>z.id!==d.id);
-    }
-
-    c.updatedAt = Date.now();
-    save();
-    renderAll();
+    if(d.kind==="task")c.tasks=c.tasks.filter(z=>z.id!==d.id);else c.links=c.links.filter(z=>z.id!==d.id);
+    save();renderSchool();
   }));
 }
 function addSchoolTask(id){
@@ -3415,9 +1718,7 @@ function addSchoolTask(id){
     subject,
     due:d.value,
     type:y.value,
-    done:false,
-    createdAt: Date.now(),
-    updatedAt: Date.now()
+    done:false
   });
 
   t.value="";
@@ -3432,7 +1733,7 @@ function addSchoolTask(id){
 function addSchoolLink(id){
   const n=document.querySelector(`#schoolLinkName${id}`),u=document.querySelector(`#schoolLinkUrl${id}`);let url=u.value.trim();
   if(!n.value.trim()||!url)return;if(!/^https?:\/\//i.test(url))url="https://"+url;
-  state.school.children[id].links.push({id:uid(),name:n.value.trim(),url,createdAt:Date.now(),updatedAt:Date.now()});n.value="";u.value="";save();renderAll();
+  state.school.children[id].links.push({id:uid(),name:n.value.trim(),url});n.value="";u.value="";save();renderSchool();
 }
 
 ["1","2"].forEach(id=>{
@@ -3457,54 +1758,23 @@ document.querySelectorAll(".save-timetable").forEach(b=>b.addEventListener("clic
 }));
 
 
-function populateSchoolYearSelect(select) {
-  if (!select) return;
-  const selectedKey = state.settings.schoolYear || "2026-27";
-  const nowYear = new Date().getFullYear();
-  const selectedStart = Number(selectedKey.slice(0, 4)) || nowYear;
-  const first = Math.min(nowYear - 1, selectedStart);
-  const last = Math.max(nowYear + 8, selectedStart + 2);
-
-  const keys = [];
-  for (let y = first; y <= last; y++) keys.push(schoolYearKey(y));
-
-  select.innerHTML = keys.map(key => {
-    const sy = schoolYearConfig(key);
-    return `<option value="${key}">${escapeHtml(sy.label)}</option>`;
-  }).join("");
-  select.value = selectedKey;
-}
-
-function updateSchoolYearTexts() {
-  const sy = activeSchoolYear();
-  const recurrenceOption = document.querySelector('#recurrence option[value="schoolyear-noe"]');
-  const hint = document.querySelector("#schoolHolidayHint");
-
-  if (recurrenceOption) recurrenceOption.textContent = `Schuljahr NÖ ${sy.label}`;
-  if (hint) {
-    hint.textContent = sy.generated
-      ? `🎒 Schuljahr NÖ ${sy.label} – automatisch weitergeführt. Ferien werden nach dem üblichen NÖ-Rhythmus berechnet; abweichende oder schulautonome Tage bitte prüfen.`
-      : `🎒 Wöchentlich im Schuljahr NÖ ${sy.label} – Ferien und offizielle schulfreie Tage werden ausgelassen.`;
-  }
-}
-
 function bindSchoolYearSetting(){
   const select = document.querySelector("#schoolYearSelect");
   if (!select) return;
-
-  populateSchoolYearSelect(select);
-  updateSchoolYearTexts();
-
+  if (document.activeElement !== select) select.value = state.settings.schoolYear || "2026-27";
   if (!select.dataset.bound) {
     select.dataset.bound = "1";
     select.addEventListener("change", () => {
       state.settings.schoolYear = select.value;
       localStorage.setItem("balanceProd.schoolYear", select.value);
-      updateSchoolYearTexts();
       renderAll();
 
       const sy = activeSchoolYear();
-      showMotivation(`Schuljahr ${sy.label} ist jetzt ausgewählt.`);
+      if (!sy.start) {
+        showMotivation("Für dieses Schuljahr sind die NÖ-Ferien noch nicht hinterlegt.");
+      } else {
+        showMotivation(`Schuljahr ${sy.label} ist jetzt ausgewählt.`);
+      }
     });
   }
 }
@@ -3529,54 +1799,15 @@ document.querySelectorAll(".timetable-switch").forEach(btn => {
 });
 // Stundenplan-Auswahl auf der Wochenplan-Seite
 const familyTimetableDialog = document.querySelector("#familyTimetableDialog");
-let familyTimetableMode = "view";
-
-function openFamilyTimetableChooser(mode = "view") {
-  familyTimetableMode = mode;
-  document.querySelector("#manualTimetableWrapmama")?.classList.add("hidden");
-  document.querySelector("#familyTimetableDialog .family-timetable-buttons")?.classList.remove("hidden");
-
-  const title = document.querySelector("#familyTimetableDialogTitle");
-  if (title) {
-    title.textContent = mode === "edit"
-      ? "Welchen Stundenplan bearbeiten?"
-      : "Welchen Stundenplan ansehen?";
-  }
-
-  familyTimetableDialog?.showModal();
-}
 
 document.querySelector("#openFamilyTimetableBtn")?.addEventListener("click", () => {
-  openFamilyTimetableChooser("view");
-});
-
-document.querySelector("#openSchoolTimetableEditorBtn")?.addEventListener("click", () => {
-  openFamilyTimetableChooser("edit");
-});
-
-function openMamaTimetableEditorDirect() {
-  familyTimetableMode = "edit";
-
-  const title = document.querySelector("#familyTimetableDialogTitle");
-  if (title) title.textContent = "Mama – Stundenplan bearbeiten";
-
-  const chooserButtons = document.querySelector("#familyTimetableDialog .family-timetable-buttons");
-  if (chooserButtons) chooserButtons.classList.add("hidden");
-
-  familyTimetableDialog?.showModal();
-  renderTTMatrix("mama");
-  document.querySelector("#manualTimetableWrapmama")?.classList.remove("hidden");
-}
-
-document.querySelector("#openWorkTimetableBtn")?.addEventListener("click", openMamaTimetableEditorDirect);
-
-function closeFamilyTimetableEditorDialog() {
   document.querySelector("#manualTimetableWrapmama")?.classList.add("hidden");
-  document.querySelector("#familyTimetableDialog .family-timetable-buttons")?.classList.remove("hidden");
-  familyTimetableDialog?.close();
-}
+  familyTimetableDialog?.showModal();
+});
 
-document.querySelector("#closeFamilyTimetableDialog")?.addEventListener("click", closeFamilyTimetableEditorDialog);
+document.querySelector("#closeFamilyTimetableDialog")?.addEventListener("click", () => {
+  familyTimetableDialog?.close();
+});
 
 // ===== PAPA – Alles auf einen Blick =====
 
@@ -3656,18 +1887,9 @@ function renderPapaOverview(weekOffset = 0) {
   const monday = new Date(currentWeekMonday);
   monday.setDate(monday.getDate() + (weekOffset * 7));
 
-const weekEntries = [];
+  const weekEntries = [];
 
-const undatedTodos = state.todos
-  .filter(t =>
-    (t.type || "todo") === "todo" &&
-    papaEntryIsRelevant(t) &&
-    papaTodoIsVisible(t) &&
-    (!t.day || t.day === "") &&
-    t.weekKey === dateKey(monday)
-  );
-
-  WEEK_DAYS.forEach((dayName, index) => {
+  days.forEach((dayName, index) => {
     const date = dayDate(monday, index);
     const today = new Date();
 today.setHours(0, 0, 0, 0);
@@ -3691,14 +1913,6 @@ if (checkDate < today) return;
     });
   });
 
-if (undatedTodos.length) {
-  weekEntries.unshift({
-    dayName: "Diese Woche",
-    date: monday,
-    entries: undatedTodos
-  });
-}
-  
   if (!weekEntries.length) {
     list.innerHTML = `
       <div class="papa-overview-empty">
@@ -3723,58 +1937,44 @@ return `
     </div>
 
     <div class="papa-overview-day-entries">
-${(() => {
-  const events = day.entries.filter(t => t.type === "event");
-  const todos = day.entries.filter(t => t.type !== "event");
+      ${day.entries.map(t => {
+        const isEvent = t.type === "event";
 
-  const renderEvent = t => {
-    let time = "";
+        let time = "";
 
-    if (t.time && t.endTime) {
-      time = `${t.time}–${t.endTime}`;
-    } else if (t.time) {
-      time = t.time;
-    } else if (t.endTime) {
-      time = `bis ${t.endTime}`;
-    }
+        if (isEvent) {
+          if (t.time && t.endTime) {
+            time = `${t.time}–${t.endTime}`;
+          } else if (t.time) {
+            time = t.time;
+          } else if (t.endTime) {
+            time = `bis ${t.endTime}`;
+          }
+        }
 
-    return `
-      <div class="papa-overview-entry event">
-        <span class="papa-overview-symbol">✦</span>
-        <span class="papa-overview-entry-text">
-          ${time ? `<strong>${escapeHtml(time)}</strong> ` : ""}
-          ${escapeHtml(t.text || "")}
-        </span>
-      </div>
-    `;
-  };
+        if (isEvent) {
+          return `
+            <div class="papa-overview-entry event">
+              <span class="papa-overview-symbol">✦</span>
 
-  const renderTodo = t => `
-    <div class="papa-overview-entry todo">
-      <span class="papa-overview-symbol">☐</span>
-      <span class="papa-overview-entry-text">
-        ${escapeHtml(t.text || "")}
-      </span>
-    </div>
-  `;
+              <span class="papa-overview-entry-text">
+                ${time ? `<strong>${escapeHtml(time)}</strong> ` : ""}
+                ${escapeHtml(t.text || "")}
+              </span>
+            </div>
+          `;
+        }
 
-  return `
-    ${events.length ? `
-      <div class="papa-overview-group">
-        <div class="papa-overview-group-label">Termine</div>
-        ${events.map(renderEvent).join("")}
-      </div>
-    ` : ""}
+        return `
+          <div class="papa-overview-entry todo">
+            <span class="papa-overview-symbol">☐</span>
 
-    ${todos.length ? `
-      <div class="papa-overview-group">
-        <div class="papa-overview-group-label">To-dos</div>
-        ${todos.map(renderTodo).join("")}
-      </div>
-    ` : ""}
-  `;
-})()}
-
+            <span class="papa-overview-entry-text">
+              ${escapeHtml(t.text || "")}
+            </span>
+          </div>
+        `;
+      }).join("")}
     </div>
 
   </section>
@@ -3803,22 +2003,18 @@ document.querySelectorAll(".family-timetable-person").forEach(btn => {
   btn.addEventListener("click", () => {
     const person = btn.dataset.person;
 
-    if (familyTimetableMode === "view") {
-      familyTimetableDialog?.close();
-      showManualTimetable(person);
-      return;
-    }
+           
+ if (person === "1" || person === "2") {
+    familyTimetableDialog?.close();
+    showManualTimetable(person);
+    return;
+}
 
-    if (person === "1" || person === "2") {
-      familyTimetableDialog?.close();
-      openManualTimetableEditor(person);
-      return;
-    }
-
-    if (person === "mama") {
-      renderTTMatrix("mama");
-      document.querySelector("#manualTimetableWrapmama")?.classList.remove("hidden");
-    }
+       if (person === "mama") {
+  renderTTMatrix("mama");
+  document.querySelector("#manualTimetableWrapmama")?.classList.remove("hidden");
+  return;
+}
   });
 });
 const manualTimetableDialog = document.querySelector("#manualTimetableDialog");
@@ -3834,23 +2030,11 @@ function renderAll() {
   renderWeek();
   renderTodos();
   renderArchive();
-  renderTimeTracking();
-  renderRecipeLinkTracker();
   renderSchool();
   renderSchoolWorkTodos();
   renderSchoolPrints();
   renderWorkroomLinks();
-  renderRecipes();
-  renderMealPlan();
-  renderPinboard();
-  renderSubstitutions();
   renderShopping();
-
-  // Defensive Aktualisierung: wenn Einkauf sichtbar ist, Rezeptkarten immer neu aufbauen.
-  if (document.querySelector("#shopping")?.classList.contains("active")) {
-    renderRecipes();
-    renderMealPlan();
-  }
 }
 
 async function updateVideoPreview() {
@@ -3899,18 +2083,6 @@ document.querySelectorAll(".tab").forEach(btn => btn.addEventListener("click", (
   document.querySelectorAll(".view").forEach(x => x.classList.remove("active"));
   btn.classList.add("active");
   document.querySelector(`#${btn.dataset.view}`).classList.add("active");
-
-  // Der Rezeptbereich wird beim Öffnen von Einkauf immer aus dem aktuellen State neu aufgebaut.
-  // So bleiben gespeicherte Rezepte nach Login/Cloud-Sync zuverlässig sichtbar.
-  if (btn.dataset.view === "shopping") {
-    const categoryFilter = document.querySelector("#recipeCategoryFilter");
-    if (!recipeCategoryTouched && categoryFilter) {
-      activeRecipeCategory = "all";
-      categoryFilter.value = "all";
-    }
-    renderRecipes();
-    renderMealPlan();
-  }
 }));
 
 document.querySelector("#prevWeekBtn").addEventListener("click", () => {
@@ -3927,1417 +2099,250 @@ document.querySelector("#todayWeekBtn").addEventListener("click", () => {
   currentWeekMonday = getMonday(new Date());
   renderWeek();
 });
-
-
-function ensureRecipeCardMarkPicker() {
-  // Felder stehen jetzt fest im HTML.
-  return document.querySelector("#recipeCardMark");
-}
-
-function recipeCardMark(recipe) {
-  return recipe?.cardMark || "⌁";
-}
-
-function ensureRecipeCardMarkStyles() {
-  // Gestaltung liegt jetzt vollständig in style.css.
-}
-
-ensureRecipeCardMarkPicker();
-ensureRecipeCardMarkStyles();
-
-
-// ===== EINKAUF – REZEPTKARTEN =====
-let activeRecipeDifficulty = "all";
-let activeRecipeCategory = "all";
-let recipeCategoryTouched = false;
-let recipeKidsOnly = false;
-let recipeHealthyOnly = false;
-let recipeFavoriteOnly = false;
-let activeRecipeSearch = "";
-let mealPlanWeekOffset = 0;
-let recipePage = 0;
-const RECIPE_PAGE_SIZE = 10;
-let editingRecipeId = null;
-
-function resetRecipeForm() {
-  ["#recipeTitle","#recipeTime","#recipeIngredients","#recipeSteps","#recipeWebUrl","#recipeYoutubeUrl","#recipeBakeTime","#recipeTemperature"]
-    .forEach(sel => {
-      const el = document.querySelector(sel);
-      if (el) el.value = "";
-    });
-
-  const category = document.querySelector("#recipeCategory");
-  if (category) category.value = "main";
-
-  ensureRecipeCardMarkPicker();
-  const cardMark = document.querySelector("#recipeCardMark");
-  if (cardMark) cardMark.value = "⌁";
-
-  const difficulty = document.querySelector("#recipeDifficulty");
-  if (difficulty) difficulty.value = "medium";
-
-  const kids = document.querySelector("#recipeKids");
-  if (kids) kids.checked = false;
-
-  const healthy = document.querySelector("#recipeHealthy");
-  if (healthy) healthy.checked = false;
-
-  const favorite = document.querySelector("#recipeFavorite");
-  if (favorite) favorite.checked = false;
-  syncRecipeFavoriteToggleVisual();
-
-  editingRecipeId = null;
-
-  const saveBtn = document.querySelector("#saveRecipeBtn");
-  if (saveBtn) saveBtn.textContent = "Rezept speichern";
-
-  document.querySelector("#cancelRecipeEditBtn")?.classList.add("hidden");
-}
-
-function startRecipeEdit(recipe) {
-  if (!recipe) return;
-
-  editingRecipeId = recipe.id;
-
-  ensureRecipeCardMarkPicker();
-  document.querySelector("#recipeTitle").value = recipe.title || "";
-  document.querySelector("#recipeCategory").value = recipe.category || "main";
-  const cardMark = document.querySelector("#recipeCardMark");
-  if (cardMark) cardMark.value = recipeCardMark(recipe);
-  document.querySelector("#recipeDifficulty").value = recipe.difficulty || "medium";
-  document.querySelector("#recipeKids").checked = !!recipe.kids;
-  document.querySelector("#recipeHealthy").checked = !!recipe.healthy;
-  document.querySelector("#recipeFavorite").checked = !!recipe.favorite;
-  syncRecipeFavoriteToggleVisual();
-  document.querySelector("#recipeTime").value = recipe.time || "";
-  document.querySelector("#recipeBakeTime").value = recipe.bakeTime || "";
-  document.querySelector("#recipeTemperature").value = recipe.temperature || "";
-  document.querySelector("#recipeIngredients").value = normalizedRecipeLines(recipe.ingredients).join("\n");
-  document.querySelector("#recipeSteps").value = normalizedRecipeLines(recipe.steps).join("\n");
-  document.querySelector("#recipeWebUrl").value = recipe.webUrl || "";
-  document.querySelector("#recipeYoutubeUrl").value = recipe.youtubeUrl || "";
-
-  document.querySelector("#recipeForm")?.classList.remove("hidden");
-
-  const saveBtn = document.querySelector("#saveRecipeBtn");
-  if (saveBtn) saveBtn.textContent = "Änderungen speichern";
-
-  document.querySelector("#cancelRecipeEditBtn")?.classList.remove("hidden");
-  document.querySelector("#recipeForm")?.scrollIntoView({behavior:"smooth", block:"start"});
-}
-
-function recipeDifficultyLabel(value) {
-  return {easy:"Einfach", medium:"Mittel", advanced:"Etwas aufwendiger"}[value] || "Mittel";
-}
-
-function recipeCategoryLabel(value) {
-  return {
-    breakfast: "🥣 Frühstück & Morgenideen",
-    spread: "🥖 Aufstriche & Dips",
-    soup: "🍲 Suppen & Eintöpfe",
-    main: "🍝 Hauptgerichte",
-    small: "🥙 Kleine Sachen & Jause",
-    salad: "🥗 Salate & Frisches",
-    sweet: "🍓 Süßes & Backen",
-    drink: "🥤 Getränke & Smoothies",
-    other: "✨ Sonstiges"
-  }[value] || "🍝 Hauptgerichte";
-}
-
-function recipeCategoryClass(value) {
-  const key = ["breakfast","spread","soup","main","small","salad","sweet","drink","other"]
-    .includes(value) ? value : "main";
-  return `recipe-category-${key}`;
-}
-
-function recipeLines(value) {
-  const source = Array.isArray(value) ? value.join("\n") : String(value || "");
-  return source
-    .replace(/\\n/g, "\n")
-    .split(/\r?\n/)
-    .map(v => v.trim())
-    .filter(Boolean);
-}
-
-function normalizedRecipeLines(value) {
-  return recipeLines(value);
-}
-
-
-function recipeByTitle(title) {
-  const q = String(title || "").trim().toLowerCase();
-  if (!q) return null;
-  return (state.recipes || []).find(r =>
-    String(r.title || "").trim().toLowerCase() === q
-  ) || null;
-}
-
-function recipeLinkTarget(recipe) {
-  if (!recipe) return "";
-  return recipe.webUrl || recipe.youtubeUrl || "";
-}
-
-let activeRecipeDetailId = null;
-
-function printRecipe(recipe) {
-  if (!recipe) return;
-
-  const category = recipeCategoryLabel(recipe.category || "main");
-  const ingredients = normalizedRecipeLines(recipe.ingredients);
-  const steps = normalizedRecipeLines(recipe.steps);
-
-  const printWindow = window.open("", "_blank", "width=820,height=950");
-  if (!printWindow) {
-    showMotivation("Druckfenster konnte nicht geöffnet werden.");
-    return;
-  }
-
-  const safeTitle = escapeHtml(recipe.title || "Rezept");
-  const kidBadge = recipe.kids ? `<span class="print-badge kids">🧒 Kinderrezept</span>` : "";
-  const healthyBadge = recipe.healthy ? `<span class="print-badge healthy">🌿 Gesund & bunt</span>` : "";
-  const time = recipe.time ? `<span class="print-badge">◔ ${escapeHtml(recipe.time)}</span>` : "";
-
-  printWindow.document.write(`
-    <!doctype html>
-    <html lang="de">
-    <head>
-      <meta charset="utf-8">
-      <title>${safeTitle}</title>
-      <style>
-        @page { size: A4; margin: 15mm; }
-        * { box-sizing: border-box; }
-        body {
-          margin: 0;
-          color: #424745;
-          font-family: "Trebuchet MS", "Segoe UI", Arial, sans-serif;
-          background: white;
-        }
-        .sheet {
-          border: 1px solid #c9d9d5;
-          border-radius: 18px;
-          overflow: hidden;
-        }
-        .head {
-          padding: 24px 28px 20px;
-          text-align: center;
-          background: #c6ddd8;
-        }
-        .eyebrow {
-          font-size: 10px;
-          letter-spacing: .18em;
-          color: #6f7d79;
-        }
-        h1 {
-          margin: 8px 0 12px;
-          font-family: Georgia, "Times New Roman", serif;
-          font-size: 30px;
-          font-weight: 500;
-        }
-        .badges {
-          display: flex;
-          justify-content: center;
-          flex-wrap: wrap;
-          gap: 6px;
-        }
-        .print-badge {
-          padding: 5px 9px;
-          border-radius: 999px;
-          background: rgba(255,255,255,.72);
-          font-size: 11px;
-        }
-        .kids { background: #fff0ba; }
-        .healthy { background: #e2efe3; }
-        .content {
-          display: grid;
-          grid-template-columns: 1fr 1.25fr;
-        }
-        section {
-          padding: 24px 26px 30px;
-          min-height: 360px;
-        }
-        section + section { border-left: 1px solid #dce6e3; }
-        h2 {
-          margin: 0 0 14px;
-          padding-bottom: 7px;
-          border-bottom: 2px solid #d3e3df;
-          font-size: 15px;
-          text-transform: uppercase;
-          letter-spacing: .06em;
-        }
-        ul {
-          margin: 0;
-          padding-left: 20px;
-        }
-        li, .step {
-          margin-bottom: 9px;
-          font-size: 14px;
-          line-height: 1.5;
-        }
-        .footer {
-          padding: 10px;
-          text-align: center;
-          background: #d8e8e4;
-          color: white;
-        }
-        .links {
-          padding: 12px 26px 18px;
-          font-size: 11px;
-          color: #71807c;
-        }
-        @media print {
-          .sheet { break-inside: avoid; }
-        }
-      </style>
-    </head>
-    <body>
-      <main class="sheet">
-        <header class="head">
-          <div class="eyebrow">REZEPT</div>
-          <h1>${safeTitle}</h1>
-          <div class="badges">
-            <span class="print-badge">${escapeHtml(category)}</span>
-            <span class="print-badge">${escapeHtml(recipeDifficultyLabel(recipe.difficulty))}</span>
-            ${time}${kidBadge}${healthyBadge}
-          </div>
-        </header>
-        <div class="content">
-          <section>
-            <h2>Zutaten</h2>
-            <ul>${ingredients.map(item => `<li>${escapeHtml(item)}</li>`).join("")}</ul>
-          </section>
-          <section>
-            <h2>Zubereitung</h2>
-            ${steps.map(step => `<div class="step">${escapeHtml(step)}</div>`).join("")}
-          </section>
-        </div>
-        ${(recipe.webUrl || recipe.youtubeUrl) ? `
-          <div class="links">
-            ${recipe.webUrl ? `Online-Rezept: ${escapeHtml(recipe.webUrl)}<br>` : ""}
-            ${recipe.youtubeUrl ? `YouTube: ${escapeHtml(recipe.youtubeUrl)}` : ""}
-          </div>` : ""}
-        <footer class="footer">♡</footer>
-      </main>
-      <script>
-        window.onload = () => {
-          window.print();
-          window.onafterprint = () => window.close();
-        };
-      <\/script>
-    </body>
-    </html>
-  `);
-
-  printWindow.document.close();
-}
-
-function showRecipeDetail(recipeOrTitle) {
-  const recipe = typeof recipeOrTitle === "string"
-    ? recipeByTitle(recipeOrTitle)
-    : recipeOrTitle;
-
-  if (!recipe) return false;
-  activeRecipeDetailId = recipe.id;
-
-  const dialog = document.querySelector("#recipeDetailDialog");
-  const title = document.querySelector("#recipeDetailTitle");
-  const body = document.querySelector("#recipeDetailBody");
-  if (!dialog || !title || !body) return false;
-
-  title.textContent = recipe.title || "Rezept";
-
-  body.innerHTML = `
-    <div class="recipe-detail-banner ${recipeCategoryClass(recipe.category || "main")} ${recipe.kids ? "recipe-detail-kids" : ""}">
-      <div class="recipe-detail-time">
-        <span class="recipe-detail-clock">◔</span>
-        <span>${escapeHtml(recipe.time || "–")}</span>
-        ${(recipe.bakeTime || recipe.temperature) ? `
-          <small class="recipe-bake-meta">
-            ${recipe.bakeTime ? `♨ ${escapeHtml(recipe.bakeTime)}` : ""}
-            ${recipe.temperature ? ` · ${escapeHtml(recipe.temperature)}` : ""}
-          </small>
-        ` : ""}
-      </div>
-      <div class="recipe-detail-center">
-        <span class="recipe-detail-ribbon">REZEPT</span>
-        <div class="recipe-detail-tags">
-          <span>${escapeHtml(recipeCategoryLabel(recipe.category || "main"))}</span>
-          <span>${escapeHtml(recipeDifficultyLabel(recipe.difficulty))}</span>
-          ${recipe.kids ? `<span class="recipe-kids-badge">🧒 Das kannst du selbst kochen!</span>` : ""}
-          ${recipe.healthy ? `<span class="recipe-healthy-badge">🌿 Gesund & bunt</span>` : ""}
-        </div>
-      </div>
-      <div class="recipe-detail-utensil">${escapeHtml(recipeCardMark(recipe))}</div>
-    </div>
-
-    <div class="recipe-detail-grid">
-      <section>
-        <h3>Zutaten</h3>
-        <div class="recipe-cook-checklist">
-          ${normalizedRecipeLines(recipe.ingredients).map(x => `
-            <button type="button" class="recipe-cook-line">
-              <span class="recipe-cook-dot">○</span>
-              <span>${escapeHtml(x)}</span>
-            </button>
-          `).join("")}
-        </div>
-      </section>
-      <section>
-        <h3>Zubereitung</h3>
-        <div class="recipe-cook-checklist">
-          ${normalizedRecipeLines(recipe.steps).map(x => `
-            <button type="button" class="recipe-cook-line">
-              <span class="recipe-cook-dot">○</span>
-              <span>${escapeHtml(x)}</span>
-            </button>
-          `).join("")}
-        </div>
-      </section>
-    </div>
-
-    <div class="recipe-detail-links">
-      ${recipe.webUrl ? `<a href="${escapeHtml(recipe.webUrl)}" target="_blank" rel="noopener">↗ Onlinerezept öffnen</a>` : ""}
-      ${recipe.youtubeUrl ? `<a href="${escapeHtml(recipe.youtubeUrl)}" target="_blank" rel="noopener">▶ YouTube öffnen</a>` : ""}
-    </div>
-  `;
-
-  body.querySelectorAll(".recipe-cook-line").forEach(line => {
-    line.addEventListener("click", () => {
-      const done = line.classList.toggle("done");
-      const dot = line.querySelector(".recipe-cook-dot");
-      if (dot) dot.textContent = done ? "✓" : "○";
-    });
-  });
-
-  dialog.showModal();
-  return true;
-}
-
-function renderRecipePager(totalItems) {
-  const host = document.querySelector("#recipePager");
-  if (!host) return;
-
-  const totalPages = Math.ceil(totalItems / RECIPE_PAGE_SIZE);
-  recipePage = Math.min(recipePage, Math.max(0, totalPages - 1));
-
-  if (totalPages <= 1) {
-    host.innerHTML = "";
-    return;
-  }
-
-  host.innerHTML = `
-    <button type="button" class="recipe-page-btn" data-page="${recipePage - 1}" ${recipePage <= 0 ? "disabled" : ""}>‹</button>
-    ${Array.from({length: totalPages}, (_, i) =>
-      `<button type="button" class="recipe-page-btn ${i === recipePage ? "active" : ""}" data-page="${i}">${i + 1}</button>`
-    ).join("")}
-    <button type="button" class="recipe-page-btn" data-page="${recipePage + 1}" ${recipePage >= totalPages - 1 ? "disabled" : ""}>›</button>
-  `;
-
-  host.querySelectorAll(".recipe-page-btn").forEach(btn => {
-    btn.addEventListener("click", () => {
-      if (btn.disabled) return;
-      const next = Number(btn.dataset.page);
-      if (!Number.isFinite(next) || next < 0 || next >= totalPages) return;
-      recipePage = next;
-      renderRecipes();
-      document.querySelector("#recipeList")?.scrollIntoView({behavior:"smooth", block:"start"});
-    });
-  });
-}
-
-function renderRecipes() {
-  const host = document.querySelector("#recipeList");
-  if (!host) return;
-  state.recipes = Array.isArray(state.recipes) ? state.recipes : [];
-
-  const query = activeRecipeSearch.trim().toLowerCase();
-
-  const recipes = state.recipes
-    .filter(r => {
-      const matchesCategory =
-        activeRecipeCategory === "all" || (r.category || "main") === activeRecipeCategory;
-      const matchesDifficulty =
-        activeRecipeDifficulty === "all" || r.difficulty === activeRecipeDifficulty;
-      const matchesKids = !recipeKidsOnly || !!r.kids;
-      const matchesHealthy = !recipeHealthyOnly || !!r.healthy;
-      const matchesFavorite = !recipeFavoriteOnly || !!r.favorite;
-      const haystack = [
-        r.title,
-        ...(Array.isArray(r.ingredients) ? r.ingredients : [])
-      ].join(" ").toLowerCase();
-      const matchesSearch = !query || haystack.includes(query);
-      return matchesCategory && matchesDifficulty && matchesKids && matchesHealthy && matchesFavorite && matchesSearch;
-    })
-    .sort((a,b) => (b.createdAt || 0) - (a.createdAt || 0));
-
-  recipePage = Math.min(
-    recipePage,
-    Math.max(0, Math.ceil(recipes.length / RECIPE_PAGE_SIZE) - 1)
-  );
-  const visibleRecipes = recipes.slice(
-    recipePage * RECIPE_PAGE_SIZE,
-    recipePage * RECIPE_PAGE_SIZE + RECIPE_PAGE_SIZE
-  );
-
-  if (!recipes.length) {
-    host.innerHTML = `<div class="workroom-empty">Keine passenden Rezepte gefunden.</div>`;
-    renderRecipePager(0);
-    renderRecipeSearchSuggestions();
-    renderRecipeToc();
-    return;
-  }
-
-  host.innerHTML = visibleRecipes.map(r => `
-    <article class="recipe-card ${recipeCategoryClass(r.category || "main")} ${r.kids ? "recipe-card-kids" : ""}" id="recipe-${r.id}">
-      <header class="recipe-card-head">
-        <div class="recipe-time-mark">
-          <span class="recipe-clock">◔</span>
-          <span>${escapeHtml(r.time || "–")}</span>
-          ${(r.bakeTime || r.temperature) ? `
-            <small class="recipe-bake-meta">
-              ${r.bakeTime ? `♨ ${escapeHtml(r.bakeTime)}` : ""}
-              ${r.temperature ? ` · ${escapeHtml(r.temperature)}` : ""}
-            </small>
-          ` : ""}
-        </div>
-        <div class="recipe-title-wrap">
-          <span class="recipe-ribbon">REZEPT</span>
-          <button type="button" class="recipe-title-button" data-recipe-id="${r.id}">
-            ${escapeHtml(r.title)}
-          </button>
-          <div class="recipe-badges">
-            <span>${escapeHtml(recipeCategoryLabel(r.category || "main"))}</span>
-            <span>${escapeHtml(recipeDifficultyLabel(r.difficulty))}</span>
-            ${r.kids ? `<span class="recipe-kids-badge">🧒 Das kannst du selbst kochen!</span>` : ""}
-            ${r.healthy ? `<span class="recipe-healthy-badge">🌿 Gesund & bunt</span>` : ""}
-            ${r.favorite ? `<span class="recipe-favorite-badge">★ Lieblingsrezept</span>` : ""}
-          </div>
-        </div>
-        <div class="recipe-tools">${escapeHtml(recipeCardMark(r))}</div>
-      </header>
-      <div class="recipe-card-body">
-        <section class="recipe-column">
-          <h4>ZUTATEN</h4>
-          <ul>${normalizedRecipeLines(r.ingredients).map(x => `<li>${escapeHtml(x)}</li>`).join("")}</ul>
-        </section>
-        <section class="recipe-column">
-          <h4>ZUBEREITUNG</h4>
-          <div class="recipe-prep-lines">${normalizedRecipeLines(r.steps).map(x => `<div class="recipe-prep-line">${escapeHtml(x)}</div>`).join("")}</div>
-        </section>
-      </div>
-      <footer class="recipe-card-footer">
-        <div class="recipe-links">
-          ${r.webUrl ? `<a href="${escapeHtml(r.webUrl)}" target="_blank" rel="noopener">↗ Onlinerezept</a>` : ""}
-          ${r.youtubeUrl ? `<a href="${escapeHtml(r.youtubeUrl)}" target="_blank" rel="noopener">▶ YouTube</a>` : ""}
-        </div>
-        <div class="recipe-card-actions">
-          <button class="recipe-print" data-id="${r.id}" type="button" title="Rezept drucken" aria-label="Rezept drucken">🖨</button>
-          <button class="recipe-edit" data-id="${r.id}" type="button" title="Rezept bearbeiten">✎</button>
-          <button class="recipe-delete" data-id="${r.id}" type="button" title="Rezept löschen">×</button>
-        </div>
-      </footer>
-    </article>
-  `).join("");
-
-  host.querySelectorAll(".recipe-delete").forEach(btn => btn.addEventListener("click", () => {
-    const recipe = state.recipes.find(r => r.id === btn.dataset.id);
-    if (!recipe) return;
-
-    pendingRecipeDeleteId = recipe.id;
-    const text = document.querySelector("#recipeDeleteText");
-    if (text) text.textContent = `„${recipe.title || "Dieses Rezept"}“ wird dauerhaft aus deinen Rezeptkarten entfernt.`;
-    document.querySelector("#recipeDeleteDialog")?.showModal();
-  }));
-
-  host.querySelectorAll(".recipe-print").forEach(btn => {
-    btn.addEventListener("click", () => {
-      const recipe = state.recipes.find(r => r.id === btn.dataset.id);
-      if (recipe) printRecipe(recipe);
-    });
-  });
-
-  host.querySelectorAll(".recipe-edit").forEach(btn => {
-    btn.addEventListener("click", () => {
-      const recipe = state.recipes.find(r => r.id === btn.dataset.id);
-      if (recipe) startRecipeEdit(recipe);
-    });
-  });
-
-  host.querySelectorAll(".recipe-title-button").forEach(btn => {
-    btn.addEventListener("click", () => {
-      const recipe = state.recipes.find(r => r.id === btn.dataset.recipeId);
-      if (recipe) showRecipeDetail(recipe);
-    });
-  });
-
-  renderRecipePager(recipes.length);
-  renderRecipeSearchSuggestions();
-  renderRecipeToc();
-}
-
-
-function renderRecipeSearchSuggestions() {
-  const list = document.querySelector("#recipeSearchSuggestions");
-  const popup = document.querySelector("#recipeAutocomplete");
-  const input = document.querySelector("#recipeSearch");
-  const recipes = (state.recipes || [])
-    .slice()
-    .sort((a,b) => String(a.title || "").localeCompare(String(b.title || ""), "de"));
-
-  if (list) {
-    list.innerHTML = recipes
-      .map(r => `<option value="${escapeHtml(r.title || "")}"></option>`)
-      .join("");
-  }
-
-  if (!popup || !input) return;
-  const q = (input.value || "").trim().toLowerCase();
-
-  if (!q) {
-    popup.classList.add("hidden");
-    popup.innerHTML = "";
-    return;
-  }
-
-  const matches = recipes
-    .filter(r => String(r.title || "").toLowerCase().includes(q))
-    .slice(0, 7);
-
-  if (!matches.length) {
-    popup.classList.add("hidden");
-    popup.innerHTML = "";
-    return;
-  }
-
-  popup.innerHTML = matches.map(r =>
-    `<button type="button" class="recipe-autocomplete-item" data-title="${escapeHtml(r.title || "")}">
-       ${escapeHtml(r.title || "")}
-     </button>`
-  ).join("");
-  popup.classList.remove("hidden");
-
-  popup.querySelectorAll(".recipe-autocomplete-item").forEach(btn => {
-    btn.addEventListener("click", () => {
-      input.value = btn.dataset.title || "";
-      activeRecipeSearch = input.value;
-      popup.classList.add("hidden");
-      renderRecipes();
-    });
-  });
-}
-
-function renderRecipeToc() {
-  const host = document.querySelector("#recipeTocList");
-  if (!host) return;
-
-  const recipes = (state.recipes || [])
-    .slice()
-    .sort((a,b) => String(a.title || "").localeCompare(String(b.title || ""), "de"));
-
-  if (!recipes.length) {
-    host.innerHTML = `<span class="recipe-toc-empty">Noch keine Rezepte.</span>`;
-    return;
-  }
-
-  host.innerHTML = recipes
-    .map(r => `<button type="button" class="recipe-toc-link" data-id="${r.id}" data-title="${escapeHtml(r.title || "")}">${escapeHtml(r.title || "Ohne Titel")}</button>`)
-    .join("");
-
-  host.querySelectorAll(".recipe-toc-link").forEach(btn => {
-    btn.addEventListener("click", () => {
-      const search = document.querySelector("#recipeSearch");
-      if (search) search.value = btn.dataset.title || "";
-      activeRecipeSearch = btn.dataset.title || "";
-      renderRecipes();
-      requestAnimationFrame(() => {
-        const card = document.querySelector(`#recipe-${CSS.escape(btn.dataset.id)}`);
-        if (card) card.scrollIntoView({behavior:"smooth", block:"start"});
-      });
-    });
-  });
-}
-
-function mealPlanMonday(offset = 0) {
-  const monday = new Date(currentWeekMonday);
-  monday.setDate(monday.getDate() + offset * 7);
-  return monday;
-}
-
-
-function normalizeMealEntry(entry) {
-  if (!entry) return null;
-
-  if (typeof entry === "string") {
-    return {
-      label: /^https?:\/\//i.test(entry.trim()) ? "" : entry.trim(),
-      recipeId: "",
-      url: /^https?:\/\//i.test(entry.trim()) ? entry.trim() : "",
-      updatedAt: 0
-    };
-  }
-
-  if (typeof entry !== "object") return null;
-
-  let label = String(entry.label || "").trim();
-  let url = String(entry.url || "").trim();
-
-  if (/^https?:\/\//i.test(label) && !url) {
-    url = label;
-    label = "";
-  }
-
-  return {
-    label,
-    recipeId: String(entry.recipeId || ""),
-    url,
-    deleted: entry.deleted === true,
-    updatedAt: Number(entry.updatedAt) || 0
-  };
-}
-
-function mergeMeals(localMeals, cloudMeals) {
-  const local = localMeals && typeof localMeals === "object" ? localMeals : {};
-  const cloud = cloudMeals && typeof cloudMeals === "object" ? cloudMeals : {};
-  const merged = {};
-  const keys = new Set([...Object.keys(local), ...Object.keys(cloud)]);
-
-  keys.forEach(key => {
-    const l = normalizeMealEntry(local[key]);
-    const c = normalizeMealEntry(cloud[key]);
-
-    if (!l && !c) return;
-    if (!l) { merged[key] = c; return; }
-    if (!c) { merged[key] = l; return; }
-
-    // Neue Einträge tragen updatedAt. Dann gewinnt immer die neuere Fassung.
-    if (l.updatedAt || c.updatedAt) {
-      merged[key] = l.updatedAt >= c.updatedAt ? l : c;
-      return;
-    }
-
-    // Migration alter Daten: die vollständigere Fassung behalten.
-    const localScore = Number(!!l.label) * 3 + Number(!!l.recipeId) * 2 + Number(!!l.url);
-    const cloudScore = Number(!!c.label) * 3 + Number(!!c.recipeId) * 2 + Number(!!c.url);
-    merged[key] = localScore >= cloudScore ? l : c;
-  });
-
-  return merged;
-}
-
-function renderMealPlan() {
-  const host = document.querySelector("#mealPlanGrid");
-  if (!host) return;
-
-  const monday = mealPlanMonday(mealPlanWeekOffset);
-  const recipes = (state.recipes || [])
-    .slice()
-    .sort((a,b) => String(a.title || "").localeCompare(String(b.title || ""), "de"));
-
-  const isUrl = value => /^https?:\/\//i.test(String(value || "").trim());
-
-  host.innerHTML = WEEK_DAYS.map((dayName, index) => {
-    const date = new Date(monday);
-    date.setDate(monday.getDate() + index);
-    const key = dateKey(date);
-
-    const storedRaw = normalizeMealEntry ? normalizeMealEntry(state.meals?.[key]) : state.meals?.[key];
-    const stored = storedRaw?.deleted === true ? null : storedRaw;
-    const value = typeof stored === "string" ? stored : (stored?.label || "");
-    const customUrl = typeof stored === "object" ? (stored?.url || "") : "";
-    const recipeId = typeof stored === "object" ? (stored?.recipeId || "") : "";
-
-    const matched = recipeId
-      ? recipes.find(r => r.id === recipeId)
-      : recipeByTitle(value);
-
-    return `
-      <div class="meal-plan-day">
-        <div class="meal-plan-day-head">
-          <span class="meal-plan-day-name">${escapeHtml(dayName)}</span>
-          <span class="meal-plan-date">${String(date.getDate()).padStart(2,"0")}.${String(date.getMonth()+1).padStart(2,"0")}.</span>
-        </div>
-
-        <div class="meal-plan-input-wrap">
-          <div class="meal-plan-name-wrap">
-            <input type="text"
-                   class="meal-plan-input"
-                   data-date="${key}"
-                   value="${escapeHtml(value)}"
-                   autocomplete="off"
-                   placeholder="Bezeichnung, z. B. Pommes">
-            <div class="meal-plan-autocomplete hidden" data-date="${key}"></div>
-          </div>
-
-          <button type="button"
-                  class="meal-plan-link-toggle ${customUrl ? "active" : ""}"
-                  data-date="${key}"
-                  title="Link hinterlegen">🔗</button>
-
-          ${matched ? `
-            <button type="button"
-                    class="meal-plan-recipe-btn"
-                    data-recipe-id="${matched.id}"
-                    title="Rezept öffnen">↗</button>
-          ` : customUrl ? `
-            <a class="meal-plan-recipe-btn"
-               href="${escapeHtml(customUrl)}"
-               target="_blank"
-               rel="noopener"
-               title="Link öffnen">↗</a>
-          ` : ""}
-        </div>
-
-        <div class="meal-plan-url-row ${customUrl ? "" : "hidden"}" data-date="${key}">
-          <input type="url"
-                 class="meal-plan-url-input"
-                 data-date="${key}"
-                 value="${escapeHtml(customUrl)}"
-                 placeholder="Link einfügen, z. B. https://…">
-        </div>
-      </div>
-    `;
-  }).join("");
-
-  function persistMealForDate(key, {refresh = false, cloud = true} = {}) {
-    const esc = CSS.escape(key);
-    const labelInput = host.querySelector(`.meal-plan-input[data-date="${esc}"]`);
-    const urlInput = host.querySelector(`.meal-plan-url-input[data-date="${esc}"]`);
-
-    let label = labelInput?.value.trim() || "";
-    let url = urlInput?.value.trim() || "";
-
-    if (isUrl(label) && !url) {
-      url = label;
-      label = "";
-      if (labelInput) labelInput.value = "";
-      if (urlInput) urlInput.value = url;
-    }
-
-    const matched = recipeByTitle(label);
-    state.meals = state.meals && typeof state.meals === "object" ? state.meals : {};
-
-    if (!label && !url) {
-      // Wichtig für mehrere Geräte:
-      // Nicht einfach den Schlüssel entfernen. Sonst kann ein anderes Gerät
-      // mit dem alten Eintrag ("Pommes") ihn beim nächsten Merge zurückbringen.
-      // Stattdessen speichern wir eine Löschmarke mit Zeitstempel.
-      state.meals[key] = {
-        label: "",
-        recipeId: "",
-        url: "",
-        deleted: true,
-        updatedAt: Date.now()
-      };
-    } else {
-      state.meals[key] = {
-        label: matched ? matched.title : label,
-        recipeId: matched ? matched.id : "",
-        url,
-        deleted: false,
-        updatedAt: Date.now()
-      };
-    }
-
-    // Beim Tippen NICHT in die Cloud schreiben:
-    // der Firestore-Rückkanal würde renderAll() auslösen und dem Textfeld
-    // nach jedem Buchstaben den Fokus nehmen.
-    if (cloud) {
-      save();
-    } else {
-      saveLocal();
-    }
-
-    renderWeek();
-    if (refresh) renderMealPlan();
-  }
-
-  function showMealSuggestions(input) {
-    const key = input.dataset.date;
-    const popup = host.querySelector(`.meal-plan-autocomplete[data-date="${CSS.escape(key)}"]`);
-    if (!popup) return;
-
-    const q = input.value.trim().toLowerCase();
-    if (!q) {
-      popup.innerHTML = "";
-      popup.classList.add("hidden");
-      return;
-    }
-
-    const matches = recipes
-      .filter(r => String(r.title || "").toLowerCase().includes(q))
-      .slice(0, 6);
-
-    if (!matches.length) {
-      popup.innerHTML = "";
-      popup.classList.add("hidden");
-      return;
-    }
-
-    popup.innerHTML = matches.map(r => `
-      <button type="button"
-              class="meal-plan-autocomplete-item"
-              data-title="${escapeHtml(r.title || "")}"
-              data-recipe-id="${r.id}">
-        <strong>${escapeHtml(r.title || "")}</strong>
-        <span>${escapeHtml(recipeCategoryLabel(r.category || "main"))}</span>
-      </button>
-    `).join("");
-    popup.classList.remove("hidden");
-
-    popup.querySelectorAll(".meal-plan-autocomplete-item").forEach(btn => {
-      btn.addEventListener("mousedown", e => e.preventDefault());
-      btn.addEventListener("click", () => {
-        input.value = btn.dataset.title || "";
-        popup.classList.add("hidden");
-        persistMealForDate(key, {refresh:true, cloud:true});
-      });
-    });
-  }
-
-  host.querySelectorAll(".meal-plan-input").forEach(input => {
-    input.addEventListener("input", () => {
-      // lokal sichern, Fokus behalten, Vorschläge offen lassen
-      persistMealForDate(input.dataset.date, {cloud:false});
-      showMealSuggestions(input);
-    });
-
-    input.addEventListener("focus", () => showMealSuggestions(input));
-
-    input.addEventListener("blur", () => {
-      // Beim Verlassen erst gemeinsam synchronisieren.
-      persistMealForDate(input.dataset.date, {cloud:true});
-      setTimeout(() => {
-        const popup = host.querySelector(`.meal-plan-autocomplete[data-date="${CSS.escape(input.dataset.date)}"]`);
-        popup?.classList.add("hidden");
-      }, 160);
-    });
-
-    input.addEventListener("change", () => {
-      persistMealForDate(input.dataset.date, {cloud:true});
-    });
-  });
-
-  host.querySelectorAll(".meal-plan-url-input").forEach(input => {
-    input.addEventListener("input", () => {
-      persistMealForDate(input.dataset.date, {cloud:false});
-    });
-    input.addEventListener("blur", () => {
-      persistMealForDate(input.dataset.date, {cloud:true});
-    });
-    input.addEventListener("change", () => {
-      persistMealForDate(input.dataset.date, {cloud:true});
-    });
-  });
-
-  host.querySelectorAll(".meal-plan-link-toggle").forEach(btn => {
-    btn.addEventListener("mousedown", e => e.preventDefault());
-    btn.addEventListener("click", () => {
-      const row = host.querySelector(`.meal-plan-url-row[data-date="${CSS.escape(btn.dataset.date)}"]`);
-      row?.classList.toggle("hidden");
-      if (row && !row.classList.contains("hidden")) row.querySelector("input")?.focus();
-    });
-  });
-
-  host.querySelectorAll(".meal-plan-recipe-btn[data-recipe-id]").forEach(btn => {
-    btn.addEventListener("click", e => {
-      e.preventDefault();
-      const recipe = state.recipes.find(r => r.id === btn.dataset.recipeId);
-      if (recipe) showRecipeDetail(recipe);
-    });
-  });
-
-  document.querySelector("#mealPlanThisWeekBtn")?.classList.toggle("active", mealPlanWeekOffset === 0);
-  document.querySelector("#mealPlanNextWeekBtn")?.classList.toggle("active", mealPlanWeekOffset === 1);
-}
-
-function closeRecipeDetailDialog() {
-  const dialog = document.querySelector("#recipeDetailDialog");
-  if (dialog?.open) dialog.close();
-  activeRecipeDetailId = null;
-}
-
-document.querySelector("#printRecipeDetailBtn")?.addEventListener("click", () => {
-  const recipe = state.recipes.find(r => r.id === activeRecipeDetailId);
-  if (recipe) printRecipe(recipe);
-});
-
-document.querySelector("#closeRecipeDetailBtn")?.addEventListener("click", closeRecipeDetailDialog);
-
-document.querySelector("#recipeDetailDialog")?.addEventListener("click", e => {
-  if (e.target === e.currentTarget) closeRecipeDetailDialog();
-});
-
-document.querySelector("#cancelRecipeDeleteBtn")?.addEventListener("click", () => {
-  pendingRecipeDeleteId = null;
-  document.querySelector("#recipeDeleteDialog")?.close();
-});
-
-document.querySelector("#confirmRecipeDeleteBtn")?.addEventListener("click", () => {
-  if (!pendingRecipeDeleteId) return;
-  state.recipes = state.recipes.filter(r => r.id !== pendingRecipeDeleteId);
-  pendingRecipeDeleteId = null;
-  save();
-  renderRecipes();
-  renderMealPlan();
-  document.querySelector("#recipeDeleteDialog")?.close();
-  showMotivation("Rezept gelöscht.");
-});
-
-document.querySelector("#toggleRecipeFormBtn")?.addEventListener("click", () => {
-  document.querySelector("#recipeForm")?.classList.toggle("hidden");
-});
-document.querySelector("#recipeSearch")?.addEventListener("input", e => {
-  activeRecipeSearch = e.currentTarget.value || "";
-  recipePage = 0;
-  renderRecipes();
-  renderRecipeSearchSuggestions();
-});
-
-document.querySelector("#recipeCategoryFilter")?.addEventListener("change", e => {
-  recipeCategoryTouched = true;
-  activeRecipeCategory = e.currentTarget.value || "all";
-  recipePage = 0;
-  renderRecipes();
-});
-
-document.querySelector("#recipeDifficultyFilter")?.addEventListener("change", e => {
-  activeRecipeDifficulty = e.currentTarget.value || "all";
-  recipePage = 0;
-  renderRecipes();
-});
-document.querySelector("#recipeKidsOnlyFilter")?.addEventListener("change", e => {
-  recipeKidsOnly = !!e.currentTarget.checked;
-  recipePage = 0;
-  renderRecipes();
-});
-
-document.querySelector("#recipeHealthyOnlyFilter")?.addEventListener("change", e => {
-  recipeHealthyOnly = !!e.currentTarget.checked;
-  recipePage = 0;
-  renderRecipes();
-});
-
-document.querySelector("#recipeFavoriteOnlyFilter")?.addEventListener("change", e => {
-  recipeFavoriteOnly = !!e.currentTarget.checked;
-  recipePage = 0;
-  renderRecipes();
-});
-
-document.querySelector("#mealPlanThisWeekBtn")?.addEventListener("click", () => {
-  mealPlanWeekOffset = 0;
-  renderMealPlan();
-});
-
-document.querySelector("#mealPlanNextWeekBtn")?.addEventListener("click", () => {
-  mealPlanWeekOffset = 1;
-  renderMealPlan();
-});
-function syncRecipeFavoriteToggleVisual() {
-  const label = document.querySelector(".recipe-favorite-toggle");
-  const input = document.querySelector("#recipeFavorite");
-  if (!label || !input) return;
-  label.classList.toggle("is-favorite", !!input.checked);
-
-  const text = label.querySelector("span");
-  if (text) text.textContent = input.checked ? "★ Favorit" : "☆ Favorit";
-}
-
-document.querySelector("#recipeFavorite")?.addEventListener("change", syncRecipeFavoriteToggleVisual);
-syncRecipeFavoriteToggleVisual();
-
-document.querySelector("#saveRecipeBtn")?.addEventListener("click", () => {
-  const title = document.querySelector("#recipeTitle")?.value.trim() || "";
-  if (!title) return showMotivation("Bitte zuerst einen Rezeptnamen eintragen.");
-
-  const recipeData = {
-    title,
-    category: document.querySelector("#recipeCategory")?.value || "main",
-    cardMark: document.querySelector("#recipeCardMark")?.value || "⌁",
-    difficulty: document.querySelector("#recipeDifficulty")?.value || "medium",
-    kids: !!document.querySelector("#recipeKids")?.checked,
-    healthy: !!document.querySelector("#recipeHealthy")?.checked,
-    favorite: !!document.querySelector("#recipeFavorite")?.checked,
-    time: document.querySelector("#recipeTime")?.value.trim() || "",
-    bakeTime: document.querySelector("#recipeBakeTime")?.value.trim() || "",
-    temperature: document.querySelector("#recipeTemperature")?.value.trim() || "",
-    ingredients: recipeLines(document.querySelector("#recipeIngredients")?.value),
-    steps: recipeLines(document.querySelector("#recipeSteps")?.value),
-    webUrl: document.querySelector("#recipeWebUrl")?.value.trim() || "",
-    youtubeUrl: document.querySelector("#recipeYoutubeUrl")?.value.trim() || ""
-  };
-
-  if (editingRecipeId) {
-    const recipe = state.recipes.find(r => r.id === editingRecipeId);
-    if (recipe) {
-      Object.assign(recipe, recipeData, {updatedAt: Date.now()});
-
-      // Bereits verknüpfte Essensplan-Einträge behalten die Verbindung,
-      // bekommen aber automatisch den neuen Rezeptnamen.
-      Object.keys(state.meals || {}).forEach(key => {
-        const meal = state.meals[key];
-        if (meal && typeof meal === "object" && meal.recipeId === recipe.id) {
-          meal.label = recipe.title;
-        }
-      });
-    }
-  } else {
-    state.recipes.push({
-      id: uid(),
-      ...recipeData,
-      createdAt: Date.now()
-    });
-  }
-
-  const wasEditing = !!editingRecipeId;
-  save();
-  renderRecipes();
-  renderMealPlan();
-  renderWeek();
-  resetRecipeForm();
-  document.querySelector("#recipeForm")?.classList.add("hidden");
-  showMotivation(wasEditing ? "Rezept geändert." : "Rezept gespeichert.");
-});
-
-document.querySelector("#cancelRecipeEditBtn")?.addEventListener("click", () => {
-  resetRecipeForm();
-  document.querySelector("#recipeForm")?.classList.add("hidden");
-});
-
-
-const WORKROOM_PAGE_SIZE = 10;
-let schoolWorkTodoPage = 0;
-let schoolPrintPage = 0;
-let workroomLinkPage = 0;
-
-function clampWorkroomPage(page, totalItems) {
-  const maxPage = Math.max(0, Math.ceil(totalItems / WORKROOM_PAGE_SIZE) - 1);
-  return Math.min(Math.max(0, page), maxPage);
-}
-
-function workroomPageSlice(items, page) {
-  const start = page * WORKROOM_PAGE_SIZE;
-  return items.slice(start, start + WORKROOM_PAGE_SIZE);
-}
-
-function renderWorkroomPager(listElement, totalItems, currentPage, onChange, showSingle = false) {
-  if (!listElement) return;
-
-  const old = listElement.parentElement?.querySelector(
-    `.workroom-pager[data-for="${listElement.id}"]`
-  );
-  if (old) old.remove();
-
-  const totalPages = Math.max(1, Math.ceil(totalItems / WORKROOM_PAGE_SIZE));
-  if (totalItems === 0) return;
-  if (totalPages <= 1 && !showSingle) return;
-
-  const pager = document.createElement("div");
-  pager.className = "workroom-pager";
-  pager.dataset.for = listElement.id;
-
-  const buttons = [];
-  for (let i = 0; i < totalPages; i++) {
-    const near = Math.abs(i - currentPage) <= 2;
-    const edge = i === 0 || i === totalPages - 1;
-    if (totalPages <= 7 || near || edge) {
-      buttons.push(`<button type="button" class="workroom-page-btn ${i === currentPage ? "active" : ""}" data-page="${i}">${i + 1}</button>`);
-    }
-  }
-
-  pager.innerHTML = `
-    <button type="button" class="workroom-page-btn" data-page="${currentPage - 1}" ${currentPage <= 0 ? "disabled" : ""}>‹</button>
-    ${buttons.join("")}
-    <button type="button" class="workroom-page-btn" data-page="${currentPage + 1}" ${currentPage >= totalPages - 1 ? "disabled" : ""}>›</button>
-  `;
-
-  listElement.insertAdjacentElement("afterend", pager);
-
-  pager.querySelectorAll(".workroom-page-btn[data-page]").forEach(btn => {
-    btn.addEventListener("click", () => {
-      if (btn.disabled) return;
-      const next = Number(btn.dataset.page);
-      if (!Number.isFinite(next) || next < 0 || next >= totalPages) return;
-      onChange(next);
-    });
-  });
-}
-
 function renderSchoolWorkTodos() {
-  const list = document.querySelector("#schoolWorkTodoList");
+   const list = document.querySelector("#schoolWorkTodoList");
   if (!list) return;
 
-  const archiveCutoff = Date.now() - 3 * 60 * 1000;
+const oneMinuteAgo = Date.now() - 60000;
 
-  const todos = [...state.workroom.todos]
-    .filter(t => {
-      if (!t.done) return true;
-      if (!t.completedAt) return true;
-      return t.completedAt > archiveCutoff;
-    })
-    .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+const todos = [...state.workroom.todos]
+  .filter(t => {
+    if (!t.done) return true;
+    if (!t.completedAt) return true;
 
-  schoolWorkTodoPage = clampWorkroomPage(schoolWorkTodoPage, todos.length);
-  const visibleTodos = workroomPageSlice(todos, schoolWorkTodoPage);
+    return t.completedAt > oneMinuteAgo;
+  })
+  
+  .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 
-  const archive = document.querySelector("#schoolWorkTodoArchive");
+if (!todos.length) {
+  list.innerHTML = `<div class="workroom-empty">Im Moment ist alles erledigt. ✨</div>`;
+}
 
-  if (archive) {
-    const archivedTodos = state.workroom.todos
-      .filter(t =>
-        t.done &&
-        t.completedAt &&
-        t.completedAt <= archiveCutoff
-      )
-      .sort((a, b) => (b.completedAt ?? 0) - (a.completedAt ?? 0));
+const archive = document.querySelector("#schoolWorkTodoArchive");
 
-    if (archivedTodos.length) {
-      const groups = archivedTodos.reduce((acc, t) => {
-        const label = new Date(t.completedAt).toLocaleDateString("de-AT", {
-          weekday: "short",
-          day: "2-digit",
-          month: "2-digit",
-          year: "numeric"
-        });
-        (acc[label] ||= []).push(t);
-        return acc;
-      }, {});
+if (archive) {
+  const archivedTodos = state.workroom.todos
+    .filter(t =>
+      t.done &&
+      t.completedAt &&
+      t.completedAt <= oneMinuteAgo
+    )
+    .sort((a, b) => (b.completedAt ?? 0) - (a.completedAt ?? 0));
 
-      archive.innerHTML = Object.entries(groups).map(([dateLabel, items]) => `
-        <div class="workroom-archive-group">
-          <div class="workroom-archive-date">${escapeHtml(dateLabel)}</div>
-          ${items.map(t => `
-            <div class="workroom-archive-item">
-              <span>✓ ${escapeHtml(t.text)}</span>
-              <button
-                type="button"
-                class="workroom-archive-delete"
-                data-id="${t.id}"
-                title="Endgültig löschen"
-                aria-label="Erledigtes Schul-To-do löschen"
-              >×</button>
-            </div>
-          `).join("")}
-        </div>
-      `).join("");
-    } else {
-      archive.innerHTML = `<div class="workroom-empty">Noch keine erledigten Schul-To-dos.</div>`;
-    }
+archive.innerHTML = archivedTodos.length
+  ? archivedTodos.map(t => `
+      <div class="workroom-archive-item">
+        <span>✓ ${escapeHtml(t.text)}</span>
 
-    archive.querySelectorAll(".workroom-archive-delete").forEach(btn => {
-      btn.addEventListener("click", e => {
-        const id = e.currentTarget.dataset.id;
+        <button
+          type="button"
+          class="workroom-archive-delete"
+          data-id="${t.id}"
+          title="Endgültig löschen"
+          aria-label="Erledigtes Schul-To-do löschen"
+        >×</button>
+      </div>
+    `).join("")
+  : `<div class="workroom-empty">Noch keine erledigten Schul-To-dos.</div>`;
 
-        state.workroom.todos =
-          state.workroom.todos.filter(t => t.id !== id);
+/* GENAU HIER EINFÜGEN */
+document.querySelectorAll(".workroom-archive-delete").forEach(btn => {
+  btn.addEventListener("click", e => {
+    const id = e.currentTarget.dataset.id;
 
-        save();
-        renderSchoolWorkTodos();
-      });
-    });
+    state.workroom.todos =
+      state.workroom.todos.filter(t => t.id !== id);
+
+    save();
+    renderSchoolWorkTodos();
+  });
+});
   }
 
-  if (!todos.length) {
-    list.innerHTML =
-      `<div class="workroom-empty">Im Moment ist alles erledigt. ✨</div>`;
-    return;
-  }
-
-  const typeLabels = {
+const typeLabels = {
     draw: "✏️ Vorzeichnen",
     prepare: "🛠 Vorbereiten",
     create: "📄 Erstellen",
-    print: "🖨 Drucken",
-    ask: "💬 Nachfragen"
+    print: "🖨 Drucken"
   };
 
-  list.innerHTML = visibleTodos.map(t => `
-    <div
-      class="workroom-todo-row ${t.done ? "done" : ""} ${t.type === "ask" ? "workroom-todo-ask" : ""}"
-      data-id="${t.id}">
+  list.innerHTML = todos.map(t => `
+<div
+  class="workroom-todo-row ${t.done ? "done" : ""}"
+  data-id="${t.id}">
 
-      <input
-        class="workroom-todo-check"
-        type="checkbox"
-        data-id="${t.id}"
-        ${t.done ? "checked" : ""}>
+  <input
+    class="workroom-todo-check"
+    type="checkbox"
+    data-id="${t.id}"
+    ${t.done ? "checked" : ""}>
 
-      <div class="workroom-todo-content">
-        <span class="workroom-todo-text">
-          ${escapeHtml(t.text)}
-        </span>
-      </div>
+ <div class="workroom-todo-content">
+  <span class="workroom-todo-text">${escapeHtml(t.text)}</span>
+</div>
 
-      <div class="workroom-todo-actions">
+<div class="workroom-todo-actions">
 
-        ${t.type
-          ? `<span class="workroom-todo-type">
-               ${typeLabels[t.type] || ""}
-             </span>`
-          : ""}
+  ${t.type
+    ? `<span class="workroom-todo-type">${typeLabels[t.type] || ""}</span>`
+    : ""}
 
-        ${t.url
-          ? `<a
-               class="workroom-todo-link"
-               href="${escapeHtml(t.url)}"
-               target="_blank"
-               rel="noopener"
-               title="Link öffnen">🔗</a>`
-          : ""}
-
-        <button
-          class="workroom-todo-edit"
-          type="button"
-          data-id="${t.id}"
-          title="Bearbeiten">✎</button>
-
-        <button
-          class="workroom-todo-delete"
-          type="button"
-          data-id="${t.id}"
-          title="Löschen">×</button>
-
-        <div class="workroom-move-controls">
-
+  ${t.url
+    ? `<a class="workroom-todo-link"
+        href="${escapeHtml(t.url)}"
+        target="_blank"
+        rel="noopener"
+        title="Link öffnen">🔗</a>`
+    : ""}
           <button
-            class="workroom-move-btn workroom-move-top"
-            type="button"
-            data-id="${t.id}"
-            title="Ganz nach oben">⇈</button>
+  class="workroom-todo-edit"
+  type="button"
+  data-id="${t.id}"
+  title="Bearbeiten">✎</button>
 
-          <button
-            class="workroom-move-btn workroom-move-up"
-            type="button"
-            data-id="${t.id}"
-            title="Eine Position nach oben">↑</button>
+<button
+  class="workroom-todo-delete"
+  type="button"
+  data-id="${t.id}"
+  title="Löschen">×</button>
 
-          <button
-            class="workroom-move-btn workroom-move-down"
-            type="button"
-            data-id="${t.id}"
-            title="Eine Position nach unten">↓</button>
+<div class="workroom-move-controls">
+  <button
+    class="workroom-move-btn workroom-move-top"
+    type="button"
+    data-id="${t.id}"
+    title="Ganz nach oben">⇈</button>
 
-          <span
-            class="workroom-drag-handle"
-            title="Ziehen"
-            aria-label="Ziehen">⋮⋮</span>
+  <button
+    class="workroom-move-btn workroom-move-up"
+    type="button"
+    data-id="${t.id}"
+    title="Eine Position nach oben">↑</button>
 
-        </div>
+  <button
+    class="workroom-move-btn workroom-move-down"
+    type="button"
+    data-id="${t.id}"
+    title="Eine Position nach unten">↓</button>
+
+  <span
+    class="workroom-drag-handle"
+    title="Ziehen"
+    aria-label="Ziehen">⋮⋮</span>
+</div>
       </div>
     </div>
   `).join("");
 
-  renderWorkroomPager(
-    list,
-    todos.length,
-    schoolWorkTodoPage,
-    page => {
-      schoolWorkTodoPage = page;
-      renderSchoolWorkTodos();
+document.querySelectorAll(".workroom-todo-check").forEach(box => {
+  box.addEventListener("change", e => {
+    const item = state.workroom.todos.find(t => t.id === e.currentTarget.dataset.id);
+    if (!item) return;
+
+    item.done = e.currentTarget.checked;
+
+    if (item.done) {
+      item.completedAt = Date.now();
+    } else {
+      item.completedAt = null;
     }
-  );
 
-  document.querySelectorAll(".workroom-todo-check").forEach(box => {
-    box.addEventListener("change", e => {
-      const item = state.workroom.todos.find(
-        t => t.id === e.currentTarget.dataset.id
-      );
-
-      if (!item) return;
-
-      item.done = e.currentTarget.checked;
-      item.completedAt = item.done ? Date.now() : null;
-
-      save();
-      renderSchoolWorkTodos();
-
-      if (item.done) {
-        setTimeout(() => {
-          renderSchoolWorkTodos();
-        }, 181000);
-      }
-    });
+    save();
+    renderSchoolWorkTodos();
+    if (item.done) {
+  setTimeout(() => {
+    renderSchoolWorkTodos();
+  }, 61000);
+}
   });
+});
+    function moveSchoolWorkTodo(id, direction) {
+  const sorted = [...state.workroom.todos]
+    .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+
+  const index = sorted.findIndex(t => t.id === id);
+  if (index === -1) return;
+
+  let newIndex = index;
+
+  if (direction === "top") newIndex = 0;
+  if (direction === "up") newIndex = Math.max(0, index - 1);
+  if (direction === "down") newIndex = Math.min(sorted.length - 1, index + 1);
+
+  if (newIndex === index) return;
+
+  const [moved] = sorted.splice(index, 1);
+  sorted.splice(newIndex, 0, moved);
+
+  sorted.forEach((todo, i) => {
+    todo.order = i;
+  });
+
+  state.workroom.todos = sorted;
+
+  save();
+  renderSchoolWorkTodos();
+}
+
 
   document.querySelectorAll(".workroom-todo-delete").forEach(btn => {
-    btn.addEventListener("click", e => {
-      const id = e.currentTarget.dataset.id;
+  btn.addEventListener("click", e => {
+    const id = e.currentTarget.dataset.id;
 
-      state.workroom.todos =
-        state.workroom.todos.filter(t => t.id !== id);
+    state.workroom.todos = state.workroom.todos.filter(t => t.id !== id);
+
+    save();
+    renderSchoolWorkTodos();
+  });
+});
+
+document.querySelectorAll(".workroom-todo-edit").forEach(btn => {
+  btn.addEventListener("click", e => {
+    const id = e.currentTarget.dataset.id;
+    const item = state.workroom.todos.find(t => t.id === id);
+    if (!item) return;
+
+    document.querySelector("#schoolWorkTodoInput").value = item.text || "";
+    document.querySelector("#schoolWorkTodoType").value = item.type || "";
+    document.querySelector("#schoolWorkTodoLink").value = item.url || "";
+
+    document.querySelector("#addSchoolWorkTodoBtn").dataset.editId = item.id;
+    document.querySelector("#addSchoolWorkTodoBtn").textContent = "Änderung speichern";
+  });
+});
+// Schul-To-dos per Maus oder Touch sortieren
+const todoList = document.querySelector("#schoolWorkTodoList");
+
+if (todoList && typeof Sortable !== "undefined") {
+  new Sortable(todoList, {
+    animation: 180,
+    handle: ".workroom-drag-handle",
+    ghostClass: "workroom-sort-ghost",
+    chosenClass: "workroom-sort-chosen",
+    dragClass: "workroom-sort-drag",
+delay: 0,
+delayOnTouchOnly: false,
+touchStartThreshold: 5,
+
+forceFallback: false,
+    
+    onEnd: function () {
+      const ids = [...todoList.querySelectorAll(".workroom-todo-row")]
+        .map(row => row.dataset.id);
+
+      ids.forEach((id, index) => {
+        const todo = state.workroom.todos.find(t => t.id === id);
+        if (todo) todo.order = index;
+      });
 
       save();
       renderSchoolWorkTodos();
-    });
+    }
   });
-
-  document.querySelectorAll(".workroom-todo-edit").forEach(btn => {
-    btn.addEventListener("click", e => {
-      const id = e.currentTarget.dataset.id;
-      const item = state.workroom.todos.find(t => t.id === id);
-
-      if (!item) return;
-
-      document.querySelector("#schoolWorkTodoInput").value =
-        item.text || "";
-
-      document.querySelector("#schoolWorkTodoType").value =
-        item.type || "";
-
-      document.querySelector("#schoolWorkTodoLink").value =
-        item.url || "";
-
-      const addBtn =
-        document.querySelector("#addSchoolWorkTodoBtn");
-
-      addBtn.dataset.editId = item.id;
-      addBtn.textContent = "Änderung speichern";
-    });
-  });
-
-  const todoList =
-    document.querySelector("#schoolWorkTodoList");
-
-  if (todoList && typeof Sortable !== "undefined") {
-    new Sortable(todoList, {
-      animation: 180,
-      draggable: ".workroom-todo-row",
-      filter: "input, button, a, select, textarea, .workroom-todo-actions, .workroom-drag-handle",
-      preventOnFilter: false,
-      ghostClass: "workroom-sort-ghost",
-      chosenClass: "workroom-sort-chosen",
-      dragClass: "workroom-sort-drag",
-      delay: 180,
-      delayOnTouchOnly: true,
-      touchStartThreshold: 6,
-      forceFallback: false,
-
-      onEnd: function () {
-        const ids = [
-          ...todoList.querySelectorAll(".workroom-todo-row")
-        ].map(row => row.dataset.id);
-
-        const sortedAll = [...state.workroom.todos]
-          .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
-
-        const startIndex = schoolWorkTodoPage * WORKROOM_PAGE_SIZE;
-        const visibleIdSet = new Set(ids);
-        const unaffected = sortedAll.filter(t => !visibleIdSet.has(t.id));
-        const moved = ids.map(id => state.workroom.todos.find(t => t.id === id)).filter(Boolean);
-
-        const rebuilt = [
-          ...unaffected.slice(0, startIndex),
-          ...moved,
-          ...unaffected.slice(startIndex)
-        ];
-
-        rebuilt.forEach((todo, index) => { todo.order = index; });
-        state.workroom.todos = rebuilt;
-
-        save();
-        renderSchoolWorkTodos();
-      }
-    });
-  }
 }
+}
+
 
 // Werkraum: Schul-To-dos mit Pfeilen verschieben
 document.addEventListener("click", e => {
@@ -5400,7 +2405,6 @@ document.querySelector("#addSchoolWorkTodoBtn")?.addEventListener("click", () =>
       item.text = text;
       item.type = typeInput.value || "";
       item.url = url;
-      item.updatedAt = Date.now();
     }
 
     delete button.dataset.editId;
@@ -5416,8 +2420,7 @@ document.querySelector("#addSchoolWorkTodoBtn")?.addEventListener("click", () =>
       url,
       order: state.workroom.todos.length,
       done: false,
-      createdAt: Date.now(),
-      updatedAt: Date.now()
+      createdAt: Date.now()
     });
 
     showMotivation("Schul-To-do hinzugefügt ✓");
@@ -5450,15 +2453,12 @@ state.workroom.prints = state.workroom.prints.filter(p => {
   
 const prints = [...state.workroom.prints]
   .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
-
-schoolPrintPage = clampWorkroomPage(schoolPrintPage, prints.length);
-const visiblePrints = workroomPageSlice(prints, schoolPrintPage);
   
   if (!prints.length) {
     list.innerHTML =
       `<div class="workroom-empty">Im Moment steht nichts auf der Druckliste.</div>`;
   } else {
-    list.innerHTML = visiblePrints.map(p => `
+    list.innerHTML = prints.map(p => `
       <div
         class="workroom-todo-row ${p.done ? "done" : ""}"
         data-print-id="${p.id}">
@@ -5525,16 +2525,6 @@ const visiblePrints = workroomPageSlice(prints, schoolPrintPage);
       </div>
     `).join("");
   }
-
-  renderWorkroomPager(
-    list,
-    prints.length,
-    schoolPrintPage,
-    page => {
-      schoolPrintPage = page;
-      renderSchoolPrints();
-    }
-  );
 
  document.querySelectorAll(".workroom-print-check").forEach(box => {
   box.addEventListener("change", e => {
@@ -5635,33 +2625,17 @@ const visiblePrints = workroomPageSlice(prints, schoolPrintPage);
     if (printList) {
       new Sortable(printList, {
         animation: 150,
+        handle: ".workroom-drag-handle",
         draggable: ".workroom-todo-row",
-        filter: "input, button, a, select, textarea, .workroom-todo-actions, .workroom-drag-handle",
-        preventOnFilter: false,
-        delay: 180,
-        delayOnTouchOnly: true,
-        touchStartThreshold: 6,
 
         onEnd: () => {
           const ids = [...printList.querySelectorAll(".workroom-todo-row")]
             .map(row => row.dataset.printId);
 
-          const sortedAll = [...state.workroom.prints]
-            .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
-
-          const startIndex = schoolPrintPage * WORKROOM_PAGE_SIZE;
-          const visibleIdSet = new Set(ids);
-          const unaffected = sortedAll.filter(p => !visibleIdSet.has(p.id));
-          const moved = ids.map(id => state.workroom.prints.find(p => p.id === id)).filter(Boolean);
-
-          const rebuilt = [
-            ...unaffected.slice(0, startIndex),
-            ...moved,
-            ...unaffected.slice(startIndex)
-          ];
-
-          rebuilt.forEach((item, index) => { item.order = index; });
-          state.workroom.prints = rebuilt;
+          ids.forEach((id, index) => {
+            const item = state.workroom.prints.find(p => p.id === id);
+            if (item) item.order = index;
+          });
 
           save();
           renderSchoolPrints();
@@ -5714,72 +2688,29 @@ document.querySelector("#addSchoolPrintBtn")?.addEventListener("click", () => {
   renderSchoolPrints();
 });
 
-
 // =============================
 // WERKRAUM – LINKSAMMLUNG
 // =============================
 
 let activeWorkroomLinkCategory = "all";
-let activeWorkroomLinkUse = "all";
-let workroomImportantOnly = false;
 
 function renderWorkroomLinks() {
   const list = document.querySelector("#workroomLinkList");
   if (!list) return;
-
-  // Ältere Links bekommen einmalig eine stabile Reihenfolge.
-  let orderChanged = false;
-  state.workroom.links.forEach((link, index) => {
-    if (!Number.isFinite(Number(link.order))) {
-      link.order = index;
-      orderChanged = true;
-    }
-  });
-  if (orderChanged) save();
 
   const categoryLabels = {
     wood: "🪵 Holz",
     paper: "📄 Papier",
     free: "✂️ Freies Arbeiten",
     experiment: "🧪 Experimentieren",
-    documents: "📎 Unterlagen & Belege",
-    bureaucracy: "🗂 Bürokratie",
-    current: "📌 Aktuell",
     other: "✨ Sonstiges"
   };
 
-  const useLabels = {
-    soon: "Demnächst",
-    current: "📌 Aktuell",
-    bureaucracy: "🗂 Bürokratie",
-    year: "🗓 Jahresplanung",
-    later: "🌙 Später vorgemerkt"
-  };
-
-  const useRank = { current: 0, soon: 1, bureaucracy: 2, year: 3, later: 4 };
-
   const links = [...state.workroom.links]
-    .sort((a, b) => {
-      const importantDiff = Number(!!b.important) - Number(!!a.important);
-      if (importantDiff) return importantDiff;
-
-      if (activeWorkroomLinkUse === "all") {
-        const rankDiff = (useRank[a.use || "soon"] ?? 0) - (useRank[b.use || "soon"] ?? 0);
-        if (rankDiff) return rankDiff;
-      }
-
-      return (Number(a.order) || 0) - (Number(b.order) || 0);
-    })
     .filter(link =>
-      (activeWorkroomLinkCategory === "all" ||
-       link.category === activeWorkroomLinkCategory) &&
-      (activeWorkroomLinkUse === "all" ||
-       (link.use || "soon") === activeWorkroomLinkUse) &&
-      (!workroomImportantOnly || !!link.important)
+      activeWorkroomLinkCategory === "all" ||
+      link.category === activeWorkroomLinkCategory
     );
-
-  workroomLinkPage = clampWorkroomPage(workroomLinkPage, links.length);
-  const visibleLinks = workroomPageSlice(links, workroomLinkPage);
 
   if (!links.length) {
     list.innerHTML =
@@ -5787,49 +2718,32 @@ function renderWorkroomLinks() {
     return;
   }
 
-  list.innerHTML = visibleLinks.map(link => `
-    <div class="workroom-link-item ${link.important ? "workroom-link-important" : ""} ${(link.use || "soon") === "later" ? "workroom-link-later" : ""}" data-id="${link.id}">
+  list.innerHTML = links.map(link => `
+    <div class="workroom-link-item" data-id="${link.id}">
 
  <div class="workroom-link-main">
 
   <div class="workroom-link-texts">
-    ${link.url ? `
-      <a
-        href="${escapeHtml(link.url)}"
-        target="_blank"
-        rel="noopener"
-        class="workroom-link-title">
-        ${escapeHtml(link.title)}
-      </a>
-    ` : `
-      <span class="workroom-link-title workroom-link-title-static">
-        ${escapeHtml(link.title)}
-      </span>
-    `}
+    <a
+      href="${escapeHtml(link.url)}"
+      target="_blank"
+      rel="noopener"
+      class="workroom-link-title">
+      ${escapeHtml(link.title)}
+    </a>
 
     ${link.note
       ? `<div class="workroom-link-note">${escapeHtml(link.note)}</div>`
       : ""}
   </div>
 
-  <div class="workroom-link-badges">
-    ${link.important ? `<span class="workroom-link-important-badge">⭐ Wichtig</span>` : ""}
-    <span class="workroom-link-use">
-      ${useLabels[link.use || "soon"]}
-    </span>
-    <span class="workroom-link-category">
-      ${categoryLabels[link.category] || "✨ Sonstiges"}
-    </span>
-  </div>
+  <span class="workroom-link-category">
+    ${categoryLabels[link.category] || "✨ Sonstiges"}
+  </span>
 
 </div>
 
       <div class="workroom-link-actions">
-        <span
-          class="workroom-link-drag-handle"
-          title="Link verschieben"
-          aria-label="Link verschieben">⋮⋮</span>
-
         <button
           class="workroom-link-edit"
           type="button"
@@ -5845,17 +2759,6 @@ function renderWorkroomLinks() {
 
     </div>
   `).join("");
-
-  renderWorkroomPager(
-    list,
-    links.length,
-    workroomLinkPage,
-    page => {
-      workroomLinkPage = page;
-      renderWorkroomLinks();
-    },
-    true
-  );
 
   document.querySelectorAll(".workroom-link-delete").forEach(btn => {
     btn.addEventListener("click", e => {
@@ -5881,10 +2784,6 @@ function renderWorkroomLinks() {
       document.querySelector("#workroomLinkUrl").value = link.url || "";
       document.querySelector("#workroomLinkCategory").value =
         link.category || "other";
-      document.querySelector("#workroomLinkUse").value =
-        link.use || "soon";
-      const importantInput = document.querySelector("#workroomLinkImportant");
-      if (importantInput) importantInput.checked = !!link.important;
 
       const addBtn = document.querySelector("#addWorkroomLinkBtn");
 
@@ -5892,59 +2791,6 @@ function renderWorkroomLinks() {
       addBtn.textContent = "Änderung speichern";
     });
   });
-
-  if (typeof Sortable !== "undefined") {
-    new Sortable(list, {
-      animation: 180,
-      draggable: ".workroom-link-item",
-      filter: "a, button, input, select, textarea",
-      preventOnFilter: false,
-      ghostClass: "workroom-sort-ghost",
-      chosenClass: "workroom-sort-chosen",
-      dragClass: "workroom-sort-drag",
-      delay: 180,
-      delayOnTouchOnly: true,
-      touchStartThreshold: 6,
-
-      onEnd: function () {
-        const draggedIds = [...list.querySelectorAll(".workroom-link-item")]
-          .map(row => row.dataset.id);
-
-        const allSorted = [...state.workroom.links]
-          .sort((a, b) => (Number(a.order) || 0) - (Number(b.order) || 0));
-
-        // Beim Kategorie-Filter nur die sichtbaren Plätze neu belegen.
-        const visibleSlots = [];
-        allSorted.forEach((link, index) => {
-          if (
-            (activeWorkroomLinkCategory === "all" ||
-             link.category === activeWorkroomLinkCategory) &&
-            (activeWorkroomLinkUse === "all" ||
-             (link.use || "soon") === activeWorkroomLinkUse)
-          ) {
-            visibleSlots.push(index);
-          }
-        });
-
-        const byId = new Map(state.workroom.links.map(link => [link.id, link]));
-
-        draggedIds.forEach((id, index) => {
-          const slot = visibleSlots[index];
-          if (slot !== undefined && byId.has(id)) {
-            allSorted[slot] = byId.get(id);
-          }
-        });
-
-        allSorted.forEach((link, index) => {
-          link.order = index;
-        });
-
-        state.workroom.links = allSorted;
-        save();
-        renderWorkroomLinks();
-      }
-    });
-  }
 }
 
 
@@ -5955,23 +2801,16 @@ document.querySelector("#addWorkroomLinkBtn")?.addEventListener("click", () => {
   const noteInput = document.querySelector("#workroomLinkNote");
   const urlInput = document.querySelector("#workroomLinkUrl");
   const categoryInput = document.querySelector("#workroomLinkCategory");
-  const useInput = document.querySelector("#workroomLinkUse");
-  const importantInput = document.querySelector("#workroomLinkImportant");
   const button = document.querySelector("#addWorkroomLinkBtn");
 
   const title = titleInput.value.trim();
   const note = noteInput.value.trim();
   let url = urlInput.value.trim();
   const category = categoryInput.value || "other";
-  const use = useInput?.value || "soon";
-  const important = !!importantInput?.checked;
 
-  if (!title) {
-    titleInput.focus();
-    return;
-  }
+  if (!title || !url) return;
 
-  if (url && !/^https?:\/\//i.test(url)) {
+  if (!/^https?:\/\//i.test(url)) {
     url = "https://" + url;
   }
 
@@ -5986,9 +2825,6 @@ document.querySelector("#addWorkroomLinkBtn")?.addEventListener("click", () => {
       item.note = note;
       item.url = url;
       item.category = category;
-      item.use = use;
-      item.important = important;
-      item.updatedAt = Date.now();
     }
 
     delete button.dataset.editId;
@@ -6001,11 +2837,7 @@ document.querySelector("#addWorkroomLinkBtn")?.addEventListener("click", () => {
       note,
       url,
       category,
-      use,
-      important,
-      order: state.workroom.links.length,
-      createdAt: Date.now(),
-      updatedAt: Date.now()
+      createdAt: Date.now()
     });
   }
 
@@ -6013,162 +2845,30 @@ document.querySelector("#addWorkroomLinkBtn")?.addEventListener("click", () => {
   noteInput.value = "";
   urlInput.value = "";
   categoryInput.value = "wood";
-  if (useInput) useInput.value = "soon";
-  if (importantInput) importantInput.checked = false;
 
   save();
   renderWorkroomLinks();
 });
 
 
-// Kategorien filtern – kompakt per Dropdown
-document.querySelector("#workroomLinkCategoryFilter")?.addEventListener("change", e => {
-  activeWorkroomLinkCategory = e.currentTarget.value || "all";
-  workroomLinkPage = 0;
-  renderWorkroomLinks();
-});
+// Kategorien filtern
+document.querySelectorAll(".workroom-link-filter").forEach(btn => {
 
-document.querySelectorAll(".workroom-link-use-filter").forEach(btn => {
   btn.addEventListener("click", e => {
-    activeWorkroomLinkUse = e.currentTarget.dataset.use || "soon";
-    workroomLinkPage = 0;
 
-    document.querySelectorAll(".workroom-link-use-filter").forEach(filter =>
-      filter.classList.toggle("active", filter === e.currentTarget)
-    );
+    activeWorkroomLinkCategory =
+      e.currentTarget.dataset.category || "all";
+
+    document.querySelectorAll(".workroom-link-filter")
+      .forEach(filter =>
+        filter.classList.toggle(
+          "active",
+          filter === e.currentTarget
+        )
+      );
 
     renderWorkroomLinks();
   });
-});
-
-document.querySelector("#workroomLinkUseFilterSelect")?.addEventListener("change", e => {
-  activeWorkroomLinkUse = e.currentTarget.value || "all";
-  workroomLinkPage = 1;
-  renderWorkroomLinks();
-});
-
-document.querySelector("#workroomLinkImportantFilter")?.addEventListener("click", e => {
-  workroomImportantOnly = !workroomImportantOnly;
-  workroomLinkPage = 0;
-  e.currentTarget.classList.toggle("active", workroomImportantOnly);
-  renderWorkroomLinks();
-});
-
-
-
-// =========================================================
-// WERKRAUM – SUPPLIERUNGEN
-// =========================================================
-function renderSubstitutions() {
-  const host = document.querySelector("#substitutionList");
-  if (!host) return;
-
-  state.workroom.substitutions = Array.isArray(state.workroom.substitutions)
-    ? state.workroom.substitutions
-    : [];
-
-  const items = [...state.workroom.substitutions]
-    .sort((a, b) => String(b.date || "").localeCompare(String(a.date || "")));
-
-  if (!items.length) {
-    host.innerHTML = `<div class="workroom-empty substitution-empty">Noch keine Supplierungen eingetragen.</div>`;
-    return;
-  }
-
-  const totalHours = items.reduce((sum, item) => sum + (Number(item.hours) || 1), 0);
-
-  host.innerHTML = `
-    <div class="substitution-summary">
-      <span>Für die Abrechnung</span>
-      <strong>${String(totalHours).replace(".", ",")} Std.</strong>
-    </div>
-    <div class="substitution-grid">
-      ${items.map(item => {
-        const dateLabel = item.date
-          ? parseLocalDate(item.date)?.toLocaleDateString("de-AT", {
-              weekday:"short", day:"2-digit", month:"2-digit"
-            }) || item.date
-          : "";
-        const hours = Number(item.hours) || 1;
-
-        return `
-          <div class="substitution-item">
-            <div class="substitution-item-main">
-              <div class="substitution-topline">
-                <strong>${escapeHtml(dateLabel)}</strong>
-                <span class="substitution-hours">${String(hours).replace(".", ",")} Std.</span>
-              </div>
-              <span>${escapeHtml(item.className || "")}${item.className && item.subject ? " · " : ""}${escapeHtml(item.subject || "")}</span>
-              ${item.forWhom ? `<small>für ${escapeHtml(item.forWhom)}</small>` : ""}
-              ${item.note ? `<small>${escapeHtml(item.note)}</small>` : ""}
-            </div>
-            <button type="button" class="substitution-delete" data-id="${item.id}" title="Löschen" aria-label="Supplierung löschen">×</button>
-          </div>
-        `;
-      }).join("")}
-    </div>
-  `;
-
-  host.querySelectorAll(".substitution-delete").forEach(btn => {
-    btn.addEventListener("click", () => {
-      state.workroom.substitutions = state.workroom.substitutions
-        .filter(item => item.id !== btn.dataset.id);
-      save();
-      renderSubstitutions();
-    });
-  });
-}
-
-const substitutionDialog = document.querySelector("#substitutionDialog");
-
-document.querySelector("#openSubstitutionBtn")?.addEventListener("click", () => {
-  const dateInput = document.querySelector("#substitutionDate");
-  if (dateInput && !dateInput.value) dateInput.value = dateKey(new Date());
-  substitutionDialog?.showModal();
-  setTimeout(() => dateInput?.showPicker?.(), 80);
-});
-
-document.querySelector("#closeSubstitutionDialogBtn")?.addEventListener("click", () => {
-  substitutionDialog?.close();
-});
-
-document.querySelector("#saveSubstitutionBtn")?.addEventListener("click", () => {
-  const date = document.querySelector("#substitutionDate")?.value || "";
-  const className = document.querySelector("#substitutionClass")?.value.trim() || "";
-  const subject = document.querySelector("#substitutionSubject")?.value.trim() || "";
-  const forWhom = document.querySelector("#substitutionForWhom")?.value.trim() || "";
-  const hours = Number(document.querySelector("#substitutionHours")?.value || 1);
-  const note = document.querySelector("#substitutionNote")?.value.trim() || "";
-
-  if (!date || !className || !subject) {
-    showMotivation("Bitte Tag, Klasse und Supplierfach eintragen.");
-    return;
-  }
-
-  state.workroom.substitutions.push({
-    id: uid(),
-    date,
-    className,
-    subject,
-    forWhom,
-    hours: Number.isFinite(hours) && hours > 0 ? hours : 1,
-    note,
-    createdAt: Date.now()
-  });
-
-  ["#substitutionClass","#substitutionSubject","#substitutionForWhom","#substitutionNote"]
-    .forEach(sel => {
-      const el = document.querySelector(sel);
-      if (el) el.value = "";
-    });
-
-  const hoursInput = document.querySelector("#substitutionHours");
-  if (hoursInput) hoursInput.value = "1";
-
-  save();
-  renderSubstitutions();
-  substitutionDialog?.close();
-  showMotivation("Supplierung gespeichert.");
 });
 
 document.querySelector("#addVideoBtn").addEventListener("click", () => {
@@ -6247,27 +2947,12 @@ function resetTodoEditor() {
   document.querySelector("#todoPriority").value = "medium";
   document.querySelector("#todoArea").value = "work";
   document.querySelector("#todoPeriod").value = "week";
-  document.querySelector("#todoWeekOffset").value = "0";
   document.querySelector("#todoDay").value = "";
   document.querySelector("#eventDate").value = "";
   document.querySelector("#eventEndDate").value = "";
   document.querySelector("#eventTime").value = "";
-document.querySelector("#eventEndTime").value = "";
-const schoolyearWeekdayReset = document.querySelector("#schoolyearWeekday");
-const schoolyearTimeReset = document.querySelector("#schoolyearTime");
-const schoolyearEndTimeReset = document.querySelector("#schoolyearEndTime");
-if (schoolyearWeekdayReset) schoolyearWeekdayReset.value = "";
-if (schoolyearTimeReset) schoolyearTimeReset.value = "";
-if (schoolyearEndTimeReset) schoolyearEndTimeReset.value = "";
-
-
-const plingEnabled = document.querySelector("#eventPlingEnabled");
-const plingMinutes = document.querySelector("#eventPlingMinutes");
-
-if (plingEnabled) plingEnabled.checked = false;
-if (plingMinutes) plingMinutes.value = "15";
-
-document.querySelector("#eventCategory").value = "normal";
+  document.querySelector("#eventEndTime").value = "";
+  document.querySelector("#eventCategory").value = "normal";
   document.querySelector("#recurrence").value = "none";
   setSelectedFamilyMembers([]);
   updateEntryTypeUI();
@@ -6277,100 +2962,72 @@ document.querySelector("#eventCategory").value = "normal";
 
 
 function updateEntryTypeUI() {
-  const type = document.querySelector("#entryType")?.value || "todo";
+  const type = document.querySelector("#entryType").value;
   const isEvent = type === "event";
+const eventCategory = document.querySelector("#eventCategory")?.value || "normal";
+const recurrenceSelect = document.querySelector("#recurrence");
 
-  const eventCategory = document.querySelector("#eventCategory")?.value || "normal";
-  const recurrenceSelect = document.querySelector("#recurrence");
+if (
+  isEvent &&
+  ["birthday", "nameday", "anniversary", "holiday"].includes(eventCategory)
+) {
+  recurrenceSelect.value = "yearly";
+}
+  document.querySelector("#eventFields").classList.toggle("hidden", !isEvent);
+  document.querySelector("#entryTextLabel").textContent = isEvent ? "Termin" : "Aufgabe";
+  document.querySelector("#todoText").placeholder = isEvent
+    ? "z. B. Musikschule, Elternabend, Training"
+    : "z. B. Elternbrief fertigstellen";
 
-  // Geburtstage/Namenstage/Jahrestage/Feiertage automatisch jährlich
-  if (
-    isEvent &&
-    recurrenceSelect &&
-    ["birthday", "nameday", "anniversary", "holiday"].includes(eventCategory)
-  ) {
-    recurrenceSelect.value = "yearly";
-  }
-
-  const recurrence = recurrenceSelect?.value || "none";
-
-  // Normale Terminfelder grundsätzlich bei "Termin" sichtbar
-  const eventFields = document.querySelector("#eventFields");
-  if (eventFields) eventFields.classList.toggle("hidden", !isEvent);
-
-  const entryTextLabel = document.querySelector("#entryTextLabel");
-  if (entryTextLabel) entryTextLabel.textContent = isEvent ? "Termin" : "Aufgabe";
-
-  const todoText = document.querySelector("#todoText");
-  if (todoText) {
-    todoText.placeholder = isEvent
-      ? "z. B. Musikschule, Elternabend, Training"
-      : "z. B. Elternbrief fertigstellen";
-  }
-
+  // Button passend zur gewählten Art beschriften
   const addBtn = document.querySelector("#addTodoBtn");
-  if (addBtn && !editingTodoId) {
+  if (addBtn) {
     addBtn.textContent = isEvent ? "Termin hinzufügen" : "To-do hinzufügen";
   }
+const periodField = document.querySelector("#todoPeriod")?.closest("label, .field, .form-field");
 
-  // To-do-spezifische Felder bei Termin ausblenden
-  const periodField = document.querySelector("#todoPeriod")?.closest("label, .field, .form-field");
-  const priorityField = document.querySelector("#todoPriority")?.closest("label, .field, .form-field");
-  const areaField = document.querySelector("#todoArea")?.closest("label, .field, .form-field");
+if (periodField) {
+  periodField.classList.toggle("hidden", isEvent);
+}
+ 
+const priorityField = document.querySelector("#todoPriority")?.closest("label, .field, .form-field");
+const areaField = document.querySelector("#todoArea")?.closest("label, .field, .form-field");
 
-  if (periodField) periodField.classList.toggle("hidden", isEvent);
-  if (priorityField) priorityField.classList.toggle("hidden", isEvent);
-  if (areaField) areaField.classList.toggle("hidden", isEvent);
+if (priorityField) {
+  priorityField.classList.toggle("hidden", isEvent);
+}
 
-  // Ferienhinweis
-  const schoolHint = document.querySelector("#schoolHolidayHint");
-  if (schoolHint) schoolHint.classList.toggle("hidden", recurrence !== "schoolyear-noe");
+if (areaField) {
+  areaField.classList.toggle("hidden", isEvent);
+}
 
-  // To-do-Wochentag/Woche nur bei Wochen-To-do
-  const period = document.querySelector("#todoPeriod")?.value || "week";
+const recurrence = document.querySelector("#recurrence").value;
+
+  document.querySelector("#schoolHolidayHint").classList.toggle(
+    "hidden",
+    recurrence !== "schoolyear-no"
+  );
+
+  // Wochentag bei To-dos nur für "Diese Woche" anzeigen
+  const period = document.querySelector("#todoPeriod")?.value;
   const todoDayField = document.querySelector("#todoDay")?.closest("label, .field, .form-field");
-  const todoWeekOffsetField = document.querySelector("#todoWeekOffset")?.closest("label, .field, .form-field");
 
   if (todoDayField) {
     todoDayField.classList.toggle("hidden", isEvent || period !== "week");
   }
-  if (todoWeekOffsetField) {
-    todoWeekOffsetField.classList.toggle("hidden", isEvent || period !== "week");
-  }
-
-  // Sonderfall Schuljahr NÖ:
-  // Statt Start-/Enddatum werden Wochentag + Von/Bis gezeigt.
-  const isSchoolyearEvent = isEvent && recurrence === "schoolyear-noe";
-  const schoolyearFields = document.querySelector("#schoolyearScheduleFields");
-  if (schoolyearFields) {
-    schoolyearFields.classList.toggle("hidden", !isSchoolyearEvent);
-  }
-
-  ["#eventDate", "#eventEndDate", "#eventTime", "#eventEndTime"].forEach(selector => {
-    const field = document.querySelector(selector)?.closest("label");
-    if (field) field.classList.toggle("hidden", isSchoolyearEvent);
-  });
 }
 
 document.querySelector("#entryType").addEventListener("change", updateEntryTypeUI);
 document.querySelector("#recurrence").addEventListener("change", updateEntryTypeUI);
 document.querySelector("#eventCategory").addEventListener("change", updateEntryTypeUI);
-document.querySelector("#todoPeriod")?.addEventListener("change", updateEntryTypeUI);
 
 document.querySelector("#cancelTodoEditBtn").addEventListener("click", resetTodoEditor);
 
 document.querySelector("#addTodoBtn").addEventListener("click", () => {
-  const todoTextInput = document.querySelector("#todoText");
-  const text = todoTextInput?.value.trim() || "";
-  const type = document.querySelector("#entryType").value;
+  const text = document.querySelector("#todoText").value.trim();
+  if (!text) return;
 
-  if (!text) {
-    alert(type === "event"
-      ? "Bitte dem Termin noch einen Namen geben."
-      : "Bitte das To-do noch kurz benennen.");
-    todoTextInput?.focus();
-    return;
-  }
+  const type = document.querySelector("#entryType").value;
   const selectedDay = document.querySelector("#todoDay").value;
   const selectedFamily = selectedFamilyMembers();
   const recurrence = document.querySelector("#recurrence").value;
@@ -6378,61 +3035,18 @@ document.querySelector("#addTodoBtn").addEventListener("click", () => {
 const eventEndDate = document.querySelector("#eventEndDate")?.value || "";
 const eventTime = document.querySelector("#eventTime").value;
 const eventEndTime = document.querySelector("#eventEndTime")?.value || "";
-
-const plingEnabled =
-  type === "event" &&
-  !!document.querySelector("#eventPlingEnabled")?.checked;
-
-const plingMinutes =
-  Number(document.querySelector("#eventPlingMinutes")?.value || 15);
-
-const eventCategory = document.querySelector("#eventCategory")?.value || "normal";
-const schoolyearWeekday = document.querySelector("#schoolyearWeekday")?.value || "";
-const schoolyearTime = document.querySelector("#schoolyearTime")?.value || "";
-const schoolyearEndTime = document.querySelector("#schoolyearEndTime")?.value || "";
-const isSchoolyearEvent = type === "event" && recurrence === "schoolyear-noe";
+  const eventCategory = document.querySelector("#eventCategory")?.value || "normal";
   const superImportant = document.querySelector("#superImportant").checked;
 
   const activeMonday = new Date(currentWeekMonday);
-  const todoWeekOffset = Math.max(0, Math.min(2, Number(document.querySelector("#todoWeekOffset")?.value || 0)));
-  const plannedMonday = new Date(activeMonday);
-  plannedMonday.setDate(plannedMonday.getDate() + (todoWeekOffset * 7));
-
-  const selectedTodoDate = selectedDay ? dateForWeekday(plannedMonday, selectedDay) : null;
-  const newWeekKey = selectedDay ? dateKey(plannedMonday) : null;
+  const selectedTodoDate = selectedDay ? dateForWeekday(activeMonday, selectedDay) : null;
+  const newWeekKey = selectedDay ? dateKey(activeMonday) : null;
   const anchorDate = type === "event"
-    ? (isSchoolyearEvent ? activeSchoolYear().start : eventDate)
+    ? eventDate
     : (selectedTodoDate ? dateKey(selectedTodoDate) : null);
 
-  if (isSchoolyearEvent && !schoolyearWeekday) {
-    alert("Bitte für den Schuljahr-Termin einen Wochentag auswählen.");
-    document.querySelector("#schoolyearWeekday")?.focus();
-    return;
-  }
-
-  if (type === "event" && !isSchoolyearEvent && !eventDate) {
+  if (type === "event" && !eventDate) {
     alert("Bitte für den Termin ein Datum auswählen.");
-    document.querySelector("#eventDate")?.focus();
-    return;
-  }
-
-  if (type === "event" && !isSchoolyearEvent && eventEndDate && eventEndDate < eventDate) {
-    alert("Das Enddatum kann nicht vor dem Startdatum liegen.");
-    document.querySelector("#eventEndDate")?.focus();
-    return;
-  }
-
-  if (
-    type === "event" &&
-    !isSchoolyearEvent &&
-    eventEndDate &&
-    eventEndDate === eventDate &&
-    eventTime &&
-    eventEndTime &&
-    eventEndTime < eventTime
-  ) {
-    alert("Die Endzeit kann am selben Tag nicht vor der Startzeit liegen.");
-    document.querySelector("#eventEndTime")?.focus();
     return;
   }
 
@@ -6454,14 +3068,11 @@ const isSchoolyearEvent = type === "event" && recurrence === "schoolyear-noe";
     item.day = selectedDay;
     item.family = selectedFamily;
     item.weekKey = type === "event" ? null : newWeekKey;
-    item.schoolDay = isSchoolyearEvent ? schoolyearWeekday : "";
-    item.date = type === "event" ? (isSchoolyearEvent ? null : eventDate) : null;
-    item.time = type === "event" ? (isSchoolyearEvent ? schoolyearTime : eventTime) : "";
-    item.endDate = type === "event" ? (isSchoolyearEvent ? null : eventEndDate) : null;
-item.endTime = type === "event" ? (isSchoolyearEvent ? schoolyearEndTime : eventEndTime) : "";
-item.plingEnabled = type === "event" ? plingEnabled : false;
-item.plingMinutes = type === "event" ? plingMinutes : 15;
-item.eventCategory = type === "event" ? eventCategory : "normal";
+    item.date = type === "event" ? eventDate : null;
+    item.time = type === "event" ? eventTime : "";
+    item.endDate = type === "event" ? eventEndDate : null;
+item.endTime = type === "event" ? eventEndTime : "";
+    item.eventCategory = type === "event" ? eventCategory : "normal";
     item.recurrence = recurrence;
     item.anchorDate = anchorDate;
     item.completedOccurrences = Array.isArray(item.completedOccurrences) ? item.completedOccurrences : [];
@@ -6480,14 +3091,11 @@ item.eventCategory = type === "event" ? eventCategory : "normal";
       day: selectedDay,
       family: selectedFamily,
       weekKey: type === "event" ? null : newWeekKey,
-      schoolDay: isSchoolyearEvent ? schoolyearWeekday : "",
-      date: type === "event" ? (isSchoolyearEvent ? null : eventDate) : null,
-      time: type === "event" ? (isSchoolyearEvent ? schoolyearTime : eventTime) : "",
-      endDate: type === "event" ? (isSchoolyearEvent ? null : eventEndDate) : null,
-endTime: type === "event" ? (isSchoolyearEvent ? schoolyearEndTime : eventEndTime) : "",
-plingEnabled: type === "event" ? plingEnabled : false,
-plingMinutes: type === "event" ? plingMinutes : 15,
-eventCategory: type === "event" ? eventCategory : "normal",
+      date: type === "event" ? eventDate : null,
+      time: type === "event" ? eventTime : "",
+      endDate: type === "event" ? eventEndDate : null,
+endTime: type === "event" ? eventEndTime : "",
+      eventCategory: type === "event" ? eventCategory : "normal",
       recurrence,
       anchorDate,
       completedOccurrences: [],
@@ -6506,7 +3114,6 @@ document.querySelectorAll(".filter").forEach(btn => btn.addEventListener("click"
   document.querySelectorAll(".filter").forEach(x => x.classList.remove("active"));
   btn.classList.add("active");
   todoFilter = btn.dataset.filter;
-  if (todoFilter === "done") window.todoDonePage = 1;
   renderTodos();
 }));
 
@@ -6518,34 +3125,6 @@ document.querySelectorAll(".archive-filter").forEach(btn => btn.addEventListener
 }));
 
 
-function openRecipeReuseDialog(link) {
-  if (!link?.url) return;
-
-  replanMode = "recipe";
-  replanArchiveId = null;
-  replanRecipeLink = {
-    url:link.url,
-    label:link.label || "Rezept",
-    recipeId:link.recipeId || ""
-  };
-
-  const dialog = document.querySelector("#replanDialog");
-  if (!dialog) return;
-
-  const smallLabel = dialog.querySelector(".small-label");
-  if (smallLabel) smallLabel.textContent = "REZEPT EINPLANEN";
-
-  const title = document.querySelector("#replanTitle");
-  if (title) title.textContent = replanRecipeLink.label;
-
-  const week = document.querySelector("#replanWeek");
-  const day = document.querySelector("#replanDay");
-  if (week) week.value = "0";
-  if (day) day.value = "Montag";
-
-  dialog.showModal();
-}
-
 const replanDialog = document.querySelector("#replanDialog");
 const closeReplanDialogBtn = document.querySelector("#closeReplanDialogBtn");
 const cancelReplanBtn = document.querySelector("#cancelReplanBtn");
@@ -6553,12 +3132,6 @@ const confirmReplanBtn = document.querySelector("#confirmReplanBtn");
 
 function closeReplanDialog() {
   replanArchiveId = null;
-  replanRecipeLink = null;
-  replanMode = "exercise";
-
-  const smallLabel = replanDialog?.querySelector(".small-label");
-  if (smallLabel) smallLabel.textContent = "ÜBUNG EINPLANEN";
-
   if (replanDialog && replanDialog.open) replanDialog.close();
 }
 
@@ -6572,55 +3145,16 @@ if (replanDialog) {
 }
 
 if (confirmReplanBtn) confirmReplanBtn.addEventListener("click", () => {
-  const weeksAhead = Number(document.querySelector("#replanWeek")?.value || 0);
-  const day = document.querySelector("#replanDay")?.value || "Montag";
-  const monday = getMonday(new Date());
-  monday.setDate(monday.getDate() + weeksAhead * 7);
-
-  if (replanMode === "recipe") {
-    const link = replanRecipeLink;
-    if (!link?.url) {
-      closeReplanDialog();
-      return;
-    }
-
-    const dayIndex = WEEK_DAYS.indexOf(day);
-    const targetDate = dayDate(monday, dayIndex >= 0 ? dayIndex : 0);
-    const key = dateKey(targetDate);
-
-    state.meals = state.meals && typeof state.meals === "object" ? state.meals : {};
-    state.meals[key] = {
-      label:link.label || "Rezept",
-      recipeId:link.recipeId || "",
-      url:link.url,
-      deleted:false,
-      updatedAt:Date.now()
-    };
-
-    // Falls dieser Link vorher mit × aus dem Tracking geräumt wurde,
-    // darf die neue Verwendung ihn wieder sichtbar machen.
-    const feedback = state.recipeLinkFeedback[link.url] || {};
-    state.recipeLinkFeedback[link.url] = {
-      ...feedback,
-      hidden:false,
-      hiddenAt:0,
-      updatedAt:Date.now()
-    };
-
-    save();
-    currentWeekMonday = monday;
-    closeReplanDialog();
-    renderAll();
-    document.querySelector('[data-view="week"]')?.click();
-    showMotivation("Rezept eingeplant ✓");
-    return;
-  }
-
   const item = state.archive.find(a => a.id === replanArchiveId);
   if (!item) {
     closeReplanDialog();
     return;
   }
+
+  const weeksAhead = Number(document.querySelector("#replanWeek").value || 0);
+  const day = document.querySelector("#replanDay").value;
+  const monday = getMonday(new Date());
+  monday.setDate(monday.getDate() + weeksAhead * 7);
 
   state.videos.push({
     id:uid(),
@@ -6638,7 +3172,7 @@ if (confirmReplanBtn) confirmReplanBtn.addEventListener("click", () => {
   replanDialog.close();
   currentWeekMonday = monday;
   renderAll();
-  document.querySelector('[data-view="week"]')?.click();
+  document.querySelector('[data-view="week"]').click();
 });
 
 const deleteAllExercisesBtn = document.querySelector("#deleteAllExercisesBtn");
@@ -6701,85 +3235,6 @@ function showLoginGate(show) {
   document.querySelector("#logoutBtn")?.classList.toggle("hidden", show);
 }
 
-
-function nonEmptyWorkroomScore(w) {
-  if (!w || typeof w !== "object") return 0;
-  return ["todos","prints","links","substitutions"].reduce(
-    (sum, key) => sum + (Array.isArray(w[key]) ? w[key].length : 0), 0
-  );
-}
-
-function normalizeWorkroom(w) {
-  const src = w && typeof w === "object" ? w : {};
-  return {
-    todos: Array.isArray(src.todos) ? src.todos : [],
-    prints: Array.isArray(src.prints) ? src.prints : [],
-    links: Array.isArray(src.links) ? src.links : [],
-    substitutions: Array.isArray(src.substitutions) ? src.substitutions : [],
-    plans: src.plans && typeof src.plans === "object"
-      ? src.plans
-      : {week:[], year:[]}
-  };
-}
-
-function mergeByIdPreferNewer(localList, cloudList) {
-  const local = Array.isArray(localList) ? localList : [];
-  const cloud = Array.isArray(cloudList) ? cloudList : [];
-  const map = new Map();
-
-  [...cloud, ...local].forEach(item => {
-    if (!item || !item.id) return;
-    const previous = map.get(item.id);
-    if (!previous) {
-      map.set(item.id, item);
-      return;
-    }
-    const prevTime = Number(previous.updatedAt || previous.createdAt || 0);
-    const itemTime = Number(item.updatedAt || item.createdAt || 0);
-    if (itemTime >= prevTime) map.set(item.id, item);
-  });
-
-  return [...map.values()];
-}
-
-function mergeSchool(localSchool, cloudSchool) {
-  if (!localSchool?.children) return cloudSchool?.children ? cloudSchool : localSchool;
-  if (!cloudSchool?.children) return localSchool;
-
-  const merged = structuredClone(localSchool);
-
-  ["1","2"].forEach(id => {
-    const l = localSchool.children[id] || {};
-    const c = cloudSchool.children[id] || {};
-
-    const deletedTaskIds = [...new Set([
-      ...(Array.isArray(l.deletedTaskIds) ? l.deletedTaskIds : []),
-      ...(Array.isArray(c.deletedTaskIds) ? c.deletedTaskIds : [])
-    ])];
-
-    const deletedLinkIds = [...new Set([
-      ...(Array.isArray(l.deletedLinkIds) ? l.deletedLinkIds : []),
-      ...(Array.isArray(c.deletedLinkIds) ? c.deletedLinkIds : [])
-    ])];
-
-    merged.children[id] = {
-      ...c,
-      ...l,
-      name: l.name || c.name || (id === "1" ? "Lou" : "Fina"),
-      deletedTaskIds,
-      deletedLinkIds,
-      tasks: mergeByIdPreferNewer(l.tasks, c.tasks)
-        .filter(task => !deletedTaskIds.includes(task.id)),
-      links: mergeByIdPreferNewer(l.links, c.links)
-        .filter(link => !deletedLinkIds.includes(link.id)),
-      timetableUrl: l.timetableUrl || c.timetableUrl || "",
-      manualTimetable: l.manualTimetable || c.manualTimetable || null
-    };
-  });
-
-  return merged;
-}
-
 function applyCloudData(data) {
   cloudApplying = true;
   try {
@@ -6792,51 +3247,15 @@ function applyCloudData(data) {
 
 shoppingItems = state.shopping;
     
-    const localRecipes = Array.isArray(state.recipes) ? state.recipes : [];
-    const cloudRecipes = Array.isArray(data.recipes) ? data.recipes : null;
-
-    // Ältere Cloud-Stände hatten teilweise noch keine Rezeptdaten.
-    // Eine leere Cloud-Liste darf deshalb vorhandene lokale Rezepte nicht löschen.
-    state.recipes = cloudRecipes && cloudRecipes.length
-      ? cloudRecipes
-      : localRecipes;
-    state.meals = mergeMeals(
-      state.meals,
-      data.meals && typeof data.meals === "object" ? data.meals : {}
-    );
-    if (Array.isArray(data.pinboard)) {
-      handleIncomingPinboard(data.pinboard);
-      state.pinboard = data.pinboard;
+    state.workroom = data.workroom && typeof data.workroom === "object"
+  ? {
+      todos: Array.isArray(data.workroom.todos) ? data.workroom.todos : [],
+      prints: Array.isArray(data.workroom.prints) ? data.workroom.prints : [],
+      links: Array.isArray(data.workroom.links) ? data.workroom.links : [],
+      substitutions: Array.isArray(data.workroom.substitutions) ? data.workroom.substitutions : []
     }
-    // Zeittracking wird separat synchronisiert, damit Geräte sich nicht gegenseitig
-    // mit einem älteren Gesamtstand überschreiben.
-    if (data.recipeLinkFeedback && typeof data.recipeLinkFeedback === "object") {
-      state.recipeLinkFeedback = {
-        ...state.recipeLinkFeedback,
-        ...data.recipeLinkFeedback
-      };
-    }
-    const localWorkroom = normalizeWorkroom(state.workroom);
-    const cloudWorkroom = normalizeWorkroom(data.workroom);
-
-    // Sicherheitsregel:
-    // Ein leerer Cloud-Stand darf vorhandene lokale Werkraumdaten niemals löschen.
-    if (nonEmptyWorkroomScore(localWorkroom) > 0 && nonEmptyWorkroomScore(cloudWorkroom) === 0) {
-      state.workroom = localWorkroom;
-    } else if (nonEmptyWorkroomScore(localWorkroom) === 0) {
-      state.workroom = cloudWorkroom;
-    } else {
-      state.workroom = {
-        todos: mergeByIdPreferNewer(localWorkroom.todos, cloudWorkroom.todos),
-        prints: mergeByIdPreferNewer(localWorkroom.prints, cloudWorkroom.prints),
-        links: mergeByIdPreferNewer(localWorkroom.links, cloudWorkroom.links),
-        substitutions: mergeByIdPreferNewer(localWorkroom.substitutions, cloudWorkroom.substitutions),
-        plans: localWorkroom.plans || cloudWorkroom.plans || {week:[], year:[]}
-      };
-    }
-    if (data.school?.children) {
-      state.school = mergeSchool(state.school, data.school);
-    }
+  : state.workroom;
+    if (data.school?.children) state.school = data.school;
     if (data.familySettings) state.familySettings = data.familySettings;
     state.settings = {...(state.settings || {}), ...(data.settings || {})};
     saveLocal();
@@ -6948,7 +3367,6 @@ firebase.auth().onAuthStateChanged(async user => {
     setLoginMessage("");
     showLoginGate(false);
     startCloudSync();
-    await startTimeTrackingSync();
     
     await migrateShoppingToCollection();
 startShoppingSync();
@@ -6958,10 +3376,6 @@ startShoppingSync();
     if (cloudUnsubscribe) {
       cloudUnsubscribe();
       cloudUnsubscribe = null;
-    }
-    if (timeTrackingUnsubscribe) {
-      timeTrackingUnsubscribe();
-      timeTrackingUnsubscribe = null;
     }
     showLoginGate(true);
   }
@@ -7291,573 +3705,11 @@ store.value = "";
 
     renderShopping();
   });
-// =========================================================
-// PLING – Termin-Erinnerung + Gerätestatus + Systemhinweis
-// Kostenlos: kein Blaze, kein Firebase Storage, kein Bezahl-Dienst.
-// WICHTIG: Exakte Erinnerungen bei vollständig geschlossener Web-App
-// benötigen echten Web-Push von einem Server. Diese Version erinnert
-// zuverlässig, solange die Seite läuft, und holt beim Zurückkehren
-// versäumte Erinnerungen vor Terminbeginn nach.
-// =========================================================
-(function setupPlingReminder(){
-
-  const DEVICE_KEY = "balanceProd.plingDeviceEnabled";
-  const VOLUME_KEY = "balanceProd.plingVolume";
-  const SOUND_KEY = "balanceProd.plingSound";
-  const FIRED_KEY = "balanceProd.plingFired";
-
-  let audioContext = null;
-  let audioUnlocked = false;
-
-  function notificationSupported(){
-    return "Notification" in window;
-  }
-
-  function serviceWorkerSupported(){
-    return "serviceWorker" in navigator;
-  }
-
-  async function ensureServiceWorker(){
-    if (!serviceWorkerSupported()) return null;
-
-    try {
-      await navigator.serviceWorker.register("./sw.js");
-      const registration = await navigator.serviceWorker.ready;
-      return registration;
-    } catch (err) {
-      console.warn("Service Worker konnte nicht registriert werden:", err);
-      return null;
-    }
-  }
-
-  function deviceNotificationsEnabled(){
-    return localStorage.getItem(DEVICE_KEY) === "1";
-  }
-
-  function setDeviceNotificationsEnabled(value){
-    localStorage.setItem(DEVICE_KEY, value ? "1" : "0");
-  }
-
-  function permissionState(){
-    if (!notificationSupported()) return "unsupported";
-    return Notification.permission;
-  }
-
-  function updateDeviceStatus(){
-    const status = document.querySelector("#plingDeviceStatus");
-    const enableBtn = document.querySelector("#enablePlingNotifications");
-    if (!status || !enableBtn) return;
-
-    const permission = permissionState();
-    const enabled = deviceNotificationsEnabled();
-
-    if (permission === "unsupported") {
-      status.textContent = "🔕 System-Benachrichtigungen sind in diesem Browser nicht verfügbar.";
-      status.dataset.state = "unsupported";
-      enableBtn.textContent = "Nicht verfügbar";
-      enableBtn.disabled = true;
-      return;
-    }
-
-    enableBtn.disabled = false;
-
-    if (permission === "granted" && enabled) {
-      status.textContent = "🔔 Dieses Gerät ist für Benachrichtigungen aktiviert.";
-      status.dataset.state = "granted";
-      enableBtn.textContent = "Benachrichtigungen aktiv";
-      return;
-    }
-
-    if (permission === "denied") {
-      status.textContent = "🔕 Benachrichtigungen sind auf diesem Gerät blockiert.";
-      status.dataset.state = "denied";
-      enableBtn.textContent = "In Browser-Einstellungen erlauben";
-      return;
-    }
-
-    if (permission === "granted" && !enabled) {
-      status.textContent = "🔔 Browser erlaubt Benachrichtigungen – für dieses Gerät noch nicht aktiviert.";
-      status.dataset.state = "default";
-      enableBtn.textContent = "Auf diesem Gerät aktivieren";
-      return;
-    }
-
-    status.textContent = "🔔 Benachrichtigungen auf diesem Gerät noch nicht eingerichtet.";
-    status.dataset.state = "default";
-    enableBtn.textContent = "Benachrichtigungen aktivieren";
-  }
-
-  async function enableNotificationsOnThisDevice(){
-    if (!notificationSupported()) {
-      updateDeviceStatus();
-      return false;
-    }
-
-    try {
-      let permission = Notification.permission;
-
-      if (permission !== "granted") {
-        permission = await Notification.requestPermission();
-      }
-
-      if (permission === "granted") {
-        setDeviceNotificationsEnabled(true);
-        await ensureServiceWorker();
-        updateDeviceStatus();
-        return true;
-      }
-
-      setDeviceNotificationsEnabled(false);
-      updateDeviceStatus();
-      return false;
-    } catch (err) {
-      console.warn("Benachrichtigungsfreigabe fehlgeschlagen:", err);
-      setDeviceNotificationsEnabled(false);
-      updateDeviceStatus();
-      return false;
-    }
-  }
-
-  function currentPlingVolume(){
-    const saved = localStorage.getItem(VOLUME_KEY) || "loud";
-    return ["soft","medium","loud","extra","super"].includes(saved) ? saved : "loud";
-  }
-
-  function currentPlingSound(){
-    const saved = localStorage.getItem(SOUND_KEY) || "pling";
-    return ["pling","peng","elf","bowl","boing"].includes(saved) ? saved : "pling";
-  }
-
-  function plingMasterGain(){
-    return {
-      soft: 0.18,
-      medium: 0.34,
-      loud: 0.58,
-      extra: 0.82,
-      super: 1.0
-    }[currentPlingVolume()] || 0.58;
-  }
-
-  const volumeSelect = document.querySelector("#plingVolume");
-  if (volumeSelect) {
-    volumeSelect.value = currentPlingVolume();
-    volumeSelect.addEventListener("change", () => {
-      localStorage.setItem(VOLUME_KEY, volumeSelect.value);
-      showMotivation(`🔔 Lautstärke auf diesem Gerät: ${volumeSelect.options[volumeSelect.selectedIndex].text}`);
-    });
-  }
-
-  const soundSelect = document.querySelector("#plingSound");
-  if (soundSelect) {
-    soundSelect.value = currentPlingSound();
-    soundSelect.addEventListener("change", () => {
-      localStorage.setItem(SOUND_KEY, soundSelect.value);
-      showMotivation(`♪ Erinnerungston: ${soundSelect.options[soundSelect.selectedIndex].text}`);
-    });
-  }
-
-  async function unlockAudio(){
-    try {
-      audioContext =
-        audioContext ||
-        new (window.AudioContext || window.webkitAudioContext)();
-
-      if (audioContext.state === "suspended") {
-        await audioContext.resume();
-      }
-
-      audioUnlocked = audioContext.state === "running";
-      return audioUnlocked;
-    } catch (_) {
-      audioUnlocked = false;
-      return false;
-    }
-  }
-
-  async function playPling(){
-    try {
-      const ready = await unlockAudio();
-      if (!audioContext || !ready) return false;
-
-      const now = audioContext.currentTime;
-      const master = audioContext.createGain();
-      const level = plingMasterGain();
-      const sound = currentPlingSound();
-
-      master.connect(audioContext.destination);
-
-      function tone(freq, start, stop, options = {}) {
-        const osc = audioContext.createOscillator();
-        const gain = audioContext.createGain();
-
-        osc.type = options.type || "sine";
-        osc.frequency.setValueAtTime(freq, now + start);
-
-        if (options.endFreq) {
-          osc.frequency.exponentialRampToValueAtTime(
-            Math.max(20, options.endFreq),
-            now + stop
-          );
-        }
-
-        gain.gain.setValueAtTime(0.0001, now + start);
-        gain.gain.exponentialRampToValueAtTime(
-          options.gain ?? 0.85,
-          now + start + (options.attack ?? 0.012)
-        );
-        gain.gain.exponentialRampToValueAtTime(0.0001, now + stop);
-
-        osc.connect(gain);
-        gain.connect(master);
-        osc.start(now + start);
-        osc.stop(now + stop + 0.04);
-      }
-
-      function noiseBurst(start, duration, gainLevel = 0.7) {
-        const length = Math.max(1, Math.floor(audioContext.sampleRate * duration));
-        const buffer = audioContext.createBuffer(1, length, audioContext.sampleRate);
-        const data = buffer.getChannelData(0);
-
-        for (let i = 0; i < length; i++) {
-          const fade = 1 - i / length;
-          data[i] = (Math.random() * 2 - 1) * fade;
-        }
-
-        const source = audioContext.createBufferSource();
-        const filter = audioContext.createBiquadFilter();
-        const gain = audioContext.createGain();
-
-        source.buffer = buffer;
-        filter.type = "bandpass";
-        filter.frequency.setValueAtTime(1250, now + start);
-        filter.Q.setValueAtTime(0.7, now + start);
-
-        gain.gain.setValueAtTime(gainLevel, now + start);
-        gain.gain.exponentialRampToValueAtTime(0.0001, now + start + duration);
-
-        source.connect(filter);
-        filter.connect(gain);
-        gain.connect(master);
-        source.start(now + start);
-      }
-
-      const totalDuration =
-        sound === "bowl" ? 2.8 :
-        sound === "elf" ? 1.65 :
-        sound === "peng" ? 0.65 :
-        sound === "boing" ? 0.95 : 0.72;
-
-      master.gain.setValueAtTime(0.0001, now);
-      master.gain.exponentialRampToValueAtTime(level, now + 0.012);
-      master.gain.setValueAtTime(level, now + Math.min(0.35, totalDuration * 0.35));
-      master.gain.exponentialRampToValueAtTime(0.0001, now + totalDuration);
-
-      if (sound === "pling") {
-        tone(880, 0.00, 0.28, {gain:0.82});
-        tone(1175,0.18, 0.62, {gain:0.78});
-
-      } else if (sound === "peng") {
-        // Heller, trockener PENG-Impuls mit scharfem Attack.
-        noiseBurst(0.00, 0.070, 0.88);
-        tone(1650, 0.000, 0.070, {type:"square", gain:0.50, endFreq:720});
-        tone(980,  0.006, 0.115, {type:"triangle", gain:0.72, endFreq:520});
-        tone(360,  0.018, 0.190, {type:"triangle", gain:0.42, endFreq:220});
-
-      } else if (sound === "elf") {
-        tone(1319,0.00,0.42,{gain:0.48});
-        tone(1760,0.15,0.60,{gain:0.42});
-        tone(2093,0.31,0.78,{gain:0.38});
-        tone(2637,0.50,1.00,{gain:0.30});
-        tone(2093,0.76,1.24,{gain:0.26});
-        tone(3136,0.94,1.48,{gain:0.20});
-
-      } else if (sound === "bowl") {
-        // Wärmere, schwebendere Klangschale mit langen Obertönen.
-        tone(174.6, 0.00, 2.75, {gain:0.74, attack:0.035});
-        tone(349.2, 0.01, 2.55, {gain:0.30, attack:0.028});
-        tone(523.3, 0.04, 2.20, {gain:0.20, attack:0.025});
-        tone(698.5, 0.10, 1.90, {gain:0.14, attack:0.02});
-        tone(1046.5,0.22, 1.55, {gain:0.08, attack:0.018});
-
-      } else if (sound === "boing") {
-        tone(520,0.00,0.52,{gain:0.82,endFreq:170});
-        tone(260,0.16,0.78,{gain:0.58,endFreq:105});
-      }
-
-      return true;
-    } catch (err) {
-      console.warn("Erinnerungston konnte nicht abgespielt werden:", err);
-      return false;
-    }
-  }
-
-  async function showSystemNotification(title, body, tag){
-    if (
-      !notificationSupported() ||
-      Notification.permission !== "granted" ||
-      !deviceNotificationsEnabled()
-    ) {
-      return false;
-    }
-
-    try {
-      const registration = await ensureServiceWorker();
-
-      if (registration?.showNotification) {
-        await registration.showNotification(title, {
-          body,
-          tag,
-          renotify: true,
-          silent: false,
-          data: { url: location.href }
-        });
-        return true;
-      }
-
-      new Notification(title, { body, tag });
-      return true;
-    } catch (err) {
-      console.warn("System-Benachrichtigung fehlgeschlagen:", err);
-      return false;
-    }
-  }
-
-  function readFired(){
-    try {
-      const parsed = JSON.parse(localStorage.getItem(FIRED_KEY) || "{}");
-      return parsed && typeof parsed === "object" ? parsed : {};
-    } catch {
-      return {};
-    }
-  }
-
-  function hasFired(key){
-    return !!readFired()[key];
-  }
-
-  function markFired(key){
-    const fired = readFired();
-    fired[key] = Date.now();
-
-    const cutoff = Date.now() - 14 * 24 * 60 * 60 * 1000;
-    Object.keys(fired).forEach(k => {
-      if (Number(fired[k]) < cutoff) delete fired[k];
-    });
-
-    localStorage.setItem(FIRED_KEY, JSON.stringify(fired));
-  }
-
-  function eventStartForOccurrence(item, now){
-    if (
-      !item ||
-      item.type !== "event" ||
-      !item.plingEnabled ||
-      !item.time
-    ) {
-      return null;
-    }
-
-    const today = new Date(now);
-    today.setHours(12,0,0,0);
-
-    if (!occursOnDate(item, today)) return null;
-
-    // Ein einmaliger mehrtägiger Termin soll nur am tatsächlichen Starttag plingen.
-    if (
-      (item.recurrence || "none") === "none" &&
-      item.date &&
-      item.date !== dateKey(today)
-    ) {
-      return null;
-    }
-
-    const [h,m] = String(item.time).split(":").map(Number);
-    if (!Number.isFinite(h) || !Number.isFinite(m)) return null;
-
-    const start = new Date(now);
-    start.setHours(h,m,0,0);
-    return start;
-  }
-
-  async function fireReminder(item, minutes, start, key){
-    markFired(key);
-
-    // In-App-Ton als Ergänzung.
-    await playPling();
-
-    const body = `${item.text} · in ${minutes} Minuten`;
-
-    // Sichtbarer Hinweis innerhalb der App.
-    showMotivation(`🔔 ${body}`);
-
-    // System-Benachrichtigung für dieses freigegebene Gerät.
-    await showSystemNotification(
-      "Unsere Woche in Balance",
-      body,
-      `pling-${key}`
-    );
-  }
-
-  async function checkPlings(){
-    const now = new Date();
-
-    for (const item of state.todos) {
-      const start = eventStartForOccurrence(item, now);
-      if (!start) continue;
-
-      const minutes = [5,15,30].includes(Number(item.plingMinutes))
-        ? Number(item.plingMinutes)
-        : 15;
-
-      const remindAt = new Date(start.getTime() - minutes * 60000);
-      const key = `${item.id}::${dateKey(now)}::${minutes}`;
-
-      // Ab Erinnerungszeit bis zum Termin selbst auslösen.
-      // Dadurch geht eine Erinnerung nicht verloren, wenn ein Hintergrund-Tab
-      // vom Browser kurz pausiert wurde.
-      if (
-        now >= remindAt &&
-        now < start &&
-        !hasFired(key)
-      ) {
-        await fireReminder(item, minutes, start, key);
-      }
-    }
-  }
-
-  async function runTestPling(){
-    // Test-Klick ist eine echte Nutzeraktion: Audio hier direkt freischalten.
-    const sounded = await playPling();
-
-    // Falls Benachrichtigungen noch nicht freigegeben sind, darf der Test-Klick
-    // selbst die Browser-Abfrage auslösen.
-    if (
-      notificationSupported() &&
-      Notification.permission !== "granted"
-    ) {
-      await enableNotificationsOnThisDevice();
-    }
-
-    let systemShown = false;
-
-    if (
-      notificationSupported() &&
-      Notification.permission === "granted" &&
-      deviceNotificationsEnabled()
-    ) {
-      systemShown = await showSystemNotification(
-        "Test-Pling",
-        "🔔 Benachrichtigungen funktionieren auf diesem Gerät.",
-        `pling-test-${Date.now()}`
-      );
-    }
-
-    updateDeviceStatus();
-
-    if (sounded && systemShown) {
-      showMotivation("🔔 Test erfolgreich – Pling und System-Benachrichtigung funktionieren.");
-      return;
-    }
-
-    if (sounded && !systemShown) {
-      showMotivation("🔔 Pling hörbar. Die System-Benachrichtigung ist auf diesem Gerät noch nicht freigegeben.");
-      return;
-    }
-
-    if (!sounded && systemShown) {
-      showMotivation("🔔 System-Benachrichtigung funktioniert. Der Browser blockiert derzeit den Ton.");
-      return;
-    }
-
-    const permission = permissionState();
-    if (permission === "denied") {
-      showMotivation("🔕 Benachrichtigungen sind im Browser für diese Seite blockiert.");
-    } else {
-      showMotivation("🔕 Test fehlgeschlagen – bitte Medienlautstärke und Browser-Berechtigung dieses Geräts prüfen.");
-    }
-  }
-
-  document.querySelector("#enablePlingNotifications")?.addEventListener("click", async () => {
-    await unlockAudio();
-    await enableNotificationsOnThisDevice();
-  });
-
-  document.querySelector("#testPlingBtn")?.addEventListener("click", async () => {
-    await runTestPling();
-  });
-
-  ["pointerdown","keydown","touchstart"].forEach(evt => {
-    document.addEventListener(evt, unlockAudio, {
-      once:true,
-      passive:true
-    });
-  });
-
-  document.addEventListener("visibilitychange", () => {
-    if (!document.hidden) {
-      updateDeviceStatus();
-      checkPlings();
-    }
-  });
-
-  window.addEventListener("focus", () => {
-    updateDeviceStatus();
-    checkPlings();
-  });
-
-  window.addEventListener("online", updateDeviceStatus);
-
-  ensureServiceWorker();
-  updateDeviceStatus();
-
-  setInterval(checkPlings, 20000);
-  setTimeout(checkPlings, 1000);
-
-})();
-
-
-// ===== NOTFALL-HILFE: lokale Sicherheitsbackups prüfen/wiederherstellen =====
-window.balanceDataSafety = {
-  listBackups() {
-    return [1,2,3].map(n => {
-      const raw = localStorage.getItem(`balanceProd.safetyBackup.${n}`);
-      if (!raw) return null;
-      try {
-        const data = JSON.parse(raw);
-        return {
-          slot:n,
-          savedAt:data.savedAt ? new Date(data.savedAt).toLocaleString("de-AT") : "unbekannt",
-          workroomTodos:data.workroom?.todos?.length || 0,
-          workroomPrints:data.workroom?.prints?.length || 0,
-          workroomLinks:data.workroom?.links?.length || 0,
-          school1:data.school?.children?.["1"]?.tasks?.length || 0,
-          school2:data.school?.children?.["2"]?.tasks?.length || 0
-        };
-      } catch {
-        return {slot:n, error:true};
-      }
-    }).filter(Boolean);
-  },
-  restoreBackup(slot=1) {
-    const raw = localStorage.getItem(`balanceProd.safetyBackup.${slot}`);
-    if (!raw) return false;
-    const data = JSON.parse(raw);
-    if (data.workroom) state.workroom = normalizeWorkroom(data.workroom);
-    if (data.school?.children) state.school = data.school;
-    if (Array.isArray(data.recipes)) state.recipes = data.recipes;
-    if (data.meals && typeof data.meals === "object") state.meals = data.meals;
-    saveLocal();
-    renderAll();
-    return true;
-  }
-};
-
-
+renderAll();
 // =============================
 // WERKRAUM – BEREICHE AUF/ZU
-// Handler VOR dem ersten renderAll registrieren.
-// So funktionieren die drei Bereiche auch dann, wenn ein späterer Render einmal scheitert.
 // =============================
+
 document.addEventListener("click", e => {
   const head = e.target.closest(".workroom-fold-head");
   if (!head) return;
@@ -7865,214 +3717,9 @@ document.addEventListener("click", e => {
   const card = head.closest(".workroom-fold-card");
   if (!card) return;
 
-  const wasOpen = card.classList.contains("open");
-
   document.querySelectorAll(".workroom-fold-card").forEach(otherCard => {
     otherCard.classList.remove("open");
   });
 
-  if (!wasOpen) card.classList.add("open");
+  card.classList.add("open");
 });
-
-restoreTimeTrackingFromLocal();
-renderAll();
-
-
-function ensureMobileWeekActionCircleStyles() {
-  if (document.querySelector("#mobileWeekActionCircleFix")) return;
-
-  const style = document.createElement("style");
-  style.id = "mobileWeekActionCircleFix";
-  style.textContent = `
-    @media (max-width:600px){
-      .week-head-actions{
-        display:flex !important;
-        flex-wrap:nowrap !important;
-        justify-content:flex-end !important;
-        align-items:center !important;
-        gap:7px !important;
-      }
-
-      #openPinboardBtn,
-      #openPapaOverviewBtn,
-      #addVideoBtn,
-      #openFamilyTimetableBtn{
-        box-sizing:border-box !important;
-        flex:0 0 42px !important;
-        width:42px !important;
-        min-width:42px !important;
-        max-width:42px !important;
-        height:42px !important;
-        min-height:42px !important;
-        max-height:42px !important;
-        padding:0 !important;
-        margin:0 !important;
-        border-radius:50% !important;
-        display:grid !important;
-        place-items:center !important;
-        align-items:center !important;
-        justify-content:center !important;
-        line-height:1 !important;
-        overflow:visible !important;
-        white-space:nowrap !important;
-      }
-
-      #openPinboardBtn .pinboard-label{
-        display:none !important;
-      }
-
-      #openPinboardBtn{
-        font-size:0 !important;
-      }
-      #openPinboardBtn .pinboard-icon{
-        display:block !important;
-        width:auto !important;
-        height:auto !important;
-        margin:0 !important;
-        padding:0 !important;
-        font-size:1rem !important;
-        line-height:1 !important;
-        transform:none !important;
-      }
-
-      #openPapaOverviewBtn{
-        font-size:0 !important;
-      }
-      #openPapaOverviewBtn::before{
-        content:"♡";
-        display:block;
-        font-size:1rem !important;
-        line-height:1 !important;
-      }
-
-      #addVideoBtn{
-        font-size:0 !important;
-      }
-      #addVideoBtn::before{
-        content:"+";
-        display:block;
-        font-size:1.15rem !important;
-        line-height:1 !important;
-      }
-
-      #openFamilyTimetableBtn,
-      #printWeekBtn{
-        font-size:.9rem !important;
-        line-height:1 !important;
-      }
-
-      #openPinboardBtn .pinboard-badge{
-        position:absolute !important;
-        top:-3px !important;
-        right:-3px !important;
-        margin:0 !important;
-      }
-    }
-
-    .recipe-link-times{
-      display:flex;
-      align-items:center;
-      gap:6px;
-      flex-wrap:wrap;
-    }
-
-    .recipe-link-reuse{
-      border:1px solid rgba(143,165,157,.26);
-      border-radius:999px;
-      background:#edf4f1;
-      color:#506963;
-      padding:6px 9px;
-      cursor:pointer;
-      font-size:.66rem;
-    }
-
-    .recipe-link-reuse:hover{
-      background:#dfece8;
-    }
-  `;
-  document.head.appendChild(style);
-}
-
-ensureMobileWeekActionCircleStyles();
-
-
-
-document.addEventListener("DOMContentLoaded", () => {
-  ensureRecipeCardMarkPicker();
-  ensureRecipeCardMarkStyles();
-});
-
-
-
-
-function ensureRecipeFormAndMobileActionStyles() {
-  // Das Rezeptlayout liegt jetzt ausschließlich in style.css.
-  // Keine dynamischen Grid-Regeln mehr, damit sich nichts gegenseitig überschreibt.
-}
-
-function normalizeRecipeFlagLayout() {
-  const row = document.querySelector(".recipe-flags-row");
-  if (!row) return;
-
-  const grid = row.closest(".recipe-form-grid");
-  if (!grid) return;
-
-  [...row.children].forEach(child => {
-    grid.insertBefore(child, row);
-  });
-  row.remove();
-}
-
-ensureRecipeFormAndMobileActionStyles();
-normalizeRecipeFlagLayout();
-
-function normalizeRecipeBottomRow() {
-  const grid = document.querySelector(".recipe-form-grid");
-  if (!grid) return;
-
-  let row = grid.querySelector(".recipe-bottom-row");
-  if (!row) {
-    row = document.createElement("div");
-    row.className = "recipe-bottom-row";
-    grid.appendChild(row);
-  }
-
-  const selectors = [
-    ".recipe-card-mark-field",
-    ".recipe-bake-field",
-    ".recipe-temp-field",
-    ".recipe-kids-toggle",
-    ".recipe-healthy-toggle",
-    ".recipe-favorite-toggle",
-    ".recipe-form-actions"
-  ];
-
-  selectors.forEach(selector => {
-    const el = grid.querySelector(selector);
-    if (el && el.parentElement !== row) {
-      row.appendChild(el);
-    }
-  });
-}
-
-normalizeRecipeBottomRow();
-
-document.addEventListener("DOMContentLoaded", () => {
-  ensureRecipeFormAndMobileActionStyles();
-  normalizeRecipeFlagLayout();
-  normalizeRecipeBottomRow();
-});
-
-/* MOBILE PRINT FINAL OVERRIDE */
-(function ensurePhonePrintHidden(){
-  const id = "phonePrintHiddenFinal";
-  if (document.getElementById(id)) return;
-  const s = document.createElement("style");
-  s.id = id;
-  s.textContent = `
-    @media (max-width:760px){
-      #printWeekBtn{display:none !important;}
-    }
-  `;
-  document.head.appendChild(s);
-})();
