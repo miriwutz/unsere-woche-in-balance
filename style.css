@@ -6870,3 +6870,103 @@ a.day-meal{
   .todo-reuse-panel{grid-template-columns:1fr 1fr;}
   .todo-reuse-panel strong{grid-column:1/-1;}
 }
+
+/* =========================================================
+   FEINSCHLIFF 17.08.2026 – schnelle Eingabe + vergangene Tage
+   ========================================================= */
+
+/* Vergangene Wochentage: noch gut lesbar, aber deutlich ruhiger. */
+.day.past-day{
+  opacity:.58;
+  filter:saturate(.72);
+  transition:opacity .18s ease,filter .18s ease;
+}
+.day.past-day:hover{opacity:.78;filter:saturate(.9)}
+.day.today{opacity:1;filter:none}
+
+/* Eingabekarte insgesamt kompakter. */
+.todo-form{gap:11px;padding:15px 17px}
+.todo-form label{gap:4px;font-size:.82rem}
+.todo-form input,
+.todo-form select{padding:9px 10px;border-radius:11px}
+
+/* Art + Superwichtig sollen nur so viel Platz bekommen, wie sie brauchen. */
+.entry-top-row{
+  display:grid;
+  grid-template-columns:minmax(170px,230px) max-content;
+  gap:12px;
+  align-items:end;
+}
+.super-important-control{
+  display:inline-flex !important;
+  width:max-content;
+  min-height:38px;
+  align-items:center;
+  gap:7px !important;
+  padding:8px 12px;
+  border:1px solid var(--line);
+  border-radius:12px;
+  background:rgba(255,253,251,.72);
+}
+.super-important-control input{margin:0}
+
+/* Das wichtigste Feld darf sofort ins Auge fallen. */
+#todoText{
+  min-height:42px;
+  border-color:#d3c4bc;
+  background:#fffefa;
+  box-shadow:0 2px 8px rgba(89,72,66,.035);
+}
+#todoText:focus{border-color:#aa98bb;box-shadow:0 0 0 3px rgba(201,193,215,.22)}
+
+/* Termin: Startdatum + Startzeit bewusst hervorheben, Endwerte etwas ruhiger. */
+.event-fields{
+  display:grid;
+  grid-template-columns:minmax(170px,1fr) minmax(170px,1fr) minmax(150px,.8fr) minmax(150px,.8fr);
+  gap:10px;
+  align-items:end;
+}
+.event-fields > label:nth-child(1),
+.event-fields > label:nth-child(3){
+  padding:8px;
+  border:1px solid #d8cdbf;
+  border-radius:14px;
+  background:linear-gradient(180deg,#fffdfa,#faf7f1);
+}
+#eventDate,#eventTime{font-weight:600;border-color:#cdbdad;background:#fff}
+#eventEndDate,#eventEndTime{background:rgba(255,253,251,.68)}
+.event-fields > label:nth-child(5){grid-column:1 / 3}
+.event-fields .pling-field{grid-column:1 / -1 !important}
+
+/* To-do: Wochentag als wichtiges Zielfeld hervorheben. */
+#todoWeekday{
+  font-weight:600;
+  border-color:#c8b8d5;
+  background:#fdfbff;
+  box-shadow:0 0 0 2px rgba(201,193,215,.10);
+}
+.form-row{gap:8px}
+
+/* Wiederholung und Zusatzoptionen bleiben sichtbar, drängen sich aber nicht vor. */
+.recurrence-row{margin-top:0}
+.pling-field{padding:10px 12px}
+.pling-device-row{gap:7px}
+
+@media (max-width:900px){
+  .event-fields{grid-template-columns:1fr 1fr}
+  .event-fields > label:nth-child(5){grid-column:1 / -1}
+}
+@media (max-width:620px){
+  .todo-form{padding:13px 12px;gap:10px}
+  .entry-top-row{grid-template-columns:1fr auto;gap:8px}
+  .super-important-control{padding:8px 10px}
+  .event-fields{grid-template-columns:1fr 1fr;gap:8px}
+  .event-fields > label:nth-child(5){grid-column:1 / -1}
+  .form-row{grid-template-columns:1fr 1fr}
+}
+@media (max-width:430px){
+  .entry-top-row{grid-template-columns:1fr}
+  .super-important-control{justify-self:start}
+  .event-fields{grid-template-columns:1fr 1fr}
+  .form-row{grid-template-columns:1fr}
+}
