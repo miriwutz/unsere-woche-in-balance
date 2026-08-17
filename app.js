@@ -1530,8 +1530,10 @@ ${isNewEntry(t) ? `<span class="new-entry-badge">NEU</span>` : ""}
 if (!item.recurrence || item.recurrence === "none") {
   item.completedAt = e.target.checked ? Date.now() : null;
 }
-    save();
+    // Sofort lokal neu zeichnen, damit ein erledigtes normales To-do
+    // unmittelbar aus dem Wochenplan verschwindet und im Archiv erscheint.
     renderAll();
+    save();
 
     if (!wasDone && e.target.checked) showMotivation(todoMotivationalMessage());
   }));
@@ -1866,8 +1868,10 @@ if (isExpanded) {
 } else {
   item.completedAt = null;
 }
-    save();
+    // UI zuerst aktualisieren: kein Warten auf Cloud-Speicherung.
+    // So verschwindet das To-do unmittelbar aus der aktiven Ansicht.
     renderAll();
+    save();
     if (!wasDone && item.done) showMotivation(todoMotivationalMessage());
   }));
 
