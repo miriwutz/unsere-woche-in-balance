@@ -726,7 +726,8 @@ function renderWeek() {
     const videos = state.videos.filter(v => v.day === day && v.weekKey === weekKey);
     const occurrences = state.todos.filter(t => occursOnDate(t, date));
  const todos = occurrences.filter(t =>
-  (t.type || "todo") === "todo"
+  (t.type || "todo") === "todo" &&
+  !isOccurrenceDone(t, date)
 );
     const events = occurrences.filter(t => t.type === "event");
 
@@ -767,7 +768,7 @@ function renderWeek() {
                  : `--group-border:${familyColor(groupKey) || "#c8c0ba"}`}">
             <div class="person-todo-group-title">${todoGroupLabel(groupKey)}</div>
             ${groupItems.map(t => `
-              <label class="todo-mini grouped-todo-row ${isOccurrenceDone(t, date) ? "done" : ""} ${t.superImportant ? "super-important" : ""}">
+              <label class="todo-mini grouped-todo-row ${t.superImportant ? "super-important" : ""}">
                 <input class="check mini-todo-check" data-id="${t.id}" data-date="${dateKey(date)}" type="checkbox" ${isOccurrenceDone(t, date) ? "checked":""}>
                <span>
   ${t.superImportant ? `<span class="tiny-star">★</span>` : ''}
@@ -879,7 +880,12 @@ ${isNewEntry(t) ? `<span class="new-entry-badge">NEU</span>` : ""}
       ${eventHtml}
       ${schoolHtml}${todoHtml}
       <div class="day-bottom-slot">
-        ${videoHtml || '<div class="empty print-hide-empty">Heute ist noch Platz für etwas Schönes.</div>'}
+        ${videoHtml
+          ? `<details class="day-video-details">
+               <summary>▷ Übung${videos.length === 1 ? "" : "en"} <span>${videos.length}</span></summary>
+               <div class="day-video-details-content">${videoHtml}</div>
+             </details>`
+          : '<div class="empty print-hide-empty">Heute ist noch Platz für etwas Schönes.</div>'}
       </div>
     `;
     grid.appendChild(dayEl);
