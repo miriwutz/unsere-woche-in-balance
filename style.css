@@ -7243,11 +7243,11 @@ a.day-meal{
 .workroom-calm-header{
   position:relative;
   display:grid;
-  grid-template-columns:minmax(0,1fr) 180px;
+  grid-template-columns:minmax(0,1fr) 205px;
   align-items:center;
-  min-height:132px;
+  min-height:152px;
   margin:16px 0 18px;
-  padding:18px 22px 18px 24px;
+  padding:20px 24px 20px 26px;
   overflow:hidden;
   border:1px solid rgba(126,143,115,.18);
   border-radius:20px;
@@ -7296,10 +7296,10 @@ a.day-meal{
 
 .workroom-calm-art{
   position:absolute;
-  right:12px;
+  right:14px;
   top:50%;
-  width:178px;
-  height:150px;
+  width:200px;
+  height:174px;
   transform:translateY(-50%);
   opacity:.58;
   pointer-events:none;
@@ -7315,18 +7315,18 @@ a.day-meal{
 
 @media(max-width:820px){
   .workroom-calm-header{
-    grid-template-columns:minmax(0,1fr) 145px;
-    min-height:116px;
-    padding:16px 18px;
+    grid-template-columns:minmax(0,1fr) 165px;
+    min-height:132px;
+    padding:17px 20px;
   }
   .workroom-calm-art{
-    width:145px;
-    height:128px;
-    right:6px;
-    opacity:.48;
+    width:165px;
+    height:146px;
+    right:8px;
+    opacity:.50;
   }
   .workroom-calm-copy{
-    padding-right:105px;
+    padding-right:118px;
   }
 }
 
