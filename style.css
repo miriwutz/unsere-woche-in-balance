@@ -7409,3 +7409,74 @@ a.day-meal{
     font-size:.61rem;
   }
 }
+
+
+/* =========================================================
+   18.08.2026 – Zuhause-Zeit + stabiles Zeittracking
+   ========================================================= */
+.day-home-person strong{
+  color:#7b8455 !important;
+  font-weight:800 !important;
+}
+
+.time-tracker-card .overview-card-head{
+  position:relative;
+  min-height:132px;
+  padding-right:330px;
+}
+
+.time-tracker-card #activeTimeTracker{
+  position:absolute;
+  top:0;
+  right:0;
+  width:310px;
+  height:122px;
+  max-height:122px;
+  overflow-y:auto;
+  align-content:start;
+  scrollbar-width:thin;
+}
+
+.time-tracker-card #activeTimeTracker.hidden{
+  display:grid !important;
+  visibility:hidden;
+  pointer-events:none;
+}
+
+.time-tracker-card .active-time-item{
+  min-height:54px;
+  box-sizing:border-box;
+}
+
+.time-tracker-card .active-time-elapsed{
+  font-variant-numeric:tabular-nums;
+}
+
+@media(max-width:820px){
+  .time-tracker-card .overview-card-head{
+    min-height:120px;
+    padding-right:286px;
+  }
+  .time-tracker-card #activeTimeTracker{
+    width:270px;
+    height:110px;
+    max-height:110px;
+  }
+}
+
+@media(max-width:650px){
+  .time-tracker-card .overview-card-head{
+    min-height:0;
+    padding-right:0;
+  }
+  .time-tracker-card #activeTimeTracker{
+    position:static;
+    width:auto;
+    height:auto;
+    max-height:none;
+    margin-top:10px;
+  }
+  .time-tracker-card #activeTimeTracker.hidden{
+    display:none !important;
+  }
+}
