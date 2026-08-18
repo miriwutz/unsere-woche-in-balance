@@ -3277,16 +3277,23 @@ if (deleteAllExercisesBtn) {
 
 
 const workroomCalmQuotes = [
-  "In Ruhe entsteht oft das Klarste.",
-  "Nicht alles muss heute fertig werden.",
-  "Gut vorbereitet darf sich leicht anfühlen.",
-  "Ein kleiner Schritt reicht für den Anfang.",
-  "Ordnung darf entlasten, nicht antreiben.",
-  "Ideen brauchen manchmal ein wenig Raum.",
-  "Ich muss nicht schneller sein als mein eigener Rhythmus.",
-  "Was wirklich wichtig ist, darf sichtbar werden.",
-  "Vorbereitung soll mir dienen – nicht umgekehrt.",
-  "Auch im Schulalltag darf Platz für Ruhe bleiben."
+  'In Ruhe entsteht oft das Klarste.',
+  'Nicht alles muss heute fertig werden.',
+  'Gut vorbereitet darf sich leicht anfühlen.',
+  'Ein kleiner Schritt reicht für den Anfang.',
+  'Ordnung darf entlasten, nicht antreiben.',
+  'Ideen brauchen manchmal ein wenig Raum.',
+  'Ich muss nicht schneller sein als mein eigener Rhythmus.',
+  'Was wirklich wichtig ist, darf sichtbar werden.',
+  'Vorbereitung soll mir dienen – nicht umgekehrt.',
+  'Auch im Schulalltag darf Platz für Ruhe bleiben.',
+  'Meine Gründe reichen für meine Entscheidung. Sie müssen niemand anderen überzeugen.',
+  'Ich kann deine Entscheidung stehen lassen. Lass bitte auch meine stehen.',
+  'Ich glaube nicht, dass wir uns gegenseitig überzeugen müssen.',
+  'Das ist eine Entscheidung, keine Einladung zur Debatte.',
+  'Dass ich meine Gründe nicht diskutieren möchte, heißt nicht, dass ich keine habe.',
+  'Ich muss meine Überzeugung nicht verteidigen, um nach ihr handeln zu können.',
+  'Ich sehe das anders, aber wir müssen uns darüber nicht einigen.',
 ];
 
 let workroomQuoteTimer = null;
@@ -3851,3 +3858,62 @@ document.addEventListener("click", e => {
 
   card.classList.add("open");
 });
+
+/* --- Multi-day event horizontal alignment --- */
+function alignMultiDayEventRows() {
+  const week = document.querySelector(".week-grid, #weekGrid, .weekGrid, .weekly-grid");
+  if (!week) return;
+
+  const cards = [...week.querySelectorAll(
+    ".event-card, .calendar-event, .appointment-card, .week-event, [data-event-id], [data-event-key]"
+  )].filter(el => el.offsetParent !== null);
+
+  cards.forEach(el => {
+    if (el.dataset.multiAlignAdded) {
+      el.style.transform = el.dataset.multiAlignBaseTransform || "";
+      delete el.dataset.multiAlignAdded;
+    }
+  });
+
+  const keyFor = el => {
+    const explicit = el.dataset.eventId || el.dataset.eventKey || el.dataset.seriesId || "";
+    if (explicit) return "id:" + explicit;
+    const clone = el.cloneNode(true);
+    clone.querySelectorAll(".new-badge,.badge,.person-label,.event-person").forEach(n => n.remove());
+    return "txt:" + clone.textContent.replace(/\bNEU\b/gi,"").replace(/\s+/g," ").trim().toLowerCase();
+  };
+
+  const groups = new Map();
+  cards.forEach(el => {
+    const key = keyFor(el);
+    if (!key || key === "txt:") return;
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(el);
+  });
+
+  groups.forEach(group => {
+    if (group.length < 2) return;
+    const tops = group.map(el => el.getBoundingClientRect().top);
+    const targetTop = Math.max(...tops);
+    group.forEach((el, i) => {
+      const dy = Math.round(targetTop - tops[i]);
+      if (dy > 0) {
+        el.dataset.multiAlignBaseTransform = el.style.transform || "";
+        el.dataset.multiAlignAdded = "1";
+        el.style.transform = `${el.style.transform || ""} translateY(${dy}px)`.trim();
+      }
+    });
+  });
+}
+
+function scheduleMultiDayAlignment() {
+  requestAnimationFrame(() => requestAnimationFrame(alignMultiDayEventRows));
+}
+window.addEventListener("load", scheduleMultiDayAlignment);
+window.addEventListener("resize", scheduleMultiDayAlignment);
+document.addEventListener("click", e => {
+  if (e.target.closest("button, input, select, .week-nav, .week-navigation")) {
+    setTimeout(scheduleMultiDayAlignment, 80);
+  }
+});
+
