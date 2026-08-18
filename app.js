@@ -1,25 +1,3 @@
-// FINAL LEER – saubere Ausgangsversion für den Online-Start.
-// Lou, Fina, Familienfarben, Fächer und Funktionen bleiben erhalten.
-
-
-
-// FINAL LEER: Beim allerersten Start dieser leeren Ausgabe werden nur Inhalts-/Testdaten entfernt.
-// Danach werden neue Einträge ganz normal dauerhaft gespeichert.
-(function prepareFinalCleanStart(){
-  const cleanVersion = "final-leer-v1";
-  const markerKey = "balanceProd.cleanStartVersion";
-  if (localStorage.getItem(markerKey) === cleanVersion) return;
-
-  [
-    "balanceProd.videos",
-    "balanceProd.todos",
-    "balanceProd.archive",
-    "balanceProd.school"
-  ].forEach(key => localStorage.removeItem(key));
-
-  localStorage.setItem(markerKey, cleanVersion);
-})();
-
 const days = ["Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag","Sonntag"];
 
 const state = {
@@ -418,6 +396,16 @@ if (item.type === "event" && recurrence === "none") {
 }
 
   if (item.type !== "event" && recurrence === "none") {
+    // "Heute"-To-dos aus älteren Versionen hatten teilweise weder day noch weekKey.
+    // In diesem Fall ordnen wir sie sicher ihrem Erstellungstag zu, statt sie
+    // aus dem Wochenplan verschwinden zu lassen.
+    if (item.period === "today" && (!item.weekKey || !item.day)) {
+      const created = Number(item.createdAt || 0);
+      if (!created) return key === dateKey(new Date());
+      const createdDate = new Date(created);
+      return key === dateKey(createdDate);
+    }
+
     return item.weekKey === dateKey(getMonday(date)) && item.day === weekdayNameForDate(date);
   }
 
@@ -3944,7 +3932,7 @@ const recurrence = document.querySelector("#recurrence").value;
 
   document.querySelector("#schoolHolidayHint").classList.toggle(
     "hidden",
-    recurrence !== "schoolyear-no"
+    recurrence !== "schoolyear-noe"
   );
 
   // Wochentag bei To-dos nur für "Diese Woche" anzeigen
@@ -3976,7 +3964,11 @@ document.querySelector("#addTodoBtn").addEventListener("click", () => {
   if (!text) return;
 
   const type = document.querySelector("#entryType").value;
-  const selectedDay = document.querySelector("#todoDay").value;
+  const period = document.querySelector("#todoPeriod").value;
+  const todayDate = new Date();
+  const selectedDay = period === "today"
+    ? weekdayNameForDate(todayDate)
+    : document.querySelector("#todoDay").value;
   const selectedFamily = selectedFamilyMembers();
   const recurrence = document.querySelector("#recurrence").value;
  const eventDate = document.querySelector("#eventDate").value;
@@ -3987,9 +3979,11 @@ const eventEndTime = document.querySelector("#eventEndTime")?.value || "";
   const superImportant = document.querySelector("#superImportant").checked;
 
   const weekOffset = Number(document.querySelector("#todoWeekOffset")?.value || 0);
-  const activeMonday = getMonday(new Date());
-  activeMonday.setDate(activeMonday.getDate() + weekOffset * 7);
-  const selectedTodoDate = selectedDay ? dateForWeekday(activeMonday, selectedDay) : null;
+  const activeMonday = period === "today" ? getMonday(todayDate) : getMonday(new Date());
+  if (period !== "today") activeMonday.setDate(activeMonday.getDate() + weekOffset * 7);
+  const selectedTodoDate = period === "today"
+    ? todayDate
+    : (selectedDay ? dateForWeekday(activeMonday, selectedDay) : null);
   const newWeekKey = selectedDay ? dateKey(activeMonday) : null;
   const anchorDate = type === "event"
     ? eventDate
@@ -4014,7 +4008,7 @@ const eventEndTime = document.querySelector("#eventEndTime")?.value || "";
     item.text = text;
     item.priority = document.querySelector("#todoPriority").value;
     item.area = document.querySelector("#todoArea").value;
-    item.period = document.querySelector("#todoPeriod").value;
+    item.period = period;
     item.day = selectedDay;
     item.family = selectedFamily;
     item.weekKey = type === "event" ? null : newWeekKey;
@@ -4037,7 +4031,7 @@ item.endTime = type === "event" ? eventEndTime : "";
       text,
       priority: document.querySelector("#todoPriority").value,
       area: document.querySelector("#todoArea").value,
-      period: document.querySelector("#todoPeriod").value,
+      period,
       day: selectedDay,
       family: selectedFamily,
       weekKey: type === "event" ? null : newWeekKey,
@@ -4805,4 +4799,3 @@ document.addEventListener("click", e => {
     setTimeout(scheduleMultiDayAlignment, 80);
   }
 });
-
