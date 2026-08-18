@@ -2164,6 +2164,7 @@ const TIME_TRACKING_LOCAL_KEY = "balanceProd.timeTracking";
 let timeTrackingUnsubscribe = null;
 let timeTrackingCloudSaveTimer = null;
 let timeTrackingCloudApplying = false;
+let timeTrackingPollTimer = null;
 
 function writeTimeTrackingLocalOnly() {
   try {
@@ -2292,7 +2293,43 @@ function scheduleTimeTrackingCloudSave() {
 
 function saveTimeTrackingImmediately() {
   writeTimeTrackingLocalOnly();
-  scheduleTimeTrackingCloudSave();
+
+  // Für laufende Timer ist Geräte-Synchronität wichtiger als Debouncing:
+  // sofort in die Cloud schreiben. Der kurze Debounce bleibt als Fallback.
+  if (firebase.auth().currentUser) {
+    saveTimeTrackingToCloudNow();
+    scheduleTimeTrackingCloudSave();
+  }
+}
+
+async function refreshTimeTrackingFromCloud() {
+  if (!firebase.auth().currentUser) return;
+
+  try {
+    const snap = await timeTrackingDoc().get();
+    if (!snap.exists) return;
+
+    timeTrackingCloudApplying = true;
+    try {
+      state.timeTracking = mergeTimeTrackingData(state.timeTracking, snap.data());
+      writeTimeTrackingLocalOnly();
+      renderTimeTracking();
+    } finally {
+      timeTrackingCloudApplying = false;
+    }
+  } catch (err) {
+    console.warn("Zeittracking-Aktualisierung konnte nicht geladen werden:", err);
+  }
+}
+
+function startTimeTrackingPollFallback() {
+  if (timeTrackingPollTimer) clearInterval(timeTrackingPollTimer);
+
+  // onSnapshot bleibt die Hauptsynchronisation.
+  // Der Pull hilft besonders auf Tablets, wenn der Browser Listener pausiert.
+  timeTrackingPollTimer = setInterval(() => {
+    if (!document.hidden) refreshTimeTrackingFromCloud();
+  }, 12000);
 }
 
 async function startTimeTrackingSync() {
@@ -2338,6 +2375,9 @@ async function startTimeTrackingSync() {
   }, err => {
     console.error("Zeittracking Live-Sync fehlgeschlagen:", err);
   });
+
+  await refreshTimeTrackingFromCloud();
+  startTimeTrackingPollFallback();
 }
 
 function restoreTimeTrackingFromLocal() {
@@ -4348,8 +4388,16 @@ startShoppingSync();
       timeTrackingUnsubscribe();
       timeTrackingUnsubscribe = null;
     }
+    if (timeTrackingPollTimer) {
+      clearInterval(timeTrackingPollTimer);
+      timeTrackingPollTimer = null;
+    }
 showLoginGate(true);
   }
+});
+
+document.addEventListener("visibilitychange", () => {
+  if (!document.hidden) refreshTimeTrackingFromCloud();
 });
 
 restoreTimeTrackingFromLocal();
