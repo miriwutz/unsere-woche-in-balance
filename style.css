@@ -7178,3 +7178,11 @@ a.day-meal{
   .todo-primary-row > label{padding:7px}
   .todo-form .form-row{grid-template-columns:1fr}
 }
+
+
+/* Mehrtägige Termine: feste wochenweite Zeilen für horizontale Ausrichtung */
+.multiday-event-lanes{display:flex;flex-direction:column;gap:8px}
+.multiday-event-lane{min-height:78px;box-sizing:border-box}
+.multiday-event-lane .event-person-block{margin-top:0;min-height:78px;box-sizing:border-box}
+.multiday-event-placeholder{visibility:hidden;pointer-events:none}
+.day-events > .event-person-block{margin-top:8px}
