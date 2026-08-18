@@ -6,6 +6,7 @@ const state = {
   archive: JSON.parse(localStorage.getItem("balanceProd.archive") || "[]"),
   shopping: JSON.parse(localStorage.getItem("balanceProd.shopping") || "[]"),
   timeTracking: JSON.parse(localStorage.getItem("balanceProd.timeTracking") || '{"entries":[],"active":[],"stopped":{},"deletedEntries":{}}'),
+  trash: JSON.parse(localStorage.getItem("balanceProd.trash") || "[]"),
 
   workroom: JSON.parse(
     localStorage.getItem("balanceProd.workroom") ||
@@ -44,6 +45,7 @@ function saveLocal() {
   localStorage.setItem("balanceProd.archive", JSON.stringify(state.archive));
   localStorage.setItem("balanceProd.shopping", JSON.stringify(state.shopping));
   localStorage.setItem("balanceProd.timeTracking", JSON.stringify(state.timeTracking));
+  localStorage.setItem("balanceProd.trash", JSON.stringify(state.trash || []));
   localStorage.setItem("balanceProd.workroom", JSON.stringify(state.workroom));
   localStorage.setItem("balanceProd.school", JSON.stringify(state.school));
   localStorage.setItem("balanceProd.familySettings", JSON.stringify(state.familySettings));
@@ -56,6 +58,7 @@ function cloudPayload() {
   return JSON.parse(JSON.stringify({
     videos: state.videos,
     todos: state.todos,
+    trash: state.trash || [],
     archive: state.archive,
     shopping: state.shopping,
     workroom: state.workroom,
@@ -1364,7 +1367,11 @@ if (isExpanded) {
 }
     save();
     renderAll();
-    if (!wasDone && item.done) showMotivation(todoMotivationalMessage());
+    if (!wasDone && item.done) {
+      showMotivation(todoMotivationalMessage());
+      const id=item.id;
+      showUndo("To-do erledigt",()=>{const x=state.todos.find(t=>t.id===id);if(!x)return;x.done=false;x.completedAt=null;x.updatedAt=Date.now();save();renderAll();});
+    }
   }));
 
   document.querySelectorAll(".edit-todo").forEach(el => el.addEventListener("click", e => {
@@ -1401,10 +1408,11 @@ document.querySelector("#recurrence").value = item.recurrence || "none";
   }));
 
   document.querySelectorAll(".delete-todo").forEach(el => el.addEventListener("click", e => {
-    state.todos = state.todos.filter(t => t.id !== e.currentTarget.dataset.id);
-    if (editingTodoId === e.currentTarget.dataset.id) resetTodoEditor();
-    save();
-    renderAll();
+    const id=e.currentTarget.dataset.id, item=state.todos.find(t=>t.id===id); if(!item)return;
+    const trashId=trashItem("todo",item);
+    state.todos=state.todos.filter(t=>t.id!==id);
+    if(editingTodoId===id)resetTodoEditor();
+    save();renderAll();showUndo("To-do gelöscht",()=>restoreTrashEntry(trashId));
   }));
 }
 
@@ -2900,14 +2908,12 @@ function renderTimeTracking() {
           ? state.timeTracking.deletedEntries
           : {};
 
-      // Löschmarke statt nur lokalem Entfernen:
-      // So kann ein zweiter Rechner den alten Eintrag nicht wieder zurückschreiben.
-      state.timeTracking.deletedEntries[id] = now;
-      state.timeTracking.entries =
-        state.timeTracking.entries.filter(entry => entry.id !== id);
-
-      saveTimeTrackingImmediately();
-      renderTimeTracking();
+      const entryToDelete=state.timeTracking.entries.find(entry=>entry.id===id);
+      const trashId=entryToDelete?trashItem("time",entryToDelete):null;
+      state.timeTracking.deletedEntries[id]=now;
+      state.timeTracking.entries=state.timeTracking.entries.filter(entry=>entry.id!==id);
+      save();saveTimeTrackingImmediately();renderTimeTracking();renderTrash();
+      if(trashId)showUndo("Zeiteintrag gelöscht",()=>restoreTrashEntry(trashId));
     });
   });
 
@@ -3011,7 +3017,56 @@ document.querySelector("#startTimeTrackBtn")?.addEventListener("click", startTim
 document.querySelector("#addManualTimeBtn")?.addEventListener("click", addManualTimeEntry);
 
 document.querySelector("#printWeekBtn")?.addEventListener("click",()=>window.print());
+
+const TRASH_KEEP_MS = 3 * 24 * 60 * 60 * 1000;
+let undoTimer = null, lastUndoAction = null;
+
+function pruneTrash(){
+  const cutoff=Date.now()-TRASH_KEEP_MS;
+  state.trash=(state.trash||[]).filter(x=>Number(x.deletedAt||0)>=cutoff);
+}
+function trashItem(kind,item){
+  if(!item)return null; pruneTrash();
+  const rec={trashId:uid(),kind,item:JSON.parse(JSON.stringify(item)),deletedAt:Date.now()};
+  state.trash=state.trash||[]; state.trash.unshift(rec); return rec.trashId;
+}
+function showUndo(message,fn){
+  lastUndoAction=fn; clearTimeout(undoTimer);
+  let bar=document.querySelector("#undoBar");
+  if(!bar){bar=document.createElement("div");bar.id="undoBar";bar.className="undo-bar";document.body.appendChild(bar);}
+  bar.innerHTML=`<span>${escapeHtml(message)}</span><button type="button" id="undoNowBtn">↩ Rückgängig</button>`;
+  bar.classList.add("show");
+  bar.querySelector("#undoNowBtn")?.addEventListener("click",()=>{const a=lastUndoAction;lastUndoAction=null;clearTimeout(undoTimer);bar.classList.remove("show");if(a)a();});
+  undoTimer=setTimeout(()=>{lastUndoAction=null;bar.classList.remove("show");},7000);
+}
+function restoreTrashEntry(id){
+  const rec=(state.trash||[]).find(x=>x.trashId===id); if(!rec)return;
+  const item=JSON.parse(JSON.stringify(rec.item));
+  if(rec.kind==="todo"){if(!state.todos.some(x=>x.id===item.id))state.todos.push(item);}
+  if(rec.kind==="time"){
+    delete state.timeTracking.deletedEntries?.[item.id];
+    if(!state.timeTracking.entries.some(x=>x.id===item.id))state.timeTracking.entries.push(item);
+    saveTimeTrackingImmediately();
+  }
+  state.trash=state.trash.filter(x=>x.trashId!==id); save(); renderAll();
+}
+function renderTrash(){
+  pruneTrash(); const host=document.querySelector("#trashList"); if(!host)return;
+  const rows=state.trash||[];
+  host.innerHTML=rows.length?rows.map(rec=>{
+    const x=rec.item||{};
+    const label=rec.kind==="time"?`${familyName(x.person)} · ${timeCategoryLabel(x.category)}${x.note?" · "+x.note:""}`:(x.text||"To-do");
+    const days=Math.max(0,Math.ceil((TRASH_KEEP_MS-(Date.now()-Number(rec.deletedAt||0)))/86400000));
+    return `<div class="trash-row"><span><strong>${escapeHtml(label)}</strong><small>noch ${days} Tag${days===1?"":"e"}</small></span><button class="trash-restore" data-id="${rec.trashId}" title="Wiederherstellen">↩</button><button class="trash-delete" data-id="${rec.trashId}" title="Endgültig löschen">×</button></div>`;
+  }).join(""):`<div class="overview-empty">Papierkorb ist leer.</div>`;
+  host.querySelectorAll(".trash-restore").forEach(b=>b.onclick=()=>restoreTrashEntry(b.dataset.id));
+  host.querySelectorAll(".trash-delete").forEach(b=>b.onclick=()=>{state.trash=state.trash.filter(x=>x.trashId!==b.dataset.id);save();renderTrash();});
+  const empty=document.querySelector("#emptyTrashBtn"); if(empty)empty.disabled=!rows.length;
+}
+
 function renderAll() {
+  pruneTrash();
+  renderTrash();
   bindManualTimetableControls();
   bindSchoolYearSetting();
   applyFamilyVisuals();
@@ -4467,6 +4522,7 @@ function applyCloudData(data) {
   try {
     state.videos = Array.isArray(data.videos) ? data.videos : [];
     state.todos = mergeCloudTodosWithoutLosingNewLocal(data.todos, data.updatedAt);
+  state.trash = Array.isArray(data.trash) ? data.trash : (state.trash || []);
     state.archive = Array.isArray(data.archive) ? data.archive : [];
     state.shopping = Array.isArray(data.shopping)
   ? data.shopping
@@ -5024,3 +5080,9 @@ document.addEventListener("click", e => {
   }
 });
 
+
+document.querySelector("#emptyTrashBtn")?.addEventListener("click",()=>{
+  if(!(state.trash||[]).length)return;
+  if(!confirm("Papierkorb wirklich endgültig leeren?"))return;
+  state.trash=[];save();renderTrash();
+});
