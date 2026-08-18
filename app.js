@@ -399,11 +399,12 @@ if (item.type === "event" && recurrence === "none") {
     // "Heute"-To-dos aus älteren Versionen hatten teilweise weder day noch weekKey.
     // In diesem Fall ordnen wir sie sicher ihrem Erstellungstag zu, statt sie
     // aus dem Wochenplan verschwinden zu lassen.
-    if (item.period === "today" && (!item.weekKey || !item.day)) {
-      const created = Number(item.createdAt || 0);
-      if (!created) return key === dateKey(new Date());
-      const createdDate = new Date(created);
-      return key === dateKey(createdDate);
+    // "Heute" ist bewusst dynamisch: solange das To-do offen ist, gehört es
+    // auf den tatsächlichen heutigen Kalendertag – unabhängig davon, wann es
+    // ursprünglich angelegt wurde. So bleiben alte unerledigte Heute-To-dos
+    // nicht am gestrigen Tag hängen.
+    if (item.period === "today") {
+      return key === dateKey(new Date());
     }
 
     return item.weekKey === dateKey(getMonday(date)) && item.day === weekdayNameForDate(date);
@@ -1337,7 +1338,37 @@ document.querySelector("#eventEndDate").value = item.endDate || "";
 document.querySelector("#eventTime").value = item.time || "";
 document.querySelector("#eventEndTime").value = item.endTime || "";
 document.querySelector("#eventCategory").value = item.eventCategory || "normal";
-    document.querySelector("#recurrence").value = item.recurrence || "none";
+    
+function updateSchoolyearNoeUI() {
+  const recurrenceEl = document.querySelector("#recurrence");
+  if (!recurrenceEl) return;
+  const isSchoolyear = recurrenceEl.value === "schoolyear-noe";
+
+  const eventDate = document.querySelector("#eventDate");
+  const eventEndDate = document.querySelector("#eventEndDate");
+  const eventTime = document.querySelector("#eventTime");
+  const eventEndTime = document.querySelector("#eventEndTime");
+  const todoDay = document.querySelector("#todoDay");
+
+  // Die jeweiligen Feld-Container über das nächstgelegene beschriftete Element
+  // ein-/ausblenden, ohne die restliche Maske umzubauen.
+  const fieldBox = el => el ? (el.closest(".field") || el.parentElement) : null;
+  [eventDate, eventEndDate, eventEndTime].forEach(el => {
+    const box = fieldBox(el);
+    if (box) box.style.display = isSchoolyear ? "none" : "";
+  });
+
+  if (eventTime) {
+    const box = fieldBox(eventTime);
+    if (box) box.style.display = "";
+  }
+  if (todoDay) {
+    const box = fieldBox(todoDay);
+    if (box) box.style.display = isSchoolyear ? "" : box.style.display;
+  }
+}
+
+document.querySelector("#recurrence").value = item.recurrence || "none";
     setSelectedFamilyMembers(item.family || []);
     updateEntryTypeUI();
 
@@ -4799,3 +4830,11 @@ document.addEventListener("click", e => {
     setTimeout(scheduleMultiDayAlignment, 80);
   }
 });
+
+const recurrenceSchoolyearUi = document.querySelector("#recurrence");
+if (recurrenceSchoolyearUi) {
+  recurrenceSchoolyearUi.addEventListener("change", () => {
+    updateSchoolyearNoeUI();
+  });
+  setTimeout(updateSchoolyearNoeUI, 0);
+}
