@@ -3275,6 +3275,56 @@ if (deleteAllExercisesBtn) {
 }
 
 
+
+const workroomCalmQuotes = [
+  "In Ruhe entsteht oft das Klarste.",
+  "Nicht alles muss heute fertig werden.",
+  "Gut vorbereitet darf sich leicht anfühlen.",
+  "Ein kleiner Schritt reicht für den Anfang.",
+  "Ordnung darf entlasten, nicht antreiben.",
+  "Ideen brauchen manchmal ein wenig Raum.",
+  "Ich muss nicht schneller sein als mein eigener Rhythmus.",
+  "Was wirklich wichtig ist, darf sichtbar werden.",
+  "Vorbereitung soll mir dienen – nicht umgekehrt.",
+  "Auch im Schulalltag darf Platz für Ruhe bleiben."
+];
+
+let workroomQuoteTimer = null;
+
+function setWorkroomCalmQuote(forceNext = false) {
+  const el = document.querySelector("#workroomCalmQuote");
+  if (!el) return;
+
+  let current = Number(el.dataset.quoteIndex || -1);
+  let next = Math.floor(Math.random() * workroomCalmQuotes.length);
+
+  if (forceNext && workroomCalmQuotes.length > 1 && next === current) {
+    next = (next + 1) % workroomCalmQuotes.length;
+  }
+
+  el.classList.add("changing");
+  window.setTimeout(() => {
+    el.textContent = workroomCalmQuotes[next];
+    el.dataset.quoteIndex = String(next);
+    el.classList.remove("changing");
+  }, 180);
+}
+
+function initWorkroomCalmHeader() {
+  const el = document.querySelector("#workroomCalmQuote");
+  if (!el) return;
+
+  setWorkroomCalmQuote(false);
+
+  if (workroomQuoteTimer) clearInterval(workroomQuoteTimer);
+  workroomQuoteTimer = setInterval(() => {
+    const workroomView = document.querySelector("#workroom");
+    if (workroomView?.classList.contains("active")) {
+      setWorkroomCalmQuote(true);
+    }
+  }, 14000);
+}
+
 function setRandomDailySubtitle() {
   const subtitles = [
     "🌞 Heute ist ein guter Tag für kleine Schritte.",
@@ -3459,6 +3509,7 @@ startShoppingSync();
 });
 
 setRandomDailySubtitle();
+initWorkroomCalmHeader();
 updateEntryTypeUI();
 migrateOldData();
 
