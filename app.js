@@ -27,6 +27,7 @@ const state = {
   todos: JSON.parse(localStorage.getItem("balanceProd.todos") || "[]"),
   archive: JSON.parse(localStorage.getItem("balanceProd.archive") || "[]"),
   shopping: JSON.parse(localStorage.getItem("balanceProd.shopping") || "[]"),
+  timeTracking: JSON.parse(localStorage.getItem("balanceProd.timeTracking") || '{"entries":[],"active":[],"stopped":{},"deletedEntries":{}}'),
 
   workroom: JSON.parse(
     localStorage.getItem("balanceProd.workroom") ||
@@ -39,6 +40,20 @@ const state = {
   }
 };
 
+state.timeTracking = state.timeTracking && typeof state.timeTracking === "object"
+  ? state.timeTracking
+  : {entries:[], active:[], stopped:{}, deletedEntries:{}};
+state.timeTracking.entries = Array.isArray(state.timeTracking.entries) ? state.timeTracking.entries : [];
+state.timeTracking.active = Array.isArray(state.timeTracking.active)
+  ? state.timeTracking.active
+  : (state.timeTracking.active && typeof state.timeTracking.active === "object" ? [state.timeTracking.active] : []);
+state.timeTracking.stopped =
+  state.timeTracking.stopped && typeof state.timeTracking.stopped === "object"
+    ? state.timeTracking.stopped : {};
+state.timeTracking.deletedEntries =
+  state.timeTracking.deletedEntries && typeof state.timeTracking.deletedEntries === "object"
+    ? state.timeTracking.deletedEntries : {};
+
 let shoppingItems = state.shopping;
 let cloudReady = false;
 let cloudApplying = false;
@@ -50,6 +65,7 @@ function saveLocal() {
   localStorage.setItem("balanceProd.todos", JSON.stringify(state.todos));
   localStorage.setItem("balanceProd.archive", JSON.stringify(state.archive));
   localStorage.setItem("balanceProd.shopping", JSON.stringify(state.shopping));
+  localStorage.setItem("balanceProd.timeTracking", JSON.stringify(state.timeTracking));
   localStorage.setItem("balanceProd.workroom", JSON.stringify(state.workroom));
   localStorage.setItem("balanceProd.school", JSON.stringify(state.school));
   localStorage.setItem("balanceProd.familySettings", JSON.stringify(state.familySettings));
@@ -97,6 +113,19 @@ function scheduleCloudSave() {
 function save() {
   saveLocal();
   scheduleCloudSave();
+}
+
+
+function mergeByIdPreferNewer(localList = [], cloudList = []) {
+  const map = new Map();
+  [...(localList || []), ...(cloudList || [])].forEach(item => {
+    if (!item?.id) return;
+    const prev = map.get(item.id);
+    const itemTs = Number(item.updatedAt || item.endedAt || item.createdAt || item.startedAt || 0);
+    const prevTs = Number(prev?.updatedAt || prev?.endedAt || prev?.createdAt || prev?.startedAt || 0);
+    if (!prev || itemTs >= prevTs) map.set(item.id, item);
+  });
+  return [...map.values()];
 }
 
 function uid() {
@@ -2094,6 +2123,798 @@ const manualTimetableDialog = document.querySelector("#manualTimetableDialog");
 document.querySelector("#closeManualTimetableDialog")?.addEventListener("click", () => manualTimetableDialog?.close());
 document.querySelector("#closeManualTimetableDialog2")?.addEventListener("click", () => manualTimetableDialog?.close());
 
+function timeCategoryLabel(key) {
+  return {
+    pc: "🖥 PC & Büro",
+    prep: "✂ Vorbereitung",
+    household: "🏡 Haushalt",
+    cook: "🍳 Kochen",
+    shopping: "🛒 Einkaufen",
+    repair: "🔧 Reparaturen",
+    garden: "🌿 Garten & draußen",
+    sport: "🏃 Sport & Bewegung",
+    help: "🤝 Helfen & Unterstützen",
+    school: "✏ Lernen & Schule",
+    organize: "🗂 Organisieren", // Altbestand lesbar
+    errands: "🛒 Einkaufen",    // Altbestand sinnvoll umbenannt
+    other: "✨ Sonstiges"
+  }[key] || "✨ Sonstiges";
+}
+
+function formatMinutes(total) {
+  const mins = Math.max(0, Math.round(Number(total) || 0));
+  const h = Math.floor(mins / 60);
+  const m = mins % 60;
+  if (!h) return `${m} Min.`;
+  if (!m) return `${h} Std.`;
+  return `${h} Std. ${m} Min.`;
+}
+
+function weekStartForDate(date = new Date()) {
+  const d = new Date(date);
+  const day = (d.getDay() + 6) % 7;
+  d.setHours(0,0,0,0);
+  d.setDate(d.getDate() - day);
+  return d;
+}
+
+
+const TIME_TRACKING_LOCAL_KEY = "balanceProd.timeTracking";
+
+let timeTrackingUnsubscribe = null;
+let timeTrackingCloudSaveTimer = null;
+let timeTrackingCloudApplying = false;
+
+function writeTimeTrackingLocalOnly() {
+  try {
+    localStorage.setItem(TIME_TRACKING_LOCAL_KEY, JSON.stringify(state.timeTracking));
+  } catch (err) {
+    console.warn("Zeitdaten konnten lokal nicht gespeichert werden:", err);
+  }
+}
+
+function timeTrackingDoc() {
+  return firebase.firestore()
+    .collection("families")
+    .doc("shared")
+    .collection("modules")
+    .doc("timeTracking");
+}
+
+function normalizeTimeTrackingData(value) {
+  const source = value && typeof value === "object" ? value : {};
+  return {
+    entries: Array.isArray(source.entries) ? source.entries : [],
+    active: Array.isArray(source.active)
+      ? source.active
+      : (source.active && typeof source.active === "object" ? [source.active] : []),
+    stopped: source.stopped && typeof source.stopped === "object" ? source.stopped : {},
+    deletedEntries:
+      source.deletedEntries && typeof source.deletedEntries === "object"
+        ? source.deletedEntries
+        : {}
+  };
+}
+
+function mergeStoppedMaps(a, b) {
+  const result = {...(a || {})};
+  Object.entries(b || {}).forEach(([id, ts]) => {
+    result[id] = Math.max(Number(result[id] || 0), Number(ts || 0));
+  });
+  return result;
+}
+
+function mergeTimeDeletionMaps(a, b) {
+  const result = {...(a || {})};
+  Object.entries(b || {}).forEach(([id, ts]) => {
+    result[id] = Math.max(Number(result[id] || 0), Number(ts || 0));
+  });
+  return result;
+}
+
+function mergeTimeTrackingData(a, b) {
+  const A = normalizeTimeTrackingData(a);
+  const B = normalizeTimeTrackingData(b);
+
+  const stopped = mergeStoppedMaps(A.stopped, B.stopped);
+  const deletedEntries = mergeTimeDeletionMaps(A.deletedEntries, B.deletedEntries);
+
+  // Zuerst nach ID zusammenführen, danach echte Löschungen anwenden.
+  const mergedEntries = mergeByIdPreferNewer(A.entries, B.entries);
+  const entries = mergedEntries.filter(entry => {
+    if (!entry?.id) return true;
+    const deletedAt = Number(deletedEntries[entry.id] || 0);
+    const entryUpdatedAt = Number(entry.updatedAt || entry.endedAt || entry.createdAt || 0);
+
+    // Eine neuere Löschmarke gewinnt gegen einen alten Datensatz auf einem anderen Gerät.
+    return !(deletedAt && deletedAt >= entryUpdatedAt);
+  });
+
+  const finishedIds = new Set(entries.map(entry => entry?.id).filter(Boolean));
+  const activeMap = new Map();
+
+  [...A.active, ...B.active].forEach(timer => {
+    if (!timer?.id || finishedIds.has(timer.id)) return;
+
+    // Auch ein bereits gelöschter fertiger Eintrag soll nicht durch einen
+    // alten Active-Stand wieder auferstehen.
+    if (deletedEntries[timer.id]) return;
+
+    const stoppedAt = Number(stopped[timer.id] || 0);
+    if (stoppedAt && stoppedAt >= Number(timer.startedAt || 0)) return;
+
+    const prev = activeMap.get(timer.id);
+    if (!prev || Number(timer.startedAt || 0) >= Number(prev.startedAt || 0)) {
+      activeMap.set(timer.id, timer);
+    }
+  });
+
+  return {
+    entries,
+    active:[...activeMap.values()],
+    stopped,
+    deletedEntries
+  };
+}
+
+async function saveTimeTrackingToCloudNow() {
+  if (timeTrackingCloudApplying || !firebase.auth().currentUser) return;
+
+  const ref = timeTrackingDoc();
+  const localSnapshot = normalizeTimeTrackingData(state.timeTracking);
+
+  try {
+    const merged = await firebase.firestore().runTransaction(async tx => {
+      const snap = await tx.get(ref);
+      const remote = snap.exists ? snap.data() : {};
+      const next = mergeTimeTrackingData(remote, localSnapshot);
+
+      tx.set(ref, {
+        ...next,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+
+      return next;
+    });
+
+    state.timeTracking = mergeTimeTrackingData(state.timeTracking, merged);
+    writeTimeTrackingLocalOnly();
+  } catch (err) {
+    console.error("Zeittracking-Synchronisation fehlgeschlagen:", err);
+  }
+}
+
+function scheduleTimeTrackingCloudSave() {
+  if (!firebase.auth().currentUser) return;
+  clearTimeout(timeTrackingCloudSaveTimer);
+  timeTrackingCloudSaveTimer = setTimeout(saveTimeTrackingToCloudNow, 120);
+}
+
+function saveTimeTrackingImmediately() {
+  writeTimeTrackingLocalOnly();
+  scheduleTimeTrackingCloudSave();
+}
+
+async function startTimeTrackingSync() {
+  if (timeTrackingUnsubscribe) {
+    timeTrackingUnsubscribe();
+    timeTrackingUnsubscribe = null;
+  }
+
+  const ref = timeTrackingDoc();
+
+  try {
+    const own = await ref.get();
+
+    if (!own.exists) {
+      // Einmalige Migration: alter Cloud-Zeitstand + lokale Daten zusammenführen.
+      const legacySnap = await firebase.firestore().collection("families").doc("shared").get();
+      const legacy = legacySnap.exists ? legacySnap.data()?.timeTracking : null;
+      const initial = mergeTimeTrackingData(state.timeTracking, legacy);
+
+      state.timeTracking = initial;
+      writeTimeTrackingLocalOnly();
+
+      await ref.set({
+        ...initial,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+    }
+  } catch (err) {
+    console.warn("Zeittracking-Migration konnte nicht abgeschlossen werden:", err);
+  }
+
+  timeTrackingUnsubscribe = ref.onSnapshot(snap => {
+    if (!snap.exists) return;
+
+    timeTrackingCloudApplying = true;
+    try {
+      state.timeTracking = mergeTimeTrackingData(state.timeTracking, snap.data());
+      writeTimeTrackingLocalOnly();
+      renderTimeTracking();
+    } finally {
+      timeTrackingCloudApplying = false;
+    }
+  }, err => {
+    console.error("Zeittracking Live-Sync fehlgeschlagen:", err);
+  });
+}
+
+function restoreTimeTrackingFromLocal() {
+  try {
+    const raw = localStorage.getItem(TIME_TRACKING_LOCAL_KEY);
+    if (!raw) return;
+    const local = JSON.parse(raw);
+    if (!local || typeof local !== "object") return;
+
+    const localEntries = Array.isArray(local.entries) ? local.entries : [];
+    state.timeTracking.entries = mergeByIdPreferNewer(
+      state.timeTracking.entries,
+      localEntries
+    );
+
+    const localStopped =
+      local.stopped && typeof local.stopped === "object" ? local.stopped : {};
+    const currentStopped =
+      state.timeTracking.stopped && typeof state.timeTracking.stopped === "object"
+        ? state.timeTracking.stopped
+        : {};
+
+    state.timeTracking.stopped = {
+      ...localStopped,
+      ...currentStopped
+    };
+
+    const localActive = Array.isArray(local.active)
+      ? local.active
+      : (local.active && typeof local.active === "object" ? [local.active] : []);
+    const currentActive = Array.isArray(state.timeTracking.active) ? state.timeTracking.active : [];
+
+    const stopped = state.timeTracking.stopped || {};
+    const activeMap = new Map();
+
+    [...currentActive, ...localActive].forEach(timer => {
+      if (!timer?.id) return;
+
+      const stoppedAt = Number(stopped[timer.id] || 0);
+      if (stoppedAt && stoppedAt >= Number(timer.startedAt || 0)) return;
+
+      const prev = activeMap.get(timer.id);
+      if (!prev || Number(timer.startedAt || 0) >= Number(prev.startedAt || 0)) {
+        activeMap.set(timer.id, timer);
+      }
+    });
+
+    state.timeTracking.active = [...activeMap.values()];
+  } catch (err) {
+    console.warn("Lokale Zeitdaten konnten nicht wiederhergestellt werden:", err);
+  }
+}
+
+function formatElapsedWithSeconds(startedAt, nowOverride = Date.now()) {
+  const seconds = Math.max(0, Math.floor((Number(nowOverride) - Number(startedAt || nowOverride)) / 1000));
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  const s = seconds % 60;
+  return `${String(h).padStart(2,"0")}:${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}`;
+}
+
+let liveTimeTicker = null;
+
+const TIME_TRACKING_MAX_MS = 5 * 60 * 60 * 1000;
+
+function startLiveTimeTicker() {
+  clearInterval(liveTimeTicker);
+  const activeTimers = Array.isArray(state.timeTracking.active) ? state.timeTracking.active : [];
+  if (!activeTimers.length) return;
+
+  liveTimeTicker = setInterval(() => {
+    const now = Date.now();
+
+    document.querySelectorAll(".active-time-elapsed").forEach(el => {
+      const startedAt = Number(el.dataset.startedAt || now);
+      const cappedNow = Math.min(now, startedAt + TIME_TRACKING_MAX_MS);
+      el.textContent = formatElapsedWithSeconds(startedAt, cappedNow);
+    });
+
+    const expired = (state.timeTracking.active || []).filter(timer =>
+      now - Number(timer.startedAt || now) >= TIME_TRACKING_MAX_MS
+    );
+
+    expired.forEach(timer => {
+      stopTimeTracking(timer.id, Number(timer.startedAt) + TIME_TRACKING_MAX_MS);
+    });
+  }, 1000);
+}
+
+function trackingPersonColor(key) {
+  const source = familyColor(key) || "#aaa29c";
+
+  const hex = String(source).trim().replace("#","");
+  if (!/^[0-9a-fA-F]{6}$/.test(hex)) return "#d7d2ce";
+
+  let r = parseInt(hex.slice(0,2),16);
+  let g = parseInt(hex.slice(2,4),16);
+  let b = parseInt(hex.slice(4,6),16);
+
+  // Etwas entsättigen → rauchiger.
+  const gray = Math.round(r * 0.299 + g * 0.587 + b * 0.114);
+  const desaturate = 0.34;
+  r = Math.round(r * (1 - desaturate) + gray * desaturate);
+  g = Math.round(g * (1 - desaturate) + gray * desaturate);
+  b = Math.round(b * (1 - desaturate) + gray * desaturate);
+
+  // Deutlich aufhellen, damit die kräftigeren To-do-Farben im Tracking ruhiger wirken.
+  const lighten = 0.62;
+  r = Math.round(r * (1 - lighten) + 255 * lighten);
+  g = Math.round(g * (1 - lighten) + 255 * lighten);
+  b = Math.round(b * (1 - lighten) + 255 * lighten);
+
+  return "#" + [r,g,b]
+    .map(v => Math.max(0,Math.min(255,v)).toString(16).padStart(2,"0"))
+    .join("");
+}
+
+
+function hexToRgb(hex) {
+  const clean = String(hex || "").replace("#","").trim();
+  if (!/^[0-9a-fA-F]{6}$/.test(clean)) return {r:180,g:180,b:180};
+  return {
+    r:parseInt(clean.slice(0,2),16),
+    g:parseInt(clean.slice(2,4),16),
+    b:parseInt(clean.slice(4,6),16)
+  };
+}
+
+function rgbToHex({r,g,b}) {
+  return "#" + [r,g,b]
+    .map(v => Math.max(0,Math.min(255,Math.round(v))).toString(16).padStart(2,"0"))
+    .join("");
+}
+
+function mixHex(a, b, weightB = .5) {
+  const A = hexToRgb(a);
+  const B = hexToRgb(b);
+  const w = Math.max(0,Math.min(1,Number(weightB || 0)));
+  return rgbToHex({
+    r:A.r*(1-w)+B.r*w,
+    g:A.g*(1-w)+B.g*w,
+    b:A.b*(1-w)+B.b*w
+  });
+}
+
+function timeRingSegmentColor(personKey, categoryColor) {
+  const person = familyColor(personKey) || "#aaa29c";
+  const blended = mixHex(categoryColor || "#d6d0c8", person, .72);
+  return mixHex(blended, "#ffffff", .18);
+}
+
+function renderTimeTracking() {
+  const list = document.querySelector("#timeLogList");
+  const activeBox = document.querySelector("#activeTimeTracker");
+  const weekChips = document.querySelector("#timeSummaryChips");
+  const todayChips = document.querySelector("#timeTodayChips");
+  const donutLegend = document.querySelector("#timeDonutLegend");
+  const donutTotal = document.querySelector("#timeDonutTotal");
+  if (!list || !activeBox || !weekChips || !todayChips) return;
+
+  const activeTimers = Array.isArray(state.timeTracking.active) ? state.timeTracking.active : [];
+
+  if (activeTimers.length) {
+    activeBox.classList.remove("hidden");
+    activeBox.innerHTML = activeTimers.map(active => `
+      <div class="active-time-item" data-id="${active.id}" style="--person-color:${escapeHtml(trackingPersonColor(active.person))}">
+        <div>
+          <span class="active-time-person">
+            <span class="time-person-dot" style="background:${escapeHtml(trackingPersonColor(active.person))}"></span>
+            ${escapeHtml(familyName(active.person))}
+          </span>
+          <strong>${escapeHtml(timeCategoryLabel(active.category))}</strong>
+          <small>${escapeHtml(active.note || "")}</small>
+        </div>
+        <div class="active-time-right">
+          <span class="active-time-elapsed" data-started-at="${active.startedAt}">${formatElapsedWithSeconds(active.startedAt)}</span>
+          <button class="secondary-btn stop-time-track-btn" data-id="${active.id}" type="button">■ Stoppen</button>
+        </div>
+      </div>
+    `).join("");
+
+    activeBox.querySelectorAll(".stop-time-track-btn").forEach(btn => {
+      btn.addEventListener("click", () => stopTimeTracking(btn.dataset.id));
+    });
+  } else {
+    activeBox.classList.add("hidden");
+    activeBox.innerHTML = "";
+  }
+
+  const weekStart = weekStartForDate();
+  const todayStart = new Date();
+  todayStart.setHours(0,0,0,0);
+
+  const weekEntries = state.timeTracking.entries.filter(entry =>
+    Number(entry.endedAt || entry.createdAt || 0) >= weekStart.getTime()
+  );
+  const todayEntries = state.timeTracking.entries.filter(entry =>
+    Number(entry.endedAt || entry.createdAt || 0) >= todayStart.getTime()
+  );
+
+  function totalsByPersonAndCategory(entries) {
+    const totals = {};
+    entries.forEach(entry => {
+      const person = entry.person || "a";
+      totals[person] = totals[person] || {};
+      totals[person][entry.category] =
+        (totals[person][entry.category] || 0) + Number(entry.minutes || 0);
+    });
+    return totals;
+  }
+
+  function renderPersonSummary(host, entries) {
+    const totals = totalsByPersonAndCategory(entries);
+    const people = ["a","b","c","d"];
+
+    const html = people.map(person => {
+      const categoryTotals = totals[person] || {};
+      const pairs = Object.entries(categoryTotals).sort((a,b) => b[1] - a[1]);
+      if (!pairs.length) return "";
+
+      const personTotal = pairs.reduce((sum, [,minutes]) => sum + minutes, 0);
+
+      return `
+        <div class="time-person-summary">
+          <div class="time-person-summary-head">
+            <span class="time-person-dot" style="background:${escapeHtml(trackingPersonColor(person))}"></span>
+            <strong>${escapeHtml(familyName(person))}</strong>
+            <span>${formatMinutes(personTotal)}</span>
+          </div>
+          <div class="time-summary-chips-inner">
+            ${pairs.map(([category, minutes]) => `
+              <span class="time-summary-chip">
+                ${escapeHtml(timeCategoryLabel(category))}
+                <strong>${formatMinutes(minutes)}</strong>
+              </span>
+            `).join("")}
+          </div>
+        </div>
+      `;
+    }).join("");
+
+    host.innerHTML = html || `<span class="time-summary-empty">Noch keine Zeiten.</span>`;
+  }
+
+  renderPersonSummary(weekChips, weekEntries);
+  renderPersonSummary(todayChips, todayEntries);
+
+  // FESTE LOGIK DES DIAGRAMMS:
+  // Ringposition = Person: Mama außen -> Papa -> Lou -> Fina innen.
+  // Farbe innerhalb eines Rings = gewählter Bereich/Kategorie.
+  // Dieselbe Kategorie hat bei ALLEN Personen exakt dieselbe Farbe.
+  const categoryPalette = {
+    pc: "#5F9296",
+    prep: "#7892BF",
+    household: "#7F9E6D",
+    cook: "#C8795C",
+    shopping: "#D29B2F",
+    repair: "#A46F89",
+    garden: "#557F66",
+    sport: "#736DB0",
+    help: "#C99224",
+    school: "#8E73AB",
+    organize: "#91857D",
+    errands: "#D29B2F",
+    other: "#82766F"
+  };
+
+  const weekTotals = totalsByPersonAndCategory(weekEntries);
+  const people = [
+    {key:"a", ring:"#timeRingMama"},
+    {key:"b", ring:"#timeRingPapa"},
+    {key:"c", ring:"#timeRingLou"},
+    {key:"d", ring:"#timeRingFina"}
+  ];
+
+  let grandTotal = 0;
+  const legendParts = [];
+
+  people.forEach(personInfo => {
+    const categoryTotals = weekTotals[personInfo.key] || {};
+    const pairs = Object.entries(categoryTotals)
+      .filter(([,minutes]) => Number(minutes) > 0)
+      .sort((a,b) => b[1] - a[1]);
+
+    const personTotal = pairs.reduce((sum,[,minutes]) => sum + Number(minutes), 0);
+    grandTotal += personTotal;
+
+    const ring = document.querySelector(personInfo.ring);
+
+    if (ring) {
+      if (!personTotal) {
+        ring.style.background = "rgba(229,226,220,.48)";
+      } else {
+        let cursor = 0;
+        const segments = [];
+
+        pairs.forEach(([category, minutes]) => {
+          const start = cursor;
+          const end = cursor + (Number(minutes) / personTotal) * 100;
+          cursor = end;
+          // Der Ring selbst gehört bereits eindeutig einer Person.
+          // Die Segmentfarbe zeigt deshalb ausschließlich den gewählten Bereich.
+          const color = categoryPalette[category] || "#b8ada5";
+          segments.push(`${color} ${start}% ${end}%`);
+        });
+
+        ring.style.background = `conic-gradient(${segments.join(",")})`;
+      }
+    }
+
+    if (personTotal) {
+      legendParts.push(`
+        <div class="time-person-legend">
+          <div class="time-person-legend-head">
+            <span class="time-person-dot" style="background:${escapeHtml(trackingPersonColor(personInfo.key))}"></span>
+            <strong>${escapeHtml(familyName(personInfo.key))}</strong>
+            <span>${formatMinutes(personTotal)}</span>
+          </div>
+          ${pairs.map(([category,minutes]) => `
+            <div class="time-donut-legend-row">
+              <span class="time-donut-dot" style="background:${categoryPalette[category] || "#b8ada5"}"></span>
+              <span>${escapeHtml(timeCategoryLabel(category))}</span>
+              <strong>${formatMinutes(minutes)}</strong>
+            </div>
+          `).join("")}
+        </div>
+      `);
+    }
+  });
+
+  if (donutTotal) donutTotal.textContent = formatMinutes(grandTotal);
+  if (donutLegend) {
+    donutLegend.innerHTML = legendParts.join("") ||
+      `<span class="time-summary-empty">Noch keine Verteilung.</span>`;
+  }
+
+  const entries = state.timeTracking.entries
+    .slice()
+    .sort((a,b) => Number(b.endedAt || b.createdAt || 0) - Number(a.endedAt || a.createdAt || 0))
+    .slice(0, 20);
+
+  list.innerHTML = entries.length ? entries.map(entry => `
+    <div class="time-log-row" style="--person-color:${escapeHtml(trackingPersonColor(entry.person))}">
+      <span class="time-log-person">
+        <span class="time-person-dot" style="background:${escapeHtml(trackingPersonColor(entry.person))}"></span>
+        ${escapeHtml(familyName(entry.person))}
+      </span>
+      <span class="time-log-category">${escapeHtml(timeCategoryLabel(entry.category))}</span>
+      <span class="time-log-note">${escapeHtml(entry.note || "")}</span>
+      <strong>${formatMinutes(entry.minutes)}</strong>
+      <button type="button" class="time-log-edit" data-id="${entry.id}" title="Eintrag korrigieren">✎</button>
+      <button type="button" class="time-log-delete" data-id="${entry.id}" title="Eintrag löschen">×</button>
+    </div>
+  `).join("") : `<div class="overview-empty">Noch keine Zeiten eingetragen.</div>`;
+
+
+  list.querySelectorAll(".time-log-edit").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const id = btn.dataset.id;
+      const entry = state.timeTracking.entries.find(item => item.id === id);
+      if (!entry) return;
+
+      // Falls bereits ein Editor offen ist, zuerst schließen.
+      list.querySelectorAll(".time-log-edit-panel").forEach(panel => panel.remove());
+
+      const row = btn.closest(".time-log-row");
+      if (!row) return;
+
+      const panel = document.createElement("div");
+      panel.className = "time-log-edit-panel";
+
+      const categoryOptions = [
+        ["pc","🖥 PC & Büro"],
+        ["prep","✂ Vorbereitung"],
+        ["household","🏡 Haushalt"],
+        ["cook","🍳 Kochen"],
+        ["shopping","🛒 Einkaufen"],
+        ["repair","🔧 Reparaturen"],
+        ["garden","🌿 Garten & draußen"],
+        ["sport","🏃 Sport & Bewegung"],
+        ["help","🤝 Helfen & Unterstützen"],
+        ["school","✏ Lernen & Schule"],
+        ["other","✨ Sonstiges"]
+      ];
+
+      panel.innerHTML = `
+        <label>
+          Für wen?
+          <select class="time-edit-person">
+            <option value="a"${entry.person === "a" ? " selected" : ""}>Mama</option>
+            <option value="b"${entry.person === "b" ? " selected" : ""}>Papa</option>
+            <option value="c"${entry.person === "c" ? " selected" : ""}>Lou</option>
+            <option value="d"${entry.person === "d" ? " selected" : ""}>Fina</option>
+          </select>
+        </label>
+
+        <label>
+          Bereich
+          <select class="time-edit-category">
+            ${categoryOptions.map(([value,label]) =>
+              `<option value="${value}"${entry.category === value ? " selected" : ""}>${label}</option>`
+            ).join("")}
+          </select>
+        </label>
+
+        <label class="time-edit-note-wrap">
+          Notiz
+          <input class="time-edit-note" type="text" value="${escapeHtml(entry.note || "")}">
+        </label>
+
+        <label>
+          Stunden
+          <input class="time-edit-hours" type="number" min="0" max="5" value="${Math.floor(Number(entry.minutes || 0) / 60)}">
+        </label>
+
+        <label>
+          Minuten
+          <input class="time-edit-minutes" type="number" min="0" max="59" value="${Number(entry.minutes || 0) % 60}">
+        </label>
+
+        <div class="time-edit-actions">
+          <button type="button" class="secondary-btn time-edit-cancel">Abbrechen</button>
+          <button type="button" class="primary-btn time-edit-save">Speichern</button>
+        </div>
+      `;
+
+      row.insertAdjacentElement("afterend", panel);
+
+      panel.querySelector(".time-edit-cancel")?.addEventListener("click", () => panel.remove());
+
+      panel.querySelector(".time-edit-save")?.addEventListener("click", () => {
+        const hours = Math.max(0, Math.min(5, Math.round(Number(panel.querySelector(".time-edit-hours")?.value || 0))));
+        const minutesPart = Math.max(0, Math.min(59, Math.round(Number(panel.querySelector(".time-edit-minutes")?.value || 0))));
+        const totalMinutes = Math.min(300, hours * 60 + minutesPart);
+
+        if (!totalMinutes) {
+          panel.querySelector(".time-edit-minutes")?.focus();
+          return;
+        }
+
+        const editedAt = Date.now();
+        entry.person = panel.querySelector(".time-edit-person")?.value || entry.person;
+        entry.category = panel.querySelector(".time-edit-category")?.value || entry.category;
+        entry.note = panel.querySelector(".time-edit-note")?.value.trim() || "";
+        entry.minutes = totalMinutes;
+        entry.endedAt = editedAt;
+        entry.startedAt = editedAt - totalMinutes * 60000;
+        entry.updatedAt = editedAt;
+
+        saveTimeTrackingImmediately();
+        renderTimeTracking();
+      });
+    });
+  });
+
+  list.querySelectorAll(".time-log-delete").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const id = btn.dataset.id;
+      if (!id) return;
+
+      const now = Date.now();
+
+      state.timeTracking.deletedEntries =
+        state.timeTracking.deletedEntries && typeof state.timeTracking.deletedEntries === "object"
+          ? state.timeTracking.deletedEntries
+          : {};
+
+      // Löschmarke statt nur lokalem Entfernen:
+      // So kann ein zweiter Rechner den alten Eintrag nicht wieder zurückschreiben.
+      state.timeTracking.deletedEntries[id] = now;
+      state.timeTracking.entries =
+        state.timeTracking.entries.filter(entry => entry.id !== id);
+
+      saveTimeTrackingImmediately();
+      renderTimeTracking();
+    });
+  });
+
+  startLiveTimeTicker();
+}
+
+function startTimeTracking() {
+  const person = document.querySelector("#timeTrackPerson")?.value || "a";
+  const category = document.querySelector("#timeTrackCategory")?.value || "pc";
+  const note = document.querySelector("#timeTrackNote")?.value.trim() || "";
+
+  state.timeTracking.active = Array.isArray(state.timeTracking.active) ? state.timeTracking.active : [];
+  state.timeTracking.stopped =
+    state.timeTracking.stopped && typeof state.timeTracking.stopped === "object"
+      ? state.timeTracking.stopped
+      : {};
+
+  state.timeTracking.active.push({
+    id: uid(),
+    person,
+    category,
+    note,
+    startedAt: Date.now()
+  });
+
+  saveTimeTrackingImmediately();
+  save();
+  renderTimeTracking();
+}
+
+function stopTimeTracking(timerId, endedAtOverride = null) {
+  state.timeTracking.active = Array.isArray(state.timeTracking.active) ? state.timeTracking.active : [];
+  const active = state.timeTracking.active.find(timer => timer.id === timerId);
+  if (!active) return;
+
+  const endedAt = endedAtOverride == null ? Date.now() : Number(endedAtOverride);
+  const minutes = Math.max(1, Math.min(300, Math.round((endedAt - Number(active.startedAt || endedAt)) / 60000)));
+
+  state.timeTracking.entries.push({
+    id: active.id || uid(),
+    person: active.person,
+    category: active.category,
+    note: active.note || "",
+    startedAt: active.startedAt,
+    endedAt,
+    createdAt: endedAt,
+    updatedAt: endedAt,
+    minutes
+  });
+
+  state.timeTracking.stopped =
+    state.timeTracking.stopped && typeof state.timeTracking.stopped === "object"
+      ? state.timeTracking.stopped
+      : {};
+  state.timeTracking.stopped[timerId] = endedAt;
+
+  state.timeTracking.active = state.timeTracking.active.filter(timer => timer.id !== timerId);
+
+  saveTimeTrackingImmediately();
+  save();
+  renderTimeTracking();
+}
+
+function addManualTimeEntry() {
+  const hoursInput = document.querySelector("#manualTimeHours");
+  const minutesInput = document.querySelector("#manualTimeMinutes");
+  const hours = Math.max(0, Math.round(Number(hoursInput?.value || 0)));
+  const mins = Math.max(0, Math.round(Number(minutesInput?.value || 0)));
+  const totalMinutes = hours * 60 + mins;
+
+  if (!totalMinutes) {
+    (minutesInput || hoursInput)?.focus();
+    return;
+  }
+
+  const now = Date.now();
+  state.timeTracking.entries.push({
+    id: uid(),
+    person: document.querySelector("#timeTrackPerson")?.value || "a",
+    category: document.querySelector("#timeTrackCategory")?.value || "pc",
+    note: document.querySelector("#timeTrackNote")?.value.trim() || "",
+    startedAt: now - totalMinutes * 60000,
+    endedAt: now,
+    createdAt: now,
+    updatedAt: now,
+    minutes: totalMinutes
+  });
+
+  if (hoursInput) hoursInput.value = "";
+  if (minutesInput) minutesInput.value = "";
+
+  saveTimeTrackingImmediately();
+  save();
+  renderTimeTracking();
+}
+
+
+
+
+document.querySelector("#startTimeTrackBtn")?.addEventListener("click", startTimeTracking);
+document.querySelector("#addManualTimeBtn")?.addEventListener("click", addManualTimeEntry);
+
 document.querySelector("#printWeekBtn")?.addEventListener("click",()=>window.print());
 function renderAll() {
   bindManualTimetableControls();
@@ -2103,6 +2924,7 @@ function renderAll() {
   renderWeek();
   renderTodos();
   renderArchive();
+  renderTimeTracking();
   renderSchool();
   renderSchoolWorkTodos();
   renderSchoolPrints();
@@ -3511,6 +4333,7 @@ firebase.auth().onAuthStateChanged(async user => {
     setLoginMessage("");
     showLoginGate(false);
     startCloudSync();
+    await startTimeTrackingSync();
     
     await migrateShoppingToCollection();
 startShoppingSync();
@@ -3521,10 +4344,15 @@ startShoppingSync();
       cloudUnsubscribe();
       cloudUnsubscribe = null;
     }
-    showLoginGate(true);
+        if (timeTrackingUnsubscribe) {
+      timeTrackingUnsubscribe();
+      timeTrackingUnsubscribe = null;
+    }
+showLoginGate(true);
   }
 });
 
+restoreTimeTrackingFromLocal();
 setRandomDailySubtitle();
 initWorkroomCalmHeader();
 updateEntryTypeUI();
