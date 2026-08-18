@@ -7245,9 +7245,9 @@ a.day-meal{
   display:grid;
   grid-template-columns:minmax(0,1fr) 225px;
   align-items:center;
-  min-height:168px;
+  min-height:188px;
   margin:16px 0 18px;
-  padding:20px 24px 20px 26px;
+  padding:24px 24px 24px 26px;
   overflow:hidden;
   border:1px solid rgba(126,143,115,.18);
   border-radius:20px;
@@ -7298,8 +7298,8 @@ a.day-meal{
   position:absolute;
   right:14px;
   top:50%;
-  width:220px;
-  height:190px;
+  width:205px;
+  height:158px;
   transform:translateY(-50%);
   opacity:.58;
   pointer-events:none;
@@ -7316,13 +7316,13 @@ a.day-meal{
 @media(max-width:820px){
   .workroom-calm-header{
     grid-template-columns:minmax(0,1fr) 165px;
-    min-height:132px;
-    padding:17px 20px;
+    min-height:150px;
+    padding:20px 20px;
   }
   .workroom-calm-art{
-    width:165px;
-    height:146px;
-    right:8px;
+    width:155px;
+    height:124px;
+    right:10px;
     opacity:.50;
   }
   .workroom-calm-copy{
@@ -7674,4 +7674,37 @@ a.day-meal{
   .time-log-category{grid-area:category;}
   .time-log-note{grid-area:note;}
   .time-log-duration{grid-area:duration; align-self:center;}
+}
+
+
+/* =========================================================
+   WERKRAUM HEADER – MEHR LUFT OBEN/UNTEN
+   18.08.2026 – finaler Override
+   ========================================================= */
+
+.workroom-calm-header{
+  min-height:205px !important;
+  padding-top:30px !important;
+  padding-bottom:30px !important;
+}
+
+.workroom-calm-art{
+  top:50% !important;
+  width:195px !important;
+  height:140px !important;
+  transform:translateY(-50%) !important;
+}
+
+/* Tablet */
+@media (min-width:601px) and (max-width:820px){
+  .workroom-calm-header{
+    min-height:170px !important;
+    padding-top:25px !important;
+    padding-bottom:25px !important;
+  }
+
+  .workroom-calm-art{
+    width:148px !important;
+    height:112px !important;
+  }
 }
