@@ -252,10 +252,35 @@
           </label>
         </div>
 
-        <label>
-          <span id="entryTextLabel">Aufgabe</span>
-          <input id="todoText" type="text" placeholder="z. B. Elternbrief fertigstellen">
-        </label>
+        <div class="todo-primary-row">
+          <label class="todo-primary-task">
+            <span id="entryTextLabel">Aufgabe</span>
+            <input id="todoText" type="text" placeholder="z. B. Elternbrief fertigstellen">
+          </label>
+
+          <label class="todo-week-offset-field todo-primary-week">
+            Welche Woche?
+            <select id="todoWeekOffset">
+              <option value="0" selected>Diese Woche</option>
+              <option value="1">Nächste Woche</option>
+              <option value="2">Übernächste Woche</option>
+            </select>
+          </label>
+
+          <label class="todo-primary-day">
+            Wochentag
+            <select id="todoDay">
+              <option value="">Nicht einplanen</option>
+              <option>Montag</option>
+              <option>Dienstag</option>
+              <option>Mittwoch</option>
+              <option>Donnerstag</option>
+              <option>Freitag</option>
+              <option>Samstag</option>
+              <option>Sonntag</option>
+            </select>
+          </label>
+        </div>
         <div class="family-picker">
           <span class="family-picker-label">Für wen?</span>
           <div class="family-options" id="familyOptions">
@@ -430,27 +455,7 @@
               <option value="later">Irgendwann</option>
             </select>
           </label>
-          <label class="todo-week-offset-field">
-            Welche Woche?
-            <select id="todoWeekOffset">
-              <option value="0" selected>Diese Woche</option>
-              <option value="1">Nächste Woche</option>
-              <option value="2">Übernächste Woche</option>
-            </select>
-          </label>
-          <label>
-            Wochentag
-            <select id="todoDay">
-              <option value="">Nicht einplanen</option>
-              <option>Montag</option>
-              <option>Dienstag</option>
-              <option>Mittwoch</option>
-              <option>Donnerstag</option>
-              <option>Freitag</option>
-              <option>Samstag</option>
-              <option>Sonntag</option>
-            </select>
-          </label>
+
         </div>
         <div class="todo-form-actions">
           <button id="cancelTodoEditBtn" class="secondary-btn hidden" type="button">Bearbeiten abbrechen</button>
