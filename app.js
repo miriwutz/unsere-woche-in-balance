@@ -768,14 +768,19 @@ function renderWeek() {
                  : `--group-border:${familyColor(groupKey) || "#c8c0ba"}`}">
             <div class="person-todo-group-title">${todoGroupLabel(groupKey)}</div>
             ${groupItems.map(t => `
-              <label class="todo-mini grouped-todo-row ${t.superImportant ? "super-important" : ""}">
-                <input class="check mini-todo-check" data-id="${t.id}" data-date="${dateKey(date)}" type="checkbox" ${isOccurrenceDone(t, date) ? "checked":""}>
-               <span>
-  ${t.superImportant ? `<span class="tiny-star">★</span>` : ''}
-  ${escapeHtml(t.text)}
-  ${isNewEntry(t) ? `<span class="new-entry-badge">NEU</span>` : ""}
-</span>
-              </label>
+              <div class="todo-mini-wrap">
+                <label class="todo-mini grouped-todo-row ${t.superImportant ? "super-important" : ""}">
+                  <input class="check mini-todo-check" data-id="${t.id}" data-date="${dateKey(date)}" type="checkbox" ${isOccurrenceDone(t, date) ? "checked":""}>
+                  <span>
+                    ${t.superImportant ? `<span class="tiny-star">★</span>` : ''}
+                    ${escapeHtml(t.text)}
+                    ${isNewEntry(t) ? `<span class="new-entry-badge">NEU</span>` : ""}
+                  </span>
+                </label>
+                ${(!t.recurrence || t.recurrence === "none") && date < new Date(new Date().setHours(0,0,0,0))
+                  ? `<button type="button" class="roll-todo-today" data-id="${t.id}" title="Auf heute verschieben" aria-label="Auf heute verschieben">→</button>`
+                  : ""}
+              </div>
             `).join("")}
           </div>
         `).join("")}
@@ -923,6 +928,30 @@ if (!item.recurrence || item.recurrence === "none") {
     renderAll();
 
     if (!wasDone && e.target.checked) showMotivation(todoMotivationalMessage());
+  }));
+
+  document.querySelectorAll(".roll-todo-today").forEach(btn => btn.addEventListener("click", e => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const item = state.todos.find(t => t.id === e.currentTarget.dataset.id);
+    if (!item) return;
+
+    const today = new Date();
+    today.setHours(0,0,0,0);
+    const dayNames = ["Sonntag","Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag"];
+    const monday = getMonday(today);
+
+    item.period = "week";
+    item.day = dayNames[today.getDay()];
+    item.weekKey = dateKey(monday);
+    item.anchorDate = dateKey(today);
+    item.done = false;
+    item.completedAt = null;
+
+    save();
+    renderAll();
+    showMotivation("Auf heute verschoben ✓");
   }));
 
   document.querySelectorAll(".school-week-check").forEach(el => el.addEventListener("change", e => {
@@ -1262,6 +1291,10 @@ if (isExpanded) {
     document.querySelector("#todoPriority").value = item.priority;
     document.querySelector("#todoArea").value = item.area;
     document.querySelector("#todoPeriod").value = item.period;
+    const editMonday = getMonday(new Date());
+    const itemMonday = item.weekKey ? parseLocalDate(item.weekKey) : null;
+    const editOffset = itemMonday ? Math.max(0, Math.round((itemMonday - editMonday) / 604800000)) : 0;
+    document.querySelector("#todoWeekOffset").value = String(Math.min(2, editOffset));
     document.querySelector("#todoDay").value = item.day || "";
   document.querySelector("#eventDate").value = item.date || "";
 document.querySelector("#eventEndDate").value = item.endDate || "";
@@ -2968,6 +3001,7 @@ function resetTodoEditor() {
   document.querySelector("#todoPriority").value = "medium";
   document.querySelector("#todoArea").value = "work";
   document.querySelector("#todoPeriod").value = "week";
+  document.querySelector("#todoWeekOffset").value = "0";
   document.querySelector("#todoDay").value = "";
   document.querySelector("#eventDate").value = "";
   document.querySelector("#eventEndDate").value = "";
@@ -3032,14 +3066,23 @@ const recurrence = document.querySelector("#recurrence").value;
   // Wochentag bei To-dos nur für "Diese Woche" anzeigen
   const period = document.querySelector("#todoPeriod")?.value;
   const todoDayField = document.querySelector("#todoDay")?.closest("label, .field, .form-field");
+  const todoWeekField = document.querySelector("#todoWeekOffset")?.closest("label, .field, .form-field");
+  const primaryRow = document.querySelector(".todo-primary-row");
 
   if (todoDayField) {
     todoDayField.classList.toggle("hidden", isEvent || period !== "week");
+  }
+  if (todoWeekField) {
+    todoWeekField.classList.toggle("hidden", isEvent || period !== "week");
+  }
+  if (primaryRow) {
+    primaryRow.classList.toggle("event-mode", isEvent);
   }
 }
 
 document.querySelector("#entryType").addEventListener("change", updateEntryTypeUI);
 document.querySelector("#recurrence").addEventListener("change", updateEntryTypeUI);
+document.querySelector("#todoPeriod").addEventListener("change", updateEntryTypeUI);
 document.querySelector("#eventCategory").addEventListener("change", updateEntryTypeUI);
 
 document.querySelector("#cancelTodoEditBtn").addEventListener("click", resetTodoEditor);
@@ -3059,7 +3102,9 @@ const eventEndTime = document.querySelector("#eventEndTime")?.value || "";
   const eventCategory = document.querySelector("#eventCategory")?.value || "normal";
   const superImportant = document.querySelector("#superImportant").checked;
 
-  const activeMonday = new Date(currentWeekMonday);
+  const weekOffset = Number(document.querySelector("#todoWeekOffset")?.value || 0);
+  const activeMonday = getMonday(new Date());
+  activeMonday.setDate(activeMonday.getDate() + weekOffset * 7);
   const selectedTodoDate = selectedDay ? dateForWeekday(activeMonday, selectedDay) : null;
   const newWeekKey = selectedDay ? dateKey(activeMonday) : null;
   const anchorDate = type === "event"
