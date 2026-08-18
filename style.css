@@ -7480,3 +7480,153 @@ a.day-meal{
     display:none !important;
   }
 }
+
+
+/* =========================================================
+   18.08.2026 – Zeittracking: ruhige, tablet-taugliche Leiste
+   Überschreibt die vorige absolute Timerbox.
+   ========================================================= */
+
+.time-tracker-card .overview-card-head{
+  display:block !important;
+  position:static !important;
+  min-height:0 !important;
+  padding-right:0 !important;
+}
+
+/* Laufende Zeiten bekommen eine eigene, feste Zeile unter der Überschrift.
+   So überdecken sie nichts und die Höhe der Eingabe bleibt stabil. */
+.time-tracker-card #activeTimeTracker{
+  position:static !important;
+  width:100% !important;
+  height:72px !important;
+  min-height:72px !important;
+  max-height:72px !important;
+  margin-top:12px !important;
+  display:flex !important;
+  flex-wrap:nowrap !important;
+  gap:9px !important;
+  overflow-x:auto !important;
+  overflow-y:hidden !important;
+  align-items:stretch !important;
+  scrollbar-width:thin;
+  box-sizing:border-box;
+}
+
+/* Wenn nichts läuft, bleibt die Zeile unsichtbar reserviert:
+   Start/Stop verschiebt dadurch den Rest der Karte nicht. */
+.time-tracker-card #activeTimeTracker.hidden{
+  display:flex !important;
+  visibility:hidden !important;
+  pointer-events:none !important;
+}
+
+/* Jede laufende Zeit ist eine kompakte horizontale Karte. */
+.time-tracker-card .active-time-item{
+  flex:0 0 min(390px, calc(50% - 5px)) !important;
+  width:auto !important;
+  min-width:300px !important;
+  min-height:64px !important;
+  height:64px !important;
+  padding:8px 10px !important;
+  display:grid !important;
+  grid-template-columns:minmax(0,1fr) auto !important;
+  align-items:center !important;
+  gap:12px !important;
+  overflow:hidden !important;
+  box-sizing:border-box !important;
+}
+
+.time-tracker-card .active-time-item > div:first-child{
+  min-width:0 !important;
+  display:grid !important;
+  gap:1px !important;
+}
+
+.time-tracker-card .active-time-person{
+  white-space:nowrap !important;
+  overflow:hidden !important;
+  text-overflow:ellipsis !important;
+}
+
+.time-tracker-card .active-time-item strong{
+  display:block !important;
+  white-space:nowrap !important;
+  overflow:hidden !important;
+  text-overflow:ellipsis !important;
+  line-height:1.2 !important;
+}
+
+.time-tracker-card .active-time-item small{
+  display:block !important;
+  white-space:nowrap !important;
+  overflow:hidden !important;
+  text-overflow:ellipsis !important;
+  line-height:1.15 !important;
+}
+
+.time-tracker-card .active-time-right{
+  display:grid !important;
+  grid-template-columns:auto auto !important;
+  align-items:center !important;
+  gap:8px !important;
+  flex-shrink:0 !important;
+}
+
+.time-tracker-card .active-time-elapsed{
+  display:block !important;
+  min-width:76px !important;
+  text-align:right !important;
+  font-size:.9rem !important;
+  font-weight:800 !important;
+  color:#6f7650 !important;
+  font-variant-numeric:tabular-nums !important;
+  white-space:nowrap !important;
+}
+
+.time-tracker-card .stop-time-track-btn{
+  min-width:82px !important;
+  padding:8px 10px !important;
+  white-space:nowrap !important;
+}
+
+/* Tablet: Zeit bleibt sichtbar; Karten werden etwas kompakter. */
+@media(max-width:1000px){
+  .time-tracker-card .active-time-item{
+    flex-basis:360px !important;
+    min-width:330px !important;
+  }
+
+  .time-tracker-card .active-time-elapsed{
+    min-width:72px !important;
+    font-size:.84rem !important;
+  }
+
+  .time-tracker-card .stop-time-track-btn{
+    min-width:76px !important;
+    padding:7px 8px !important;
+  }
+}
+
+/* Handy: Karten untereinander; dort darf die Höhe wachsen. */
+@media(max-width:650px){
+  .time-tracker-card #activeTimeTracker{
+    height:auto !important;
+    min-height:0 !important;
+    max-height:none !important;
+    flex-direction:column !important;
+    overflow:visible !important;
+  }
+
+  .time-tracker-card #activeTimeTracker.hidden{
+    display:none !important;
+  }
+
+  .time-tracker-card .active-time-item{
+    width:100% !important;
+    min-width:0 !important;
+    height:auto !important;
+    min-height:64px !important;
+    flex-basis:auto !important;
+  }
+}
