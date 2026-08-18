@@ -103,7 +103,7 @@ function scheduleCloudSave() {
     try {
       const payload = cloudPayload();
       payload.updatedAt = firebase.firestore.FieldValue.serverTimestamp();
-      await firebase.firestore().collection("families").doc("shared").set(payload);
+      await firebase.firestore().collection("families").doc("shared").set(payload, { merge: true });
     } catch (err) {
       console.error("Firestore save failed:", err);
     }
@@ -2175,11 +2175,11 @@ function writeTimeTrackingLocalOnly() {
 }
 
 function timeTrackingDoc() {
+  // Zeittracking liegt absichtlich im bereits funktionierenden gemeinsamen
+  // Familien-Dokument. So benutzen PC und Tablet exakt denselben Firestore-Pfad.
   return firebase.firestore()
     .collection("families")
-    .doc("shared")
-    .collection("modules")
-    .doc("timeTracking");
+    .doc("shared");
 }
 
 function normalizeTimeTrackingData(value) {
@@ -2267,13 +2267,13 @@ async function saveTimeTrackingToCloudNow() {
   try {
     const merged = await firebase.firestore().runTransaction(async tx => {
       const snap = await tx.get(ref);
-      const remote = snap.exists ? snap.data() : {};
+      const remote = snap.exists ? (snap.data()?.timeTracking || {}) : {};
       const next = mergeTimeTrackingData(remote, localSnapshot);
 
       tx.set(ref, {
-        ...next,
-        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-      });
+        timeTracking: next,
+        timeTrackingUpdatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      }, { merge: true });
 
       return next;
     });
@@ -2311,7 +2311,9 @@ async function refreshTimeTrackingFromCloud() {
 
     timeTrackingCloudApplying = true;
     try {
-      state.timeTracking = mergeTimeTrackingData(state.timeTracking, snap.data());
+      const remoteTimeTracking = snap.data()?.timeTracking;
+      if (!remoteTimeTracking) return;
+      state.timeTracking = mergeTimeTrackingData(state.timeTracking, remoteTimeTracking);
       writeTimeTrackingLocalOnly();
       renderTimeTracking();
     } finally {
@@ -2342,20 +2344,19 @@ async function startTimeTrackingSync() {
 
   try {
     const own = await ref.get();
+    const remoteTimeTracking = own.exists ? own.data()?.timeTracking : null;
+    const initial = mergeTimeTrackingData(state.timeTracking, remoteTimeTracking);
 
-    if (!own.exists) {
-      // Einmalige Migration: alter Cloud-Zeitstand + lokale Daten zusammenführen.
-      const legacySnap = await firebase.firestore().collection("families").doc("shared").get();
-      const legacy = legacySnap.exists ? legacySnap.data()?.timeTracking : null;
-      const initial = mergeTimeTrackingData(state.timeTracking, legacy);
+    state.timeTracking = initial;
+    writeTimeTrackingLocalOnly();
 
-      state.timeTracking = initial;
-      writeTimeTrackingLocalOnly();
-
+    // Falls bisher nur lokale Zeitdaten vorhanden waren, einmalig ins
+    // gemeinsame Familien-Dokument übernehmen.
+    if (!remoteTimeTracking && (initial.active.length || initial.entries.length)) {
       await ref.set({
-        ...initial,
-        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-      });
+        timeTracking: initial,
+        timeTrackingUpdatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      }, { merge: true });
     }
   } catch (err) {
     console.warn("Zeittracking-Migration konnte nicht abgeschlossen werden:", err);
@@ -2363,10 +2364,12 @@ async function startTimeTrackingSync() {
 
   timeTrackingUnsubscribe = ref.onSnapshot(snap => {
     if (!snap.exists) return;
+    const remoteTimeTracking = snap.data()?.timeTracking;
+    if (!remoteTimeTracking) return;
 
     timeTrackingCloudApplying = true;
     try {
-      state.timeTracking = mergeTimeTrackingData(state.timeTracking, snap.data());
+      state.timeTracking = mergeTimeTrackingData(state.timeTracking, remoteTimeTracking);
       writeTimeTrackingLocalOnly();
       renderTimeTracking();
     } finally {
