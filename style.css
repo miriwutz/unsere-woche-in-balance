@@ -7708,3 +7708,19 @@ a.day-meal{
     height:112px !important;
   }
 }
+
+/* 18.08.2026 – Rückgängig + 3-Tage-Papierkorb */
+.undo-bar{position:fixed;left:50%;bottom:22px;transform:translate(-50%,18px);z-index:9999;display:flex;align-items:center;gap:14px;padding:10px 14px;border-radius:16px;background:rgba(71,68,63,.94);color:white;box-shadow:0 8px 24px rgba(0,0,0,.16);opacity:0;pointer-events:none;transition:.22s ease}
+.undo-bar.show{opacity:1;pointer-events:auto;transform:translate(-50%,0)}
+.undo-bar button{border:0;background:#eef1df;color:#65704b;border-radius:10px;padding:7px 10px;font-weight:750;cursor:pointer}
+.trash-panel{margin-top:10px;border-top:1px solid rgba(120,110,100,.12);padding-top:8px}
+.trash-panel summary{cursor:pointer;color:#877d75;font-size:.72rem}
+.trash-note{margin-left:5px;opacity:.65}
+.trash-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:10px 0 6px;font-size:.68rem;color:#91867d}
+#emptyTrashBtn{border:0;background:transparent;color:#9b7770;font-size:.66rem;cursor:pointer}
+#emptyTrashBtn:disabled{opacity:.35;cursor:default}
+.trash-row{display:grid;grid-template-columns:minmax(0,1fr) 30px 30px;align-items:center;gap:6px;padding:7px 4px;border-top:1px solid rgba(120,110,100,.08)}
+.trash-row span{min-width:0;display:flex;flex-direction:column}
+.trash-row strong{font-size:.72rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.trash-row small{font-size:.6rem;color:#a09388}
+.trash-row button{border:0;background:transparent;cursor:pointer;color:#81786f;font-size:.85rem}
