@@ -5,6 +5,10 @@ const state = {
   todos: JSON.parse(localStorage.getItem("balanceProd.todos") || "[]"),
   archive: JSON.parse(localStorage.getItem("balanceProd.archive") || "[]"),
   shopping: JSON.parse(localStorage.getItem("balanceProd.shopping") || "[]"),
+  recipes: JSON.parse(localStorage.getItem("balanceProd.recipes") || "[]"),
+  meals: JSON.parse(localStorage.getItem("balanceProd.meals") || "{}"),
+  pinboard: JSON.parse(localStorage.getItem("balanceProd.pinboard") || "[]"),
+  recipeLinkFeedback: JSON.parse(localStorage.getItem("balanceProd.recipeLinkFeedback") || "{}"),
   timeTracking: JSON.parse(localStorage.getItem("balanceProd.timeTracking") || '{"entries":[],"active":[],"stopped":{},"deletedEntries":{}}'),
   trash: JSON.parse(localStorage.getItem("balanceProd.trash") || "[]"),
 
@@ -33,6 +37,13 @@ state.timeTracking.deletedEntries =
   state.timeTracking.deletedEntries && typeof state.timeTracking.deletedEntries === "object"
     ? state.timeTracking.deletedEntries : {};
 
+
+state.recipes = Array.isArray(state.recipes) ? state.recipes : [];
+state.meals = state.meals && typeof state.meals === "object" ? state.meals : {};
+state.pinboard = Array.isArray(state.pinboard) ? state.pinboard : [];
+state.recipeLinkFeedback = state.recipeLinkFeedback && typeof state.recipeLinkFeedback === "object"
+  ? state.recipeLinkFeedback : {};
+
 let shoppingItems = state.shopping;
 let cloudReady = false;
 let cloudApplying = false;
@@ -44,6 +55,10 @@ function saveLocal() {
   localStorage.setItem("balanceProd.todos", JSON.stringify(state.todos));
   localStorage.setItem("balanceProd.archive", JSON.stringify(state.archive));
   localStorage.setItem("balanceProd.shopping", JSON.stringify(state.shopping));
+  localStorage.setItem("balanceProd.recipes", JSON.stringify(state.recipes));
+  localStorage.setItem("balanceProd.meals", JSON.stringify(state.meals));
+  localStorage.setItem("balanceProd.pinboard", JSON.stringify(state.pinboard));
+  localStorage.setItem("balanceProd.recipeLinkFeedback", JSON.stringify(state.recipeLinkFeedback));
   localStorage.setItem("balanceProd.timeTracking", JSON.stringify(state.timeTracking));
   localStorage.setItem("balanceProd.trash", JSON.stringify(state.trash || []));
   localStorage.setItem("balanceProd.workroom", JSON.stringify(state.workroom));
@@ -61,6 +76,10 @@ function cloudPayload() {
     trash: state.trash || [],
     archive: state.archive,
     shopping: state.shopping,
+    recipes: state.recipes,
+    meals: state.meals,
+    pinboard: state.pinboard,
+    recipeLinkFeedback: state.recipeLinkFeedback,
     workroom: state.workroom,
     school: state.school,
     familySettings: state.familySettings,
@@ -96,6 +115,357 @@ function save() {
   scheduleCloudSave();
 }
 
+
+
+
+// =========================================================
+// PINNWAND – flüchtige Familiennachrichten
+// =========================================================
+const PINBOARD_DEVICE_KEY = "balanceProd.pinboardDeviceEnabled";
+
+function pinboardDeviceEnabled() {
+  return localStorage.getItem(PINBOARD_DEVICE_KEY) === "1";
+}
+
+function setPinboardDeviceEnabled(value) {
+  localStorage.setItem(PINBOARD_DEVICE_KEY, value ? "1" : "0");
+}
+
+function updatePinboardDeviceStatus() {
+  const btn = document.querySelector("#enablePinboardNotifications");
+  const status = document.querySelector("#pinboardDeviceStatus");
+  if (!btn || !status) return;
+
+  const enabled = pinboardDeviceEnabled();
+  const notificationSupported = "Notification" in window;
+  const permission = notificationSupported ? Notification.permission : "unsupported";
+
+  if (enabled && (permission === "granted" || permission === "unsupported")) {
+    btn.textContent = "Benachrichtigungen aktiv";
+    status.textContent = permission === "unsupported"
+      ? "🔊 Ton auf diesem Gerät aktiviert"
+      : "🔔 Ton & Benachrichtigung aktiviert";
+    status.dataset.state = "granted";
+    return;
+  }
+
+  if (permission === "denied") {
+    btn.textContent = "Ton aktivieren";
+    status.textContent = "🔊 Ton möglich · System-Benachrichtigungen blockiert";
+    status.dataset.state = "denied";
+    return;
+  }
+
+  btn.textContent = "Benachrichtigungen aktivieren";
+  status.textContent = "Noch nicht aktiviert";
+  status.dataset.state = "default";
+}
+
+async function enablePinboardOnThisDevice() {
+  try {
+    // Der Klick selbst entsperrt Audio auf iPhone/iPad/Android.
+    pinboardAudioContext =
+      pinboardAudioContext ||
+      new (window.AudioContext || window.webkitAudioContext)();
+
+    if (pinboardAudioContext.state === "suspended") {
+      await pinboardAudioContext.resume();
+    }
+
+    // Mini-stummer Impuls hält das AudioContext-Unlock auf mobilen Browsern stabiler.
+    const osc = pinboardAudioContext.createOscillator();
+    const gain = pinboardAudioContext.createGain();
+    gain.gain.value = 0.00001;
+    osc.connect(gain);
+    gain.connect(pinboardAudioContext.destination);
+    osc.start();
+    osc.stop(pinboardAudioContext.currentTime + 0.03);
+
+    if ("Notification" in window && Notification.permission === "default") {
+      try {
+        await Notification.requestPermission();
+      } catch (err) {
+        console.warn("Pinnwand Notification-Permission:", err);
+      }
+    }
+
+    setPinboardDeviceEnabled(true);
+    updatePinboardDeviceStatus();
+
+    // Sofort hörbarer Bestätigungston: wenn der kommt, ist das Gerät entsperrt.
+    await playPinboardSound(document.querySelector("#pinboardSound")?.value || "letter");
+    return true;
+  } catch (err) {
+    console.warn("Pinnwand konnte auf diesem Gerät nicht aktiviert werden:", err);
+    setPinboardDeviceEnabled(false);
+    updatePinboardDeviceStatus();
+    return false;
+  }
+}
+
+const PINBOARD_VOLUME_KEY = "balanceProd.pinboardVolume";
+
+function getPinboardVolumeSetting() {
+  return localStorage.getItem(PINBOARD_VOLUME_KEY) || "loud";
+}
+
+function setPinboardVolumeSetting(value) {
+  localStorage.setItem(PINBOARD_VOLUME_KEY, value || "loud");
+}
+
+function pinboardVolumeGain() {
+  return {
+    soft: 0.22,
+    normal: 0.48,
+    loud: 0.88,
+    max: 1.65
+  }[getPinboardVolumeSetting()] || 0.88;
+}
+
+const pinboardSeenIds = new Set();
+let pinboardCloudInitialized = false;
+let pinboardAudioContext = null;
+
+function pinboardRecipientName(key) {
+  if (key === "all") return "Alle";
+  return familyName(key) || "Familie";
+}
+
+function pinboardSoundLabel(sound) {
+  return {
+    letter: "💌 Briefchen",
+    sparkle: "✨ Funkeln",
+    bubble: "🫧 Blubb"
+  }[sound] || "💌 Briefchen";
+}
+
+async function playPinboardSound(sound = "letter") {
+  try {
+    pinboardAudioContext =
+      pinboardAudioContext ||
+      new (window.AudioContext || window.webkitAudioContext)();
+
+    if (pinboardAudioContext.state === "suspended") {
+      await pinboardAudioContext.resume();
+    }
+
+    const ctx = pinboardAudioContext;
+    if (!ctx || ctx.state !== "running") return false;
+
+    const now = ctx.currentTime;
+    const master = ctx.createGain();
+    const compressor = ctx.createDynamicsCompressor();
+    compressor.threshold.setValueAtTime(-18, now);
+    compressor.knee.setValueAtTime(12, now);
+    compressor.ratio.setValueAtTime(6, now);
+    compressor.attack.setValueAtTime(0.003, now);
+    compressor.release.setValueAtTime(0.18, now);
+    master.connect(compressor);
+    compressor.connect(ctx.destination);
+
+    const volumeGain = pinboardVolumeGain();
+    const isSuperLoud = getPinboardVolumeSetting() === "max";
+    master.gain.setValueAtTime(0.0001, now);
+    master.gain.exponentialRampToValueAtTime(volumeGain, now + 0.01);
+
+    function note(freq, start, duration, type = "sine", gainValue = 0.7, endFreq = null) {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, now + start);
+      if (endFreq) {
+        osc.frequency.exponentialRampToValueAtTime(Math.max(30, endFreq), now + start + duration);
+      }
+      gain.gain.setValueAtTime(0.0001, now + start);
+      gain.gain.exponentialRampToValueAtTime(gainValue, now + start + 0.01);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + start + duration);
+      osc.connect(gain);
+      gain.connect(master);
+      osc.start(now + start);
+      osc.stop(now + start + duration + 0.03);
+    }
+
+    function pattern(offset = 0) {
+      if (sound === "sparkle") {
+        note(1180, offset + 0.00, 0.18, "triangle", 0.98);
+        note(1540, offset + 0.10, 0.22, "triangle", 0.92);
+        note(1980, offset + 0.22, 0.30, "sine", 0.88);
+      } else if (sound === "bubble") {
+        note(330, offset + 0.00, 0.20, "triangle", 1.0, 180);
+        note(520, offset + 0.15, 0.18, "triangle", 0.86, 260);
+        note(760, offset + 0.27, 0.13, "sine", 0.62, 430);
+      } else {
+        note(820, offset + 0.00, 0.18, "square", 0.78);
+        note(1180, offset + 0.16, 0.26, "triangle", 1.0);
+        note(1640, offset + 0.28, 0.20, "sine", 0.62);
+      }
+    }
+
+    pattern(0);
+
+    // Super laut wiederholt den kurzen Hinweis einmal.
+    // Das ist auf kleinen Handy-/Tablet-Lautsprechern deutlich besser wahrnehmbar
+    // als nur den Pegel immer weiter zu übersteuern.
+    if (isSuperLoud) {
+      pattern(0.52);
+      master.gain.exponentialRampToValueAtTime(0.0001, now + 1.10);
+    } else {
+      master.gain.exponentialRampToValueAtTime(0.0001, now + 0.62);
+    }
+
+    return true;
+  } catch (err) {
+    console.warn("Pinnwand-Ton konnte nicht abgespielt werden:", err);
+    return false;
+  }
+}
+
+function renderPinboard() {
+  const list = document.querySelector("#pinboardList");
+  const badge = document.querySelector("#pinboardBadge");
+  const countText = document.querySelector("#pinboardCountText");
+  if (!list) return;
+
+  state.pinboard = Array.isArray(state.pinboard) ? state.pinboard : [];
+  const messages = state.pinboard
+    .slice()
+    .sort((a,b) => Number(b.createdAt || 0) - Number(a.createdAt || 0));
+
+  if (badge) {
+    badge.textContent = String(messages.length);
+    badge.classList.toggle("hidden", messages.length === 0);
+  }
+
+  if (countText) {
+    countText.textContent =
+      messages.length === 0 ? "Keine Nachrichten" :
+      messages.length === 1 ? "1 Nachricht" :
+      `${messages.length} Nachrichten`;
+  }
+
+  if (!messages.length) {
+    list.innerHTML = `<div class="pinboard-empty">Die Pinnwand ist gerade leer.</div>`;
+    return;
+  }
+
+  list.innerHTML = messages.map(message => `
+    <article class="pinboard-note" data-id="${message.id}">
+      <div class="pinboard-note-top">
+        <span class="pinboard-note-recipient">💌 ${escapeHtml(pinboardRecipientName(message.recipient))}</span>
+        <span class="pinboard-note-sound">${escapeHtml(pinboardSoundLabel(message.sound))}</span>
+        <button type="button" class="pinboard-note-x" data-id="${message.id}" title="Nachricht löschen">×</button>
+      </div>
+      <div class="pinboard-note-text">${escapeHtml(message.text || "")}</div>
+      <button type="button" class="pinboard-read-delete" data-id="${message.id}">
+        ✓ Gelesen & löschen
+      </button>
+    </article>
+  `).join("");
+
+  list.querySelectorAll(".pinboard-read-delete, .pinboard-note-x").forEach(btn => {
+    btn.addEventListener("click", () => {
+      state.pinboard = state.pinboard.filter(message => message.id !== btn.dataset.id);
+      save();
+      renderPinboard();
+    });
+  });
+}
+
+function handleIncomingPinboard(cloudMessages) {
+  const incoming = Array.isArray(cloudMessages) ? cloudMessages : [];
+
+  if (!pinboardCloudInitialized) {
+    incoming.forEach(message => message?.id && pinboardSeenIds.add(message.id));
+    pinboardCloudInitialized = true;
+    return;
+  }
+
+  const fresh = incoming.filter(message =>
+    message?.id && !pinboardSeenIds.has(message.id)
+  );
+
+  incoming.forEach(message => message?.id && pinboardSeenIds.add(message.id));
+
+  if (fresh.length) {
+    const newest = fresh
+      .slice()
+      .sort((a,b) => Number(b.createdAt || 0) - Number(a.createdAt || 0))[0];
+
+    if (pinboardDeviceEnabled()) {
+      setTimeout(() => {
+        playPinboardSound(newest?.sound || "letter");
+      }, 80);
+    }
+  }
+}
+
+function openPinboard() {
+  renderPinboard();
+  const volume = document.querySelector("#pinboardVolume");
+  if (volume) volume.value = getPinboardVolumeSetting();
+  updatePinboardDeviceStatus();
+  document.querySelector("#pinboardDialog")?.showModal();
+}
+
+document.querySelector("#enablePinboardNotifications")?.addEventListener("click", async () => {
+  await enablePinboardOnThisDevice();
+});
+
+document.querySelector("#pinboardVolume")?.addEventListener("change", e => {
+  setPinboardVolumeSetting(e.currentTarget.value || "loud");
+});
+
+document.querySelector("#testPinboardSoundBtn")?.addEventListener("click", async () => {
+  if (!pinboardDeviceEnabled()) {
+    await enablePinboardOnThisDevice();
+    return;
+  }
+  const sound = document.querySelector("#pinboardSound")?.value || "letter";
+  await playPinboardSound(sound);
+});
+
+document.querySelector("#openPinboardBtn")?.addEventListener("click", openPinboard);
+document.querySelector("#closePinboardBtn")?.addEventListener("click", () => {
+  document.querySelector("#pinboardDialog")?.close();
+});
+
+document.querySelector("#pinboardDialog")?.addEventListener("click", e => {
+  if (e.target === e.currentTarget) e.currentTarget.close();
+});
+
+document.querySelector("#sendPinboardBtn")?.addEventListener("click", async () => {
+  const volumeValue = document.querySelector("#pinboardVolume")?.value || getPinboardVolumeSetting();
+  setPinboardVolumeSetting(volumeValue);
+
+  const recipient = document.querySelector("#pinboardRecipient")?.value || "all";
+  const textInput = document.querySelector("#pinboardMessage");
+  const sound = document.querySelector("#pinboardSound")?.value || "letter";
+  const text = textInput?.value.trim() || "";
+
+  if (!text) {
+    textInput?.focus();
+    return;
+  }
+
+  const message = {
+    id: uid(),
+    recipient,
+    text,
+    sound,
+    createdAt: Date.now()
+  };
+
+  state.pinboard.push(message);
+
+  // Der Sender bekommt nicht gleich seinen eigenen Cloud-Echo-Ton.
+  pinboardSeenIds.add(message.id);
+
+  save();
+  renderPinboard();
+
+  if (textInput) textInput.value = "";
+  showMotivation("💌 Nachricht an die Pinnwand geheftet.");
+});
 
 function mergeByIdPreferNewer(localList = [], cloudList = []) {
   const map = new Map();
@@ -3080,6 +3450,9 @@ function renderAll() {
   renderSchoolPrints();
   renderWorkroomLinks();
   renderShopping();
+  renderRecipes();
+  renderMealPlan();
+  renderPinboard();
 }
 
 async function updateVideoPreview() {
@@ -4530,6 +4903,27 @@ function applyCloudData(data) {
 
 shoppingItems = state.shopping;
     
+
+    const localRecipes = Array.isArray(state.recipes) ? state.recipes : [];
+    const cloudRecipes = Array.isArray(data.recipes) ? data.recipes : [];
+    state.recipes = mergeByIdPreferNewer(localRecipes, cloudRecipes);
+
+    if (data.meals && typeof data.meals === "object") {
+      state.meals = mergeMeals(state.meals, data.meals);
+    }
+
+    if (Array.isArray(data.pinboard)) {
+      handleIncomingPinboard(data.pinboard);
+      state.pinboard = mergeByIdPreferNewer(state.pinboard, data.pinboard);
+    }
+
+    if (data.recipeLinkFeedback && typeof data.recipeLinkFeedback === "object") {
+      state.recipeLinkFeedback = {
+        ...(data.recipeLinkFeedback || {}),
+        ...(state.recipeLinkFeedback || {})
+      };
+    }
+
     state.workroom = data.workroom && typeof data.workroom === "object"
   ? {
       todos: Array.isArray(data.workroom.todos) ? data.workroom.todos : [],
@@ -5085,4 +5479,999 @@ document.querySelector("#emptyTrashBtn")?.addEventListener("click",()=>{
   if(!(state.trash||[]).length)return;
   if(!confirm("Papierkorb wirklich endgültig leeren?"))return;
   state.trash=[];save();renderTrash();
+});
+
+// ===== EINKAUF – REZEPTKARTEN =====
+let activeRecipeDifficulty = "all";
+let activeRecipeCategory = "all";
+let recipeCategoryTouched = false;
+let recipeKidsOnly = false;
+let recipeHealthyOnly = false;
+let activeRecipeSearch = "";
+let mealPlanWeekOffset = 0;
+let recipePage = 0;
+const RECIPE_PAGE_SIZE = 10;
+let editingRecipeId = null;
+
+function resetRecipeForm() {
+  ["#recipeTitle","#recipeTime","#recipeIngredients","#recipeSteps","#recipeWebUrl","#recipeYoutubeUrl"]
+    .forEach(sel => {
+      const el = document.querySelector(sel);
+      if (el) el.value = "";
+    });
+
+  const category = document.querySelector("#recipeCategory");
+  if (category) category.value = "main";
+
+  ensureRecipeCardMarkPicker();
+  const cardMark = document.querySelector("#recipeCardMark");
+  if (cardMark) cardMark.value = "⌁";
+
+  const difficulty = document.querySelector("#recipeDifficulty");
+  if (difficulty) difficulty.value = "medium";
+
+  const kids = document.querySelector("#recipeKids");
+  if (kids) kids.checked = false;
+
+  const healthy = document.querySelector("#recipeHealthy");
+  if (healthy) healthy.checked = false;
+
+  editingRecipeId = null;
+
+  const saveBtn = document.querySelector("#saveRecipeBtn");
+  if (saveBtn) saveBtn.textContent = "Rezept speichern";
+
+  document.querySelector("#cancelRecipeEditBtn")?.classList.add("hidden");
+}
+
+function startRecipeEdit(recipe) {
+  if (!recipe) return;
+
+  editingRecipeId = recipe.id;
+
+  ensureRecipeCardMarkPicker();
+  document.querySelector("#recipeTitle").value = recipe.title || "";
+  document.querySelector("#recipeCategory").value = recipe.category || "main";
+  const cardMark = document.querySelector("#recipeCardMark");
+  if (cardMark) cardMark.value = recipeCardMark(recipe);
+  document.querySelector("#recipeDifficulty").value = recipe.difficulty || "medium";
+  document.querySelector("#recipeKids").checked = !!recipe.kids;
+  document.querySelector("#recipeHealthy").checked = !!recipe.healthy;
+  document.querySelector("#recipeTime").value = recipe.time || "";
+  document.querySelector("#recipeIngredients").value = normalizedRecipeLines(recipe.ingredients).join("\n");
+  document.querySelector("#recipeSteps").value = normalizedRecipeLines(recipe.steps).join("\n");
+  document.querySelector("#recipeWebUrl").value = recipe.webUrl || "";
+  document.querySelector("#recipeYoutubeUrl").value = recipe.youtubeUrl || "";
+
+  document.querySelector("#recipeForm")?.classList.remove("hidden");
+
+  const saveBtn = document.querySelector("#saveRecipeBtn");
+  if (saveBtn) saveBtn.textContent = "Änderungen speichern";
+
+  document.querySelector("#cancelRecipeEditBtn")?.classList.remove("hidden");
+  document.querySelector("#recipeForm")?.scrollIntoView({behavior:"smooth", block:"start"});
+}
+
+function recipeDifficultyLabel(value) {
+  return {easy:"Einfach", medium:"Mittel", advanced:"Etwas aufwendiger"}[value] || "Mittel";
+}
+
+function recipeCategoryLabel(value) {
+  return {
+    breakfast: "🥣 Frühstück & Morgenideen",
+    spread: "🥖 Aufstriche & Dips",
+    soup: "🍲 Suppen & Eintöpfe",
+    main: "🍝 Hauptgerichte",
+    small: "🥙 Kleine Sachen & Jause",
+    salad: "🥗 Salate & Frisches",
+    sweet: "🍓 Süßes & Backen",
+    drink: "🥤 Getränke & Smoothies",
+    other: "✨ Sonstiges"
+  }[value] || "🍝 Hauptgerichte";
+}
+
+function recipeCategoryClass(value) {
+  const key = ["breakfast","spread","soup","main","small","salad","sweet","drink","other"]
+    .includes(value) ? value : "main";
+  return `recipe-category-${key}`;
+}
+
+function recipeLines(value) {
+  const source = Array.isArray(value) ? value.join("\n") : String(value || "");
+  return source
+    .replace(/\\n/g, "\n")
+    .split(/\r?\n/)
+    .map(v => v.trim())
+    .filter(Boolean);
+}
+
+function normalizedRecipeLines(value) {
+  return recipeLines(value);
+}
+
+
+function recipeByTitle(title) {
+  const q = String(title || "").trim().toLowerCase();
+  if (!q) return null;
+  return (state.recipes || []).find(r =>
+    String(r.title || "").trim().toLowerCase() === q
+  ) || null;
+}
+
+function recipeLinkTarget(recipe) {
+  if (!recipe) return "";
+  return recipe.webUrl || recipe.youtubeUrl || "";
+}
+
+let activeRecipeDetailId = null;
+
+function printRecipe(recipe) {
+  if (!recipe) return;
+
+  const category = recipeCategoryLabel(recipe.category || "main");
+  const ingredients = normalizedRecipeLines(recipe.ingredients);
+  const steps = normalizedRecipeLines(recipe.steps);
+
+  const printWindow = window.open("", "_blank", "width=820,height=950");
+  if (!printWindow) {
+    showMotivation("Druckfenster konnte nicht geöffnet werden.");
+    return;
+  }
+
+  const safeTitle = escapeHtml(recipe.title || "Rezept");
+  const kidBadge = recipe.kids ? `<span class="print-badge kids">🧒 Kinderrezept</span>` : "";
+  const healthyBadge = recipe.healthy ? `<span class="print-badge healthy">🌿 Gesund & bunt</span>` : "";
+  const time = recipe.time ? `<span class="print-badge">◔ ${escapeHtml(recipe.time)}</span>` : "";
+
+  printWindow.document.write(`
+    <!doctype html>
+    <html lang="de">
+    <head>
+      <meta charset="utf-8">
+      <title>${safeTitle}</title>
+      <style>
+        @page { size: A4; margin: 15mm; }
+        * { box-sizing: border-box; }
+        body {
+          margin: 0;
+          color: #424745;
+          font-family: "Trebuchet MS", "Segoe UI", Arial, sans-serif;
+          background: white;
+        }
+        .sheet {
+          border: 1px solid #c9d9d5;
+          border-radius: 18px;
+          overflow: hidden;
+        }
+        .head {
+          padding: 24px 28px 20px;
+          text-align: center;
+          background: #c6ddd8;
+        }
+        .eyebrow {
+          font-size: 10px;
+          letter-spacing: .18em;
+          color: #6f7d79;
+        }
+        h1 {
+          margin: 8px 0 12px;
+          font-family: Georgia, "Times New Roman", serif;
+          font-size: 30px;
+          font-weight: 500;
+        }
+        .badges {
+          display: flex;
+          justify-content: center;
+          flex-wrap: wrap;
+          gap: 6px;
+        }
+        .print-badge {
+          padding: 5px 9px;
+          border-radius: 999px;
+          background: rgba(255,255,255,.72);
+          font-size: 11px;
+        }
+        .kids { background: #fff0ba; }
+        .healthy { background: #e2efe3; }
+        .content {
+          display: grid;
+          grid-template-columns: 1fr 1.25fr;
+        }
+        section {
+          padding: 24px 26px 30px;
+          min-height: 360px;
+        }
+        section + section { border-left: 1px solid #dce6e3; }
+        h2 {
+          margin: 0 0 14px;
+          padding-bottom: 7px;
+          border-bottom: 2px solid #d3e3df;
+          font-size: 15px;
+          text-transform: uppercase;
+          letter-spacing: .06em;
+        }
+        ul {
+          margin: 0;
+          padding-left: 20px;
+        }
+        li, .step {
+          margin-bottom: 9px;
+          font-size: 14px;
+          line-height: 1.5;
+        }
+        .footer {
+          padding: 10px;
+          text-align: center;
+          background: #d8e8e4;
+          color: white;
+        }
+        .links {
+          padding: 12px 26px 18px;
+          font-size: 11px;
+          color: #71807c;
+        }
+        @media print {
+          .sheet { break-inside: avoid; }
+        }
+      </style>
+    </head>
+    <body>
+      <main class="sheet">
+        <header class="head">
+          <div class="eyebrow">REZEPT</div>
+          <h1>${safeTitle}</h1>
+          <div class="badges">
+            <span class="print-badge">${escapeHtml(category)}</span>
+            <span class="print-badge">${escapeHtml(recipeDifficultyLabel(recipe.difficulty))}</span>
+            ${time}${kidBadge}${healthyBadge}
+          </div>
+        </header>
+        <div class="content">
+          <section>
+            <h2>Zutaten</h2>
+            <ul>${ingredients.map(item => `<li>${escapeHtml(item)}</li>`).join("")}</ul>
+          </section>
+          <section>
+            <h2>Zubereitung</h2>
+            ${steps.map(step => `<div class="step">${escapeHtml(step)}</div>`).join("")}
+          </section>
+        </div>
+        ${(recipe.webUrl || recipe.youtubeUrl) ? `
+          <div class="links">
+            ${recipe.webUrl ? `Online-Rezept: ${escapeHtml(recipe.webUrl)}<br>` : ""}
+            ${recipe.youtubeUrl ? `YouTube: ${escapeHtml(recipe.youtubeUrl)}` : ""}
+          </div>` : ""}
+        <footer class="footer">♡</footer>
+      </main>
+      <script>
+        window.onload = () => {
+          window.print();
+          window.onafterprint = () => window.close();
+        };
+      <\/script>
+    </body>
+    </html>
+  `);
+
+  printWindow.document.close();
+}
+
+function showRecipeDetail(recipeOrTitle) {
+  const recipe = typeof recipeOrTitle === "string"
+    ? recipeByTitle(recipeOrTitle)
+    : recipeOrTitle;
+
+  if (!recipe) return false;
+  activeRecipeDetailId = recipe.id;
+
+  const dialog = document.querySelector("#recipeDetailDialog");
+  const title = document.querySelector("#recipeDetailTitle");
+  const body = document.querySelector("#recipeDetailBody");
+  if (!dialog || !title || !body) return false;
+
+  title.textContent = recipe.title || "Rezept";
+
+  body.innerHTML = `
+    <div class="recipe-detail-banner ${recipeCategoryClass(recipe.category || "main")} ${recipe.kids ? "recipe-detail-kids" : ""}">
+      <div class="recipe-detail-time">
+        <span class="recipe-detail-clock">◔</span>
+        <span>${escapeHtml(recipe.time || "–")}</span>
+      </div>
+      <div class="recipe-detail-center">
+        <span class="recipe-detail-ribbon">REZEPT</span>
+        <div class="recipe-detail-tags">
+          <span>${escapeHtml(recipeCategoryLabel(recipe.category || "main"))}</span>
+          <span>${escapeHtml(recipeDifficultyLabel(recipe.difficulty))}</span>
+          ${recipe.kids ? `<span class="recipe-kids-badge">🧒 Das kannst du selbst kochen!</span>` : ""}
+          ${recipe.healthy ? `<span class="recipe-healthy-badge">🌿 Gesund & bunt</span>` : ""}
+        </div>
+      </div>
+      <div class="recipe-detail-utensil">${escapeHtml(recipeCardMark(recipe))}</div>
+    </div>
+
+    <div class="recipe-detail-grid">
+      <section>
+        <h3>Zutaten</h3>
+        <div class="recipe-cook-checklist">
+          ${normalizedRecipeLines(recipe.ingredients).map(x => `
+            <button type="button" class="recipe-cook-line">
+              <span class="recipe-cook-dot">○</span>
+              <span>${escapeHtml(x)}</span>
+            </button>
+          `).join("")}
+        </div>
+      </section>
+      <section>
+        <h3>Zubereitung</h3>
+        <div class="recipe-cook-checklist">
+          ${normalizedRecipeLines(recipe.steps).map(x => `
+            <button type="button" class="recipe-cook-line">
+              <span class="recipe-cook-dot">○</span>
+              <span>${escapeHtml(x)}</span>
+            </button>
+          `).join("")}
+        </div>
+      </section>
+    </div>
+
+    <div class="recipe-detail-links">
+      ${recipe.webUrl ? `<a href="${escapeHtml(recipe.webUrl)}" target="_blank" rel="noopener">↗ Onlinerezept öffnen</a>` : ""}
+      ${recipe.youtubeUrl ? `<a href="${escapeHtml(recipe.youtubeUrl)}" target="_blank" rel="noopener">▶ YouTube öffnen</a>` : ""}
+    </div>
+  `;
+
+  body.querySelectorAll(".recipe-cook-line").forEach(line => {
+    line.addEventListener("click", () => {
+      const done = line.classList.toggle("done");
+      const dot = line.querySelector(".recipe-cook-dot");
+      if (dot) dot.textContent = done ? "✓" : "○";
+    });
+  });
+
+  dialog.showModal();
+  return true;
+}
+
+function renderRecipePager(totalItems) {
+  const host = document.querySelector("#recipePager");
+  if (!host) return;
+
+  const totalPages = Math.ceil(totalItems / RECIPE_PAGE_SIZE);
+  recipePage = Math.min(recipePage, Math.max(0, totalPages - 1));
+
+  if (totalPages <= 1) {
+    host.innerHTML = "";
+    return;
+  }
+
+  host.innerHTML = `
+    <button type="button" class="recipe-page-btn" data-page="${recipePage - 1}" ${recipePage <= 0 ? "disabled" : ""}>‹</button>
+    ${Array.from({length: totalPages}, (_, i) =>
+      `<button type="button" class="recipe-page-btn ${i === recipePage ? "active" : ""}" data-page="${i}">${i + 1}</button>`
+    ).join("")}
+    <button type="button" class="recipe-page-btn" data-page="${recipePage + 1}" ${recipePage >= totalPages - 1 ? "disabled" : ""}>›</button>
+  `;
+
+  host.querySelectorAll(".recipe-page-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      if (btn.disabled) return;
+      const next = Number(btn.dataset.page);
+      if (!Number.isFinite(next) || next < 0 || next >= totalPages) return;
+      recipePage = next;
+      renderRecipes();
+      document.querySelector("#recipeList")?.scrollIntoView({behavior:"smooth", block:"start"});
+    });
+  });
+}
+
+function renderRecipes() {
+  const host = document.querySelector("#recipeList");
+  if (!host) return;
+  state.recipes = Array.isArray(state.recipes) ? state.recipes : [];
+
+  const query = activeRecipeSearch.trim().toLowerCase();
+
+  const recipes = state.recipes
+    .filter(r => {
+      const matchesCategory =
+        activeRecipeCategory === "all" || (r.category || "main") === activeRecipeCategory;
+      const matchesDifficulty =
+        activeRecipeDifficulty === "all" || r.difficulty === activeRecipeDifficulty;
+      const matchesKids = !recipeKidsOnly || !!r.kids;
+      const matchesHealthy = !recipeHealthyOnly || !!r.healthy;
+      const haystack = [
+        r.title,
+        ...(Array.isArray(r.ingredients) ? r.ingredients : [])
+      ].join(" ").toLowerCase();
+      const matchesSearch = !query || haystack.includes(query);
+      return matchesCategory && matchesDifficulty && matchesKids && matchesHealthy && matchesSearch;
+    })
+    .sort((a,b) => (b.createdAt || 0) - (a.createdAt || 0));
+
+  recipePage = Math.min(
+    recipePage,
+    Math.max(0, Math.ceil(recipes.length / RECIPE_PAGE_SIZE) - 1)
+  );
+  const visibleRecipes = recipes.slice(
+    recipePage * RECIPE_PAGE_SIZE,
+    recipePage * RECIPE_PAGE_SIZE + RECIPE_PAGE_SIZE
+  );
+
+  if (!recipes.length) {
+    host.innerHTML = `<div class="workroom-empty">Keine passenden Rezepte gefunden.</div>`;
+    renderRecipePager(0);
+    renderRecipeSearchSuggestions();
+    renderRecipeToc();
+    return;
+  }
+
+  host.innerHTML = visibleRecipes.map(r => `
+    <article class="recipe-card ${recipeCategoryClass(r.category || "main")} ${r.kids ? "recipe-card-kids" : ""}" id="recipe-${r.id}">
+      <header class="recipe-card-head">
+        <div class="recipe-time-mark"><span class="recipe-clock">◔</span><span>${escapeHtml(r.time || "–")}</span></div>
+        <div class="recipe-title-wrap">
+          <span class="recipe-ribbon">REZEPT</span>
+          <button type="button" class="recipe-title-button" data-recipe-id="${r.id}">
+            ${escapeHtml(r.title)}
+          </button>
+          <div class="recipe-badges">
+            <span>${escapeHtml(recipeCategoryLabel(r.category || "main"))}</span>
+            <span>${escapeHtml(recipeDifficultyLabel(r.difficulty))}</span>
+            ${r.kids ? `<span class="recipe-kids-badge">🧒 Das kannst du selbst kochen!</span>` : ""}
+            ${r.healthy ? `<span class="recipe-healthy-badge">🌿 Gesund & bunt</span>` : ""}
+          </div>
+        </div>
+        <div class="recipe-tools">${escapeHtml(recipeCardMark(r))}</div>
+      </header>
+      <div class="recipe-card-body">
+        <section class="recipe-column">
+          <h4>ZUTATEN</h4>
+          <ul>${normalizedRecipeLines(r.ingredients).map(x => `<li>${escapeHtml(x)}</li>`).join("")}</ul>
+        </section>
+        <section class="recipe-column">
+          <h4>ZUBEREITUNG</h4>
+          <div class="recipe-prep-lines">${normalizedRecipeLines(r.steps).map(x => `<div class="recipe-prep-line">${escapeHtml(x)}</div>`).join("")}</div>
+        </section>
+      </div>
+      <footer class="recipe-card-footer">
+        <div class="recipe-links">
+          ${r.webUrl ? `<a href="${escapeHtml(r.webUrl)}" target="_blank" rel="noopener">↗ Onlinerezept</a>` : ""}
+          ${r.youtubeUrl ? `<a href="${escapeHtml(r.youtubeUrl)}" target="_blank" rel="noopener">▶ YouTube</a>` : ""}
+        </div>
+        <div class="recipe-card-actions">
+          <button class="recipe-print" data-id="${r.id}" type="button" title="Rezept drucken" aria-label="Rezept drucken">🖨</button>
+          <button class="recipe-edit" data-id="${r.id}" type="button" title="Rezept bearbeiten">✎</button>
+          <button class="recipe-delete" data-id="${r.id}" type="button" title="Rezept löschen">×</button>
+        </div>
+      </footer>
+    </article>
+  `).join("");
+
+  host.querySelectorAll(".recipe-delete").forEach(btn => btn.addEventListener("click", () => {
+    const recipe = state.recipes.find(r => r.id === btn.dataset.id);
+    if (!recipe) return;
+
+    pendingRecipeDeleteId = recipe.id;
+    const text = document.querySelector("#recipeDeleteText");
+    if (text) text.textContent = `„${recipe.title || "Dieses Rezept"}“ wird dauerhaft aus deinen Rezeptkarten entfernt.`;
+    document.querySelector("#recipeDeleteDialog")?.showModal();
+  }));
+
+  host.querySelectorAll(".recipe-print").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const recipe = state.recipes.find(r => r.id === btn.dataset.id);
+      if (recipe) printRecipe(recipe);
+    });
+  });
+
+  host.querySelectorAll(".recipe-edit").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const recipe = state.recipes.find(r => r.id === btn.dataset.id);
+      if (recipe) startRecipeEdit(recipe);
+    });
+  });
+
+  host.querySelectorAll(".recipe-title-button").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const recipe = state.recipes.find(r => r.id === btn.dataset.recipeId);
+      if (recipe) showRecipeDetail(recipe);
+    });
+  });
+
+  renderRecipePager(recipes.length);
+  renderRecipeSearchSuggestions();
+  renderRecipeToc();
+}
+
+
+function renderRecipeSearchSuggestions() {
+  const list = document.querySelector("#recipeSearchSuggestions");
+  const popup = document.querySelector("#recipeAutocomplete");
+  const input = document.querySelector("#recipeSearch");
+  const recipes = (state.recipes || [])
+    .slice()
+    .sort((a,b) => String(a.title || "").localeCompare(String(b.title || ""), "de"));
+
+  if (list) {
+    list.innerHTML = recipes
+      .map(r => `<option value="${escapeHtml(r.title || "")}"></option>`)
+      .join("");
+  }
+
+  if (!popup || !input) return;
+  const q = (input.value || "").trim().toLowerCase();
+
+  if (!q) {
+    popup.classList.add("hidden");
+    popup.innerHTML = "";
+    return;
+  }
+
+  const matches = recipes
+    .filter(r => String(r.title || "").toLowerCase().includes(q))
+    .slice(0, 7);
+
+  if (!matches.length) {
+    popup.classList.add("hidden");
+    popup.innerHTML = "";
+    return;
+  }
+
+  popup.innerHTML = matches.map(r =>
+    `<button type="button" class="recipe-autocomplete-item" data-title="${escapeHtml(r.title || "")}">
+       ${escapeHtml(r.title || "")}
+     </button>`
+  ).join("");
+  popup.classList.remove("hidden");
+
+  popup.querySelectorAll(".recipe-autocomplete-item").forEach(btn => {
+    btn.addEventListener("click", () => {
+      input.value = btn.dataset.title || "";
+      activeRecipeSearch = input.value;
+      popup.classList.add("hidden");
+      renderRecipes();
+    });
+  });
+}
+
+function renderRecipeToc() {
+  const host = document.querySelector("#recipeTocList");
+  if (!host) return;
+
+  const recipes = (state.recipes || [])
+    .slice()
+    .sort((a,b) => String(a.title || "").localeCompare(String(b.title || ""), "de"));
+
+  if (!recipes.length) {
+    host.innerHTML = `<span class="recipe-toc-empty">Noch keine Rezepte.</span>`;
+    return;
+  }
+
+  host.innerHTML = recipes
+    .map(r => `<button type="button" class="recipe-toc-link" data-id="${r.id}" data-title="${escapeHtml(r.title || "")}">${escapeHtml(r.title || "Ohne Titel")}</button>`)
+    .join("");
+
+  host.querySelectorAll(".recipe-toc-link").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const search = document.querySelector("#recipeSearch");
+      if (search) search.value = btn.dataset.title || "";
+      activeRecipeSearch = btn.dataset.title || "";
+      renderRecipes();
+      requestAnimationFrame(() => {
+        const card = document.querySelector(`#recipe-${CSS.escape(btn.dataset.id)}`);
+        if (card) card.scrollIntoView({behavior:"smooth", block:"start"});
+      });
+    });
+  });
+}
+
+function mealPlanMonday(offset = 0) {
+  const monday = new Date(currentWeekMonday);
+  monday.setDate(monday.getDate() + offset * 7);
+  return monday;
+}
+
+
+function normalizeMealEntry(entry) {
+  if (!entry) return null;
+
+  if (typeof entry === "string") {
+    return {
+      label: /^https?:\/\//i.test(entry.trim()) ? "" : entry.trim(),
+      recipeId: "",
+      url: /^https?:\/\//i.test(entry.trim()) ? entry.trim() : "",
+      updatedAt: 0
+    };
+  }
+
+  if (typeof entry !== "object") return null;
+
+  let label = String(entry.label || "").trim();
+  let url = String(entry.url || "").trim();
+
+  if (/^https?:\/\//i.test(label) && !url) {
+    url = label;
+    label = "";
+  }
+
+  return {
+    label,
+    recipeId: String(entry.recipeId || ""),
+    url,
+    updatedAt: Number(entry.updatedAt) || 0
+  };
+}
+
+function mergeMeals(localMeals, cloudMeals) {
+  const local = localMeals && typeof localMeals === "object" ? localMeals : {};
+  const cloud = cloudMeals && typeof cloudMeals === "object" ? cloudMeals : {};
+  const merged = {};
+  const keys = new Set([...Object.keys(local), ...Object.keys(cloud)]);
+
+  keys.forEach(key => {
+    const l = normalizeMealEntry(local[key]);
+    const c = normalizeMealEntry(cloud[key]);
+
+    if (!l && !c) return;
+    if (!l) { merged[key] = c; return; }
+    if (!c) { merged[key] = l; return; }
+
+    // Neue Einträge tragen updatedAt. Dann gewinnt immer die neuere Fassung.
+    if (l.updatedAt || c.updatedAt) {
+      merged[key] = l.updatedAt >= c.updatedAt ? l : c;
+      return;
+    }
+
+    // Migration alter Daten: die vollständigere Fassung behalten.
+    const localScore = Number(!!l.label) * 3 + Number(!!l.recipeId) * 2 + Number(!!l.url);
+    const cloudScore = Number(!!c.label) * 3 + Number(!!c.recipeId) * 2 + Number(!!c.url);
+    merged[key] = localScore >= cloudScore ? l : c;
+  });
+
+  return merged;
+}
+
+function renderMealPlan() {
+  const host = document.querySelector("#mealPlanGrid");
+  if (!host) return;
+
+  const monday = mealPlanMonday(mealPlanWeekOffset);
+  const recipes = (state.recipes || [])
+    .slice()
+    .sort((a,b) => String(a.title || "").localeCompare(String(b.title || ""), "de"));
+
+  const isUrl = value => /^https?:\/\//i.test(String(value || "").trim());
+
+  host.innerHTML = WEEK_DAYS.map((dayName, index) => {
+    const date = new Date(monday);
+    date.setDate(monday.getDate() + index);
+    const key = dateKey(date);
+
+    const stored = normalizeMealEntry ? normalizeMealEntry(state.meals?.[key]) : state.meals?.[key];
+    const value = typeof stored === "string" ? stored : (stored?.label || "");
+    const customUrl = typeof stored === "object" ? (stored?.url || "") : "";
+    const recipeId = typeof stored === "object" ? (stored?.recipeId || "") : "";
+
+    const matched = recipeId
+      ? recipes.find(r => r.id === recipeId)
+      : recipeByTitle(value);
+
+    return `
+      <div class="meal-plan-day">
+        <div class="meal-plan-day-head">
+          <span class="meal-plan-day-name">${escapeHtml(dayName)}</span>
+          <span class="meal-plan-date">${String(date.getDate()).padStart(2,"0")}.${String(date.getMonth()+1).padStart(2,"0")}.</span>
+        </div>
+
+        <div class="meal-plan-input-wrap">
+          <div class="meal-plan-name-wrap">
+            <input type="text"
+                   class="meal-plan-input"
+                   data-date="${key}"
+                   value="${escapeHtml(value)}"
+                   autocomplete="off"
+                   placeholder="Bezeichnung, z. B. Pommes">
+            <div class="meal-plan-autocomplete hidden" data-date="${key}"></div>
+          </div>
+
+          <button type="button"
+                  class="meal-plan-link-toggle ${customUrl ? "active" : ""}"
+                  data-date="${key}"
+                  title="Link hinterlegen">🔗</button>
+
+          ${matched ? `
+            <button type="button"
+                    class="meal-plan-recipe-btn"
+                    data-recipe-id="${matched.id}"
+                    title="Rezept öffnen">↗</button>
+          ` : customUrl ? `
+            <a class="meal-plan-recipe-btn"
+               href="${escapeHtml(customUrl)}"
+               target="_blank"
+               rel="noopener"
+               title="Link öffnen">↗</a>
+          ` : ""}
+        </div>
+
+        <div class="meal-plan-url-row ${customUrl ? "" : "hidden"}" data-date="${key}">
+          <input type="url"
+                 class="meal-plan-url-input"
+                 data-date="${key}"
+                 value="${escapeHtml(customUrl)}"
+                 placeholder="Link einfügen, z. B. https://…">
+        </div>
+      </div>
+    `;
+  }).join("");
+
+  function persistMealForDate(key, {refresh = false, cloud = true} = {}) {
+    const esc = CSS.escape(key);
+    const labelInput = host.querySelector(`.meal-plan-input[data-date="${esc}"]`);
+    const urlInput = host.querySelector(`.meal-plan-url-input[data-date="${esc}"]`);
+
+    let label = labelInput?.value.trim() || "";
+    let url = urlInput?.value.trim() || "";
+
+    if (isUrl(label) && !url) {
+      url = label;
+      label = "";
+      if (labelInput) labelInput.value = "";
+      if (urlInput) urlInput.value = url;
+    }
+
+    const matched = recipeByTitle(label);
+    state.meals = state.meals && typeof state.meals === "object" ? state.meals : {};
+
+    if (!label && !url) {
+      delete state.meals[key];
+    } else {
+      state.meals[key] = {
+        label: matched ? matched.title : label,
+        recipeId: matched ? matched.id : "",
+        url,
+        updatedAt: Date.now()
+      };
+    }
+
+    // Beim Tippen NICHT in die Cloud schreiben:
+    // der Firestore-Rückkanal würde renderAll() auslösen und dem Textfeld
+    // nach jedem Buchstaben den Fokus nehmen.
+    if (cloud) {
+      save();
+    } else {
+      saveLocal();
+    }
+
+    renderWeek();
+    if (refresh) renderMealPlan();
+  }
+
+  function showMealSuggestions(input) {
+    const key = input.dataset.date;
+    const popup = host.querySelector(`.meal-plan-autocomplete[data-date="${CSS.escape(key)}"]`);
+    if (!popup) return;
+
+    const q = input.value.trim().toLowerCase();
+    if (!q) {
+      popup.innerHTML = "";
+      popup.classList.add("hidden");
+      return;
+    }
+
+    const matches = recipes
+      .filter(r => String(r.title || "").toLowerCase().includes(q))
+      .slice(0, 6);
+
+    if (!matches.length) {
+      popup.innerHTML = "";
+      popup.classList.add("hidden");
+      return;
+    }
+
+    popup.innerHTML = matches.map(r => `
+      <button type="button"
+              class="meal-plan-autocomplete-item"
+              data-title="${escapeHtml(r.title || "")}"
+              data-recipe-id="${r.id}">
+        <strong>${escapeHtml(r.title || "")}</strong>
+        <span>${escapeHtml(recipeCategoryLabel(r.category || "main"))}</span>
+      </button>
+    `).join("");
+    popup.classList.remove("hidden");
+
+    popup.querySelectorAll(".meal-plan-autocomplete-item").forEach(btn => {
+      btn.addEventListener("mousedown", e => e.preventDefault());
+      btn.addEventListener("click", () => {
+        input.value = btn.dataset.title || "";
+        popup.classList.add("hidden");
+        persistMealForDate(key, {refresh:true, cloud:true});
+      });
+    });
+  }
+
+  host.querySelectorAll(".meal-plan-input").forEach(input => {
+    input.addEventListener("input", () => {
+      // lokal sichern, Fokus behalten, Vorschläge offen lassen
+      persistMealForDate(input.dataset.date, {cloud:false});
+      showMealSuggestions(input);
+    });
+
+    input.addEventListener("focus", () => showMealSuggestions(input));
+
+    input.addEventListener("blur", () => {
+      // Beim Verlassen erst gemeinsam synchronisieren.
+      persistMealForDate(input.dataset.date, {cloud:true});
+      setTimeout(() => {
+        const popup = host.querySelector(`.meal-plan-autocomplete[data-date="${CSS.escape(input.dataset.date)}"]`);
+        popup?.classList.add("hidden");
+      }, 160);
+    });
+
+    input.addEventListener("change", () => {
+      persistMealForDate(input.dataset.date, {cloud:true});
+    });
+  });
+
+  host.querySelectorAll(".meal-plan-url-input").forEach(input => {
+    input.addEventListener("input", () => {
+      persistMealForDate(input.dataset.date, {cloud:false});
+    });
+    input.addEventListener("blur", () => {
+      persistMealForDate(input.dataset.date, {cloud:true});
+    });
+    input.addEventListener("change", () => {
+      persistMealForDate(input.dataset.date, {cloud:true});
+    });
+  });
+
+  host.querySelectorAll(".meal-plan-link-toggle").forEach(btn => {
+    btn.addEventListener("mousedown", e => e.preventDefault());
+    btn.addEventListener("click", () => {
+      const row = host.querySelector(`.meal-plan-url-row[data-date="${CSS.escape(btn.dataset.date)}"]`);
+      row?.classList.toggle("hidden");
+      if (row && !row.classList.contains("hidden")) row.querySelector("input")?.focus();
+    });
+  });
+
+  host.querySelectorAll(".meal-plan-recipe-btn[data-recipe-id]").forEach(btn => {
+    btn.addEventListener("click", e => {
+      e.preventDefault();
+      const recipe = state.recipes.find(r => r.id === btn.dataset.recipeId);
+      if (recipe) showRecipeDetail(recipe);
+    });
+  });
+
+  document.querySelector("#mealPlanThisWeekBtn")?.classList.toggle("active", mealPlanWeekOffset === 0);
+  document.querySelector("#mealPlanNextWeekBtn")?.classList.toggle("active", mealPlanWeekOffset === 1);
+}
+
+function closeRecipeDetailDialog() {
+  const dialog = document.querySelector("#recipeDetailDialog");
+  if (dialog?.open) dialog.close();
+  activeRecipeDetailId = null;
+}
+
+document.querySelector("#printRecipeDetailBtn")?.addEventListener("click", () => {
+  const recipe = state.recipes.find(r => r.id === activeRecipeDetailId);
+  if (recipe) printRecipe(recipe);
+});
+
+document.querySelector("#closeRecipeDetailBtn")?.addEventListener("click", closeRecipeDetailDialog);
+
+document.querySelector("#recipeDetailDialog")?.addEventListener("click", e => {
+  if (e.target === e.currentTarget) closeRecipeDetailDialog();
+});
+
+document.querySelector("#cancelRecipeDeleteBtn")?.addEventListener("click", () => {
+  pendingRecipeDeleteId = null;
+  document.querySelector("#recipeDeleteDialog")?.close();
+});
+
+document.querySelector("#confirmRecipeDeleteBtn")?.addEventListener("click", () => {
+  if (!pendingRecipeDeleteId) return;
+  state.recipes = state.recipes.filter(r => r.id !== pendingRecipeDeleteId);
+  pendingRecipeDeleteId = null;
+  save();
+  renderRecipes();
+  renderMealPlan();
+  document.querySelector("#recipeDeleteDialog")?.close();
+  showMotivation("Rezept gelöscht.");
+});
+
+document.querySelector("#toggleRecipeFormBtn")?.addEventListener("click", () => {
+  document.querySelector("#recipeForm")?.classList.toggle("hidden");
+});
+document.querySelector("#recipeSearch")?.addEventListener("input", e => {
+  activeRecipeSearch = e.currentTarget.value || "";
+  recipePage = 0;
+  renderRecipes();
+  renderRecipeSearchSuggestions();
+});
+
+document.querySelector("#recipeCategoryFilter")?.addEventListener("change", e => {
+  recipeCategoryTouched = true;
+  activeRecipeCategory = e.currentTarget.value || "all";
+  recipePage = 0;
+  renderRecipes();
+});
+
+document.querySelector("#recipeDifficultyFilter")?.addEventListener("change", e => {
+  activeRecipeDifficulty = e.currentTarget.value || "all";
+  recipePage = 0;
+  renderRecipes();
+});
+document.querySelector("#recipeKidsOnlyFilter")?.addEventListener("change", e => {
+  recipeKidsOnly = !!e.currentTarget.checked;
+  recipePage = 0;
+  renderRecipes();
+});
+
+document.querySelector("#recipeHealthyOnlyFilter")?.addEventListener("change", e => {
+  recipeHealthyOnly = !!e.currentTarget.checked;
+  recipePage = 0;
+  renderRecipes();
+});
+
+document.querySelector("#mealPlanThisWeekBtn")?.addEventListener("click", () => {
+  mealPlanWeekOffset = 0;
+  renderMealPlan();
+});
+
+document.querySelector("#mealPlanNextWeekBtn")?.addEventListener("click", () => {
+  mealPlanWeekOffset = 1;
+  renderMealPlan();
+});
+document.querySelector("#saveRecipeBtn")?.addEventListener("click", () => {
+  const title = document.querySelector("#recipeTitle")?.value.trim() || "";
+  if (!title) return showMotivation("Bitte zuerst einen Rezeptnamen eintragen.");
+
+  const recipeData = {
+    title,
+    category: document.querySelector("#recipeCategory")?.value || "main",
+    cardMark: document.querySelector("#recipeCardMark")?.value || "⌁",
+    difficulty: document.querySelector("#recipeDifficulty")?.value || "medium",
+    kids: !!document.querySelector("#recipeKids")?.checked,
+    healthy: !!document.querySelector("#recipeHealthy")?.checked,
+    time: document.querySelector("#recipeTime")?.value.trim() || "",
+    ingredients: recipeLines(document.querySelector("#recipeIngredients")?.value),
+    steps: recipeLines(document.querySelector("#recipeSteps")?.value),
+    webUrl: document.querySelector("#recipeWebUrl")?.value.trim() || "",
+    youtubeUrl: document.querySelector("#recipeYoutubeUrl")?.value.trim() || ""
+  };
+
+  if (editingRecipeId) {
+    const recipe = state.recipes.find(r => r.id === editingRecipeId);
+    if (recipe) {
+      Object.assign(recipe, recipeData, {updatedAt: Date.now()});
+
+      // Bereits verknüpfte Essensplan-Einträge behalten die Verbindung,
+      // bekommen aber automatisch den neuen Rezeptnamen.
+      Object.keys(state.meals || {}).forEach(key => {
+        const meal = state.meals[key];
+        if (meal && typeof meal === "object" && meal.recipeId === recipe.id) {
+          meal.label = recipe.title;
+        }
+      });
+    }
+  } else {
+    state.recipes.push({
+      id: uid(),
+      ...recipeData,
+      createdAt: Date.now()
+    });
+  }
+
+  const wasEditing = !!editingRecipeId;
+  save();
+  renderRecipes();
+  renderMealPlan();
+  renderWeek();
+  resetRecipeForm();
+  document.querySelector("#recipeForm")?.classList.add("hidden");
+  showMotivation(wasEditing ? "Rezept geändert." : "Rezept gespeichert.");
+});
+
+document.querySelector("#cancelRecipeEditBtn")?.addEventListener("click", () => {
+  resetRecipeForm();
+  document.querySelector("#recipeForm")?.classList.add("hidden");
 });
