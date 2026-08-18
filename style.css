@@ -7630,3 +7630,48 @@ a.day-meal{
     flex-basis:auto !important;
   }
 }
+
+
+/* =========================================================
+   18.08.2026 – Zeittracking-Archiv mit Datum
+   ========================================================= */
+.time-log-row{
+  grid-template-columns:64px 80px 180px minmax(100px,1fr) auto !important;
+}
+
+.time-log-date{
+  color:#9a8d84;
+  font-size:.66rem;
+  font-variant-numeric:tabular-nums;
+  white-space:nowrap;
+}
+
+.time-log-duration{
+  white-space:nowrap;
+  font-variant-numeric:tabular-nums;
+}
+
+@media(max-width:900px){
+  .time-log-row{
+    grid-template-columns:58px 72px 150px minmax(90px,1fr) auto !important;
+    gap:6px !important;
+  }
+  .time-log-date{
+    font-size:.62rem;
+  }
+}
+
+@media(max-width:650px){
+  .time-log-row{
+    grid-template-columns:58px minmax(0,1fr) auto !important;
+    grid-template-areas:
+      "date person duration"
+      "date category duration"
+      "date note duration";
+  }
+  .time-log-date{grid-area:date; align-self:start; padding-top:2px;}
+  .time-log-person{grid-area:person;}
+  .time-log-category{grid-area:category;}
+  .time-log-note{grid-area:note;}
+  .time-log-duration{grid-area:duration; align-self:center;}
+}
