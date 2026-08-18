@@ -2758,6 +2758,16 @@ function renderTimeTracking() {
       `<span class="time-summary-empty">Noch keine Verteilung.</span>`;
   }
 
+  const formatTimeLogDate = entry => {
+    const ts = Number(entry.endedAt || entry.createdAt || entry.startedAt || 0);
+    if (!ts) return "–";
+    return new Date(ts).toLocaleDateString("de-AT", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "2-digit"
+    });
+  };
+
   const entries = state.timeTracking.entries
     .slice()
     .sort((a,b) => Number(b.endedAt || b.createdAt || 0) - Number(a.endedAt || a.createdAt || 0))
@@ -2765,13 +2775,14 @@ function renderTimeTracking() {
 
   list.innerHTML = entries.length ? entries.map(entry => `
     <div class="time-log-row" style="--person-color:${escapeHtml(trackingPersonColor(entry.person))}">
+      <time class="time-log-date" datetime="${new Date(Number(entry.endedAt || entry.createdAt || entry.startedAt || Date.now())).toISOString()}">${formatTimeLogDate(entry)}</time>
       <span class="time-log-person">
         <span class="time-person-dot" style="background:${escapeHtml(trackingPersonColor(entry.person))}"></span>
         ${escapeHtml(familyName(entry.person))}
       </span>
       <span class="time-log-category">${escapeHtml(timeCategoryLabel(entry.category))}</span>
       <span class="time-log-note">${escapeHtml(entry.note || "")}</span>
-      <strong>${formatMinutes(entry.minutes)}</strong>
+      <strong class="time-log-duration">${formatMinutes(entry.minutes)}</strong>
       <button type="button" class="time-log-edit" data-id="${entry.id}" title="Eintrag korrigieren">✎</button>
       <button type="button" class="time-log-delete" data-id="${entry.id}" title="Eintrag löschen">×</button>
     </div>
