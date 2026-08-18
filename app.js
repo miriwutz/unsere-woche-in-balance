@@ -2166,54 +2166,6 @@ let timeTrackingCloudSaveTimer = null;
 let timeTrackingCloudApplying = false;
 let timeTrackingPollTimer = null;
 
-const timeSyncDiag = {
-  auth: "wartet",
-  write: "noch nicht",
-  read: "noch nicht",
-  listener: "noch nicht",
-  error: ""
-};
-
-function updateTimeSyncDiagnostic() {
-  const card = document.querySelector(".time-tracker-card");
-  if (!card) return;
-
-  let el = document.querySelector("#timeSyncDiagnostic");
-  if (!el) {
-    el = document.createElement("div");
-    el.id = "timeSyncDiagnostic";
-    el.style.cssText = [
-      "margin:7px 0 2px",
-      "font-size:.68rem",
-      "color:#827a73",
-      "display:flex",
-      "gap:10px",
-      "flex-wrap:wrap",
-      "align-items:center"
-    ].join(";");
-    const form = card.querySelector(".time-tracker-form");
-    form?.insertAdjacentElement("afterend", el);
-  }
-
-  if (!el) return;
-
-  const err = timeSyncDiag.error
-    ? `<span style="color:#a55252">⚠ ${escapeHtml(timeSyncDiag.error)}</span>`
-    : "";
-
-  el.innerHTML = `
-    <span>☁ Auth: <b>${escapeHtml(timeSyncDiag.auth)}</b></span>
-    <span>↑ Schreiben: <b>${escapeHtml(timeSyncDiag.write)}</b></span>
-    <span>↓ Lesen: <b>${escapeHtml(timeSyncDiag.read)}</b></span>
-    <span>↔ Live: <b>${escapeHtml(timeSyncDiag.listener)}</b></span>
-    ${err}
-  `;
-}
-
-function syncDiagTime() {
-  return new Date().toLocaleTimeString("de-AT", {hour:"2-digit", minute:"2-digit", second:"2-digit"});
-}
-
 function writeTimeTrackingLocalOnly() {
   try {
     localStorage.setItem(TIME_TRACKING_LOCAL_KEY, JSON.stringify(state.timeTracking));
@@ -2313,7 +2265,6 @@ async function saveTimeTrackingToCloudNow() {
   const localSnapshot = normalizeTimeTrackingData(state.timeTracking);
 
   try {
-    timeSyncDiag.error = "";
     const merged = await firebase.firestore().runTransaction(async tx => {
       const snap = await tx.get(ref);
       const remote = snap.exists ? (snap.data()?.timeTracking || {}) : {};
@@ -2329,12 +2280,7 @@ async function saveTimeTrackingToCloudNow() {
 
     state.timeTracking = mergeTimeTrackingData(state.timeTracking, merged);
     writeTimeTrackingLocalOnly();
-    timeSyncDiag.write = `OK ${syncDiagTime()}`;
-    updateTimeSyncDiagnostic();
   } catch (err) {
-    timeSyncDiag.write = "FEHLER";
-    timeSyncDiag.error = `${err?.code || "write"}: ${err?.message || err}`;
-    updateTimeSyncDiagnostic();
     console.error("Zeittracking-Synchronisation fehlgeschlagen:", err);
   }
 }
@@ -2369,16 +2315,11 @@ async function refreshTimeTrackingFromCloud() {
       if (!remoteTimeTracking) return;
       state.timeTracking = mergeTimeTrackingData(state.timeTracking, remoteTimeTracking);
       writeTimeTrackingLocalOnly();
-      timeSyncDiag.read = `OK ${syncDiagTime()} (${state.timeTracking.active.length} aktiv)`;
-      updateTimeSyncDiagnostic();
       renderTimeTracking();
     } finally {
       timeTrackingCloudApplying = false;
     }
   } catch (err) {
-    timeSyncDiag.read = "FEHLER";
-    timeSyncDiag.error = `${err?.code || "read"}: ${err?.message || err}`;
-    updateTimeSyncDiagnostic();
     console.warn("Zeittracking-Aktualisierung konnte nicht geladen werden:", err);
   }
 }
@@ -2422,15 +2363,9 @@ async function startTimeTrackingSync() {
   }
 
   timeTrackingUnsubscribe = ref.onSnapshot(snap => {
-    timeSyncDiag.listener = `Signal ${syncDiagTime()}`;
-    updateTimeSyncDiagnostic();
     if (!snap.exists) return;
     const remoteTimeTracking = snap.data()?.timeTracking;
-    if (!remoteTimeTracking) {
-      timeSyncDiag.listener = `Signal ${syncDiagTime()} – kein timeTracking-Feld`;
-      updateTimeSyncDiagnostic();
-      return;
-    }
+    if (!remoteTimeTracking) return;
 
     timeTrackingCloudApplying = true;
     try {
@@ -2441,9 +2376,6 @@ async function startTimeTrackingSync() {
       timeTrackingCloudApplying = false;
     }
   }, err => {
-    timeSyncDiag.listener = "FEHLER";
-    timeSyncDiag.error = `${err?.code || "listener"}: ${err?.message || err}`;
-    updateTimeSyncDiagnostic();
     console.error("Zeittracking Live-Sync fehlgeschlagen:", err);
   });
 
@@ -2601,7 +2533,6 @@ function timeRingSegmentColor(personKey, categoryColor) {
 }
 
 function renderTimeTracking() {
-  updateTimeSyncDiagnostic();
   const list = document.querySelector("#timeLogList");
   const activeBox = document.querySelector("#activeTimeTracker");
   const weekChips = document.querySelector("#timeSummaryChips");
@@ -4442,8 +4373,6 @@ document.querySelector("#logoutBtn")?.addEventListener("click", () => firebase.a
 
 firebase.auth().onAuthStateChanged(async user => {
   if (user) {
-    timeSyncDiag.auth = `OK ${user.uid.slice(0,6)}…`;
-    updateTimeSyncDiagnostic();
     setLoginMessage("");
     showLoginGate(false);
     startCloudSync();
@@ -4453,8 +4382,6 @@ firebase.auth().onAuthStateChanged(async user => {
 startShoppingSync();
     
   } else {
-    timeSyncDiag.auth = "nicht angemeldet";
-    updateTimeSyncDiagnostic();
     cloudReady = false;
     if (cloudUnsubscribe) {
       cloudUnsubscribe();
