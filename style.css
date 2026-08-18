@@ -7336,3 +7336,76 @@ a.day-meal{
     display:none !important;
   }
 }
+
+
+/* =========================================================
+   18.08.2026 – Zuhause-Zeiten kompakt oben rechts
+   ========================================================= */
+
+/* Der Hinweis nimmt keinen Platz mehr im normalen Tagesfluss ein.
+   Damit bleiben Termin-/To-do-Zeilen an allen Wochentagen auf gleicher Höhe. */
+.week-grid .day{
+  position:relative;
+}
+
+.week-grid .day > h3{
+  min-height:46px;
+  padding-right:78px;
+  margin-bottom:13px;
+}
+
+.day-home-times{
+  position:absolute;
+  top:15px;
+  right:11px;
+  z-index:2;
+  display:flex;
+  flex-direction:column;
+  align-items:flex-end;
+  gap:2px;
+  max-width:76px;
+  color:#8b817b;
+  font-size:.58rem;
+  line-height:1.15;
+  text-align:right;
+  pointer-events:none;
+}
+
+.day-home-person{
+  display:flex;
+  align-items:baseline;
+  justify-content:flex-end;
+  gap:4px;
+  white-space:nowrap;
+}
+
+.day-home-person > span{
+  color:#948a84;
+  font-weight:500;
+}
+
+.day-home-person strong{
+  color:#5f5753;
+  font-size:.66rem;
+  font-weight:750;
+  letter-spacing:.01em;
+}
+
+/* Die alte breite Leiste wird im Wochenplan nicht mehr verwendet. */
+.week-grid .home-by-strip.home-by-top{
+  display:none !important;
+}
+
+@media(max-width:700px){
+  .week-grid .day > h3{
+    padding-right:68px;
+  }
+  .day-home-times{
+    right:8px;
+    max-width:66px;
+    font-size:.54rem;
+  }
+  .day-home-person strong{
+    font-size:.61rem;
+  }
+}
