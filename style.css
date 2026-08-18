@@ -7243,9 +7243,9 @@ a.day-meal{
 .workroom-calm-header{
   position:relative;
   display:grid;
-  grid-template-columns:minmax(0,1fr) 205px;
+  grid-template-columns:minmax(0,1fr) 225px;
   align-items:center;
-  min-height:152px;
+  min-height:168px;
   margin:16px 0 18px;
   padding:20px 24px 20px 26px;
   overflow:hidden;
@@ -7278,12 +7278,12 @@ a.day-meal{
   font-family:Georgia,"Times New Roman",serif;
   font-size:clamp(1.08rem,1.7vw,1.48rem);
   line-height:1.35;
-  transition:opacity .18s ease, transform .18s ease;
+  transition:opacity .85s ease-in-out, transform .85s ease-in-out;
 }
 
 #workroomCalmQuote.changing{
-  opacity:.18;
-  transform:translateY(2px);
+  opacity:0;
+  transform:translateY(1px);
 }
 
 .workroom-calm-sub{
@@ -7298,8 +7298,8 @@ a.day-meal{
   position:absolute;
   right:14px;
   top:50%;
-  width:200px;
-  height:174px;
+  width:220px;
+  height:190px;
   transform:translateY(-50%);
   opacity:.58;
   pointer-events:none;
