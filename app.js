@@ -980,6 +980,7 @@ if (!item.recurrence || item.recurrence === "none") {
     item.anchorDate = dateKey(today);
     item.done = false;
     item.completedAt = null;
+    item.updatedAt = Date.now();
 
     save();
     renderAll();
@@ -1307,6 +1308,7 @@ if (isExpanded) {
     if (!item) return;
     const wasDone = !!item.done;
     item.done = e.target.checked;
+    item.updatedAt = Date.now();
     if (item.done) {
   item.completedAt = Date.now();
 } else {
@@ -1339,38 +1341,10 @@ document.querySelector("#eventTime").value = item.time || "";
 document.querySelector("#eventEndTime").value = item.endTime || "";
 document.querySelector("#eventCategory").value = item.eventCategory || "normal";
     
-function updateSchoolyearNoeUI() {
-  const recurrenceEl = document.querySelector("#recurrence");
-  if (!recurrenceEl) return;
-  const isSchoolyear = recurrenceEl.value === "schoolyear-noe";
-
-  const eventDate = document.querySelector("#eventDate");
-  const eventEndDate = document.querySelector("#eventEndDate");
-  const eventTime = document.querySelector("#eventTime");
-  const eventEndTime = document.querySelector("#eventEndTime");
-  const todoDay = document.querySelector("#todoDay");
-
-  // Die jeweiligen Feld-Container über das nächstgelegene beschriftete Element
-  // ein-/ausblenden, ohne die restliche Maske umzubauen.
-  const fieldBox = el => el ? (el.closest(".field") || el.parentElement) : null;
-  [eventDate, eventEndDate, eventEndTime].forEach(el => {
-    const box = fieldBox(el);
-    if (box) box.style.display = isSchoolyear ? "none" : "";
-  });
-
-  if (eventTime) {
-    const box = fieldBox(eventTime);
-    if (box) box.style.display = "";
-  }
-  if (todoDay) {
-    const box = fieldBox(todoDay);
-    if (box) box.style.display = isSchoolyear ? "" : box.style.display;
-  }
-}
-
 document.querySelector("#recurrence").value = item.recurrence || "none";
     setSelectedFamilyMembers(item.family || []);
     updateEntryTypeUI();
+    updateSchoolyearNoeUI();
 
     document.querySelector("#addTodoBtn").textContent = "Änderungen speichern";
     document.querySelector("#cancelTodoEditBtn").classList.remove("hidden");
@@ -3919,6 +3893,117 @@ function resetTodoEditor() {
 }
 
 
+
+function firstSchoolYearDateForWeekday(dayName) {
+  const sy = activeSchoolYear();
+  if (!sy?.start || !dayName) return null;
+
+  const targetNames = ["Sonntag","Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag"];
+  const target = targetNames.indexOf(dayName);
+  if (target < 0) return null;
+
+  const d = parseLocalDate(sy.start);
+  for (let i = 0; i < 7; i++) {
+    if (d.getDay() === target) return new Date(d);
+    d.setDate(d.getDate() + 1);
+  }
+  return null;
+}
+
+function ensureSchoolyearNoeScheduleRow() {
+  let row = document.querySelector("#schoolyearNoeScheduleRow");
+  if (row) return row;
+
+  const hint = document.querySelector("#schoolHolidayHint");
+  const recurrence = document.querySelector("#recurrence");
+  const host = hint?.parentElement || recurrence?.parentElement;
+  if (!host) return null;
+
+  row = document.createElement("div");
+  row.id = "schoolyearNoeScheduleRow";
+  row.className = "schoolyear-noe-schedule-row hidden";
+  row.style.cssText = [
+    "display:grid",
+    "grid-template-columns:minmax(170px,1fr) minmax(150px,.75fr)",
+    "gap:10px",
+    "max-width:560px",
+    "margin-top:10px",
+    "padding:10px 12px",
+    "border:1px solid rgba(137,151,103,.28)",
+    "border-radius:14px",
+    "background:rgba(241,245,235,.72)"
+  ].join(";");
+
+  row.innerHTML = `
+    <label style="display:grid;gap:5px">
+      <span>Wochentag</span>
+      <select id="schoolyearNoeDay">
+        <option value="">Bitte wählen</option>
+        <option>Montag</option>
+        <option>Dienstag</option>
+        <option>Mittwoch</option>
+        <option>Donnerstag</option>
+        <option>Freitag</option>
+        <option>Samstag</option>
+        <option>Sonntag</option>
+      </select>
+    </label>
+    <label style="display:grid;gap:5px">
+      <span>Uhrzeit</span>
+      <input id="schoolyearNoeTime" type="time">
+    </label>
+  `;
+
+  if (hint) hint.insertAdjacentElement("afterend", row);
+  else host.appendChild(row);
+
+  row.querySelector("#schoolyearNoeDay")?.addEventListener("change", e => {
+    const hiddenDay = document.querySelector("#todoDay");
+    if (hiddenDay) hiddenDay.value = e.target.value;
+  });
+
+  row.querySelector("#schoolyearNoeTime")?.addEventListener("change", e => {
+    const hiddenTime = document.querySelector("#eventTime");
+    if (hiddenTime) hiddenTime.value = e.target.value;
+  });
+
+  return row;
+}
+
+function updateSchoolyearNoeUI() {
+  const recurrenceEl = document.querySelector("#recurrence");
+  const typeEl = document.querySelector("#entryType");
+  if (!recurrenceEl || !typeEl) return;
+
+  const isSchoolyear = typeEl.value === "event" && recurrenceEl.value === "schoolyear-noe";
+  const row = ensureSchoolyearNoeScheduleRow();
+
+  const fieldBox = el => el ? (el.closest("label") || el.closest(".field") || el.parentElement) : null;
+  const eventDate = document.querySelector("#eventDate");
+  const eventEndDate = document.querySelector("#eventEndDate");
+  const eventTime = document.querySelector("#eventTime");
+  const eventEndTime = document.querySelector("#eventEndTime");
+
+  [eventDate, eventEndDate, eventTime, eventEndTime].forEach(el => {
+    const box = fieldBox(el);
+    if (box) box.style.display = isSchoolyear ? "none" : "";
+  });
+
+  if (row) {
+    row.classList.toggle("hidden", !isSchoolyear);
+    row.style.display = isSchoolyear ? "grid" : "none";
+
+    if (isSchoolyear) {
+      const daySelect = row.querySelector("#schoolyearNoeDay");
+      const timeInput = row.querySelector("#schoolyearNoeTime");
+      const currentDay = document.querySelector("#todoDay")?.value || "";
+      const currentTime = document.querySelector("#eventTime")?.value || "";
+      if (daySelect && document.activeElement !== daySelect) daySelect.value = currentDay;
+      if (timeInput && document.activeElement !== timeInput) timeInput.value = currentTime;
+    }
+  }
+}
+
 function updateEntryTypeUI() {
   const type = document.querySelector("#entryType").value;
   const isEvent = type === "event";
@@ -3981,6 +4066,8 @@ const recurrence = document.querySelector("#recurrence").value;
   if (primaryRow) {
     primaryRow.classList.toggle("event-mode", isEvent);
   }
+
+  updateSchoolyearNoeUI();
 }
 
 document.querySelector("#entryType").addEventListener("change", updateEntryTypeUI);
@@ -4016,12 +4103,21 @@ const eventEndTime = document.querySelector("#eventEndTime")?.value || "";
     ? todayDate
     : (selectedDay ? dateForWeekday(activeMonday, selectedDay) : null);
   const newWeekKey = selectedDay ? dateKey(activeMonday) : null;
+  const schoolyearAnchor = recurrence === "schoolyear-noe"
+    ? firstSchoolYearDateForWeekday(selectedDay)
+    : null;
+
   const anchorDate = type === "event"
-    ? eventDate
+    ? (recurrence === "schoolyear-noe" ? (schoolyearAnchor ? dateKey(schoolyearAnchor) : null) : eventDate)
     : (selectedTodoDate ? dateKey(selectedTodoDate) : null);
 
-  if (type === "event" && !eventDate) {
+  if (type === "event" && recurrence !== "schoolyear-noe" && !eventDate) {
     alert("Bitte für den Termin ein Datum auswählen.");
+    return;
+  }
+
+  if (type === "event" && recurrence === "schoolyear-noe" && !selectedDay) {
+    alert("Bitte für den Termin im Schuljahr NÖ einen Wochentag auswählen.");
     return;
   }
 
@@ -4043,7 +4139,7 @@ const eventEndTime = document.querySelector("#eventEndTime")?.value || "";
     item.day = selectedDay;
     item.family = selectedFamily;
     item.weekKey = type === "event" ? null : newWeekKey;
-    item.date = type === "event" ? eventDate : null;
+    item.date = type === "event" && recurrence !== "schoolyear-noe" ? eventDate : null;
     item.time = type === "event" ? eventTime : "";
     item.endDate = type === "event" ? eventEndDate : null;
 item.endTime = type === "event" ? eventEndTime : "";
@@ -4051,12 +4147,14 @@ item.endTime = type === "event" ? eventEndTime : "";
     item.recurrence = recurrence;
     item.anchorDate = anchorDate;
     item.completedOccurrences = Array.isArray(item.completedOccurrences) ? item.completedOccurrences : [];
+    item.updatedAt = Date.now();
 
     resetTodoEditor();
   } else {
     state.todos.push({
       id: uid(),
       createdAt: Date.now(),
+      updatedAt: Date.now(),
       type,
       superImportant,
       text,
@@ -4066,7 +4164,7 @@ item.endTime = type === "event" ? eventEndTime : "";
       day: selectedDay,
       family: selectedFamily,
       weekKey: type === "event" ? null : newWeekKey,
-      date: type === "event" ? eventDate : null,
+      date: type === "event" && recurrence !== "schoolyear-noe" ? eventDate : null,
       time: type === "event" ? eventTime : "",
       endDate: type === "event" ? eventEndDate : null,
 endTime: type === "event" ? eventEndTime : "",
@@ -4269,11 +4367,35 @@ function showLoginGate(show) {
   document.querySelector("#logoutBtn")?.classList.toggle("hidden", show);
 }
 
+
+function firestoreMillis(value) {
+  if (!value) return 0;
+  if (typeof value.toMillis === "function") return value.toMillis();
+  if (typeof value.seconds === "number") return value.seconds * 1000;
+  const n = Number(value);
+  return Number.isFinite(n) ? n : 0;
+}
+
+function mergeCloudTodosWithoutLosingNewLocal(cloudTodos, cloudUpdatedAt) {
+  const remote = Array.isArray(cloudTodos) ? cloudTodos : [];
+  const local = Array.isArray(state.todos) ? state.todos : [];
+  const cutoff = firestoreMillis(cloudUpdatedAt);
+
+  // Nur lokale Einträge behalten, die NACH dem letzten bekannten Cloud-Stand
+  // erzeugt/geändert wurden. So verschwinden Offline-Eingaben beim Reload nicht.
+  const unsyncedLocal = local.filter(t => {
+    const ts = Number(t.updatedAt || t.createdAt || 0);
+    return ts && ts > cutoff;
+  });
+
+  return mergeByIdPreferNewer(remote, unsyncedLocal);
+}
+
 function applyCloudData(data) {
   cloudApplying = true;
   try {
     state.videos = Array.isArray(data.videos) ? data.videos : [];
-    state.todos = Array.isArray(data.todos) ? data.todos : [];
+    state.todos = mergeCloudTodosWithoutLosingNewLocal(data.todos, data.updatedAt);
     state.archive = Array.isArray(data.archive) ? data.archive : [];
     state.shopping = Array.isArray(data.shopping)
   ? data.shopping
@@ -4831,10 +4953,3 @@ document.addEventListener("click", e => {
   }
 });
 
-const recurrenceSchoolyearUi = document.querySelector("#recurrence");
-if (recurrenceSchoolyearUi) {
-  recurrenceSchoolyearUi.addEventListener("change", () => {
-    updateSchoolyearNoeUI();
-  });
-  setTimeout(updateSchoolyearNoeUI, 0);
-}
