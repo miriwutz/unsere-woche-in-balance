@@ -708,6 +708,16 @@ function renderWeek() {
   grid.innerHTML = "";
   const weekKey = currentWeekKey();
 
+  // Mehrtägige Termine bekommen wochenweit feste Zeilen (Lanes).
+  // Dadurch steht z. B. „Urlaub“ an jedem betroffenen Tag exakt auf derselben Höhe.
+  const weekStartKey = dateKey(currentWeekMonday);
+  const weekEndKey = dateKey(dayDate(currentWeekMonday, 6));
+  const multiDayEventLanes = state.todos
+    .filter(t => !t.archived && t.type === "event" && (t.recurrence || "none") === "none")
+    .filter(t => t.date && (t.endDate || t.date) > t.date)
+    .filter(t => t.date <= weekEndKey && (t.endDate || t.date) >= weekStartKey)
+    .sort((a,b) => (a.date || "").localeCompare(b.date || "") || (a.time || "").localeCompare(b.time || "") || String(a.id).localeCompare(String(b.id)));
+
   days.forEach((day, index) => {
     const dayEl = document.createElement("article");
     dayEl.className = "day";
@@ -787,67 +797,63 @@ function renderWeek() {
       </div>
     ` : "";
 
-const eventHtml = events.length ? `
+const renderEventCard = (t) => {
+  const eventCategory = t.eventCategory || "normal";
+  const eventMeta = {
+    normal:      { icon: "✦", label: "" },
+    birthday:    { icon: "🎂", label: "Geburtstag" },
+    nameday:     { icon: "🌷", label: "Namenstag" },
+    anniversary: { icon: "♡", label: "Jahrestag" },
+    holiday:     { icon: "✦", label: "Feiertag" }
+  }[eventCategory] || { icon: "✦", label: "" };
+
+  const currentKey = dateKey(date);
+  const startKey = t.date || "";
+  const endKey = t.endDate || startKey;
+  let displayTime = "";
+  if (startKey === endKey) {
+    if (t.time) displayTime = t.time + (t.endTime ? "–" + t.endTime : "");
+  } else if (currentKey === startKey) {
+    displayTime = t.time || "";
+  } else if (currentKey === endKey) {
+    displayTime = t.endTime ? "bis " + t.endTime : "";
+  }
+
+  const groupKey = todoGroupKey(t);
+  return `
+    <div class="person-todo-group grouped-family-block event-person-block ${groupAccentClass(groupKey)}"
+         style="${groupKey === "shared"
+           ? `--group-border:${sharedGroupGradient([t])}`
+           : `--group-border:${familyColor(groupKey) || "#c8c0ba"}`}">
+      <div class="person-todo-group-title">${todoGroupLabel(groupKey)}</div>
+      <div class="event-mini event-display grouped-todo-row ${t.superImportant ? "super-important" : ""}">
+        <span class="event-symbol">${eventMeta.icon}</span>
+        <span class="event-copy">
+          ${displayTime ? `<strong>${escapeHtml(displayTime)}</strong>` : ""}
+          ${eventMeta.label ? `<span class="event-kind">${eventMeta.label}</span>` : ""}
+          ${t.superImportant ? `<span class="tiny-star">★</span>` : ""}
+          ${escapeHtml(t.text)}
+          ${isNewEntry(t) ? `<span class="new-entry-badge">NEU</span>` : ""}
+        </span>
+      </div>
+    </div>`;
+};
+
+const multiDayIds = new Set(multiDayEventLanes.map(t => t.id));
+const singleDayEvents = events
+  .filter(t => !multiDayIds.has(t.id))
+  .sort((a,b) => (a.time || "").localeCompare(b.time || ""));
+
+const eventHtml = (events.length || multiDayEventLanes.length) ? `
   <div class="day-events">
     <div class="day-todos-title">Termine</div>
-
-    ${groupTodosByPerson(events).map(([groupKey, groupItems]) => `
-      <div class="person-todo-group grouped-family-block ${groupAccentClass(groupKey)}"
-           style="${groupKey === "shared"
-             ? `--group-border:${sharedGroupGradient(groupItems)}`
-             : `--group-border:${familyColor(groupKey) || "#c8c0ba"}`}">
-
-        <div class="person-todo-group-title">${todoGroupLabel(groupKey)}</div>
-
-        ${groupItems
-          .sort((a,b) => (a.time || "").localeCompare(b.time || ""))
-          .map(t => {
-            const eventCategory = t.eventCategory || "normal";
-
-            const eventMeta = {
-              normal:      { icon: "✦", label: "" },
-              birthday:    { icon: "🎂", label: "Geburtstag" },
-              nameday:     { icon: "🌷", label: "Namenstag" },
-              anniversary: { icon: "♡", label: "Jahrestag" },
-              holiday:     { icon: "✦", label: "Feiertag" }
-            }[eventCategory] || { icon: "✦", label: "" };
-
-            const eventIcon = eventMeta.icon;
-            const eventLabel = eventMeta.label;
-
-            const currentKey = dateKey(date);
-            const startKey = t.date || "";
-            const endKey = t.endDate || startKey;
-
-            let displayTime = "";
-
-            if (startKey === endKey) {
-              if (t.time) {
-                displayTime = t.time + (t.endTime ? "–" + t.endTime : "");
-              }
-            } else if (currentKey === startKey) {
-              displayTime = t.time || "";
-            } else if (currentKey === endKey) {
-              displayTime = t.endTime ? "bis " + t.endTime : "";
-            }
-
-            return `
-              <div class="event-mini event-display grouped-todo-row ${t.superImportant ? "super-important" : ""}">
-                <span class="event-symbol">${eventIcon}</span>
-                <span class="event-copy">
-                  ${displayTime ? `<strong>${escapeHtml(displayTime)}</strong>` : ""}
-                  ${eventLabel ? `<span class="event-kind">${eventLabel}</span>` : ""}
-                  ${t.superImportant ? `<span class="tiny-star">★</span>` : ""}
-                 ${escapeHtml(t.text)}
-${isNewEntry(t) ? `<span class="new-entry-badge">NEU</span>` : ""}
-                </span>
-              </div>
-            `;
-          }).join("")}
-
-      </div>
-    `).join("")}
-
+    <div class="multiday-event-lanes">
+      ${multiDayEventLanes.map(t => occursOnDate(t, date)
+        ? `<div class="multiday-event-lane">${renderEventCard(t)}</div>`
+        : `<div class="multiday-event-lane multiday-event-placeholder" aria-hidden="true"></div>`
+      ).join("")}
+    </div>
+    ${singleDayEvents.map(t => renderEventCard(t)).join("")}
   </div>
 ` : "";
 
@@ -1091,6 +1097,11 @@ function renderTodos() {
   }
 
 todos.sort((a, b) => {
+  // Im Reiter „Fertige To-dos“ steht das zuletzt Erledigte immer ganz oben.
+  if (todoFilter === "done") {
+    return (b.completedAt ?? 0) - (a.completedAt ?? 0);
+  }
+
   const now = new Date();
 
   const weekdayOrder = {
