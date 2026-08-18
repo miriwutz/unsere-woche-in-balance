@@ -333,6 +333,18 @@ function isNoeSchoolFree(date) {
   );
 }
 
+function noeSchoolFreeLabel(date) {
+  const key = dateKey(date);
+  const range = activeSchoolYear().freeRanges.find(([start,end]) =>
+    isDateInRange(key, start, end)
+  );
+  if (!range) return "";
+
+  const [start, end] = range;
+  // Mehrtägige Bereiche sind Ferienblöcke; einzelne Tage werden neutral als schulfrei markiert.
+  return start === end ? "Schulfrei" : "Ferien";
+}
+
 function weekdayNameForDate(date) {
   return days[(date.getDay() + 6) % 7];
 }
@@ -720,6 +732,33 @@ function sharedGroupGradient(items = []) {
   }).join(", ")})`;
 }
 
+
+(function ensureSchoolFreeWeekStyle(){
+  if (document.querySelector("#schoolFreeWeekStyle")) return;
+  const style = document.createElement("style");
+  style.id = "schoolFreeWeekStyle";
+  style.textContent = `
+    .day-school-free{
+      color:#78805d !important;
+      font-size:.58rem !important;
+      letter-spacing:.02em;
+    }
+    .day-school-free-label{
+      display:inline-flex;
+      align-items:center;
+      gap:3px;
+      padding:3px 6px;
+      border-radius:999px;
+      background:rgba(226,232,210,.62);
+      border:1px solid rgba(146,157,109,.18);
+      color:#79815d;
+      font-weight:650;
+      white-space:nowrap;
+    }
+  `;
+  document.head.appendChild(style);
+})();
+
 function renderWeek() {
   weekLabel();
   const grid = document.querySelector("#weekGrid");
@@ -829,7 +868,9 @@ const renderEventCard = (t) => {
   const startKey = t.date || "";
   const endKey = t.endDate || startKey;
   let displayTime = "";
-  if (startKey === endKey) {
+  if ((t.recurrence || "none") === "schoolyear-noe") {
+    if (t.time) displayTime = t.time + (t.endTime ? "–" + t.endTime : "");
+  } else if (startKey === endKey) {
     if (t.time) displayTime = t.time + (t.endTime ? "–" + t.endTime : "");
   } else if (currentKey === startKey) {
     displayTime = t.time || "";
@@ -906,6 +947,13 @@ const eventHtml = (events.length || multiDayEventLanes.length) ? `
     dayEl.innerHTML = `
       <h3>${day}<span class="day-date">${dateLabel}</span></h3>
       ${(() => {
+        const schoolFree = noeSchoolFreeLabel(date);
+        if (schoolFree) {
+          return `<div class="day-home-times day-school-free" aria-label="${schoolFree}">
+            <span class="day-school-free-label">🌿 ${schoolFree}</span>
+          </div>`;
+        }
+
         const rows = ["1","2"].map(cid => {
           const tm = homeByForDate(cid, date);
           const child = state.school.children[cid];
@@ -3924,7 +3972,7 @@ function ensureSchoolyearNoeScheduleRow() {
   row.className = "schoolyear-noe-schedule-row hidden";
   row.style.cssText = [
     "display:grid",
-    "grid-template-columns:minmax(170px,1fr) minmax(150px,.75fr)",
+    "grid-template-columns:minmax(170px,1fr) minmax(140px,.7fr) minmax(140px,.7fr)",
     "gap:10px",
     "max-width:560px",
     "margin-top:10px",
@@ -3949,8 +3997,12 @@ function ensureSchoolyearNoeScheduleRow() {
       </select>
     </label>
     <label style="display:grid;gap:5px">
-      <span>Uhrzeit</span>
+      <span>Von</span>
       <input id="schoolyearNoeTime" type="time">
+    </label>
+    <label style="display:grid;gap:5px">
+      <span>Bis</span>
+      <input id="schoolyearNoeEndTime" type="time">
     </label>
   `;
 
@@ -3965,6 +4017,11 @@ function ensureSchoolyearNoeScheduleRow() {
   row.querySelector("#schoolyearNoeTime")?.addEventListener("change", e => {
     const hiddenTime = document.querySelector("#eventTime");
     if (hiddenTime) hiddenTime.value = e.target.value;
+  });
+
+  row.querySelector("#schoolyearNoeEndTime")?.addEventListener("change", e => {
+    const hiddenEndTime = document.querySelector("#eventEndTime");
+    if (hiddenEndTime) hiddenEndTime.value = e.target.value;
   });
 
   return row;
@@ -3996,10 +4053,13 @@ function updateSchoolyearNoeUI() {
     if (isSchoolyear) {
       const daySelect = row.querySelector("#schoolyearNoeDay");
       const timeInput = row.querySelector("#schoolyearNoeTime");
+      const endTimeInput = row.querySelector("#schoolyearNoeEndTime");
       const currentDay = document.querySelector("#todoDay")?.value || "";
       const currentTime = document.querySelector("#eventTime")?.value || "";
+      const currentEndTime = document.querySelector("#eventEndTime")?.value || "";
       if (daySelect && document.activeElement !== daySelect) daySelect.value = currentDay;
       if (timeInput && document.activeElement !== timeInput) timeInput.value = currentTime;
+      if (endTimeInput && document.activeElement !== endTimeInput) endTimeInput.value = currentEndTime;
     }
   }
 }
