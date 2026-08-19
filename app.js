@@ -3518,247 +3518,49 @@ document.querySelector("#todayWeekBtn").addEventListener("click", () => {
   renderWeek();
 });
 function renderSchoolWorkTodos() {
-   const list = document.querySelector("#schoolWorkTodoList");
-  if (!list) return;
+  const host =
+    document.querySelector("#schoolWorkTodosList") ||
+    document.querySelector("#workroomTodosList") ||
+    document.querySelector("#schoolTodoList") ||
+    document.querySelector("[data-workroom-list='todos']");
 
-const oneMinuteAgo = Date.now() - 60000;
+  if (!host) return;
 
-const todos = [...state.workroom.todos]
-  .filter(t => {
-    if (!t.done) return true;
-    if (!t.completedAt) return true;
+  state.workroom = normalizeWorkroom(state.workroom);
+  const items = Array.isArray(state.workroom.todos) ? state.workroom.todos : [];
 
-    return t.completedAt > oneMinuteAgo;
-  })
-  
-  .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
-
-if (!todos.length) {
-  list.innerHTML = `<div class="workroom-empty">Im Moment ist alles erledigt. ✨</div>`;
-}
-
-const archive = document.querySelector("#schoolWorkTodoArchive");
-
-if (archive) {
-  const archivedTodos = state.workroom.todos
-    .filter(t =>
-      t.done &&
-      t.completedAt &&
-      t.completedAt <= oneMinuteAgo
-    )
-    .sort((a, b) => (b.completedAt ?? 0) - (a.completedAt ?? 0));
-
-archive.innerHTML = archivedTodos.length
-  ? archivedTodos.map(t => `
-      <div class="workroom-archive-item">
-        <span>✓ ${escapeHtml(t.text)}</span>
-
-        <button
-          type="button"
-          class="workroom-archive-delete"
-          data-id="${t.id}"
-          title="Endgültig löschen"
-          aria-label="Erledigtes Schul-To-do löschen"
-        >×</button>
-      </div>
-    `).join("")
-  : `<div class="workroom-empty">Noch keine erledigten Schul-To-dos.</div>`;
-
-/* GENAU HIER EINFÜGEN */
-document.querySelectorAll(".workroom-archive-delete").forEach(btn => {
-  btn.addEventListener("click", e => {
-    const id = e.currentTarget.dataset.id;
-
-    state.workroom.todos =
-      state.workroom.todos.filter(t => t.id !== id);
-
-    save();
-    renderSchoolWorkTodos();
-  });
-});
+  if (!items.length) {
+    host.innerHTML = `<div class="muted">Noch keine Schul-To-dos eingetragen.</div>`;
+    return;
   }
 
-const typeLabels = {
-    draw: "✏️ Vorzeichnen",
-    prepare: "🛠 Vorbereiten",
-    create: "📄 Erstellen",
-    print: "🖨 Drucken"
-  };
-
-  list.innerHTML = todos.map(t => `
-<div
-  class="workroom-todo-row ${t.done ? "done" : ""}"
-  data-id="${t.id}">
-
-  <input
-    class="workroom-todo-check"
-    type="checkbox"
-    data-id="${t.id}"
-    ${t.done ? "checked" : ""}>
-
- <div class="workroom-todo-content">
-  <span class="workroom-todo-text">${escapeHtml(t.text)}</span>
-</div>
-
-<div class="workroom-todo-actions">
-
-  ${t.type
-    ? `<span class="workroom-todo-type">${typeLabels[t.type] || ""}</span>`
-    : ""}
-
-  ${t.url
-    ? `<a class="workroom-todo-link"
-        href="${escapeHtml(t.url)}"
-        target="_blank"
-        rel="noopener"
-        title="Link öffnen">🔗</a>`
-    : ""}
-          <button
-  class="workroom-todo-edit"
-  type="button"
-  data-id="${t.id}"
-  title="Bearbeiten">✎</button>
-
-<button
-  class="workroom-todo-delete"
-  type="button"
-  data-id="${t.id}"
-  title="Löschen">×</button>
-
-<div class="workroom-move-controls">
-  <button
-    class="workroom-move-btn workroom-move-top"
-    type="button"
-    data-id="${t.id}"
-    title="Ganz nach oben">⇈</button>
-
-  <button
-    class="workroom-move-btn workroom-move-up"
-    type="button"
-    data-id="${t.id}"
-    title="Eine Position nach oben">↑</button>
-
-  <button
-    class="workroom-move-btn workroom-move-down"
-    type="button"
-    data-id="${t.id}"
-    title="Eine Position nach unten">↓</button>
-
-  <span
-    class="workroom-drag-handle"
-    title="Ziehen"
-    aria-label="Ziehen">⋮⋮</span>
-</div>
+  host.innerHTML = items
+    .slice()
+    .sort((a,b) => Number(a.order ?? 9999) - Number(b.order ?? 9999))
+    .map(item => `
+      <div class="workroom-row ${item.done ? "done" : ""}" data-id="${item.id}">
+        <label class="workroom-main">
+          <input type="checkbox" class="workroom-todo-check" data-id="${item.id}" ${item.done ? "checked" : ""}>
+          <span>${escapeHtml(item.text || "")}</span>
+        </label>
+        <div class="workroom-actions">
+          ${item.type ? `<span class="tiny-badge">${escapeHtml(item.type)}</span>` : ""}
+          ${item.url ? `<a href="${escapeHtml(item.url)}" target="_blank" rel="noopener" title="Link öffnen">🔗</a>` : ""}
+        </div>
       </div>
-    </div>
-  `).join("");
+    `).join("");
 
-document.querySelectorAll(".workroom-todo-check").forEach(box => {
-  box.addEventListener("change", e => {
-    const item = state.workroom.todos.find(t => t.id === e.currentTarget.dataset.id);
-    if (!item) return;
-
-    item.done = e.currentTarget.checked;
-
-    if (item.done) {
-      item.completedAt = Date.now();
-    } else {
-      item.completedAt = null;
-    }
-
-    save();
-    renderSchoolWorkTodos();
-    if (item.done) {
-  setTimeout(() => {
-    renderSchoolWorkTodos();
-  }, 61000);
-}
-  });
-});
-    function moveSchoolWorkTodo(id, direction) {
-  const sorted = [...state.workroom.todos]
-    .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
-
-  const index = sorted.findIndex(t => t.id === id);
-  if (index === -1) return;
-
-  let newIndex = index;
-
-  if (direction === "top") newIndex = 0;
-  if (direction === "up") newIndex = Math.max(0, index - 1);
-  if (direction === "down") newIndex = Math.min(sorted.length - 1, index + 1);
-
-  if (newIndex === index) return;
-
-  const [moved] = sorted.splice(index, 1);
-  sorted.splice(newIndex, 0, moved);
-
-  sorted.forEach((todo, i) => {
-    todo.order = i;
-  });
-
-  state.workroom.todos = sorted;
-
-  save();
-  renderSchoolWorkTodos();
-}
-
-
-  document.querySelectorAll(".workroom-todo-delete").forEach(btn => {
-  btn.addEventListener("click", e => {
-    const id = e.currentTarget.dataset.id;
-
-    state.workroom.todos = state.workroom.todos.filter(t => t.id !== id);
-
-    save();
-    renderSchoolWorkTodos();
-  });
-});
-
-document.querySelectorAll(".workroom-todo-edit").forEach(btn => {
-  btn.addEventListener("click", e => {
-    const id = e.currentTarget.dataset.id;
-    const item = state.workroom.todos.find(t => t.id === id);
-    if (!item) return;
-
-    document.querySelector("#schoolWorkTodoInput").value = item.text || "";
-    document.querySelector("#schoolWorkTodoType").value = item.type || "";
-    document.querySelector("#schoolWorkTodoLink").value = item.url || "";
-
-    document.querySelector("#addSchoolWorkTodoBtn").dataset.editId = item.id;
-    document.querySelector("#addSchoolWorkTodoBtn").textContent = "Änderung speichern";
-  });
-});
-// Schul-To-dos per Maus oder Touch sortieren
-const todoList = document.querySelector("#schoolWorkTodoList");
-
-if (todoList && typeof Sortable !== "undefined") {
-  new Sortable(todoList, {
-    animation: 180,
-    handle: ".workroom-drag-handle",
-    ghostClass: "workroom-sort-ghost",
-    chosenClass: "workroom-sort-chosen",
-    dragClass: "workroom-sort-drag",
-delay: 0,
-delayOnTouchOnly: false,
-touchStartThreshold: 5,
-
-forceFallback: false,
-    
-    onEnd: function () {
-      const ids = [...todoList.querySelectorAll(".workroom-todo-row")]
-        .map(row => row.dataset.id);
-
-      ids.forEach((id, index) => {
-        const todo = state.workroom.todos.find(t => t.id === id);
-        if (todo) todo.order = index;
-      });
-
+  host.querySelectorAll(".workroom-todo-check").forEach(cb => {
+    cb.addEventListener("change", () => {
+      const item = state.workroom.todos.find(x => x.id === cb.dataset.id);
+      if (!item) return;
+      item.done = cb.checked;
+      item.completedAt = cb.checked ? Date.now() : null;
+      item.updatedAt = Date.now();
       save();
       renderSchoolWorkTodos();
-    }
+    });
   });
-}
 }
 
 
@@ -3857,210 +3659,48 @@ document.querySelector("#addSchoolWorkTodoBtn")?.addEventListener("click", () =>
 // =============================
 
 function renderSchoolPrints() {
-  const list = document.querySelector("#schoolPrintList");
+  const host =
+    document.querySelector("#schoolPrintsList") ||
+    document.querySelector("#workroomPrintsList") ||
+    document.querySelector("#printList") ||
+    document.querySelector("[data-workroom-list='prints']");
 
-  if (!list) return;
+  if (!host) return;
 
-const now = Date.now();
+  state.workroom = normalizeWorkroom(state.workroom);
+  const items = Array.isArray(state.workroom.prints) ? state.workroom.prints : [];
 
-state.workroom.prints = state.workroom.prints.filter(p => {
-  if (!p.done || !p.completedAt) return true;
+  if (!items.length) {
+    host.innerHTML = `<div class="muted">Noch nichts zum Drucken eingetragen.</div>`;
+    return;
+  }
 
-  return now - p.completedAt < 60000;
-});
-  
-const prints = [...state.workroom.prints]
-  .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
-  
-  if (!prints.length) {
-    list.innerHTML =
-      `<div class="workroom-empty">Im Moment steht nichts auf der Druckliste.</div>`;
-  } else {
-    list.innerHTML = prints.map(p => `
-      <div
-        class="workroom-todo-row ${p.done ? "done" : ""}"
-        data-print-id="${p.id}">
-
-        <input
-          class="workroom-print-check"
-          type="checkbox"
-          data-id="${p.id}"
-          ${p.done ? "checked" : ""}>
-
-        <div class="workroom-todo-content">
-          <span class="workroom-todo-text">${escapeHtml(p.text)}</span>
-        </div>
-
-        <div class="workroom-todo-actions">
-
-          ${p.url
-            ? `<a class="workroom-todo-link"
-                  href="${escapeHtml(p.url)}"
-                  target="_blank"
-                  rel="noopener"
-                  title="Link öffnen">🔗</a>`
-            : ""}
-
-          <button
-            class="workroom-print-edit"
-            type="button"
-            data-id="${p.id}"
-            title="Bearbeiten">✎</button>
-
-          <button
-            class="workroom-print-delete"
-            type="button"
-            data-id="${p.id}"
-            title="Löschen">×</button>
-
-          <div class="workroom-move-controls">
-
-            <button
-              class="workroom-print-move-btn workroom-print-move-top"
-              type="button"
-              data-id="${p.id}"
-              title="Ganz nach oben">⇈</button>
-
-            <button
-              class="workroom-print-move-btn workroom-print-move-up"
-              type="button"
-              data-id="${p.id}"
-              title="Eine Position nach oben">↑</button>
-
-            <button
-              class="workroom-print-move-btn workroom-print-move-down"
-              type="button"
-              data-id="${p.id}"
-              title="Eine Position nach unten">↓</button>
-
-                  <span
-              class="workroom-drag-handle"
-              title="Ziehen"
-              aria-label="Ziehen">⋮⋮</span>
-
-          </div>
+  host.innerHTML = items
+    .slice()
+    .sort((a,b) => Number(a.order ?? 9999) - Number(b.order ?? 9999))
+    .map(item => `
+      <div class="workroom-row ${item.done ? "done" : ""}" data-id="${item.id}">
+        <label class="workroom-main">
+          <input type="checkbox" class="workroom-print-check" data-id="${item.id}" ${item.done ? "checked" : ""}>
+          <span>${escapeHtml(item.text || "")}</span>
+        </label>
+        <div class="workroom-actions">
+          ${item.url ? `<a href="${escapeHtml(item.url)}" target="_blank" rel="noopener" title="Link öffnen">🔗</a>` : ""}
         </div>
       </div>
     `).join("");
-  }
 
- document.querySelectorAll(".workroom-print-check").forEach(box => {
-  box.addEventListener("change", e => {
-    const id = e.currentTarget.dataset.id;
-    const item = state.workroom.prints.find(p => p.id === id);
-
-    if (!item) return;
-
-    item.done = e.currentTarget.checked;
-    item.completedAt = item.done ? Date.now() : null;
-
-    save();
-    renderSchoolPrints();
-
-    if (item.done) {
-      setTimeout(() => {
-        const currentItem = state.workroom.prints.find(p => p.id === id);
-
-        if (!currentItem || !currentItem.done) return;
-
-        state.workroom.prints =
-          state.workroom.prints.filter(p => p.id !== id);
-
-        save();
-        renderSchoolPrints();
-      }, 60000);
-    }
-  });
-});
-
-  document.querySelectorAll(".workroom-print-delete").forEach(btn => {
-    btn.addEventListener("click", e => {
-      const id = e.currentTarget.dataset.id;
-
-      state.workroom.prints =
-        state.workroom.prints.filter(p => p.id !== id);
-
-      save();
-      renderSchoolPrints();
-    });
-  });
-
-  document.querySelectorAll(".workroom-print-edit").forEach(btn => {
-    btn.addEventListener("click", e => {
-      const id = e.currentTarget.dataset.id;
-      const item = state.workroom.prints.find(p => p.id === id);
-
+  host.querySelectorAll(".workroom-print-check").forEach(cb => {
+    cb.addEventListener("change", () => {
+      const item = state.workroom.prints.find(x => x.id === cb.dataset.id);
       if (!item) return;
-
-      document.querySelector("#schoolPrintInput").value = item.text || "";
-      document.querySelector("#schoolPrintLink").value = item.url || "";
-
-      const addBtn = document.querySelector("#addSchoolPrintBtn");
-      addBtn.dataset.editId = item.id;
-      addBtn.textContent = "Änderung speichern";
-    });
-  });
-
-  document.querySelectorAll(".workroom-print-move-btn").forEach(btn => {
-    btn.addEventListener("click", e => {
-      const id = e.currentTarget.dataset.id;
-
-      const sorted = [...state.workroom.prints]
-        .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
-
-      const index = sorted.findIndex(p => p.id === id);
-      if (index === -1) return;
-
-      let newIndex = index;
-
-      if (e.currentTarget.classList.contains("workroom-print-move-top")) {
-        newIndex = 0;
-      } else if (e.currentTarget.classList.contains("workroom-print-move-up")) {
-        newIndex = Math.max(0, index - 1);
-      } else if (e.currentTarget.classList.contains("workroom-print-move-down")) {
-        newIndex = Math.min(sorted.length - 1, index + 1);
-      } else if (e.currentTarget.classList.contains("workroom-print-move-bottom")) {
-        newIndex = sorted.length - 1;
-      }
-
-      const [moved] = sorted.splice(index, 1);
-      sorted.splice(newIndex, 0, moved);
-
-      sorted.forEach((p, i) => {
-        p.order = i;
-      });
-
-      state.workroom.prints = sorted;
-
+      item.done = cb.checked;
+      item.completedAt = cb.checked ? Date.now() : null;
+      item.updatedAt = Date.now();
       save();
       renderSchoolPrints();
     });
   });
-
-  if (typeof Sortable !== "undefined") {
-    const printList = document.querySelector("#schoolPrintList");
-
-    if (printList) {
-      new Sortable(printList, {
-        animation: 150,
-        handle: ".workroom-drag-handle",
-        draggable: ".workroom-todo-row",
-
-        onEnd: () => {
-          const ids = [...printList.querySelectorAll(".workroom-todo-row")]
-            .map(row => row.dataset.printId);
-
-          ids.forEach((id, index) => {
-            const item = state.workroom.prints.find(p => p.id === id);
-            if (item) item.order = index;
-          });
-
-          save();
-          renderSchoolPrints();
-        }
-      });
-    }
-  }
 }
 
 
@@ -4113,102 +3753,48 @@ document.querySelector("#addSchoolPrintBtn")?.addEventListener("click", () => {
 let activeWorkroomLinkCategory = "all";
 
 function renderWorkroomLinks() {
-  const list = document.querySelector("#workroomLinkList");
-  if (!list) return;
+  const host =
+    document.querySelector("#workroomLinksList") ||
+    document.querySelector("#schoolLinksList") ||
+    document.querySelector("#linksList") ||
+    document.querySelector("[data-workroom-list='links']");
 
-  const categoryLabels = {
-    wood: "🪵 Holz",
-    paper: "📄 Papier",
-    free: "✂️ Freies Arbeiten",
-    experiment: "🧪 Experimentieren",
-    other: "✨ Sonstiges"
-  };
+  if (!host) return;
 
-  const links = [...state.workroom.links]
-    .filter(link =>
-      activeWorkroomLinkCategory === "all" ||
-      link.category === activeWorkroomLinkCategory
-    );
+  state.workroom = normalizeWorkroom(state.workroom);
+  const items = Array.isArray(state.workroom.links) ? state.workroom.links : [];
 
-  if (!links.length) {
-    list.innerHTML =
-      `<div class="workroom-empty">Noch keine Links in dieser Kategorie gespeichert.</div>`;
+  if (!items.length) {
+    host.innerHTML = `<div class="muted">Noch keine Links gespeichert.</div>`;
     return;
   }
 
-  list.innerHTML = links.map(link => `
-    <div class="workroom-link-item" data-id="${link.id}">
+  const useLabel = {
+    soon: "Bald",
+    year: "Im Schuljahr",
+    later: "Später",
+    bureaucracy: "Bürokratie"
+  };
 
- <div class="workroom-link-main">
-
-  <div class="workroom-link-texts">
-    <a
-      href="${escapeHtml(link.url)}"
-      target="_blank"
-      rel="noopener"
-      class="workroom-link-title">
-      ${escapeHtml(link.title)}
-    </a>
-
-    ${link.note
-      ? `<div class="workroom-link-note">${escapeHtml(link.note)}</div>`
-      : ""}
-  </div>
-
-  <span class="workroom-link-category">
-    ${categoryLabels[link.category] || "✨ Sonstiges"}
-  </span>
-
-</div>
-
-      <div class="workroom-link-actions">
-        <button
-          class="workroom-link-edit"
-          type="button"
-          data-id="${link.id}"
-          title="Bearbeiten">✎</button>
-
-        <button
-          class="workroom-link-delete"
-          type="button"
-          data-id="${link.id}"
-          title="Löschen">×</button>
+  host.innerHTML = items
+    .slice()
+    .sort((a,b) => Number(a.order ?? 9999) - Number(b.order ?? 9999))
+    .map(item => `
+      <div class="workroom-link-row" data-id="${item.id}">
+        <div class="workroom-link-main">
+          <a href="${escapeHtml(item.url || "#")}"
+             ${item.url ? `target="_blank" rel="noopener"` : ""}
+             class="workroom-link-title">
+            ${escapeHtml(item.title || "Ohne Titel")}
+          </a>
+          ${item.note ? `<div class="muted">${escapeHtml(item.note)}</div>` : ""}
+        </div>
+        <div class="workroom-link-meta">
+          ${item.category ? `<span class="tiny-badge">${escapeHtml(item.category)}</span>` : ""}
+          ${item.use ? `<span class="tiny-badge">${escapeHtml(useLabel[item.use] || item.use)}</span>` : ""}
+        </div>
       </div>
-
-    </div>
-  `).join("");
-
-  document.querySelectorAll(".workroom-link-delete").forEach(btn => {
-    btn.addEventListener("click", e => {
-      const id = e.currentTarget.dataset.id;
-
-      state.workroom.links =
-        state.workroom.links.filter(link => link.id !== id);
-
-      save();
-      renderWorkroomLinks();
-    });
-  });
-
-  document.querySelectorAll(".workroom-link-edit").forEach(btn => {
-    btn.addEventListener("click", e => {
-      const id = e.currentTarget.dataset.id;
-      const link = state.workroom.links.find(link => link.id === id);
-
-      if (!link) return;
-
-      document.querySelector("#workroomLinkTitle").value = link.title || "";
-      document.querySelector("#workroomLinkNote").value = link.note || "";
-      document.querySelector("#workroomLinkUrl").value = link.url || "";
-      document.querySelector("#workroomLinkCategory").value =
-        link.category || "other";
-
-      const addBtn = document.querySelector("#addWorkroomLinkBtn");
-
-      addBtn.dataset.editId = link.id;
-      addBtn.textContent = "Änderung speichern";
-    });
-  });
+    `).join("");
 }
 
 
@@ -8742,5 +8328,21 @@ normalizeRecipeFlagLayout();
 document.addEventListener("DOMContentLoaded", () => {
   ensureRecipeFormAndMobileActionStyles();
   normalizeRecipeFlagLayout();
+});
+
+
+
+// Werkraum-Renderer bei geöffneten Bereichen erneut ausführen.
+
+document.addEventListener("click", (e) => {
+  const target = e.target.closest(
+    "#schoolWorkTodosToggle, #schoolPrintsToggle, #workroomLinksToggle, [data-workroom-toggle]"
+  );
+  if (!target) return;
+  setTimeout(() => {
+    renderSchoolWorkTodos();
+    renderSchoolPrints();
+    renderWorkroomLinks();
+  }, 0);
 });
 
