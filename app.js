@@ -1527,6 +1527,7 @@ function renderWeek() {
 
     if (compareDate < today) dayEl.classList.add("past-day");
     if (compareDate.getTime() === today.getTime()) dayEl.classList.add("today");
+    if (weekHolidayLabel(date)) dayEl.classList.add("is-holiday");
 
     const dateLabel = date.toLocaleDateString("de-AT",{day:"2-digit",month:"2-digit"});
 
