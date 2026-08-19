@@ -2980,22 +2980,10 @@ function papaEntryIsRelevant(t) {
 }
 
 function papaTodoIsVisible(t) {
+  // Termine bleiben sichtbar. In Papas Schnellansicht erscheinen bei To-dos
+  // ausschließlich offene Aufgaben – erledigte niemals, auch nicht am Erledigungstag.
   if ((t.type || "todo") !== "todo") return true;
-
-  // Wiederkehrende To-dos werden wie im normalen Wochenplan behandelt.
-  if (t.recurrence && t.recurrence !== "none") return true;
-
-  if (!t.done) return true;
-  if (!t.completedAt) return true;
-
-  // Erledigte To-dos am Erledigungstag noch anzeigen.
-  const completedDay = new Date(t.completedAt);
-  completedDay.setHours(0, 0, 0, 0);
-
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-
-  return completedDay.getTime() === today.getTime();
+  return !t.done;
 }
 
 function renderPapaOverview(weekOffset = 0) {
@@ -4230,12 +4218,13 @@ const typeLabels = {
     draw: "✏️ Vorzeichnen",
     prepare: "🛠 Vorbereiten",
     create: "📄 Erstellen",
-    print: "🖨 Drucken"
+    print: "🖨 Drucken",
+    ask: "💬 Nachfragen"
   };
 
   list.innerHTML = todos.map(t => `
 <div
-  class="workroom-todo-row ${t.done ? "done" : ""}"
+  class="workroom-todo-row ${t.done ? "done" : ""} ${t.type === "ask" ? "workroom-todo-ask" : ""}"
   data-id="${t.id}">
 
   <input
