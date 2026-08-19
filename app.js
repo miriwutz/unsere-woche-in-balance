@@ -19,6 +19,7 @@ const state = {
   recipeLinkFeedback: JSON.parse(localStorage.getItem("balanceProd.recipeLinkFeedback") || "{}"),
   timeTracking: JSON.parse(localStorage.getItem("balanceProd.timeTracking") || '{"entries":[],"active":[],"stopped":{},"deletedEntries":{}}'),
   trash: JSON.parse(localStorage.getItem("balanceProd.trash") || "[]"),
+  todoTombstones: JSON.parse(localStorage.getItem("balanceProd.todoTombstones") || "{}"),
 
   workroom: JSON.parse(
     localStorage.getItem("balanceProd.workroom") ||
@@ -74,6 +75,7 @@ function saveLocal() {
   localStorage.setItem("balanceProd.recipeLinkFeedback", JSON.stringify(state.recipeLinkFeedback));
   localStorage.setItem("balanceProd.timeTracking", JSON.stringify(state.timeTracking));
   localStorage.setItem("balanceProd.trash", JSON.stringify(state.trash || []));
+  localStorage.setItem("balanceProd.todoTombstones", JSON.stringify(state.todoTombstones || {}));
   localStorage.setItem("balanceProd.workroom", JSON.stringify(state.workroom));
   localStorage.setItem("balanceProd.school", JSON.stringify(state.school));
   localStorage.setItem("balanceProd.familySettings", JSON.stringify(state.familySettings));
@@ -87,6 +89,7 @@ function cloudPayload() {
     videos: state.videos,
     todos: state.todos,
     trash: state.trash || [],
+    todoTombstones: state.todoTombstones || {},
     archive: state.archive,
     shopping: state.shopping,
     recipes: state.recipes,
@@ -491,6 +494,54 @@ function mergeByIdPreferNewer(localList = [], cloudList = []) {
   });
   return [...map.values()];
 }
+
+// ===== To-do-Löschstatus: robuste Synchronisation über mehrere Geräte =====
+function normalizeTodoTombstone(rec) {
+  if (!rec || typeof rec !== "object") return {deletedAt:0, restoredAt:0};
+  return {
+    deletedAt: Number(rec.deletedAt || 0),
+    restoredAt: Number(rec.restoredAt || 0)
+  };
+}
+
+function tombstoneVersion(rec) {
+  const r = normalizeTodoTombstone(rec);
+  return Math.max(r.deletedAt, r.restoredAt);
+}
+
+function mergeTodoTombstones(localMap, cloudMap) {
+  const local = localMap && typeof localMap === "object" ? localMap : {};
+  const remote = cloudMap && typeof cloudMap === "object" ? cloudMap : {};
+  const merged = {};
+  new Set([...Object.keys(local), ...Object.keys(remote)]).forEach(id => {
+    const a = normalizeTodoTombstone(local[id]);
+    const b = normalizeTodoTombstone(remote[id]);
+    merged[id] = tombstoneVersion(b) > tombstoneVersion(a) ? b : a;
+  });
+  return merged;
+}
+
+function markTodoDeleted(id) {
+  if (!id) return;
+  state.todoTombstones = state.todoTombstones && typeof state.todoTombstones === "object"
+    ? state.todoTombstones : {};
+  const prev = normalizeTodoTombstone(state.todoTombstones[id]);
+  state.todoTombstones[id] = {...prev, deletedAt:Date.now()};
+}
+
+function markTodoRestored(id) {
+  if (!id) return;
+  state.todoTombstones = state.todoTombstones && typeof state.todoTombstones === "object"
+    ? state.todoTombstones : {};
+  const prev = normalizeTodoTombstone(state.todoTombstones[id]);
+  state.todoTombstones[id] = {...prev, restoredAt:Date.now()};
+}
+
+function isTodoTombstoned(id) {
+  const rec = normalizeTodoTombstone(state.todoTombstones?.[id]);
+  return rec.deletedAt > rec.restoredAt;
+}
+
 
 function uid() {
   return crypto.randomUUID ? crypto.randomUUID() : String(Date.now() + Math.random());
@@ -1793,6 +1844,7 @@ document.querySelector("#recurrence").value = item.recurrence || "none";
   document.querySelectorAll(".delete-todo").forEach(el => el.addEventListener("click", e => {
     const id=e.currentTarget.dataset.id, item=state.todos.find(t=>t.id===id); if(!item)return;
     const trashId=trashItem("todo",item);
+    markTodoDeleted(id);
     state.todos=state.todos.filter(t=>t.id!==id);
     if(editingTodoId===id)resetTodoEditor();
     save();renderAll();showUndo("To-do gelöscht",()=>restoreTrashEntry(trashId));
@@ -3425,7 +3477,11 @@ function showUndo(message,fn){
 function restoreTrashEntry(id){
   const rec=(state.trash||[]).find(x=>x.trashId===id); if(!rec)return;
   const item=JSON.parse(JSON.stringify(rec.item));
-  if(rec.kind==="todo"){if(!state.todos.some(x=>x.id===item.id))state.todos.push(item);}
+  if(rec.kind==="todo"){
+    markTodoRestored(item.id);
+    item.updatedAt = Date.now();
+    if(!state.todos.some(x=>x.id===item.id))state.todos.push(item);
+  }
   if(rec.kind==="time"){
     delete state.timeTracking.deletedEntries?.[item.id];
     if(!state.timeTracking.entries.some(x=>x.id===item.id))state.timeTracking.entries.push(item);
@@ -5098,8 +5154,16 @@ function applyCloudData(data) {
   try {
     makeLocalSafetySnapshot("vor-cloud-apply", true);
 
+    state.todoTombstones = mergeTodoTombstones(
+      state.todoTombstones,
+      data.todoTombstones
+    );
+
     state.videos = guardedMergeById(state.videos, data.videos, "Videos");
-    state.todos = guardedMergeById(state.todos, data.todos, "To-dos & Termine");
+
+    state.todos = guardedMergeById(state.todos, data.todos, "To-dos & Termine")
+      .filter(item => !isTodoTombstoned(item?.id));
+
     state.trash = guardedMergeById(state.trash, data.trash, "Papierkorb");
     state.archive = guardedMergeById(state.archive, data.archive, "Übungsarchiv");
     state.shopping = guardedMergeById(state.shopping, data.shopping, "Einkauf");
@@ -7812,6 +7876,7 @@ function saveLocal() {
   localStorage.setItem("balanceProd.recipeLinkFeedback", JSON.stringify(state.recipeLinkFeedback));
   localStorage.setItem("balanceProd.timeTracking", JSON.stringify(state.timeTracking));
   localStorage.setItem("balanceProd.trash", JSON.stringify(state.trash || []));
+  localStorage.setItem("balanceProd.todoTombstones", JSON.stringify(state.todoTombstones || {}));
   localStorage.setItem("balanceProd.workroom", JSON.stringify(state.workroom));
   localStorage.setItem("balanceProd.school", JSON.stringify(state.school));
   localStorage.setItem("balanceProd.familySettings", JSON.stringify(state.familySettings));
@@ -7824,6 +7889,7 @@ function cloudPayload() {
     videos: state.videos,
     todos: state.todos,
     trash: state.trash || [],
+    todoTombstones: state.todoTombstones || {},
     archive: state.archive,
     shopping: state.shopping,
     recipes: state.recipes,
@@ -7842,8 +7908,16 @@ function applyCloudData(data) {
   try {
     makeLocalSafetySnapshot("vor-cloud-apply", true);
 
+    state.todoTombstones = mergeTodoTombstones(
+      state.todoTombstones,
+      data.todoTombstones
+    );
+
     state.videos = guardedMergeById(state.videos, data.videos, "Videos");
-    state.todos = guardedMergeById(state.todos, data.todos, "To-dos & Termine");
+
+    state.todos = guardedMergeById(state.todos, data.todos, "To-dos & Termine")
+      .filter(item => !isTodoTombstoned(item?.id));
+
     state.trash = guardedMergeById(state.trash, data.trash, "Papierkorb");
     state.archive = guardedMergeById(state.archive, data.archive, "Übungsarchiv");
     state.shopping = guardedMergeById(state.shopping, data.shopping, "Einkauf");
