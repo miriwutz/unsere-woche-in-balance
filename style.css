@@ -7746,3 +7746,68 @@ a.day-meal{
 .day-events-placeholder-only > .multiday-event-lanes{
   margin-top:0;
 }
+
+
+/* ===== V20: Wochenplan optisch beruhigen ===== */
+
+/* Feiertage: sehr sanfte olivfarbene Hinterlegung */
+.day-card.is-holiday,
+.day-column.is-holiday,
+.day.is-holiday,
+[data-holiday="true"] {
+  background: linear-gradient(180deg, rgba(151, 153, 112, 0.105) 0%, rgba(151, 153, 112, 0.045) 100%) !important;
+  border-color: rgba(139, 142, 99, 0.30) !important;
+}
+
+/* Falls der Feiertagsname als eigenes Element ausgegeben wird */
+.holiday-label,
+.feiertag-label,
+.day-holiday {
+  color: #7f8064 !important;
+  background: rgba(151, 153, 112, 0.12) !important;
+  border-radius: 999px;
+  padding: 2px 7px;
+}
+
+/* Zusätzliche To-dos gehören optisch zur Box und sollen nicht verloren darunter hängen */
+.more-todos,
+.more-todos-btn,
+.todo-more,
+.show-more-todos {
+  margin-top: 5px !important;
+  margin-left: 4px !important;
+  display: inline-flex !important;
+  align-items: center;
+  min-height: 22px;
+  color: #8b8179 !important;
+  font-size: 11px !important;
+  line-height: 1.2;
+}
+
+/* Tagesinhalte kompakt halten statt künstlich über die ganze Spaltenhöhe zu verteilen */
+.day-content,
+.day-body,
+.day-sections {
+  align-content: start !important;
+  justify-content: flex-start !important;
+}
+
+/* Leere Abschnittsüberschriften beanspruchen keinen Platz.
+   :has() wird in aktuellen Firefox/Chrome/Samsung-Browsern unterstützt. */
+.day-section:has(.section-items:empty),
+.day-section:has(.items:empty),
+.termine-section:has(.appointment-list:empty),
+.todos-section:has(.todo-list:empty) {
+  display: none !important;
+}
+
+/* Versteckte/leer gerenderte Container dürfen keine Mindesthöhe erzeugen */
+.appointment-list:empty,
+.todo-list:empty,
+.section-items:empty,
+.items:empty {
+  display: none !important;
+  min-height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
