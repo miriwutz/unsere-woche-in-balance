@@ -824,6 +824,29 @@ function markTodoDeleted(id) {
   state.todoTombstones[id] = {...prev, deletedAt:Date.now()};
 }
 
+async function persistTodoDeletionImmediately(id) {
+  if (!id || !cloudReady || cloudApplying || !window.firebase?.firestore) return;
+
+  try {
+    const rec = normalizeTodoTombstone(state.todoTombstones?.[id]);
+    const payload = {
+      todos: (state.todos || []).filter(item => item?.id !== id),
+      todoTombstones: {
+        [id]: rec
+      },
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    };
+
+    await firebase.firestore()
+      .collection("families")
+      .doc("shared")
+      .set(payload, { merge: true });
+  } catch (err) {
+    console.error("To-do-Löschung konnte nicht sofort in der Cloud bestätigt werden:", err);
+    // Der normale save()-Weg versucht es zusätzlich erneut.
+  }
+}
+
 function markTodoRestored(id) {
   if (!id) return;
   state.todoTombstones = state.todoTombstones && typeof state.todoTombstones === "object"
@@ -1585,7 +1608,10 @@ function renderWeek() {
                style="${groupKey === "shared"
                  ? `--group-border:${sharedGroupGradient(groupItems)}`
                  : `--group-border:${familyColor(groupKey) || "#c8c0ba"}`}">
-            <div class="person-todo-group-title">${todoGroupLabel(groupKey)}</div>
+            <div class="person-todo-group-title">
+              <span>${todoGroupLabel(groupKey)}</span>
+              ${groupItems.some(isNewEntry) ? `<span class="new-entry-badge group-new-badge">NEU</span>` : ""}
+            </div>
             ${groupItems.map(t => `
               <div class="todo-mini-wrap">
                 <label class="todo-mini grouped-todo-row ${t.superImportant ? "super-important" : ""}">
@@ -1593,7 +1619,6 @@ function renderWeek() {
                   <span>
                     ${t.superImportant ? `<span class="tiny-star">★</span>` : ''}
                     ${escapeHtml(t.text)}
-                    ${isNewEntry(t) ? `<span class="new-entry-badge">NEU</span>` : ""}
                   </span>
                 </label>
                 ${(!t.recurrence || t.recurrence === "none") && date < new Date(new Date().setHours(0,0,0,0))
@@ -1640,7 +1665,10 @@ const renderEventCard = (t) => {
          style="${groupKey === "shared"
            ? `--group-border:${sharedGroupGradient([t])}`
            : `--group-border:${familyColor(groupKey) || "#c8c0ba"}`}">
-      <div class="person-todo-group-title">${todoGroupLabel(groupKey)}</div>
+      <div class="person-todo-group-title">
+        <span>${todoGroupLabel(groupKey)}</span>
+        ${isNewEntry(t) ? `<span class="new-entry-badge group-new-badge">NEU</span>` : ""}
+      </div>
       <div class="event-mini event-display grouped-todo-row ${t.superImportant ? "super-important" : ""}">
         <span class="event-symbol">${eventMeta.icon}</span>
         <span class="event-copy">
@@ -1648,7 +1676,6 @@ const renderEventCard = (t) => {
           ${eventMeta.label ? `<span class="event-kind">${eventMeta.label}</span>` : ""}
           ${t.superImportant ? `<span class="tiny-star">★</span>` : ""}
           ${escapeHtml(t.text)}
-          ${isNewEntry(t) ? `<span class="new-entry-badge">NEU</span>` : ""}
         </span>
       </div>
     </div>`;
@@ -2349,7 +2376,10 @@ document.querySelector("#recurrence").value = item.recurrence || "none";
     markTodoDeleted(id);
     state.todos=state.todos.filter(t=>t.id!==id);
     if(editingTodoId===id)resetTodoEditor();
-    save();renderAll();showUndo("To-do gelöscht",()=>restoreTrashEntry(trashId));
+    save();
+    persistTodoDeletionImmediately(id);
+    renderAll();
+    showUndo("To-do gelöscht",()=>restoreTrashEntry(trashId));
   }));
 }
 
