@@ -112,16 +112,110 @@ function shoppingCollection() {
     .collection("shoppingItems");
 }
 
+
+function ensureSyncStatusUI() {
+  let el = document.querySelector("#syncStatus");
+  if (el) return el;
+
+  el = document.createElement("div");
+  el.id = "syncStatus";
+  el.className = "sync-status";
+  el.setAttribute("aria-live", "polite");
+
+  const preferredHost =
+    document.querySelector(".top-actions") ||
+    document.querySelector(".week-actions") ||
+    document.querySelector("nav") ||
+    document.querySelector("header") ||
+    document.body;
+
+  preferredHost.appendChild(el);
+
+  if (!document.querySelector("#syncStatusStyle")) {
+    const style = document.createElement("style");
+    style.id = "syncStatusStyle";
+    style.textContent = `
+      .sync-status{
+        display:inline-flex;
+        align-items:center;
+        gap:5px;
+        margin-left:8px;
+        padding:4px 8px;
+        border-radius:999px;
+        font-size:11px;
+        line-height:1;
+        white-space:nowrap;
+        color:#817a73;
+        background:rgba(255,255,255,.48);
+        border:1px solid rgba(120,110,100,.12);
+        opacity:.86;
+        vertical-align:middle;
+      }
+      .sync-status[data-state="synced"]{color:#718071}
+      .sync-status[data-state="syncing"],
+      .sync-status[data-state="waiting"]{color:#8a806f}
+      .sync-status[data-state="offline"],
+      .sync-status[data-state="error"]{color:#9a6e67}
+      @media (max-width:700px){
+        .sync-status{
+          font-size:10px;
+          padding:4px 7px;
+          margin-left:4px;
+        }
+      }
+    `;
+    document.head.appendChild(style);
+  }
+  return el;
+}
+
+function updateSyncStatus(stateName) {
+  const el = ensureSyncStatusUI();
+  if (!el) return;
+  const states = {
+    synced:  ["✓", "synchronisiert"],
+    syncing: ["↻", "wird synchronisiert"],
+    waiting: ["…", "wartet auf Sync"],
+    offline: ["○", "offline"],
+    error:   ["!", "Sync-Fehler"]
+  };
+  const [icon, text] = states[stateName] || states.waiting;
+  el.dataset.state = stateName;
+  el.textContent = `${icon} ${text}`;
+  el.title =
+    stateName === "synced" ? "Änderungen wurden in der Cloud gespeichert." :
+    stateName === "syncing" ? "Änderungen werden gerade gespeichert." :
+    stateName === "offline" ? "Keine Internetverbindung. Änderungen bleiben lokal erhalten und werden später synchronisiert." :
+    stateName === "error" ? "Die letzte Cloud-Synchronisierung ist fehlgeschlagen." :
+    "Cloud-Synchronisierung ist noch nicht bereit.";
+}
+
+window.addEventListener("online", () => {
+  updateSyncStatus("syncing");
+  scheduleCloudSave();
+});
+window.addEventListener("offline", () => updateSyncStatus("offline"));
+
+document.addEventListener("DOMContentLoaded", () => {
+  updateSyncStatus(navigator.onLine ? "waiting" : "offline");
+});
+
 function scheduleCloudSave() {
-  if (!cloudReady || cloudApplying || !firebase.auth().currentUser) return;
+  if (!cloudReady || cloudApplying || !firebase.auth().currentUser) {
+    updateSyncStatus(navigator.onLine ? "waiting" : "offline");
+    return;
+  }
+  updateSyncStatus("syncing");
   clearTimeout(cloudSaveTimer);
   cloudSaveTimer = setTimeout(async () => {
     try {
       const payload = cloudPayload();
       payload.updatedAt = firebase.firestore.FieldValue.serverTimestamp();
       await firebase.firestore().collection("families").doc("shared").set(payload, { merge: true });
+      updateSyncStatus("synced");
     } catch (err) {
       console.error("Firestore save failed:", err);
+      updateSyncStatus(navigator.onLine ? "error" : "offline");
     }
   }, 300);
 }
@@ -5428,6 +5522,7 @@ function startCloudSync() {
     if (!snap.exists) {
       if (firstSnapshot) {
         cloudReady = true;
+    updateSyncStatus(navigator.onLine ? "synced" : "offline");
         firstSnapshot = false;
         // First family login: create the shared document from the clean local state.
         scheduleCloudSave();
