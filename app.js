@@ -5039,6 +5039,19 @@ document.querySelector("#familyLoginForm")?.addEventListener("submit", async e =
 
 document.querySelector("#logoutBtn")?.addEventListener("click", () => firebase.auth().signOut());
 
+
+// Rezept-Status muss initialisiert sein, bevor Firebase den ersten renderAll-Aufruf auslösen kann.
+let activeRecipeDifficulty = "all";
+let activeRecipeCategory = "all";
+let recipeCategoryTouched = false;
+let recipeKidsOnly = false;
+let recipeHealthyOnly = false;
+let activeRecipeSearch = "";
+let mealPlanWeekOffset = 0;
+let recipePage = 0;
+const RECIPE_PAGE_SIZE = 10;
+let editingRecipeId = null;
+
 firebase.auth().onAuthStateChanged(async user => {
   if (user) {
     setLoginMessage("");
@@ -5482,16 +5495,7 @@ document.querySelector("#emptyTrashBtn")?.addEventListener("click",()=>{
 });
 
 // ===== EINKAUF – REZEPTKARTEN =====
-let activeRecipeDifficulty = "all";
-let activeRecipeCategory = "all";
-let recipeCategoryTouched = false;
-let recipeKidsOnly = false;
-let recipeHealthyOnly = false;
-let activeRecipeSearch = "";
-let mealPlanWeekOffset = 0;
-let recipePage = 0;
-const RECIPE_PAGE_SIZE = 10;
-let editingRecipeId = null;
+// Rezept-Statusvariablen wurden aus Sicherheitsgründen vor die Auth-Initialisierung verschoben.
 
 function resetRecipeForm() {
   ["#recipeTitle","#recipeTime","#recipeIngredients","#recipeSteps","#recipeWebUrl","#recipeYoutubeUrl"]
