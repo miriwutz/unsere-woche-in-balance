@@ -3209,7 +3209,9 @@ function mergeTimeTrackingData(a, b) {
 }
 
 async function saveTimeTrackingToCloudNow() {
-  if (timeTrackingCloudApplying || !firebase.auth().currentUser) return;
+  // NIE wegen eines gleichzeitig eintreffenden Snapshots überspringen.
+  // Start/Stop muss immer in die Cloud geschrieben werden.
+  if (!firebase.auth().currentUser) return;
 
   const ref = timeTrackingDoc();
   const localSnapshot = normalizeTimeTrackingData(state.timeTracking);
@@ -3222,6 +3224,7 @@ async function saveTimeTrackingToCloudNow() {
 
       tx.set(ref, {
         timeTracking: next,
+        timeTrackingRevision: firebase.firestore.FieldValue.increment(1),
         timeTrackingUpdatedAt: firebase.firestore.FieldValue.serverTimestamp()
       }, { merge: true });
 
@@ -3264,6 +3267,7 @@ async function refreshTimeTrackingFromCloud() {
       const remoteTimeTracking = snap.data()?.timeTracking;
       if (!remoteTimeTracking) return;
       state.timeTracking = mergeTimeTrackingData(state.timeTracking, remoteTimeTracking);
+      lastTimeTrackingCloudFingerprint = JSON.stringify(remoteTimeTracking);
       writeTimeTrackingLocalOnly();
       renderTimeTracking();
     } finally {
@@ -3306,6 +3310,7 @@ async function startTimeTrackingSync() {
     if (!remoteTimeTracking && (initial.active.length || initial.entries.length)) {
       await ref.set({
         timeTracking: initial,
+        timeTrackingRevision: firebase.firestore.FieldValue.increment(1),
         timeTrackingUpdatedAt: firebase.firestore.FieldValue.serverTimestamp()
       }, { merge: true });
     }
@@ -3315,7 +3320,8 @@ async function startTimeTrackingSync() {
 
   timeTrackingUnsubscribe = ref.onSnapshot(snap => {
     if (!snap.exists) return;
-    const remoteTimeTracking = snap.data()?.timeTracking;
+    const data = snap.data() || {};
+    const remoteTimeTracking = data.timeTracking;
     if (!remoteTimeTracking) return;
 
     const fingerprint = JSON.stringify(remoteTimeTracking);
