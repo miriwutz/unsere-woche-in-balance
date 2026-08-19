@@ -7811,3 +7811,39 @@ a.day-meal{
   margin: 0 !important;
   padding: 0 !important;
 }
+
+
+/* ===== V21: Wochenplan – einheitliche Flächen + Feiertage ===== */
+
+/* Die gestrichelten Abschnittstrenner im Wochenplan entfallen. */
+.day .day-events,
+.day .day-todos,
+.day .day-school {
+  border-top: 0 !important;
+  padding-top: 0 !important;
+}
+
+/* Etwas ruhigerer Abstand zwischen vorhandenen Bereichen. */
+.day .day-events,
+.day .day-school,
+.day .day-todos {
+  margin-top: 14px !important;
+}
+
+/* Öffentliche Feiertage: ganze Tageskarte sanft oliv hinterlegen.
+   Bewusst sichtbar, aber deutlich ruhiger als Personenfarben. */
+.day.is-holiday {
+  background: linear-gradient(
+    180deg,
+    rgba(160, 164, 111, 0.18) 0%,
+    rgba(160, 164, 111, 0.105) 42%,
+    rgba(160, 164, 111, 0.075) 100%
+  ) !important;
+  border-color: rgba(132, 139, 88, 0.34) !important;
+}
+
+/* Feiertagsname passend zur Fläche statt braun. */
+.day.is-holiday .week-holiday-label {
+  color: #747957 !important;
+  font-weight: 600;
+}
