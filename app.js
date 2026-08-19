@@ -5052,6 +5052,9 @@ let recipePage = 0;
 const RECIPE_PAGE_SIZE = 10;
 let editingRecipeId = null;
 
+// Wochentage müssen vor dem ersten möglichen renderAll-Aufruf initialisiert sein.
+const WEEK_DAYS = ["Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag","Sonntag"];
+
 firebase.auth().onAuthStateChanged(async user => {
   if (user) {
     setLoginMessage("");
@@ -6134,8 +6137,6 @@ function mergeMeals(localMeals, cloudMeals) {
 
   return merged;
 }
-
-const WEEK_DAYS = ["Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag","Sonntag"];
 
 function renderMealPlan() {
   const host = document.querySelector("#mealPlanGrid");
