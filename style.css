@@ -7724,3 +7724,25 @@ a.day-meal{
 .trash-row strong{font-size:.72rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .trash-row small{font-size:.6rem;color:#a09388}
 .trash-row button{border:0;background:transparent;cursor:pointer;color:#81786f;font-size:.85rem}
+
+/* ===== Wochenplan: ruhige Überlauf-/Feiertagsdarstellung ===== */
+.week-more-todos{
+  display:block;
+  margin:7px 0 0;
+  padding:3px 2px;
+  border:0;
+  background:transparent;
+  color:var(--muted);
+  font-size:.72rem;
+  text-align:left;
+}
+.week-more-todos:hover{color:var(--ink);text-decoration:underline}
+.week-holiday-label{
+  margin:-5px 0 9px;
+  color:#8b7659;
+  font-size:.72rem;
+  line-height:1.25;
+}
+.day-events-placeholder-only > .multiday-event-lanes{
+  margin-top:0;
+}
