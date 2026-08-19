@@ -565,6 +565,11 @@
       <div class="recipe-form-grid">
         <input id="recipeTitle" type="text" placeholder="Rezeptname …">
 
+        <select id="recipeSourceType" title="Rezeptart">
+          <option value="internal" selected>📖 Internes Rezept</option>
+          <option value="external">🔗 Internetrezept</option>
+        </select>
+
         <select id="recipeCategory">
           <option value="main" selected>🍝 Hauptgericht</option>
           <option value="breakfast">🥣 Frühstück & Morgenideen</option>
@@ -581,6 +586,13 @@
           <option value="easy">Einfach</option>
           <option value="medium" selected>Mittel</option>
           <option value="advanced">Etwas aufwendiger</option>
+        </select>
+
+        <select id="recipeRating" title="Wie war es?">
+          <option value="">Noch nicht bewertet</option>
+          <option value="good">😊 Gut</option>
+          <option value="medium">🙂 Mittel</option>
+          <option value="bad">😕 Schlecht</option>
         </select>
 
         <input id="recipeTime" type="text" placeholder="Zeit, z. B. 20 Min.">
@@ -652,6 +664,12 @@
         <datalist id="recipeSearchSuggestions"></datalist>
         <div id="recipeAutocomplete" class="recipe-autocomplete hidden"></div>
       </div>
+
+      <select id="recipeSourceFilter">
+        <option value="all">Alle Rezeptarten</option>
+        <option value="internal">📖 Interne Rezepte</option>
+        <option value="external">🔗 Internetrezepte</option>
+      </select>
 
       <select id="recipeCategoryFilter">
         <option value="all">Alle Rezeptideen</option>
