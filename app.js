@@ -4171,6 +4171,14 @@ document.querySelector("#todayWeekBtn").addEventListener("click", () => {
   currentWeekMonday = getMonday(new Date());
   renderWeek();
 });
+function workroomDragEnabled() {
+  try {
+    return window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+  } catch (_) {
+    return true;
+  }
+}
+
 function renderSchoolWorkTodos() {
   // Datensicherheits-Hydration: vorhandene lokale Werkraumdaten haben Vorrang,
   // falls der In-Memory-State durch einen unvollständigen Cloudstand leerer ist.
@@ -4404,9 +4412,7 @@ document.querySelectorAll(".workroom-todo-edit").forEach(btn => {
 // Schul-To-dos per Maus oder Touch sortieren
 const todoList = document.querySelector("#schoolWorkTodoList");
 
-const workroomPointerCanDrag = window.matchMedia?.("(hover: hover) and (pointer: fine)")?.matches ?? true;
-
-if (todoList && typeof Sortable !== "undefined" && workroomPointerCanDrag) {
+if (todoList && typeof Sortable !== "undefined" && workroomDragEnabled()) {
   new Sortable(todoList, {
     animation: 180,
     handle: ".workroom-drag-handle",
@@ -4728,7 +4734,7 @@ const prints = [...state.workroom.prints]
     });
   });
 
-  if (typeof Sortable !== "undefined" && workroomPointerCanDrag) {
+  if (typeof Sortable !== "undefined" && workroomDragEnabled()) {
     const printList = document.querySelector("#schoolPrintList");
 
     if (printList) {
@@ -7078,8 +7084,7 @@ function mergeMeals(localMeals, cloudMeals) {
     if (!l) { merged[key] = c; return; }
     if (!c) { merged[key] = l; return; }
 
-    // Neue Einträge und Löschungen tragen updatedAt.
-    // Damit kann ein älteres Gerät einen gelöschten Essensplan-Eintrag nicht wieder zurückholen.
+    // Neue Einträge tragen updatedAt. Dann gewinnt immer die neuere Fassung.
     if (l.updatedAt || c.updatedAt) {
       merged[key] = l.updatedAt >= c.updatedAt ? l : c;
       return;
