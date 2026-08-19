@@ -4267,7 +4267,7 @@ const typeLabels = {
 
   list.innerHTML = todos.map(t => `
 <div
-  class="workroom-todo-row ${t.done ? "done" : ""} ${t.type === "ask" ? "workroom-todo-ask" : ""}"
+  class="workroom-todo-row ${t.done ? "done" : ""} ${t.type === "ask" ? "workroom-todo-ask" : ""} ${t.important ? "workroom-todo-important" : ""}"
   data-id="${t.id}">
 
   <input
@@ -4293,6 +4293,14 @@ const typeLabels = {
         rel="noopener"
         title="Link öffnen">🔗</a>`
     : ""}
+
+  <button
+    class="workroom-important-btn ${t.important ? "active" : ""}"
+    type="button"
+    data-id="${t.id}"
+    title="${t.important ? "Wichtig-Markierung entfernen" : "Als wichtig markieren"}"
+    aria-pressed="${t.important ? "true" : "false"}">★ Wichtig</button>
+
           <button
   class="workroom-todo-edit"
   type="button"
@@ -4395,6 +4403,18 @@ document.querySelectorAll(".workroom-todo-check").forEach(box => {
   });
 });
 
+document.querySelectorAll(".workroom-important-btn").forEach(btn => {
+  btn.addEventListener("click", e => {
+    const id = e.currentTarget.dataset.id;
+    const item = state.workroom.todos.find(t => t.id === id);
+    if (!item) return;
+
+    item.important = !item.important;
+    save();
+    renderSchoolWorkTodos();
+  });
+});
+
 document.querySelectorAll(".workroom-todo-edit").forEach(btn => {
   btn.addEventListener("click", e => {
     const id = e.currentTarget.dataset.id;
@@ -4412,7 +4432,7 @@ document.querySelectorAll(".workroom-todo-edit").forEach(btn => {
 // Schul-To-dos per Maus oder Touch sortieren
 const todoList = document.querySelector("#schoolWorkTodoList");
 
-if (todoList && typeof Sortable !== "undefined" && workroomDragEnabled()) {
+if (todoList && typeof Sortable !== "undefined") {
   new Sortable(todoList, {
     animation: 180,
     handle: ".workroom-drag-handle",
@@ -4516,6 +4536,7 @@ document.querySelector("#addSchoolWorkTodoBtn")?.addEventListener("click", () =>
       text,
       type: typeInput.value || "",
       url,
+      important: false,
       order: state.workroom.todos.length,
       done: false,
       createdAt: Date.now()
@@ -4734,7 +4755,7 @@ const prints = [...state.workroom.prints]
     });
   });
 
-  if (typeof Sortable !== "undefined" && workroomDragEnabled()) {
+  if (typeof Sortable !== "undefined") {
     const printList = document.querySelector("#schoolPrintList");
 
     if (printList) {
