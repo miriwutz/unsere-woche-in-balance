@@ -128,18 +128,25 @@ function getDeviceId() {
 
 function inferDeviceName() {
   const ua = navigator.userAgent || "";
-  if (/iPad|Tablet|SM-T|Android(?!.*Mobile)/i.test(ua)) return "Tablet";
+  if (/iPad|Tablet|SM-T|SM-X/i.test(ua)) return "Tablet";
+  if (/Android/i.test(ua) && !/Mobile/i.test(ua)) return "Tablet";
+  if (/Macintosh/i.test(ua) && Number(navigator.maxTouchPoints || 0) > 1) return "Tablet";
   if (/iPhone|Android.*Mobile|Mobile/i.test(ua)) return "Handy";
   return "PC";
 }
 
 function getDeviceName() {
-  let name = localStorage.getItem(DEVICE_NAME_KEY);
-  if (!name) {
-    name = inferDeviceName();
-    localStorage.setItem(DEVICE_NAME_KEY, name);
+  const inferred = inferDeviceName();
+  const saved = localStorage.getItem(DEVICE_NAME_KEY);
+
+  // Automatisch gesetzte Standardnamen dürfen sich korrigieren
+  // (z. B. Tablet war zuvor fälschlich als PC erkannt).
+  if (!saved || ["PC","Tablet","Handy"].includes(saved)) {
+    localStorage.setItem(DEVICE_NAME_KEY, inferred);
+    return inferred;
   }
-  return name;
+
+  return saved;
 }
 
 function firestoreMillisValue(value) {
@@ -181,40 +188,39 @@ function renderDeviceAcks(data) {
   const ackWrap = el.querySelector(".sync-device-acks");
   if (!ackWrap) return;
 
-  const acks = data?.deviceAcks && typeof data.deviceAcks === "object"
-    ? Object.values(data.deviceAcks)
-    : [];
+  const ackMap = data?.deviceAcks && typeof data.deviceAcks === "object"
+    ? data.deviceAcks
+    : {};
 
   const targetVersion = currentCloudVersion(data);
   const now = Date.now();
+  const selfId = getDeviceId();
+  const selfName = getDeviceName();
 
-  const rows = acks
-    .map(x => {
+  const rows = Object.entries(ackMap)
+    .map(([id, x]) => {
       const seen = firestoreMillisValue(x?.seenAt);
       return {
+        id,
         name: x?.name || "Gerät",
         seen,
         version: Number(x?.version || 0)
       };
     })
-    .filter(x => x.seen && now - x.seen < 15 * 60 * 1000);
+    .filter(x => x.id !== selfId && x.seen && now - x.seen < 15 * 60 * 1000);
 
   if (!rows.length) {
     ackWrap.textContent = "";
     return;
   }
 
-  const grouped = new Map();
-  rows.forEach(x => {
-    const prev = grouped.get(x.name);
-    if (!prev || x.seen > prev.seen) grouped.set(x.name, x);
-  });
-
-  const labels = [...grouped.values()]
-    .sort((a,b) => a.name.localeCompare(b.name))
+  const labels = rows
+    .sort((a,b) => b.seen - a.seen)
     .map(x => {
+      // Falls Browser/UA beide Geräte gleich benennt, bleibt die Aussage trotzdem eindeutig.
+      const label = x.name === selfName ? "anderes Gerät" : x.name;
       const current = targetVersion && x.version >= targetVersion;
-      return `${x.name} ${current ? "✓" : "…"}`;
+      return `${label} ${current ? "✓" : "…"}`;
     });
 
   ackWrap.textContent = labels.length ? " · " + labels.join(" · ") : "";
@@ -285,7 +291,7 @@ function updateSyncStatus(stateName) {
   const el = ensureSyncStatusUI();
   if (!el) return;
   const states = {
-    synced:  ["✓", "synchronisiert"],
+    synced:  ["✓", "Cloud gespeichert"],
     syncing: ["↻", "wird synchronisiert"],
     waiting: ["…", "wartet auf Sync"],
     offline: ["○", "offline"],
@@ -297,7 +303,7 @@ function updateSyncStatus(stateName) {
   if (main) main.textContent = `${icon} ${text}`;
   else el.textContent = `${icon} ${text}`;
   el.title =
-    stateName === "synced" ? "Änderungen wurden in der Cloud gespeichert." :
+    stateName === "synced" ? "Diese Änderung wurde in der Cloud gespeichert. Gerätebestätigungen stehen rechts daneben." :
     stateName === "syncing" ? "Änderungen werden gerade gespeichert." :
     stateName === "offline" ? "Keine Internetverbindung. Änderungen bleiben lokal erhalten und werden später synchronisiert." :
     stateName === "error" ? "Die letzte Cloud-Synchronisierung ist fehlgeschlagen." :
@@ -1646,9 +1652,15 @@ const eventHtml = (events.length || multiDayEventLanes.length) ? `
 
     const wasDone = isOccurrenceDone(item, occDate);
     setOccurrenceDone(item, occDate, e.target.checked);
-if (!item.recurrence || item.recurrence === "none") {
-  item.completedAt = e.target.checked ? Date.now() : null;
-}
+
+    // Geräte-Sync: Statusänderungen müssen eine neue Version bekommen.
+    // Sonst kann ein anderes Gerät seinen alten lokalen Stand behalten.
+    const now = Date.now();
+    item.updatedAt = now;
+
+    if (!item.recurrence || item.recurrence === "none") {
+      item.completedAt = e.target.checked ? now : null;
+    }
     save();
     renderAll();
 
