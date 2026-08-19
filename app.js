@@ -1,3 +1,11 @@
+// Stabilitätsmodus: alte Service Worker automatisch entfernen.
+// LocalStorage und App-Daten werden dabei NICHT berührt.
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.getRegistrations()
+    .then(regs => Promise.all(regs.map(r => r.unregister())))
+    .catch(err => console.warn("Service-Worker-Bereinigung beim Start:", err));
+}
+
 const days = ["Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag","Sonntag"];
 
 const state = {
@@ -51,7 +59,11 @@ let cloudSaveTimer = null;
 let cloudUnsubscribe = null;
 
 function saveLocal() {
-  makeLocalSafetySnapshot("vor-lokal-speichern");
+  try { makeLocalSafetySnapshot("vor-lokal-speichern"); } catch (_) {}
+  try {
+    if (typeof makeLocalSafetyBackup === "function") makeLocalSafetyBackup();
+  } catch (_) {}
+
   localStorage.setItem("balanceProd.videos", JSON.stringify(state.videos));
   localStorage.setItem("balanceProd.todos", JSON.stringify(state.todos));
   localStorage.setItem("balanceProd.archive", JSON.stringify(state.archive));
@@ -7785,7 +7797,11 @@ function makeLocalSafetyBackup() {
   }
 }
 function saveLocal() {
-  makeLocalSafetyBackup();
+  try { makeLocalSafetySnapshot("vor-lokal-speichern"); } catch (_) {}
+  try {
+    if (typeof makeLocalSafetyBackup === "function") makeLocalSafetyBackup();
+  } catch (_) {}
+
   localStorage.setItem("balanceProd.videos", JSON.stringify(state.videos));
   localStorage.setItem("balanceProd.todos", JSON.stringify(state.todos));
   localStorage.setItem("balanceProd.archive", JSON.stringify(state.archive));
@@ -7824,44 +7840,44 @@ function cloudPayload() {
 function applyCloudData(data) {
   cloudApplying = true;
   try {
-    state.videos = Array.isArray(data.videos) ? mergeByIdPreferNewer(state.videos, data.videos) : state.videos;
-    state.todos = mergeCloudTodosWithoutLosingNewLocal(data.todos, data.updatedAt);
-    state.trash = Array.isArray(data.trash) ? data.trash : (state.trash || []);
-    state.archive = Array.isArray(data.archive) ? mergeByIdPreferNewer(state.archive, data.archive) : state.archive;
+    makeLocalSafetySnapshot("vor-cloud-apply", true);
 
-    if (Array.isArray(data.shopping)) {
-      state.shopping = data.shopping;
-      shoppingItems = state.shopping;
+    state.videos = guardedMergeById(state.videos, data.videos, "Videos");
+    state.todos = guardedMergeById(state.todos, data.todos, "To-dos & Termine");
+    state.trash = guardedMergeById(state.trash, data.trash, "Papierkorb");
+    state.archive = guardedMergeById(state.archive, data.archive, "Übungsarchiv");
+    state.shopping = guardedMergeById(state.shopping, data.shopping, "Einkauf");
+    shoppingItems = state.shopping;
+    state.recipes = guardedMergeById(state.recipes, data.recipes, "Rezepte");
+
+    if (data.meals && typeof data.meals === "object") {
+      state.meals = mergeMeals(state.meals, data.meals);
     }
-
-    const localRecipes = Array.isArray(state.recipes) ? state.recipes : [];
-    const cloudRecipes = Array.isArray(data.recipes) ? data.recipes : [];
-    state.recipes = cloudRecipes.length ? mergeByIdPreferNewer(localRecipes, cloudRecipes) : localRecipes;
-
-    if (data.meals && typeof data.meals === "object") state.meals = mergeMeals(state.meals, data.meals);
 
     if (Array.isArray(data.pinboard)) {
       handleIncomingPinboard(data.pinboard);
-      state.pinboard = mergeByIdPreferNewer(state.pinboard, data.pinboard);
+      state.pinboard = guardedMergeById(state.pinboard, data.pinboard, "Pinnwand");
     }
 
     if (data.recipeLinkFeedback && typeof data.recipeLinkFeedback === "object") {
-      state.recipeLinkFeedback = {...data.recipeLinkFeedback, ...state.recipeLinkFeedback};
+      state.recipeLinkFeedback = {
+        ...(data.recipeLinkFeedback || {}),
+        ...(state.recipeLinkFeedback || {})
+      };
     }
 
-    const lw = normalizeWorkroom(state.workroom);
-    const cw = normalizeWorkroom(data.workroom);
-    state.workroom = {
-      todos: mergeByIdPreferNewer(lw.todos, cw.todos),
-      prints: mergeByIdPreferNewer(lw.prints, cw.prints),
-      links: mergeByIdPreferNewer(lw.links, cw.links),
-      substitutions: mergeByIdPreferNewer(lw.substitutions, cw.substitutions),
-      plans: (lw.plans?.week?.length || lw.plans?.year?.length) ? lw.plans : cw.plans
+    state.workroom = guardedWorkroomMerge(state.workroom, data.workroom);
+    state.school = mergeSchoolSafely(state.school, data.school);
+
+    state.familySettings = {
+      ...(data.familySettings || {}),
+      ...(state.familySettings || {})
     };
 
-    if (data.school?.children) state.school = mergeSchool(state.school, data.school);
-    if (data.familySettings) state.familySettings = {...data.familySettings, ...state.familySettings};
-    state.settings = {...(data.settings || {}), ...(state.settings || {})};
+    state.settings = {
+      ...(data.settings || {}),
+      ...(state.settings || {})
+    };
 
     saveLocal();
     renderAll();
@@ -7957,16 +7973,13 @@ function renderAll() {
   }
 
   async function ensureServiceWorker(){
-    if (!serviceWorkerSupported()) return null;
-
     try {
-      await navigator.serviceWorker.register("./sw.js");
-      const registration = await navigator.serviceWorker.ready;
-      return registration;
+      const regs = await navigator.serviceWorker?.getRegistrations?.();
+      if (Array.isArray(regs)) await Promise.all(regs.map(r => r.unregister()));
     } catch (err) {
-      console.warn("Service Worker konnte nicht registriert werden:", err);
-      return null;
+      console.warn("Service-Worker-Bereinigung:", err);
     }
+    return null;
   }
 
   function deviceNotificationsEnabled(){
