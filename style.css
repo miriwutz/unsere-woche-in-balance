@@ -8005,3 +8005,58 @@ a.day-meal{
   margin-left:0;
   transform:translateY(-1px);
 }
+
+/* =========================================================
+   FEINSCHLIFF 19.08.2026
+   - Werkraum-Frau / spirituelle Illustration dunkler oliv
+   - Wochenende und Feiertage/Schulfrei sanft grünlicher
+   ========================================================= */
+
+/* Werkraum-Illustration: dunkleres Oliv */
+.workroom-thought-illustration,
+.workroom-thought-illustration svg,
+.workroom-thought-illustration svg *,
+.workroom-quote-illustration,
+.workroom-quote-illustration svg,
+.workroom-quote-illustration svg *,
+.workroom-meditation-illustration,
+.workroom-meditation-illustration svg,
+.workroom-meditation-illustration svg *{
+  color:#7f896d !important;
+  stroke:#7f896d !important;
+}
+
+/* Wochenende: sehr sanftes, warmes Grün */
+.week-grid .day.weekend,
+.week-grid .day.is-weekend,
+.week-grid .week-day.weekend,
+.week-grid .week-day.is-weekend,
+.day.weekend,
+.day.is-weekend{
+  background:linear-gradient(180deg,rgba(232,237,225,.58),rgba(247,246,241,.78)) !important;
+}
+
+/* Feiertag / schulfrei: etwas deutlicher grünlich, aber ruhig */
+.week-grid .day.holiday,
+.week-grid .day.is-holiday,
+.week-grid .day.school-holiday,
+.week-grid .day.is-school-holiday,
+.week-grid .week-day.holiday,
+.week-grid .week-day.is-holiday,
+.day.holiday,
+.day.is-holiday,
+.day.school-holiday,
+.day.is-school-holiday{
+  background:linear-gradient(180deg,rgba(222,231,209,.72),rgba(242,244,235,.82)) !important;
+}
+
+/* Schulfrei-/Ferien-Badge passend oliv */
+.school-holiday-badge,
+.holiday-badge,
+.schoolfree-badge,
+.ferien-badge{
+  background:#edf1e3 !important;
+  border-color:#d5ddc4 !important;
+  color:#71805f !important;
+}
+
