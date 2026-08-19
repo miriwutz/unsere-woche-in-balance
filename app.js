@@ -161,12 +161,18 @@ function currentCloudVersion(data) {
 }
 
 let lastDeviceAckAt = 0;
+let lastAcknowledgedSyncToken = "";
+
 async function acknowledgeCloudSnapshot(data, snapshotMeta = null) {
   if (!firebase.auth().currentUser) return;
   if (snapshotMeta?.hasPendingWrites) return;
 
   const token = String(data?.syncToken || "");
-  if (!token) return;
+  if (!token || token === lastAcknowledgedSyncToken) return;
+
+  // Vor dem Schreiben setzen: der eigene ACK-Schreibvorgang erzeugt selbst
+  // wieder einen Firestore-Snapshot und darf keine Endlosschleife starten.
+  lastAcknowledgedSyncToken = token;
 
   try {
     const ref = firebase.firestore().collection("families").doc("shared");
@@ -180,6 +186,7 @@ async function acknowledgeCloudSnapshot(data, snapshotMeta = null) {
       }
     }, { merge: true });
   } catch (err) {
+    lastAcknowledgedSyncToken = "";
     console.warn("Gerätebestätigung konnte nicht gespeichert werden:", err);
   }
 }
@@ -3107,6 +3114,7 @@ let timeTrackingUnsubscribe = null;
 let timeTrackingCloudSaveTimer = null;
 let timeTrackingCloudApplying = false;
 let timeTrackingPollTimer = null;
+let lastTimeTrackingCloudFingerprint = "";
 
 function writeTimeTrackingLocalOnly() {
   try {
@@ -3290,6 +3298,7 @@ async function startTimeTrackingSync() {
     const initial = mergeTimeTrackingData(state.timeTracking, remoteTimeTracking);
 
     state.timeTracking = initial;
+    lastTimeTrackingCloudFingerprint = remoteTimeTracking ? JSON.stringify(remoteTimeTracking) : "";
     writeTimeTrackingLocalOnly();
 
     // Falls bisher nur lokale Zeitdaten vorhanden waren, einmalig ins
@@ -3308,6 +3317,10 @@ async function startTimeTrackingSync() {
     if (!snap.exists) return;
     const remoteTimeTracking = snap.data()?.timeTracking;
     if (!remoteTimeTracking) return;
+
+    const fingerprint = JSON.stringify(remoteTimeTracking);
+    if (fingerprint === lastTimeTrackingCloudFingerprint) return;
+    lastTimeTrackingCloudFingerprint = fingerprint;
 
     timeTrackingCloudApplying = true;
     try {
@@ -5718,21 +5731,35 @@ function startCloudSync() {
 
   const ref = firebase.firestore().collection("families").doc("shared");
   let firstSnapshot = true;
+  let lastAppliedSyncToken = "";
 
   cloudUnsubscribe = ref.onSnapshot(async snap => {
     if (!snap.exists) {
       if (firstSnapshot) {
         cloudReady = true;
-    updateSyncStatus(navigator.onLine ? "synced" : "offline");
+        updateSyncStatus(navigator.onLine ? "synced" : "offline");
         firstSnapshot = false;
-        // First family login: create the shared document from the clean local state.
         scheduleCloudSave();
       }
       return;
     }
 
     const cloudData = snap.data();
-    applyCloudData(cloudData);
+    const token = String(cloudData?.syncToken || "");
+
+    // Gerätebestätigungen werden in dasselbe Firestore-Dokument geschrieben.
+    // Sie verändern den syncToken NICHT. Solche ACK-Snapshots dürfen deshalb
+    // NICHT die ganze App neu rendern – sonst verschwinden Klicks unter der Maus.
+    const isAckOnlySnapshot =
+      !firstSnapshot &&
+      token &&
+      token === lastAppliedSyncToken;
+
+    if (!isAckOnlySnapshot) {
+      applyCloudData(cloudData);
+      lastAppliedSyncToken = token;
+    }
+
     cloudReady = true;
     updateSyncStatus(navigator.onLine ? "synced" : "offline");
     renderDeviceAcks(cloudData);
@@ -5740,14 +5767,10 @@ function startCloudSync() {
 
     if (firstSnapshot) {
       firstSnapshot = false;
-      scheduleCloudSave();
-    } else {
-      firstSnapshot = false;
     }
   }, err => {
-    console.error("Firestore sync failed:", err);
-    cloudReady = false;
-    setLoginMessage("Die Verbindung zur gemeinsamen Familienwoche ist fehlgeschlagen.");
+    console.error("Firestore listener failed:", err);
+    updateSyncStatus(navigator.onLine ? "error" : "offline");
   });
 }
 
