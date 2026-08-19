@@ -51,6 +51,7 @@ let cloudSaveTimer = null;
 let cloudUnsubscribe = null;
 
 function saveLocal() {
+  makeLocalSafetySnapshot("vor-lokal-speichern");
   localStorage.setItem("balanceProd.videos", JSON.stringify(state.videos));
   localStorage.setItem("balanceProd.todos", JSON.stringify(state.todos));
   localStorage.setItem("balanceProd.archive", JSON.stringify(state.archive));
@@ -4941,23 +4942,157 @@ function mergeCloudTodosWithoutLosingNewLocal(cloudTodos, cloudUpdatedAt) {
   return mergeByIdPreferNewer(remote, unsyncedLocal);
 }
 
+
+// =========================================================
+// DATENSICHERHEIT V8 – Cloud darf lokale Daten nicht still löschen
+// =========================================================
+
+const AUTO_SAFETY_PREFIX = "balanceProd.autoSafety.";
+const AUTO_SAFETY_SLOTS = 5;
+let lastAutoSafetyAt = 0;
+
+function makeLocalSafetySnapshot(reason = "auto", force = false) {
+  try {
+    const now = Date.now();
+    if (!force && now - lastAutoSafetyAt < 60_000) return;
+    lastAutoSafetyAt = now;
+
+    const payload = {
+      savedAt: now,
+      reason,
+      videos: state.videos,
+      todos: state.todos,
+      trash: state.trash || [],
+      archive: state.archive,
+      shopping: state.shopping,
+      recipes: state.recipes,
+      meals: state.meals,
+      pinboard: state.pinboard,
+      recipeLinkFeedback: state.recipeLinkFeedback,
+      workroom: state.workroom,
+      school: state.school,
+      familySettings: state.familySettings,
+      settings: state.settings || {}
+    };
+
+    for (let i = AUTO_SAFETY_SLOTS; i >= 2; i--) {
+      const prev = localStorage.getItem(AUTO_SAFETY_PREFIX + (i - 1));
+      if (prev) localStorage.setItem(AUTO_SAFETY_PREFIX + i, prev);
+    }
+    localStorage.setItem(AUTO_SAFETY_PREFIX + "1", JSON.stringify(payload));
+  } catch (err) {
+    console.warn("Automatische Datensicherung konnte nicht erstellt werden:", err);
+  }
+}
+
+function itemTimestamp(item) {
+  if (!item || typeof item !== "object") return 0;
+  return Number(item.updatedAt || item.completedAt || item.createdAt || 0) || 0;
+}
+
+function guardedMergeById(localValue, cloudValue, sectionName = "Daten") {
+  const local = Array.isArray(localValue) ? localValue : [];
+  const remote = Array.isArray(cloudValue) ? cloudValue : [];
+
+  if (!local.length) return remote;
+  if (!remote.length) {
+    console.warn(`Cloud-Sicherheitsblock: ${sectionName} wäre von ${local.length} auf 0 gefallen – lokale Daten bleiben erhalten.`);
+    return local;
+  }
+
+  const result = [...local];
+  const localById = new Map(local.filter(x => x?.id).map(x => [x.id, x]));
+  const newestLocalTs = local.reduce((m, x) => Math.max(m, itemTimestamp(x)), 0);
+
+  for (const remoteItem of remote) {
+    if (!remoteItem?.id) continue;
+    const localItem = localById.get(remoteItem.id);
+
+    if (localItem) {
+      const newer = itemTimestamp(remoteItem) > itemTimestamp(localItem) ? remoteItem : localItem;
+      const index = result.findIndex(x => x?.id === remoteItem.id);
+      if (index >= 0) result[index] = newer;
+      continue;
+    }
+
+    const remoteTs = itemTimestamp(remoteItem);
+    if (remoteTs && remoteTs > newestLocalTs) {
+      result.push(remoteItem);
+    } else {
+      console.warn(`Cloud-Sicherheitsblock: älterer/nicht datierbarer Cloud-Eintrag in ${sectionName} nicht automatisch zurückgeholt:`, remoteItem);
+    }
+  }
+
+  return result;
+}
+
+function guardedWorkroomMerge(localValue, cloudValue) {
+  const local = normalizeWorkroom(localValue);
+  const remote = normalizeWorkroom(cloudValue);
+
+  return {
+    ...local,
+    ...remote,
+    todos: guardedMergeById(local.todos, remote.todos, "Werkraum-To-dos"),
+    prints: guardedMergeById(local.prints, remote.prints, "Druckliste"),
+    links: guardedMergeById(local.links, remote.links, "Werkraum-Links"),
+    substitutions: guardedMergeById(local.substitutions, remote.substitutions, "Supplierungen"),
+    plans: {
+      ...(local.plans || {}),
+      ...(remote.plans || {}),
+      week: guardedMergeById(local.plans?.week, remote.plans?.week, "Werkraum-Wochenplanung"),
+      year: guardedMergeById(local.plans?.year, remote.plans?.year, "Werkraum-Jahresplanung")
+    }
+  };
+}
+
+function mergeSchoolSafely(localSchool, cloudSchool) {
+  if (!cloudSchool || typeof cloudSchool !== "object") return localSchool;
+  const local = localSchool && typeof localSchool === "object" ? localSchool : {};
+
+  const children = {
+    ...(local.children || {}),
+    ...(cloudSchool.children || {})
+  };
+
+  Object.keys(children).forEach(key => {
+    children[key] = {
+      ...(local.children?.[key] || {}),
+      ...(cloudSchool.children?.[key] || {}),
+      timetableByYear: {
+        ...(local.children?.[key]?.timetableByYear || {}),
+        ...(cloudSchool.children?.[key]?.timetableByYear || {})
+      }
+    };
+  });
+
+  return {
+    ...local,
+    ...cloudSchool,
+    mama: {
+      ...(local.mama || {}),
+      ...(cloudSchool.mama || {}),
+      timetableByYear: {
+        ...(local.mama?.timetableByYear || {}),
+        ...(cloudSchool.mama?.timetableByYear || {})
+      }
+    },
+    children
+  };
+}
+
 function applyCloudData(data) {
   cloudApplying = true;
   try {
-    state.videos = Array.isArray(data.videos) ? data.videos : [];
-    state.todos = mergeCloudTodosWithoutLosingNewLocal(data.todos, data.updatedAt);
-  state.trash = Array.isArray(data.trash) ? data.trash : (state.trash || []);
-    state.archive = Array.isArray(data.archive) ? data.archive : [];
-    state.shopping = Array.isArray(data.shopping)
-  ? data.shopping
-  : (Array.isArray(state.shopping) ? state.shopping : []);
+    makeLocalSafetySnapshot("vor-cloud-apply", true);
 
-shoppingItems = state.shopping;
-    
-
-    const localRecipes = Array.isArray(state.recipes) ? state.recipes : [];
-    const cloudRecipes = Array.isArray(data.recipes) ? data.recipes : [];
-    state.recipes = mergeByIdPreferNewer(localRecipes, cloudRecipes);
+    state.videos = guardedMergeById(state.videos, data.videos, "Videos");
+    state.todos = guardedMergeById(state.todos, data.todos, "To-dos & Termine");
+    state.trash = guardedMergeById(state.trash, data.trash, "Papierkorb");
+    state.archive = guardedMergeById(state.archive, data.archive, "Übungsarchiv");
+    state.shopping = guardedMergeById(state.shopping, data.shopping, "Einkauf");
+    shoppingItems = state.shopping;
+    state.recipes = guardedMergeById(state.recipes, data.recipes, "Rezepte");
 
     if (data.meals && typeof data.meals === "object") {
       state.meals = mergeMeals(state.meals, data.meals);
@@ -4965,7 +5100,7 @@ shoppingItems = state.shopping;
 
     if (Array.isArray(data.pinboard)) {
       handleIncomingPinboard(data.pinboard);
-      state.pinboard = mergeByIdPreferNewer(state.pinboard, data.pinboard);
+      state.pinboard = guardedMergeById(state.pinboard, data.pinboard, "Pinnwand");
     }
 
     if (data.recipeLinkFeedback && typeof data.recipeLinkFeedback === "object") {
@@ -4975,17 +5110,19 @@ shoppingItems = state.shopping;
       };
     }
 
-    state.workroom = data.workroom && typeof data.workroom === "object"
-  ? {
-      todos: Array.isArray(data.workroom.todos) ? data.workroom.todos : [],
-      prints: Array.isArray(data.workroom.prints) ? data.workroom.prints : [],
-      links: Array.isArray(data.workroom.links) ? data.workroom.links : [],
-      substitutions: Array.isArray(data.workroom.substitutions) ? data.workroom.substitutions : []
-    }
-  : state.workroom;
-    if (data.school?.children) state.school = data.school;
-    if (data.familySettings) state.familySettings = data.familySettings;
-    state.settings = {...(state.settings || {}), ...(data.settings || {})};
+    state.workroom = guardedWorkroomMerge(state.workroom, data.workroom);
+    state.school = mergeSchoolSafely(state.school, data.school);
+
+    state.familySettings = {
+      ...(data.familySettings || {}),
+      ...(state.familySettings || {})
+    };
+
+    state.settings = {
+      ...(data.settings || {}),
+      ...(state.settings || {})
+    };
+
     saveLocal();
     renderAll();
   } finally {
@@ -5061,7 +5198,13 @@ function startCloudSync() {
 
     applyCloudData(snap.data());
     cloudReady = true;
-    firstSnapshot = false;
+
+    if (firstSnapshot) {
+      firstSnapshot = false;
+      scheduleCloudSave();
+    } else {
+      firstSnapshot = false;
+    }
   }, err => {
     console.error("Firestore sync failed:", err);
     cloudReady = false;
