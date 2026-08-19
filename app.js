@@ -1438,16 +1438,9 @@ const eventHtml = (events.length || multiDayEventLanes.length) ? `
 
     const wasDone = isOccurrenceDone(item, occDate);
     setOccurrenceDone(item, occDate, e.target.checked);
-
-    // Wichtig für Geräte-Sync: Jede Änderung am Erledigt-Status bekommt
-    // einen neuen Versionszeitpunkt. Sonst hält guardedMergeById() auf
-    // dem zweiten Gerät dessen alten lokalen Zustand für gleich aktuell.
-    const now = Date.now();
-    item.updatedAt = now;
-
-    if (!item.recurrence || item.recurrence === "none") {
-      item.completedAt = e.target.checked ? now : null;
-    }
+if (!item.recurrence || item.recurrence === "none") {
+  item.completedAt = e.target.checked ? Date.now() : null;
+}
     save();
     renderAll();
 
@@ -1583,8 +1576,172 @@ function isNewEntry(item) {
   return Date.now() - item.createdAt < threeDays;
 }
 const expandedTodoGroups = new Set();
+
+function ensureTodoTrashUI() {
+  const todoView =
+    document.querySelector('[data-view-panel="todos"]') ||
+    document.querySelector("#todoList")?.closest("section") ||
+    document.querySelector("#todoList")?.parentElement;
+
+  if (!todoView) return null;
+
+  let wrap = document.querySelector("#todoTrashWrap");
+  if (!wrap) {
+    wrap = document.createElement("div");
+    wrap.id = "todoTrashWrap";
+    wrap.className = "todo-trash-wrap";
+    wrap.innerHTML = `
+      <details id="todoTrashDetails" class="todo-trash-details">
+        <summary>🗑️ Papierkorb <span id="todoTrashCount"></span></summary>
+        <div id="todoTrashList" class="todo-trash-list"></div>
+      </details>
+    `;
+    todoView.appendChild(wrap);
+  }
+  return wrap;
+}
+
+function renderTodoTrash() {
+  pruneTrash();
+  const wrap = ensureTodoTrashUI();
+  if (!wrap) return;
+
+  const host = wrap.querySelector("#todoTrashList");
+  const count = wrap.querySelector("#todoTrashCount");
+  if (!host) return;
+
+  const rows = (state.trash || [])
+    .filter(rec => rec.kind === "todo")
+    .sort((a,b) => Number(b.deletedAt || 0) - Number(a.deletedAt || 0));
+
+  if (count) count.textContent = rows.length ? `(${rows.length})` : "";
+
+  host.innerHTML = rows.length
+    ? rows.map(rec => {
+        const x = rec.item || {};
+        const remainingMs = Math.max(0, TRASH_KEEP_MS - (Date.now() - Number(rec.deletedAt || 0)));
+        const hours = Math.max(1, Math.ceil(remainingMs / 3600000));
+        const days = Math.ceil(hours / 24);
+        const remaining = days >= 2 ? `noch ${days} Tage` : (days === 1 ? "noch 1 Tag" : `noch ${hours} Std.`);
+        const typeLabel = (x.type === "event") ? "Termin" : "To-do";
+        return `
+          <div class="todo-trash-row">
+            <div class="todo-trash-copy">
+              <strong>${escapeHtml(x.text || typeLabel)}</strong>
+              <small>${typeLabel} · ${remaining}</small>
+            </div>
+            <div class="todo-trash-actions">
+              <button type="button" class="todo-trash-restore" data-id="${rec.trashId}" title="Wiederherstellen">↩</button>
+              <button type="button" class="todo-trash-delete" data-id="${rec.trashId}" title="Endgültig löschen">×</button>
+            </div>
+          </div>`;
+      }).join("")
+    : `<div class="overview-empty">Papierkorb ist leer.</div>`;
+
+  host.querySelectorAll(".todo-trash-restore").forEach(btn => {
+    btn.addEventListener("click", () => {
+      restoreTrashEntry(btn.dataset.id);
+      renderTodoTrash();
+    });
+  });
+
+  host.querySelectorAll(".todo-trash-delete").forEach(btn => {
+    btn.addEventListener("click", () => {
+      state.trash = (state.trash || []).filter(x => x.trashId !== btn.dataset.id);
+      save();
+      renderTodoTrash();
+    });
+  });
+}
+
+
+(function hideLegacyOverviewTrash() {
+  ["trashList","emptyTrashBtn"].forEach(id => {
+    const el = document.querySelector("#" + id);
+    if (!el) return;
+    const section = el.closest("section, .overview-card, .card, details, .panel");
+    if (section) section.style.display = "none";
+    else el.style.display = "none";
+  });
+})();
+
+(function ensureTodoTrashStyle() {
+  if (document.querySelector("#todoTrashStyle")) return;
+  const style = document.createElement("style");
+  style.id = "todoTrashStyle";
+  style.textContent = `
+    .todo-trash-wrap{
+      margin-top:18px;
+    }
+    .todo-trash-details{
+      border-top:1px solid rgba(120,110,100,.18);
+      padding-top:10px;
+    }
+    .todo-trash-details > summary{
+      cursor:pointer;
+      list-style:none;
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      font-size:.88rem;
+      font-weight:650;
+      color:#746f69;
+      user-select:none;
+    }
+    .todo-trash-details > summary::-webkit-details-marker{display:none}
+    .todo-trash-list{
+      display:grid;
+      gap:7px;
+      margin-top:9px;
+    }
+    .todo-trash-row{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      padding:8px 10px;
+      border:1px solid rgba(130,120,110,.14);
+      border-radius:10px;
+      background:rgba(250,248,245,.72);
+    }
+    .todo-trash-copy{
+      display:flex;
+      flex-direction:column;
+      gap:2px;
+      min-width:0;
+    }
+    .todo-trash-copy strong{
+      font-size:.88rem;
+      font-weight:650;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      white-space:nowrap;
+    }
+    .todo-trash-copy small{
+      font-size:.72rem;
+      color:#8a837c;
+    }
+    .todo-trash-actions{
+      display:flex;
+      gap:5px;
+      flex:0 0 auto;
+    }
+    .todo-trash-actions button{
+      border:0;
+      background:transparent;
+      cursor:pointer;
+      font-size:1rem;
+      padding:3px 5px;
+      opacity:.76;
+    }
+    .todo-trash-actions button:hover{opacity:1}
+  `;
+  document.head.appendChild(style);
+})();
+
 function renderTodos() {
   const list = document.querySelector("#todoList");
+  renderTodoTrash();
   let todos = state.todos.filter(t => !t.archived);
 
   if (todoFilter === "done") {
@@ -3494,7 +3651,7 @@ function restoreTrashEntry(id){
     if(!state.timeTracking.entries.some(x=>x.id===item.id))state.timeTracking.entries.push(item);
     saveTimeTrackingImmediately();
   }
-  state.trash=state.trash.filter(x=>x.trashId!==id); save(); renderAll();
+  state.trash=state.trash.filter(x=>x.trashId!==id); save(); renderAll(); renderTodoTrash();
 }
 function renderTrash(){
   pruneTrash(); const host=document.querySelector("#trashList"); if(!host)return;
@@ -3512,7 +3669,6 @@ function renderTrash(){
 
 function renderAll() {
   pruneTrash();
-  renderTrash();
   bindManualTimetableControls();
   bindSchoolYearSetting();
   applyFamilyVisuals();
