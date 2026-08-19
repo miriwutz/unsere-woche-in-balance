@@ -2975,29 +2975,42 @@ function renderPapaOverview(weekOffset = 0) {
   const monday = new Date(currentWeekMonday);
   monday.setDate(monday.getDate() + (weekOffset * 7));
 
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
   const weekEntries = [];
 
   days.forEach((dayName, index) => {
     const date = dayDate(monday, index);
-    const today = new Date();
-today.setHours(0, 0, 0, 0);
+    const checkDate = new Date(date);
+    checkDate.setHours(0, 0, 0, 0);
 
-const checkDate = new Date(date);
-checkDate.setHours(0, 0, 0, 0);
-
-if (checkDate < today) return;
+    // In Papas Schnellansicht brauchen wir Vergangenes nicht mehr.
+    if (checkDate < today) return;
 
     const entries = state.todos
       .filter(t => occursOnDate(t, date))
       .filter(papaEntryIsRelevant)
-      .filter(papaTodoIsVisible);
+      .filter(papaTodoIsVisible)
+      .sort((a,b) => {
+        // Termine zuerst, danach To-dos; Termine nach Uhrzeit.
+        const aEvent = a.type === "event" ? 0 : 1;
+        const bEvent = b.type === "event" ? 0 : 1;
+        if (aEvent !== bEvent) return aEvent - bEvent;
+        if (aEvent === 0) return String(a.time || "99:99").localeCompare(String(b.time || "99:99"));
+        return Number(!!b.superImportant) - Number(!!a.superImportant);
+      });
 
-    if (!entries.length) return;
+    const isToday = checkDate.getTime() === today.getTime();
+
+    // Heute wird in "Diese Woche" immer gezeigt, auch wenn nichts eingetragen ist.
+    if (!entries.length && !(weekOffset === 0 && isToday)) return;
 
     weekEntries.push({
       dayName,
       date,
-      entries
+      entries,
+      isToday
     });
   });
 
@@ -3016,58 +3029,64 @@ if (checkDate < today) return;
       month: "2-digit"
     });
 
-return `
-  <section class="papa-overview-day">
-
-    <div class="papa-overview-day-head">
-      <strong>${day.dayName}</strong>
-      <span> · ${dateLabel}</span>
-    </div>
-
-    <div class="papa-overview-day-entries">
-      ${day.entries.map(t => {
-        const isEvent = t.type === "event";
-
-        let time = "";
-
-        if (isEvent) {
-          if (t.time && t.endTime) {
-            time = `${t.time}–${t.endTime}`;
-          } else if (t.time) {
-            time = t.time;
-          } else if (t.endTime) {
-            time = `bis ${t.endTime}`;
-          }
-        }
-
-        if (isEvent) {
-          return `
-            <div class="papa-overview-entry event">
-              <span class="papa-overview-symbol">✦</span>
-
-              <span class="papa-overview-entry-text">
-                ${time ? `<strong>${escapeHtml(time)}</strong> ` : ""}
-                ${escapeHtml(t.text || "")}
-              </span>
-            </div>
-          `;
-        }
-
-        return `
-          <div class="papa-overview-entry todo">
-            <span class="papa-overview-symbol">☐</span>
-
-            <span class="papa-overview-entry-text">
-              ${escapeHtml(t.text || "")}
-            </span>
+    return `
+      <section class="papa-overview-day ${day.isToday ? "is-today" : ""}">
+        <div class="papa-overview-day-head">
+          <div class="papa-overview-day-title">
+            <strong>${day.dayName}</strong>
+            <span>${dateLabel}</span>
           </div>
-        `;
-      }).join("")}
-    </div>
+          ${day.isToday ? `<span class="papa-today-badge">Heute</span>` : ""}
+        </div>
 
-  </section>
-`;
+        <div class="papa-overview-day-entries">
+          ${day.entries.length ? day.entries.map(t => {
+            const isEvent = t.type === "event";
+            let time = "";
+
+            if (isEvent) {
+              if (t.time && t.endTime) {
+                time = `${t.time}–${t.endTime}`;
+              } else if (t.time) {
+                time = t.time;
+              } else if (t.endTime) {
+                time = `bis ${t.endTime}`;
+              }
+            }
+
+            if (isEvent) {
+              return `
+                <div class="papa-overview-entry event">
+                  <span class="papa-overview-symbol" aria-hidden="true">✦</span>
+                  <span class="papa-overview-entry-text">
+                    ${time ? `<strong class="papa-overview-time">${escapeHtml(time)}</strong>` : ""}
+                    <span>${escapeHtml(t.text || "")}</span>
+                  </span>
+                </div>
+              `;
+            }
+
+            return `
+              <div class="papa-overview-entry todo">
+                <span class="papa-overview-symbol" aria-hidden="true">${t.superImportant ? "★" : "☐"}</span>
+                <span class="papa-overview-entry-text">
+                  <span>${escapeHtml(t.text || "")}</span>
+                </span>
+              </div>
+            `;
+          }).join("") : `
+            <div class="papa-overview-today-empty">Heute ist nichts eingetragen.</div>
+          `}
+        </div>
+      </section>
+    `;
   }).join("");
+
+  // Beim Öffnen steht der aktuelle Tag sofort im sichtbaren Bereich.
+  const todaySection = list.querySelector(".papa-overview-day.is-today");
+  if (todaySection) {
+    requestAnimationFrame(() => todaySection.scrollIntoView({block:"nearest"}));
+  }
 }
 
 document.querySelector("#openPapaOverviewBtn")?.addEventListener("click", () => {
