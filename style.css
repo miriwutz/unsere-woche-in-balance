@@ -8022,8 +8022,8 @@ a.day-meal{
 .workroom-meditation-illustration,
 .workroom-meditation-illustration svg,
 .workroom-meditation-illustration svg *{
-  color:#7f896d !important;
-  stroke:#7f896d !important;
+  color:#667153 !important;
+  stroke:#667153 !important;
 }
 
 /* Wochenende: sehr sanftes, warmes Grün */
@@ -8033,7 +8033,7 @@ a.day-meal{
 .week-grid .week-day.is-weekend,
 .day.weekend,
 .day.is-weekend{
-  background:linear-gradient(180deg,rgba(232,237,225,.58),rgba(247,246,241,.78)) !important;
+  background:linear-gradient(180deg,rgba(221,230,211,.72),rgba(241,244,236,.86)) !important;
 }
 
 /* Feiertag / schulfrei: etwas deutlicher grünlich, aber ruhig */
@@ -8047,7 +8047,7 @@ a.day-meal{
 .day.is-holiday,
 .day.school-holiday,
 .day.is-school-holiday{
-  background:linear-gradient(180deg,rgba(222,231,209,.72),rgba(242,244,235,.82)) !important;
+  background:linear-gradient(180deg,rgba(207,222,194,.82),rgba(235,241,228,.90)) !important;
 }
 
 /* Schulfrei-/Ferien-Badge passend oliv */
@@ -8055,8 +8055,8 @@ a.day-meal{
 .holiday-badge,
 .schoolfree-badge,
 .ferien-badge{
-  background:#edf1e3 !important;
-  border-color:#d5ddc4 !important;
-  color:#71805f !important;
+  background:#e7eedc !important;
+  border-color:#c9d7b7 !important;
+  color:#657653 !important;
 }
 
