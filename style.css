@@ -8250,3 +8250,32 @@ button.day-meal{cursor:pointer}
     touch-action:manipulation;
   }
 }
+
+
+/* ===== V29: Werkraum-Frau größer ===== */
+.workroom-calm-art{
+  transform:scale(1.33) !important;
+  transform-origin:center right !important;
+}
+
+/* Auf kleineren Displays etwas zurücknehmen, damit nichts überläuft. */
+@media (max-width:900px){
+  .workroom-calm-art{
+    transform:scale(1.18) !important;
+    transform-origin:center right !important;
+  }
+}
+
+
+/* ===== V29: keine Drag-Hand auf Tablet/Handy ===== */
+@media (hover:none), (pointer:coarse){
+  .workroom-todo-row,
+  .workroom-todo-row *,
+  .workroom-print-row,
+  .workroom-print-row *{
+    cursor:default !important;
+  }
+  .workroom-drag-handle{
+    display:none !important;
+  }
+}
