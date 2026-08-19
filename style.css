@@ -8230,3 +8230,20 @@ button.day-meal{cursor:pointer}
   .meal-plan-grid{grid-template-columns:1fr !important}
   .recipes-section #recipeForm .recipe-form-grid > *{grid-column:1 !important}
 }
+
+
+/* ===== V27: Werkraum – Touchgeräte benutzen bewusst die Pfeile ===== */
+@media (hover:none), (pointer:coarse){
+  .workroom-drag-handle{
+    display:none !important;
+  }
+  .workroom-todo-row{
+    cursor:default !important;
+  }
+  .workroom-move-btn{
+    min-width:34px !important;
+    min-height:34px !important;
+    padding:6px 8px !important;
+    touch-action:manipulation;
+  }
+}
