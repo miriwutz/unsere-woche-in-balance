@@ -113,6 +113,113 @@ function shoppingCollection() {
 }
 
 
+
+const DEVICE_ID_KEY = "balanceProd.deviceId";
+const DEVICE_NAME_KEY = "balanceProd.deviceName";
+
+function getDeviceId() {
+  let id = localStorage.getItem(DEVICE_ID_KEY);
+  if (!id) {
+    id = crypto.randomUUID ? crypto.randomUUID() : `dev-${Date.now()}-${Math.random()}`;
+    localStorage.setItem(DEVICE_ID_KEY, id);
+  }
+  return id;
+}
+
+function inferDeviceName() {
+  const ua = navigator.userAgent || "";
+  if (/iPad|Tablet|SM-T|Android(?!.*Mobile)/i.test(ua)) return "Tablet";
+  if (/iPhone|Android.*Mobile|Mobile/i.test(ua)) return "Handy";
+  return "PC";
+}
+
+function getDeviceName() {
+  let name = localStorage.getItem(DEVICE_NAME_KEY);
+  if (!name) {
+    name = inferDeviceName();
+    localStorage.setItem(DEVICE_NAME_KEY, name);
+  }
+  return name;
+}
+
+function firestoreMillisValue(value) {
+  return value?.toMillis?.() ||
+    Number(value?.seconds || 0) * 1000 ||
+    Number(value || 0) ||
+    0;
+}
+
+function currentCloudVersion(data) {
+  return firestoreMillisValue(data?.updatedAt);
+}
+
+let lastDeviceAckAt = 0;
+async function acknowledgeCloudSnapshot(data) {
+  if (!firebase.auth().currentUser) return;
+  const now = Date.now();
+  if (now - lastDeviceAckAt < 3000) return;
+  lastDeviceAckAt = now;
+  try {
+    const ref = firebase.firestore().collection("families").doc("shared");
+    await ref.set({
+      deviceAcks: {
+        [getDeviceId()]: {
+          name: getDeviceName(),
+          seenAt: firebase.firestore.FieldValue.serverTimestamp(),
+          version: currentCloudVersion(data)
+        }
+      }
+    }, { merge: true });
+  } catch (err) {
+    console.warn("Gerätebestätigung konnte nicht gespeichert werden:", err);
+  }
+}
+
+function renderDeviceAcks(data) {
+  const el = ensureSyncStatusUI();
+  if (!el) return;
+  const ackWrap = el.querySelector(".sync-device-acks");
+  if (!ackWrap) return;
+
+  const acks = data?.deviceAcks && typeof data.deviceAcks === "object"
+    ? Object.values(data.deviceAcks)
+    : [];
+
+  const targetVersion = currentCloudVersion(data);
+  const now = Date.now();
+
+  const rows = acks
+    .map(x => {
+      const seen = firestoreMillisValue(x?.seenAt);
+      return {
+        name: x?.name || "Gerät",
+        seen,
+        version: Number(x?.version || 0)
+      };
+    })
+    .filter(x => x.seen && now - x.seen < 15 * 60 * 1000);
+
+  if (!rows.length) {
+    ackWrap.textContent = "";
+    return;
+  }
+
+  const grouped = new Map();
+  rows.forEach(x => {
+    const prev = grouped.get(x.name);
+    if (!prev || x.seen > prev.seen) grouped.set(x.name, x);
+  });
+
+  const labels = [...grouped.values()]
+    .sort((a,b) => a.name.localeCompare(b.name))
+    .map(x => {
+      const current = targetVersion && x.version >= targetVersion;
+      return `${x.name} ${current ? "✓" : "…"}`;
+    });
+
+  ackWrap.textContent = labels.length ? " · " + labels.join(" · ") : "";
+}
+
 function ensureSyncStatusUI() {
   let el = document.querySelector("#syncStatus");
   if (el) return el;
@@ -121,6 +228,7 @@ function ensureSyncStatusUI() {
   el.id = "syncStatus";
   el.className = "sync-status";
   el.setAttribute("aria-live", "polite");
+  el.innerHTML = `<span class="sync-main"></span><span class="sync-device-acks"></span>`;
 
   const preferredHost =
     document.querySelector(".top-actions") ||
@@ -156,6 +264,10 @@ function ensureSyncStatusUI() {
       .sync-status[data-state="waiting"]{color:#8a806f}
       .sync-status[data-state="offline"],
       .sync-status[data-state="error"]{color:#9a6e67}
+      .sync-device-acks{
+        font-weight:500;
+        opacity:.78;
+      }
       @media (max-width:700px){
         .sync-status{
           font-size:10px;
@@ -181,7 +293,9 @@ function updateSyncStatus(stateName) {
   };
   const [icon, text] = states[stateName] || states.waiting;
   el.dataset.state = stateName;
-  el.textContent = `${icon} ${text}`;
+  const main = el.querySelector(".sync-main");
+  if (main) main.textContent = `${icon} ${text}`;
+  else el.textContent = `${icon} ${text}`;
   el.title =
     stateName === "synced" ? "Änderungen wurden in der Cloud gespeichert." :
     stateName === "syncing" ? "Änderungen werden gerade gespeichert." :
@@ -5530,8 +5644,12 @@ function startCloudSync() {
       return;
     }
 
-    applyCloudData(snap.data());
+    const cloudData = snap.data();
+    applyCloudData(cloudData);
     cloudReady = true;
+    updateSyncStatus(navigator.onLine ? "synced" : "offline");
+    renderDeviceAcks(cloudData);
+    acknowledgeCloudSnapshot(cloudData);
 
     if (firstSnapshot) {
       firstSnapshot = false;
