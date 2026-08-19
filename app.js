@@ -5320,90 +5320,6 @@ store.value = "";
 
     renderShopping();
   });
-renderAll();
-// =============================
-// WERKRAUM – BEREICHE AUF/ZU
-// =============================
-
-document.addEventListener("click", e => {
-  const head = e.target.closest(".workroom-fold-head");
-  if (!head) return;
-
-  const card = head.closest(".workroom-fold-card");
-  if (!card) return;
-
-  document.querySelectorAll(".workroom-fold-card").forEach(otherCard => {
-    otherCard.classList.remove("open");
-  });
-
-  card.classList.add("open");
-});
-
-/* --- Multi-day event horizontal alignment --- */
-function alignMultiDayEventRows() {
-  const week = document.querySelector(".week-grid, #weekGrid, .weekGrid, .weekly-grid");
-  if (!week) return;
-
-  const cards = [...week.querySelectorAll(
-    ".event-card, .calendar-event, .appointment-card, .week-event, [data-event-id], [data-event-key]"
-  )].filter(el => el.offsetParent !== null);
-
-  cards.forEach(el => {
-    if (el.dataset.multiAlignAdded) {
-      el.style.transform = el.dataset.multiAlignBaseTransform || "";
-      delete el.dataset.multiAlignAdded;
-    }
-  });
-
-  const keyFor = el => {
-    const explicit = el.dataset.eventId || el.dataset.eventKey || el.dataset.seriesId || "";
-    if (explicit) return "id:" + explicit;
-    const clone = el.cloneNode(true);
-    clone.querySelectorAll(".new-badge,.badge,.person-label,.event-person").forEach(n => n.remove());
-    return "txt:" + clone.textContent.replace(/\bNEU\b/gi,"").replace(/\s+/g," ").trim().toLowerCase();
-  };
-
-  const groups = new Map();
-  cards.forEach(el => {
-    const key = keyFor(el);
-    if (!key || key === "txt:") return;
-    if (!groups.has(key)) groups.set(key, []);
-    groups.get(key).push(el);
-  });
-
-  groups.forEach(group => {
-    if (group.length < 2) return;
-    const tops = group.map(el => el.getBoundingClientRect().top);
-    const targetTop = Math.max(...tops);
-    group.forEach((el, i) => {
-      const dy = Math.round(targetTop - tops[i]);
-      if (dy > 0) {
-        el.dataset.multiAlignBaseTransform = el.style.transform || "";
-        el.dataset.multiAlignAdded = "1";
-        el.style.transform = `${el.style.transform || ""} translateY(${dy}px)`.trim();
-      }
-    });
-  });
-}
-
-function scheduleMultiDayAlignment() {
-  requestAnimationFrame(() => requestAnimationFrame(alignMultiDayEventRows));
-}
-window.addEventListener("load", scheduleMultiDayAlignment);
-window.addEventListener("resize", scheduleMultiDayAlignment);
-document.addEventListener("click", e => {
-  if (e.target.closest("button, input, select, .week-nav, .week-navigation")) {
-    setTimeout(scheduleMultiDayAlignment, 80);
-  }
-});
-
-
-document.querySelector("#emptyTrashBtn")?.addEventListener("click",()=>{
-  if(!(state.trash||[]).length)return;
-  if(!confirm("Papierkorb wirklich endgültig leeren?"))return;
-  state.trash=[];save();renderTrash();
-});
-
 // ===== EINKAUF – REZEPTKARTEN =====
 let activeRecipeDifficulty = "all";
 let activeRecipeCategory = "all";
@@ -6458,4 +6374,89 @@ document.querySelector("#saveRecipeBtn")?.addEventListener("click", () => {
 document.querySelector("#cancelRecipeEditBtn")?.addEventListener("click", () => {
   resetRecipeForm();
   document.querySelector("#recipeForm")?.classList.add("hidden");
+});
+
+
+renderAll();
+// =============================
+// WERKRAUM – BEREICHE AUF/ZU
+// =============================
+
+document.addEventListener("click", e => {
+  const head = e.target.closest(".workroom-fold-head");
+  if (!head) return;
+
+  const card = head.closest(".workroom-fold-card");
+  if (!card) return;
+
+  document.querySelectorAll(".workroom-fold-card").forEach(otherCard => {
+    otherCard.classList.remove("open");
+  });
+
+  card.classList.add("open");
+});
+
+/* --- Multi-day event horizontal alignment --- */
+function alignMultiDayEventRows() {
+  const week = document.querySelector(".week-grid, #weekGrid, .weekGrid, .weekly-grid");
+  if (!week) return;
+
+  const cards = [...week.querySelectorAll(
+    ".event-card, .calendar-event, .appointment-card, .week-event, [data-event-id], [data-event-key]"
+  )].filter(el => el.offsetParent !== null);
+
+  cards.forEach(el => {
+    if (el.dataset.multiAlignAdded) {
+      el.style.transform = el.dataset.multiAlignBaseTransform || "";
+      delete el.dataset.multiAlignAdded;
+    }
+  });
+
+  const keyFor = el => {
+    const explicit = el.dataset.eventId || el.dataset.eventKey || el.dataset.seriesId || "";
+    if (explicit) return "id:" + explicit;
+    const clone = el.cloneNode(true);
+    clone.querySelectorAll(".new-badge,.badge,.person-label,.event-person").forEach(n => n.remove());
+    return "txt:" + clone.textContent.replace(/\bNEU\b/gi,"").replace(/\s+/g," ").trim().toLowerCase();
+  };
+
+  const groups = new Map();
+  cards.forEach(el => {
+    const key = keyFor(el);
+    if (!key || key === "txt:") return;
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(el);
+  });
+
+  groups.forEach(group => {
+    if (group.length < 2) return;
+    const tops = group.map(el => el.getBoundingClientRect().top);
+    const targetTop = Math.max(...tops);
+    group.forEach((el, i) => {
+      const dy = Math.round(targetTop - tops[i]);
+      if (dy > 0) {
+        el.dataset.multiAlignBaseTransform = el.style.transform || "";
+        el.dataset.multiAlignAdded = "1";
+        el.style.transform = `${el.style.transform || ""} translateY(${dy}px)`.trim();
+      }
+    });
+  });
+}
+
+function scheduleMultiDayAlignment() {
+  requestAnimationFrame(() => requestAnimationFrame(alignMultiDayEventRows));
+}
+window.addEventListener("load", scheduleMultiDayAlignment);
+window.addEventListener("resize", scheduleMultiDayAlignment);
+document.addEventListener("click", e => {
+  if (e.target.closest("button, input, select, .week-nav, .week-navigation")) {
+    setTimeout(scheduleMultiDayAlignment, 80);
+  }
+});
+
+
+document.querySelector("#emptyTrashBtn")?.addEventListener("click",()=>{
+  if(!(state.trash||[]).length)return;
+  if(!confirm("Papierkorb wirklich endgültig leeren?"))return;
+  state.trash=[];save();renderTrash();
 });
