@@ -7847,3 +7847,36 @@ a.day-meal{
   color: #747957 !important;
   font-weight: 600;
 }
+
+
+/* ===== V22: Feiertage heller + Wochenende dezent ===== */
+
+/* Feiertag: gleicher Charakter wie V21, aber deutlich heller. */
+.day.is-holiday{
+  background:linear-gradient(
+    180deg,
+    rgba(160,164,111,.115) 0%,
+    rgba(160,164,111,.065) 46%,
+    rgba(160,164,111,.045) 100%
+  ) !important;
+  border-color:rgba(132,139,88,.27) !important;
+}
+
+/* Samstag/Sonntag: nur ein Hauch derselben Olivfamilie. */
+.day.is-weekend:not(.is-holiday){
+  background:linear-gradient(
+    180deg,
+    rgba(160,164,111,.052) 0%,
+    rgba(160,164,111,.026) 100%
+  ) !important;
+}
+
+/* Feiertag gewinnt optisch immer über Wochenende. */
+.day.is-weekend.is-holiday{
+  background:linear-gradient(
+    180deg,
+    rgba(160,164,111,.115) 0%,
+    rgba(160,164,111,.065) 46%,
+    rgba(160,164,111,.045) 100%
+  ) !important;
+}
