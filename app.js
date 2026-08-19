@@ -7,7 +7,6 @@ const state = {
   shopping: JSON.parse(localStorage.getItem("balanceProd.shopping") || "[]"),
   recipes: JSON.parse(localStorage.getItem("balanceProd.recipes") || "[]"),
   meals: JSON.parse(localStorage.getItem("balanceProd.meals") || "{}"),
-  pinboard: JSON.parse(localStorage.getItem("balanceProd.pinboard") || "[]"),
   recipeLinkFeedback: JSON.parse(localStorage.getItem("balanceProd.recipeLinkFeedback") || "{}"),
   timeTracking: JSON.parse(localStorage.getItem("balanceProd.timeTracking") || '{"entries":[],"active":[],"stopped":{},"deletedEntries":{}}'),
   trash: JSON.parse(localStorage.getItem("balanceProd.trash") || "[]"),
@@ -37,10 +36,8 @@ state.timeTracking.deletedEntries =
   state.timeTracking.deletedEntries && typeof state.timeTracking.deletedEntries === "object"
     ? state.timeTracking.deletedEntries : {};
 
-
 state.recipes = Array.isArray(state.recipes) ? state.recipes : [];
 state.meals = state.meals && typeof state.meals === "object" ? state.meals : {};
-state.pinboard = Array.isArray(state.pinboard) ? state.pinboard : [];
 state.recipeLinkFeedback = state.recipeLinkFeedback && typeof state.recipeLinkFeedback === "object"
   ? state.recipeLinkFeedback : {};
 
@@ -57,7 +54,6 @@ function saveLocal() {
   localStorage.setItem("balanceProd.shopping", JSON.stringify(state.shopping));
   localStorage.setItem("balanceProd.recipes", JSON.stringify(state.recipes));
   localStorage.setItem("balanceProd.meals", JSON.stringify(state.meals));
-  localStorage.setItem("balanceProd.pinboard", JSON.stringify(state.pinboard));
   localStorage.setItem("balanceProd.recipeLinkFeedback", JSON.stringify(state.recipeLinkFeedback));
   localStorage.setItem("balanceProd.timeTracking", JSON.stringify(state.timeTracking));
   localStorage.setItem("balanceProd.trash", JSON.stringify(state.trash || []));
@@ -78,7 +74,6 @@ function cloudPayload() {
     shopping: state.shopping,
     recipes: state.recipes,
     meals: state.meals,
-    pinboard: state.pinboard,
     recipeLinkFeedback: state.recipeLinkFeedback,
     workroom: state.workroom,
     school: state.school,
@@ -115,357 +110,6 @@ function save() {
   scheduleCloudSave();
 }
 
-
-
-
-// =========================================================
-// PINNWAND – flüchtige Familiennachrichten
-// =========================================================
-const PINBOARD_DEVICE_KEY = "balanceProd.pinboardDeviceEnabled";
-
-function pinboardDeviceEnabled() {
-  return localStorage.getItem(PINBOARD_DEVICE_KEY) === "1";
-}
-
-function setPinboardDeviceEnabled(value) {
-  localStorage.setItem(PINBOARD_DEVICE_KEY, value ? "1" : "0");
-}
-
-function updatePinboardDeviceStatus() {
-  const btn = document.querySelector("#enablePinboardNotifications");
-  const status = document.querySelector("#pinboardDeviceStatus");
-  if (!btn || !status) return;
-
-  const enabled = pinboardDeviceEnabled();
-  const notificationSupported = "Notification" in window;
-  const permission = notificationSupported ? Notification.permission : "unsupported";
-
-  if (enabled && (permission === "granted" || permission === "unsupported")) {
-    btn.textContent = "Benachrichtigungen aktiv";
-    status.textContent = permission === "unsupported"
-      ? "🔊 Ton auf diesem Gerät aktiviert"
-      : "🔔 Ton & Benachrichtigung aktiviert";
-    status.dataset.state = "granted";
-    return;
-  }
-
-  if (permission === "denied") {
-    btn.textContent = "Ton aktivieren";
-    status.textContent = "🔊 Ton möglich · System-Benachrichtigungen blockiert";
-    status.dataset.state = "denied";
-    return;
-  }
-
-  btn.textContent = "Benachrichtigungen aktivieren";
-  status.textContent = "Noch nicht aktiviert";
-  status.dataset.state = "default";
-}
-
-async function enablePinboardOnThisDevice() {
-  try {
-    // Der Klick selbst entsperrt Audio auf iPhone/iPad/Android.
-    pinboardAudioContext =
-      pinboardAudioContext ||
-      new (window.AudioContext || window.webkitAudioContext)();
-
-    if (pinboardAudioContext.state === "suspended") {
-      await pinboardAudioContext.resume();
-    }
-
-    // Mini-stummer Impuls hält das AudioContext-Unlock auf mobilen Browsern stabiler.
-    const osc = pinboardAudioContext.createOscillator();
-    const gain = pinboardAudioContext.createGain();
-    gain.gain.value = 0.00001;
-    osc.connect(gain);
-    gain.connect(pinboardAudioContext.destination);
-    osc.start();
-    osc.stop(pinboardAudioContext.currentTime + 0.03);
-
-    if ("Notification" in window && Notification.permission === "default") {
-      try {
-        await Notification.requestPermission();
-      } catch (err) {
-        console.warn("Pinnwand Notification-Permission:", err);
-      }
-    }
-
-    setPinboardDeviceEnabled(true);
-    updatePinboardDeviceStatus();
-
-    // Sofort hörbarer Bestätigungston: wenn der kommt, ist das Gerät entsperrt.
-    await playPinboardSound(document.querySelector("#pinboardSound")?.value || "letter");
-    return true;
-  } catch (err) {
-    console.warn("Pinnwand konnte auf diesem Gerät nicht aktiviert werden:", err);
-    setPinboardDeviceEnabled(false);
-    updatePinboardDeviceStatus();
-    return false;
-  }
-}
-
-const PINBOARD_VOLUME_KEY = "balanceProd.pinboardVolume";
-
-function getPinboardVolumeSetting() {
-  return localStorage.getItem(PINBOARD_VOLUME_KEY) || "loud";
-}
-
-function setPinboardVolumeSetting(value) {
-  localStorage.setItem(PINBOARD_VOLUME_KEY, value || "loud");
-}
-
-function pinboardVolumeGain() {
-  return {
-    soft: 0.22,
-    normal: 0.48,
-    loud: 0.88,
-    max: 1.65
-  }[getPinboardVolumeSetting()] || 0.88;
-}
-
-const pinboardSeenIds = new Set();
-let pinboardCloudInitialized = false;
-let pinboardAudioContext = null;
-
-function pinboardRecipientName(key) {
-  if (key === "all") return "Alle";
-  return familyName(key) || "Familie";
-}
-
-function pinboardSoundLabel(sound) {
-  return {
-    letter: "💌 Briefchen",
-    sparkle: "✨ Funkeln",
-    bubble: "🫧 Blubb"
-  }[sound] || "💌 Briefchen";
-}
-
-async function playPinboardSound(sound = "letter") {
-  try {
-    pinboardAudioContext =
-      pinboardAudioContext ||
-      new (window.AudioContext || window.webkitAudioContext)();
-
-    if (pinboardAudioContext.state === "suspended") {
-      await pinboardAudioContext.resume();
-    }
-
-    const ctx = pinboardAudioContext;
-    if (!ctx || ctx.state !== "running") return false;
-
-    const now = ctx.currentTime;
-    const master = ctx.createGain();
-    const compressor = ctx.createDynamicsCompressor();
-    compressor.threshold.setValueAtTime(-18, now);
-    compressor.knee.setValueAtTime(12, now);
-    compressor.ratio.setValueAtTime(6, now);
-    compressor.attack.setValueAtTime(0.003, now);
-    compressor.release.setValueAtTime(0.18, now);
-    master.connect(compressor);
-    compressor.connect(ctx.destination);
-
-    const volumeGain = pinboardVolumeGain();
-    const isSuperLoud = getPinboardVolumeSetting() === "max";
-    master.gain.setValueAtTime(0.0001, now);
-    master.gain.exponentialRampToValueAtTime(volumeGain, now + 0.01);
-
-    function note(freq, start, duration, type = "sine", gainValue = 0.7, endFreq = null) {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.type = type;
-      osc.frequency.setValueAtTime(freq, now + start);
-      if (endFreq) {
-        osc.frequency.exponentialRampToValueAtTime(Math.max(30, endFreq), now + start + duration);
-      }
-      gain.gain.setValueAtTime(0.0001, now + start);
-      gain.gain.exponentialRampToValueAtTime(gainValue, now + start + 0.01);
-      gain.gain.exponentialRampToValueAtTime(0.0001, now + start + duration);
-      osc.connect(gain);
-      gain.connect(master);
-      osc.start(now + start);
-      osc.stop(now + start + duration + 0.03);
-    }
-
-    function pattern(offset = 0) {
-      if (sound === "sparkle") {
-        note(1180, offset + 0.00, 0.18, "triangle", 0.98);
-        note(1540, offset + 0.10, 0.22, "triangle", 0.92);
-        note(1980, offset + 0.22, 0.30, "sine", 0.88);
-      } else if (sound === "bubble") {
-        note(330, offset + 0.00, 0.20, "triangle", 1.0, 180);
-        note(520, offset + 0.15, 0.18, "triangle", 0.86, 260);
-        note(760, offset + 0.27, 0.13, "sine", 0.62, 430);
-      } else {
-        note(820, offset + 0.00, 0.18, "square", 0.78);
-        note(1180, offset + 0.16, 0.26, "triangle", 1.0);
-        note(1640, offset + 0.28, 0.20, "sine", 0.62);
-      }
-    }
-
-    pattern(0);
-
-    // Super laut wiederholt den kurzen Hinweis einmal.
-    // Das ist auf kleinen Handy-/Tablet-Lautsprechern deutlich besser wahrnehmbar
-    // als nur den Pegel immer weiter zu übersteuern.
-    if (isSuperLoud) {
-      pattern(0.52);
-      master.gain.exponentialRampToValueAtTime(0.0001, now + 1.10);
-    } else {
-      master.gain.exponentialRampToValueAtTime(0.0001, now + 0.62);
-    }
-
-    return true;
-  } catch (err) {
-    console.warn("Pinnwand-Ton konnte nicht abgespielt werden:", err);
-    return false;
-  }
-}
-
-function renderPinboard() {
-  const list = document.querySelector("#pinboardList");
-  const badge = document.querySelector("#pinboardBadge");
-  const countText = document.querySelector("#pinboardCountText");
-  if (!list) return;
-
-  state.pinboard = Array.isArray(state.pinboard) ? state.pinboard : [];
-  const messages = state.pinboard
-    .slice()
-    .sort((a,b) => Number(b.createdAt || 0) - Number(a.createdAt || 0));
-
-  if (badge) {
-    badge.textContent = String(messages.length);
-    badge.classList.toggle("hidden", messages.length === 0);
-  }
-
-  if (countText) {
-    countText.textContent =
-      messages.length === 0 ? "Keine Nachrichten" :
-      messages.length === 1 ? "1 Nachricht" :
-      `${messages.length} Nachrichten`;
-  }
-
-  if (!messages.length) {
-    list.innerHTML = `<div class="pinboard-empty">Die Pinnwand ist gerade leer.</div>`;
-    return;
-  }
-
-  list.innerHTML = messages.map(message => `
-    <article class="pinboard-note" data-id="${message.id}">
-      <div class="pinboard-note-top">
-        <span class="pinboard-note-recipient">💌 ${escapeHtml(pinboardRecipientName(message.recipient))}</span>
-        <span class="pinboard-note-sound">${escapeHtml(pinboardSoundLabel(message.sound))}</span>
-        <button type="button" class="pinboard-note-x" data-id="${message.id}" title="Nachricht löschen">×</button>
-      </div>
-      <div class="pinboard-note-text">${escapeHtml(message.text || "")}</div>
-      <button type="button" class="pinboard-read-delete" data-id="${message.id}">
-        ✓ Gelesen & löschen
-      </button>
-    </article>
-  `).join("");
-
-  list.querySelectorAll(".pinboard-read-delete, .pinboard-note-x").forEach(btn => {
-    btn.addEventListener("click", () => {
-      state.pinboard = state.pinboard.filter(message => message.id !== btn.dataset.id);
-      save();
-      renderPinboard();
-    });
-  });
-}
-
-function handleIncomingPinboard(cloudMessages) {
-  const incoming = Array.isArray(cloudMessages) ? cloudMessages : [];
-
-  if (!pinboardCloudInitialized) {
-    incoming.forEach(message => message?.id && pinboardSeenIds.add(message.id));
-    pinboardCloudInitialized = true;
-    return;
-  }
-
-  const fresh = incoming.filter(message =>
-    message?.id && !pinboardSeenIds.has(message.id)
-  );
-
-  incoming.forEach(message => message?.id && pinboardSeenIds.add(message.id));
-
-  if (fresh.length) {
-    const newest = fresh
-      .slice()
-      .sort((a,b) => Number(b.createdAt || 0) - Number(a.createdAt || 0))[0];
-
-    if (pinboardDeviceEnabled()) {
-      setTimeout(() => {
-        playPinboardSound(newest?.sound || "letter");
-      }, 80);
-    }
-  }
-}
-
-function openPinboard() {
-  renderPinboard();
-  const volume = document.querySelector("#pinboardVolume");
-  if (volume) volume.value = getPinboardVolumeSetting();
-  updatePinboardDeviceStatus();
-  document.querySelector("#pinboardDialog")?.showModal();
-}
-
-document.querySelector("#enablePinboardNotifications")?.addEventListener("click", async () => {
-  await enablePinboardOnThisDevice();
-});
-
-document.querySelector("#pinboardVolume")?.addEventListener("change", e => {
-  setPinboardVolumeSetting(e.currentTarget.value || "loud");
-});
-
-document.querySelector("#testPinboardSoundBtn")?.addEventListener("click", async () => {
-  if (!pinboardDeviceEnabled()) {
-    await enablePinboardOnThisDevice();
-    return;
-  }
-  const sound = document.querySelector("#pinboardSound")?.value || "letter";
-  await playPinboardSound(sound);
-});
-
-document.querySelector("#openPinboardBtn")?.addEventListener("click", openPinboard);
-document.querySelector("#closePinboardBtn")?.addEventListener("click", () => {
-  document.querySelector("#pinboardDialog")?.close();
-});
-
-document.querySelector("#pinboardDialog")?.addEventListener("click", e => {
-  if (e.target === e.currentTarget) e.currentTarget.close();
-});
-
-document.querySelector("#sendPinboardBtn")?.addEventListener("click", async () => {
-  const volumeValue = document.querySelector("#pinboardVolume")?.value || getPinboardVolumeSetting();
-  setPinboardVolumeSetting(volumeValue);
-
-  const recipient = document.querySelector("#pinboardRecipient")?.value || "all";
-  const textInput = document.querySelector("#pinboardMessage");
-  const sound = document.querySelector("#pinboardSound")?.value || "letter";
-  const text = textInput?.value.trim() || "";
-
-  if (!text) {
-    textInput?.focus();
-    return;
-  }
-
-  const message = {
-    id: uid(),
-    recipient,
-    text,
-    sound,
-    createdAt: Date.now()
-  };
-
-  state.pinboard.push(message);
-
-  // Der Sender bekommt nicht gleich seinen eigenen Cloud-Echo-Ton.
-  pinboardSeenIds.add(message.id);
-
-  save();
-  renderPinboard();
-
-  if (textInput) textInput.value = "";
-  showMotivation("💌 Nachricht an die Pinnwand geheftet.");
-});
 
 function mergeByIdPreferNewer(localList = [], cloudList = []) {
   const map = new Map();
@@ -918,6 +562,8 @@ if (state.school.children["2"].name === "Kind 2") state.school.children["2"].nam
 let currentWeekMonday = getMonday(new Date());
 let detectedVideoTitle = "";
 let replanArchiveId = null;
+let replanMode = "exercise";
+let replanRecipeLink = null;
 
 function currentWeekKey() {
   return dateKey(currentWeekMonday);
@@ -1317,6 +963,41 @@ const eventHtml = (events.length || multiDayEventLanes.length) ? `
       </div>
     ` : "";
 
+    // Essen bewusst ganz unten im Tag, direkt vor dem Übungsbereich.
+    const mealStored = normalizeMealEntry(state.meals?.[dateKey(date)]);
+    const mealLabel = mealStored?.label || "";
+    const mealUrl = mealStored?.url || "";
+
+    const mealRecipe = mealStored?.recipeId
+      ? state.recipes.find(r => r.id === mealStored.recipeId)
+      : recipeByTitle(mealLabel);
+
+    const mealHtml = mealLabel ? (
+      mealRecipe ? `
+        <button type="button"
+                class="day-meal has-recipe"
+                data-recipe-id="${mealRecipe.id}">
+          <span class="day-meal-label">ESSEN</span>
+          <strong>${escapeHtml(mealLabel)}</strong>
+          <span class="day-meal-open">Rezept ↗</span>
+        </button>
+      ` : mealUrl ? `
+        <a class="day-meal has-link"
+           href="${escapeHtml(mealUrl)}"
+           target="_blank"
+           rel="noopener">
+          <span class="day-meal-label">ESSEN</span>
+          <strong>${escapeHtml(mealLabel)}</strong>
+          <span class="day-meal-open">Öffnen ↗</span>
+        </a>
+      ` : `
+        <div class="day-meal">
+          <span class="day-meal-label">ESSEN</span>
+          <strong>${escapeHtml(mealLabel)}</strong>
+        </div>
+      `
+    ) : "";
+
     dayEl.innerHTML = `
       <h3>${day}<span class="day-date">${dateLabel}</span></h3>
       ${(() => {
@@ -1337,6 +1018,7 @@ const eventHtml = (events.length || multiDayEventLanes.length) ? `
       })()}
       ${eventHtml}
       ${schoolHtml}${todoHtml}
+      ${mealHtml}
       ${videoHtml
         ? `<div class="day-bottom-slot">
              <details class="day-video-details">
@@ -1347,6 +1029,13 @@ const eventHtml = (events.length || multiDayEventLanes.length) ? `
         : ""}
     `;
     grid.appendChild(dayEl);
+  });
+
+  document.querySelectorAll(".day-meal.has-recipe").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const recipe = state.recipes.find(r => r.id === btn.dataset.recipeId);
+      if (recipe) showRecipeDetail(recipe);
+    });
   });
 
   document.querySelectorAll(".video-check").forEach(el => el.addEventListener("change", e => {
@@ -3434,6 +3123,171 @@ function renderTrash(){
   const empty=document.querySelector("#emptyTrashBtn"); if(empty)empty.disabled=!rows.length;
 }
 
+function collectInternetRecipeLinks() {
+  const map = new Map();
+
+  (state.recipes || []).forEach(recipe => {
+    const urls = [recipe.webUrl, recipe.youtubeUrl].filter(Boolean);
+    urls.forEach(url => {
+      const key = String(url).trim();
+      if (!key) return;
+
+      const candidate = {
+        url:key,
+        label:recipe.title || "Rezept",
+        source:"Rezeptkarte",
+        recipeId:recipe.id || "",
+        sourceUpdatedAt:Number(recipe.updatedAt || recipe.createdAt || 0)
+      };
+
+      const previous = map.get(key);
+      if (!previous || candidate.sourceUpdatedAt >= Number(previous.sourceUpdatedAt || 0)) {
+        map.set(key, candidate);
+      }
+    });
+  });
+
+  Object.values(state.meals || {}).forEach(meal => {
+    if (!meal || typeof meal !== "object" || !meal.url) return;
+    const key = String(meal.url).trim();
+    if (!key) return;
+
+    const candidate = {
+      url:key,
+      label:meal.label || "Rezeptlink",
+      source:"Essensplan",
+      recipeId:meal.recipeId || "",
+      sourceUpdatedAt:Number(meal.updatedAt || 0)
+    };
+
+    const previous = map.get(key);
+    if (!previous || candidate.sourceUpdatedAt >= Number(previous.sourceUpdatedAt || 0)) {
+      map.set(key, candidate);
+    }
+  });
+
+  return [...map.values()]
+    .filter(item => {
+      const feedback = state.recipeLinkFeedback?.[item.url] || {};
+      const hiddenAt = Number(feedback.hiddenAt || 0);
+
+      // × räumt den aktuellen Fund nur aus der Übersicht.
+      // Wird der Link später im Essensplan/Rezept neu gespeichert,
+      // ist sourceUpdatedAt neuer und er darf wieder erscheinen.
+      return !hiddenAt || Number(item.sourceUpdatedAt || 0) > hiddenAt;
+    })
+    .sort((a,b) => String(a.label).localeCompare(String(b.label), "de"));
+}
+
+function recipeFeedbackLabel(value) {
+  return {
+    love: "💛 Sehr gern wieder",
+    okay: "🙂 Passt gut",
+    no: "🌿 Eher nicht nochmal"
+  }[value] || "Noch offen";
+}
+
+function renderRecipeLinkTracker() {
+  const host = document.querySelector("#recipeLinkTrackerList");
+  if (!host) return;
+
+  const links = collectInternetRecipeLinks();
+
+  if (!links.length) {
+    host.innerHTML = `<div class="overview-empty">Noch keine Internetrezepte hinterlegt. Sobald eine Rezeptkarte oder ein Essensplan-Eintrag einen Web-/YouTube-Link hat, erscheint er hier zum Bewerten.</div>`;
+    return;
+  }
+
+  host.innerHTML = links.map(link => {
+    const feedback = state.recipeLinkFeedback[link.url] || {};
+    return `
+      <article class="recipe-link-track-row">
+        <div class="recipe-link-track-main">
+          <a href="${escapeHtml(link.url)}" target="_blank" rel="noopener">${escapeHtml(link.label)}</a>
+          <span>${escapeHtml(link.source)}</span>
+        </div>
+
+        <div class="recipe-link-times">
+          <button type="button" class="recipe-link-used" data-url="${escapeHtml(link.url)}">
+            ✓ gekocht ${feedback.timesUsed ? `(${feedback.timesUsed}×)` : ""}
+          </button>
+          <button type="button"
+                  class="recipe-link-reuse"
+                  data-url="${escapeHtml(link.url)}"
+                  data-label="${escapeHtml(link.label)}"
+                  data-recipe-id="${escapeHtml(link.recipeId || "")}">
+            ↻ Wiederverwenden
+          </button>
+        </div>
+
+        <div class="recipe-link-rating">
+          <button type="button" class="recipe-link-rate ${feedback.rating === "love" ? "active" : ""}" data-url="${escapeHtml(link.url)}" data-rating="love">💛 Sehr gern wieder</button>
+          <button type="button" class="recipe-link-rate ${feedback.rating === "okay" ? "active" : ""}" data-url="${escapeHtml(link.url)}" data-rating="okay">🙂 Passt gut</button>
+          <button type="button" class="recipe-link-rate ${feedback.rating === "no" ? "active" : ""}" data-url="${escapeHtml(link.url)}" data-rating="no">🌿 Eher nicht</button>
+          <button type="button" class="recipe-link-remove" data-url="${escapeHtml(link.url)}" title="Aus Übersicht entfernen">×</button>
+        </div>
+      </article>
+    `;
+  }).join("");
+
+  host.querySelectorAll(".recipe-link-used").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const url = btn.dataset.url;
+      const current = state.recipeLinkFeedback[url] || {};
+      state.recipeLinkFeedback[url] = {
+        ...current,
+        timesUsed: Number(current.timesUsed || 0) + 1,
+        lastUsed: Date.now(),
+        updatedAt: Date.now()
+      };
+      save();
+      renderRecipeLinkTracker();
+    });
+  });
+
+  host.querySelectorAll(".recipe-link-rate").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const url = btn.dataset.url;
+      const current = state.recipeLinkFeedback[url] || {};
+      state.recipeLinkFeedback[url] = {
+        ...current,
+        rating: btn.dataset.rating,
+        updatedAt: Date.now()
+      };
+      save();
+      renderRecipeLinkTracker();
+    });
+  });
+
+  host.querySelectorAll(".recipe-link-remove").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const url = btn.dataset.url;
+      const current = state.recipeLinkFeedback[url] || {};
+      const now = Date.now();
+
+      state.recipeLinkFeedback[url] = {
+        ...current,
+        hidden:false,
+        hiddenAt:now,
+        updatedAt:now
+      };
+
+      save();
+      renderRecipeLinkTracker();
+    });
+  });
+
+  host.querySelectorAll(".recipe-link-reuse").forEach(btn => {
+    btn.addEventListener("click", () => {
+      openRecipeReuseDialog({
+        url:btn.dataset.url || "",
+        label:btn.dataset.label || "Rezept",
+        recipeId:btn.dataset.recipeId || ""
+      });
+    });
+  });
+}
+
 function renderAll() {
   pruneTrash();
   renderTrash();
@@ -3445,14 +3299,14 @@ function renderAll() {
   renderTodos();
   renderArchive();
   renderTimeTracking();
+  renderRecipeLinkTracker();
   renderSchool();
   renderSchoolWorkTodos();
   renderSchoolPrints();
   renderWorkroomLinks();
-  renderShopping();
   renderRecipes();
   renderMealPlan();
-  renderPinboard();
+  renderShopping();
 }
 
 async function updateVideoPreview() {
@@ -4697,6 +4551,34 @@ document.querySelectorAll(".archive-filter").forEach(btn => btn.addEventListener
 }));
 
 
+function openRecipeReuseDialog(link) {
+  if (!link?.url) return;
+
+  replanMode = "recipe";
+  replanArchiveId = null;
+  replanRecipeLink = {
+    url:link.url,
+    label:link.label || "Rezept",
+    recipeId:link.recipeId || ""
+  };
+
+  const dialog = document.querySelector("#replanDialog");
+  if (!dialog) return;
+
+  const smallLabel = dialog.querySelector(".small-label");
+  if (smallLabel) smallLabel.textContent = "REZEPT EINPLANEN";
+
+  const title = document.querySelector("#replanTitle");
+  if (title) title.textContent = replanRecipeLink.label;
+
+  const week = document.querySelector("#replanWeek");
+  const day = document.querySelector("#replanDay");
+  if (week) week.value = "0";
+  if (day) day.value = "Montag";
+
+  dialog.showModal();
+}
+
 const replanDialog = document.querySelector("#replanDialog");
 const closeReplanDialogBtn = document.querySelector("#closeReplanDialogBtn");
 const cancelReplanBtn = document.querySelector("#cancelReplanBtn");
@@ -4704,6 +4586,12 @@ const confirmReplanBtn = document.querySelector("#confirmReplanBtn");
 
 function closeReplanDialog() {
   replanArchiveId = null;
+  replanRecipeLink = null;
+  replanMode = "exercise";
+
+  const smallLabel = replanDialog?.querySelector(".small-label");
+  if (smallLabel) smallLabel.textContent = "ÜBUNG EINPLANEN";
+
   if (replanDialog && replanDialog.open) replanDialog.close();
 }
 
@@ -4717,16 +4605,53 @@ if (replanDialog) {
 }
 
 if (confirmReplanBtn) confirmReplanBtn.addEventListener("click", () => {
+  const weeksAhead = Number(document.querySelector("#replanWeek")?.value || 0);
+  const day = document.querySelector("#replanDay")?.value || "Montag";
+  const monday = getMonday(new Date());
+  monday.setDate(monday.getDate() + weeksAhead * 7);
+
+  if (replanMode === "recipe") {
+    const link = replanRecipeLink;
+    if (!link?.url) {
+      closeReplanDialog();
+      return;
+    }
+
+    const dayIndex = days.indexOf(day);
+    const targetDate = dayDate(monday, dayIndex >= 0 ? dayIndex : 0);
+    const key = dateKey(targetDate);
+
+    state.meals = state.meals && typeof state.meals === "object" ? state.meals : {};
+    state.meals[key] = {
+      label:link.label || "Rezept",
+      recipeId:link.recipeId || "",
+      url:link.url,
+      deleted:false,
+      updatedAt:Date.now()
+    };
+
+    const feedback = state.recipeLinkFeedback[link.url] || {};
+    state.recipeLinkFeedback[link.url] = {
+      ...feedback,
+      hidden:false,
+      hiddenAt:0,
+      updatedAt:Date.now()
+    };
+
+    save();
+    currentWeekMonday = monday;
+    closeReplanDialog();
+    renderAll();
+    document.querySelector('[data-view="week"]')?.click();
+    showMotivation("Rezept eingeplant ✓");
+    return;
+  }
+
   const item = state.archive.find(a => a.id === replanArchiveId);
   if (!item) {
     closeReplanDialog();
     return;
   }
-
-  const weeksAhead = Number(document.querySelector("#replanWeek").value || 0);
-  const day = document.querySelector("#replanDay").value;
-  const monday = getMonday(new Date());
-  monday.setDate(monday.getDate() + weeksAhead * 7);
 
   state.videos.push({
     id:uid(),
@@ -4902,19 +4827,17 @@ function applyCloudData(data) {
   : (Array.isArray(state.shopping) ? state.shopping : []);
 
 shoppingItems = state.shopping;
-    
 
     const localRecipes = Array.isArray(state.recipes) ? state.recipes : [];
     const cloudRecipes = Array.isArray(data.recipes) ? data.recipes : [];
-    state.recipes = mergeByIdPreferNewer(localRecipes, cloudRecipes);
+
+    // Sicherheitsregel: ein leerer/alter Cloud-Stand darf lokale Rezepte nicht löschen.
+    state.recipes = cloudRecipes.length
+      ? mergeByIdPreferNewer(localRecipes, cloudRecipes)
+      : localRecipes;
 
     if (data.meals && typeof data.meals === "object") {
       state.meals = mergeMeals(state.meals, data.meals);
-    }
-
-    if (Array.isArray(data.pinboard)) {
-      handleIncomingPinboard(data.pinboard);
-      state.pinboard = mergeByIdPreferNewer(state.pinboard, data.pinboard);
     }
 
     if (data.recipeLinkFeedback && typeof data.recipeLinkFeedback === "object") {
@@ -5487,6 +5410,7 @@ let activeRecipeCategory = "all";
 let recipeCategoryTouched = false;
 let recipeKidsOnly = false;
 let recipeHealthyOnly = false;
+let recipeFavoriteOnly = false;
 let activeRecipeSearch = "";
 let mealPlanWeekOffset = 0;
 let recipePage = 0;
@@ -5494,7 +5418,7 @@ const RECIPE_PAGE_SIZE = 10;
 let editingRecipeId = null;
 
 function resetRecipeForm() {
-  ["#recipeTitle","#recipeTime","#recipeIngredients","#recipeSteps","#recipeWebUrl","#recipeYoutubeUrl"]
+  ["#recipeTitle","#recipeTime","#recipeIngredients","#recipeSteps","#recipeWebUrl","#recipeYoutubeUrl","#recipeBakeTime","#recipeTemperature"]
     .forEach(sel => {
       const el = document.querySelector(sel);
       if (el) el.value = "";
@@ -5515,6 +5439,10 @@ function resetRecipeForm() {
 
   const healthy = document.querySelector("#recipeHealthy");
   if (healthy) healthy.checked = false;
+
+  const favorite = document.querySelector("#recipeFavorite");
+  if (favorite) favorite.checked = false;
+  syncRecipeFavoriteToggleVisual();
 
   editingRecipeId = null;
 
@@ -5537,7 +5465,11 @@ function startRecipeEdit(recipe) {
   document.querySelector("#recipeDifficulty").value = recipe.difficulty || "medium";
   document.querySelector("#recipeKids").checked = !!recipe.kids;
   document.querySelector("#recipeHealthy").checked = !!recipe.healthy;
+  document.querySelector("#recipeFavorite").checked = !!recipe.favorite;
+  syncRecipeFavoriteToggleVisual();
   document.querySelector("#recipeTime").value = recipe.time || "";
+  document.querySelector("#recipeBakeTime").value = recipe.bakeTime || "";
+  document.querySelector("#recipeTemperature").value = recipe.temperature || "";
   document.querySelector("#recipeIngredients").value = normalizedRecipeLines(recipe.ingredients).join("\n");
   document.querySelector("#recipeSteps").value = normalizedRecipeLines(recipe.steps).join("\n");
   document.querySelector("#recipeWebUrl").value = recipe.webUrl || "";
@@ -5776,6 +5708,12 @@ function showRecipeDetail(recipeOrTitle) {
       <div class="recipe-detail-time">
         <span class="recipe-detail-clock">◔</span>
         <span>${escapeHtml(recipe.time || "–")}</span>
+        ${(recipe.bakeTime || recipe.temperature) ? `
+          <small class="recipe-bake-meta">
+            ${recipe.bakeTime ? `♨ ${escapeHtml(recipe.bakeTime)}` : ""}
+            ${recipe.temperature ? ` · ${escapeHtml(recipe.temperature)}` : ""}
+          </small>
+        ` : ""}
       </div>
       <div class="recipe-detail-center">
         <span class="recipe-detail-ribbon">REZEPT</span>
@@ -5879,12 +5817,13 @@ function renderRecipes() {
         activeRecipeDifficulty === "all" || r.difficulty === activeRecipeDifficulty;
       const matchesKids = !recipeKidsOnly || !!r.kids;
       const matchesHealthy = !recipeHealthyOnly || !!r.healthy;
+      const matchesFavorite = !recipeFavoriteOnly || !!r.favorite;
       const haystack = [
         r.title,
         ...(Array.isArray(r.ingredients) ? r.ingredients : [])
       ].join(" ").toLowerCase();
       const matchesSearch = !query || haystack.includes(query);
-      return matchesCategory && matchesDifficulty && matchesKids && matchesHealthy && matchesSearch;
+      return matchesCategory && matchesDifficulty && matchesKids && matchesHealthy && matchesFavorite && matchesSearch;
     })
     .sort((a,b) => (b.createdAt || 0) - (a.createdAt || 0));
 
@@ -5908,7 +5847,16 @@ function renderRecipes() {
   host.innerHTML = visibleRecipes.map(r => `
     <article class="recipe-card ${recipeCategoryClass(r.category || "main")} ${r.kids ? "recipe-card-kids" : ""}" id="recipe-${r.id}">
       <header class="recipe-card-head">
-        <div class="recipe-time-mark"><span class="recipe-clock">◔</span><span>${escapeHtml(r.time || "–")}</span></div>
+        <div class="recipe-time-mark">
+          <span class="recipe-clock">◔</span>
+          <span>${escapeHtml(r.time || "–")}</span>
+          ${(r.bakeTime || r.temperature) ? `
+            <small class="recipe-bake-meta">
+              ${r.bakeTime ? `♨ ${escapeHtml(r.bakeTime)}` : ""}
+              ${r.temperature ? ` · ${escapeHtml(r.temperature)}` : ""}
+            </small>
+          ` : ""}
+        </div>
         <div class="recipe-title-wrap">
           <span class="recipe-ribbon">REZEPT</span>
           <button type="button" class="recipe-title-button" data-recipe-id="${r.id}">
@@ -5919,6 +5867,7 @@ function renderRecipes() {
             <span>${escapeHtml(recipeDifficultyLabel(r.difficulty))}</span>
             ${r.kids ? `<span class="recipe-kids-badge">🧒 Das kannst du selbst kochen!</span>` : ""}
             ${r.healthy ? `<span class="recipe-healthy-badge">🌿 Gesund & bunt</span>` : ""}
+            ${r.favorite ? `<span class="recipe-favorite-badge">★ Lieblingsrezept</span>` : ""}
           </div>
         </div>
         <div class="recipe-tools">${escapeHtml(recipeCardMark(r))}</div>
@@ -6098,6 +6047,7 @@ function normalizeMealEntry(entry) {
     label,
     recipeId: String(entry.recipeId || ""),
     url,
+    deleted: entry.deleted === true,
     updatedAt: Number(entry.updatedAt) || 0
   };
 }
@@ -6142,12 +6092,13 @@ function renderMealPlan() {
 
   const isUrl = value => /^https?:\/\//i.test(String(value || "").trim());
 
-  host.innerHTML = WEEK_DAYS.map((dayName, index) => {
+  host.innerHTML = days.map((dayName, index) => {
     const date = new Date(monday);
     date.setDate(monday.getDate() + index);
     const key = dateKey(date);
 
-    const stored = normalizeMealEntry ? normalizeMealEntry(state.meals?.[key]) : state.meals?.[key];
+    const storedRaw = normalizeMealEntry ? normalizeMealEntry(state.meals?.[key]) : state.meals?.[key];
+    const stored = storedRaw?.deleted === true ? null : storedRaw;
     const value = typeof stored === "string" ? stored : (stored?.label || "");
     const customUrl = typeof stored === "object" ? (stored?.url || "") : "";
     const recipeId = typeof stored === "object" ? (stored?.recipeId || "") : "";
@@ -6223,12 +6174,23 @@ function renderMealPlan() {
     state.meals = state.meals && typeof state.meals === "object" ? state.meals : {};
 
     if (!label && !url) {
-      delete state.meals[key];
+      // Wichtig für mehrere Geräte:
+      // Nicht einfach den Schlüssel entfernen. Sonst kann ein anderes Gerät
+      // mit dem alten Eintrag ("Pommes") ihn beim nächsten Merge zurückbringen.
+      // Stattdessen speichern wir eine Löschmarke mit Zeitstempel.
+      state.meals[key] = {
+        label: "",
+        recipeId: "",
+        url: "",
+        deleted: true,
+        updatedAt: Date.now()
+      };
     } else {
       state.meals[key] = {
         label: matched ? matched.title : label,
         recipeId: matched ? matched.id : "",
         url,
+        deleted: false,
         updatedAt: Date.now()
       };
     }
@@ -6412,6 +6374,12 @@ document.querySelector("#recipeHealthyOnlyFilter")?.addEventListener("change", e
   renderRecipes();
 });
 
+document.querySelector("#recipeFavoriteOnlyFilter")?.addEventListener("change", e => {
+  recipeFavoriteOnly = !!e.currentTarget.checked;
+  recipePage = 0;
+  renderRecipes();
+});
+
 document.querySelector("#mealPlanThisWeekBtn")?.addEventListener("click", () => {
   mealPlanWeekOffset = 0;
   renderMealPlan();
@@ -6421,6 +6389,19 @@ document.querySelector("#mealPlanNextWeekBtn")?.addEventListener("click", () => 
   mealPlanWeekOffset = 1;
   renderMealPlan();
 });
+function syncRecipeFavoriteToggleVisual() {
+  const label = document.querySelector(".recipe-favorite-toggle");
+  const input = document.querySelector("#recipeFavorite");
+  if (!label || !input) return;
+  label.classList.toggle("is-favorite", !!input.checked);
+
+  const text = label.querySelector("span");
+  if (text) text.textContent = input.checked ? "★ Favorit" : "☆ Favorit";
+}
+
+document.querySelector("#recipeFavorite")?.addEventListener("change", syncRecipeFavoriteToggleVisual);
+syncRecipeFavoriteToggleVisual();
+
 document.querySelector("#saveRecipeBtn")?.addEventListener("click", () => {
   const title = document.querySelector("#recipeTitle")?.value.trim() || "";
   if (!title) return showMotivation("Bitte zuerst einen Rezeptnamen eintragen.");
@@ -6432,7 +6413,10 @@ document.querySelector("#saveRecipeBtn")?.addEventListener("click", () => {
     difficulty: document.querySelector("#recipeDifficulty")?.value || "medium",
     kids: !!document.querySelector("#recipeKids")?.checked,
     healthy: !!document.querySelector("#recipeHealthy")?.checked,
+    favorite: !!document.querySelector("#recipeFavorite")?.checked,
     time: document.querySelector("#recipeTime")?.value.trim() || "",
+    bakeTime: document.querySelector("#recipeBakeTime")?.value.trim() || "",
+    temperature: document.querySelector("#recipeTemperature")?.value.trim() || "",
     ingredients: recipeLines(document.querySelector("#recipeIngredients")?.value),
     steps: recipeLines(document.querySelector("#recipeSteps")?.value),
     webUrl: document.querySelector("#recipeWebUrl")?.value.trim() || "",
