@@ -2808,16 +2808,16 @@ a.day-meal{
 
 /* Nachfragen-To-dos sollen sofort ins Auge fallen, aber ruhig bleiben */
 .workroom-todo-row.workroom-todo-ask{
-  border-color:#d9b8df !important;
-  background:linear-gradient(90deg,#fbf4fc,#fffdfb) !important;
-  box-shadow:inset 4px 0 0 #c99bd3;
+  border-color:#e9b99f !important;
+  background:linear-gradient(90deg,#fff0e7,#fffaf6) !important;
+  box-shadow:inset 4px 0 0 #e5a782;
 }
 .workroom-todo-row.workroom-todo-ask .workroom-todo-text{
   font-weight:650;
 }
 .workroom-todo-row.workroom-todo-ask .workroom-todo-type{
-  background:#f1e2f4;
-  color:#725779;
+  background:#f8ddcd;
+  color:#7b5847;
   border-radius:999px;
   padding:4px 8px;
   font-weight:650;
