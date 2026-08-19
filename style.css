@@ -8232,7 +8232,9 @@ button.day-meal{cursor:pointer}
 }
 
 
-/* ===== V27: Werkraum – Touchgeräte benutzen bewusst die Pfeile ===== */
+/* ===== V28: Werkraum auf Touchgeräten =====
+   PC: Drag & Drop bleibt.
+   Handy/Tablet: keine irreführende Verschiebehand, Pfeile bleiben. */
 @media (hover:none), (pointer:coarse){
   .workroom-drag-handle{
     display:none !important;
@@ -8240,7 +8242,8 @@ button.day-meal{cursor:pointer}
   .workroom-todo-row{
     cursor:default !important;
   }
-  .workroom-move-btn{
+  .workroom-move-btn,
+  .workroom-print-move-btn{
     min-width:34px !important;
     min-height:34px !important;
     padding:6px 8px !important;
