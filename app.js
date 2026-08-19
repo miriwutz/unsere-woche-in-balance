@@ -1438,9 +1438,16 @@ const eventHtml = (events.length || multiDayEventLanes.length) ? `
 
     const wasDone = isOccurrenceDone(item, occDate);
     setOccurrenceDone(item, occDate, e.target.checked);
-if (!item.recurrence || item.recurrence === "none") {
-  item.completedAt = e.target.checked ? Date.now() : null;
-}
+
+    // Wichtig für Geräte-Sync: Jede Änderung am Erledigt-Status bekommt
+    // einen neuen Versionszeitpunkt. Sonst hält guardedMergeById() auf
+    // dem zweiten Gerät dessen alten lokalen Zustand für gleich aktuell.
+    const now = Date.now();
+    item.updatedAt = now;
+
+    if (!item.recurrence || item.recurrence === "none") {
+      item.completedAt = e.target.checked ? now : null;
+    }
     save();
     renderAll();
 
