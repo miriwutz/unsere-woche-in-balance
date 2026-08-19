@@ -8279,3 +8279,97 @@ button.day-meal{cursor:pointer}
     display:none !important;
   }
 }
+
+
+/* =========================================================
+   V30 – Werkraum: Frau korrekt größer + Wichtig-Markierung
+   ========================================================= */
+
+/* Die vorige Skalierung hatte translateY überschrieben und die Frau nach unten geschoben.
+   Jetzt bleibt sie mittig und ist tatsächlich rund ein Drittel größer. */
+.workroom-calm-header{
+  min-height:214px !important;
+  grid-template-columns:minmax(0,1fr) 275px !important;
+}
+.workroom-calm-art{
+  width:245px !important;
+  height:190px !important;
+  right:18px !important;
+  top:50% !important;
+  transform:translateY(-50%) scale(1.12) !important;
+  transform-origin:center center !important;
+}
+@media(max-width:900px){
+  .workroom-calm-header{
+    min-height:176px !important;
+    grid-template-columns:minmax(0,1fr) 185px !important;
+  }
+  .workroom-calm-art{
+    width:170px !important;
+    height:145px !important;
+    right:8px !important;
+    transform:translateY(-50%) scale(1.08) !important;
+  }
+}
+
+/* Wichtig ist deutlich sichtbar, aber bleibt im ruhigen Stil. */
+.workroom-important-btn{
+  flex:0 0 auto;
+  display:inline-flex;
+  align-items:center;
+  gap:4px;
+  min-height:27px;
+  padding:4px 8px;
+  border:1px solid rgba(175,139,74,.24);
+  border-radius:999px;
+  background:rgba(249,244,232,.72);
+  color:#8b754d;
+  font-size:.68rem;
+  font-weight:600;
+  line-height:1;
+  cursor:pointer;
+}
+.workroom-important-btn:hover{
+  border-color:rgba(171,132,62,.48);
+  background:#f6ecd5;
+}
+.workroom-important-btn.active{
+  border-color:#b88d42;
+  background:#f4e3bc;
+  color:#765a2e;
+  box-shadow:0 0 0 2px rgba(184,141,66,.10);
+}
+.workroom-todo-row.workroom-todo-important{
+  border:2px solid #c59a52 !important;
+  background:linear-gradient(90deg,rgba(251,244,226,.92),rgba(255,253,249,.88)) !important;
+  box-shadow:0 3px 11px rgba(150,111,49,.08) !important;
+}
+.workroom-todo-row.workroom-todo-important .workroom-todo-text{
+  font-weight:600;
+  color:#584a36;
+}
+
+/* Auf PC ist die Hand der einzige Drag-Bereich und klar als solcher erkennbar. */
+@media (hover:hover) and (pointer:fine){
+  .workroom-drag-handle{
+    display:inline-flex !important;
+    align-items:center;
+    justify-content:center;
+    min-width:25px;
+    min-height:28px;
+    opacity:.62 !important;
+    cursor:grab !important;
+    touch-action:none;
+  }
+  .workroom-drag-handle:hover{
+    opacity:1 !important;
+    background:rgba(201,193,215,.16);
+    border-radius:7px;
+  }
+  .workroom-drag-handle:active{cursor:grabbing !important}
+}
+
+/* Tablet/Handy: weiterhin keine irreführende Hand – Pfeile übernehmen. */
+@media (hover:none), (pointer:coarse){
+  .workroom-drag-handle{display:none !important}
+}
