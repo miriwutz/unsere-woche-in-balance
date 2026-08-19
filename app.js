@@ -6135,6 +6135,8 @@ function mergeMeals(localMeals, cloudMeals) {
   return merged;
 }
 
+const WEEK_DAYS = ["Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag","Sonntag"];
+
 function renderMealPlan() {
   const host = document.querySelector("#mealPlanGrid");
   if (!host) return;
