@@ -161,11 +161,13 @@ function currentCloudVersion(data) {
 }
 
 let lastDeviceAckAt = 0;
-async function acknowledgeCloudSnapshot(data) {
+async function acknowledgeCloudSnapshot(data, snapshotMeta = null) {
   if (!firebase.auth().currentUser) return;
-  const now = Date.now();
-  if (now - lastDeviceAckAt < 3000) return;
-  lastDeviceAckAt = now;
+  if (snapshotMeta?.hasPendingWrites) return;
+
+  const token = String(data?.syncToken || "");
+  if (!token) return;
+
   try {
     const ref = firebase.firestore().collection("families").doc("shared");
     await ref.set({
@@ -173,7 +175,7 @@ async function acknowledgeCloudSnapshot(data) {
         [getDeviceId()]: {
           name: getDeviceName(),
           seenAt: firebase.firestore.FieldValue.serverTimestamp(),
-          version: currentCloudVersion(data)
+          token
         }
       }
     }, { merge: true });
@@ -188,39 +190,34 @@ function renderDeviceAcks(data) {
   const ackWrap = el.querySelector(".sync-device-acks");
   if (!ackWrap) return;
 
+  const token = String(data?.syncToken || "");
   const ackMap = data?.deviceAcks && typeof data.deviceAcks === "object"
     ? data.deviceAcks
     : {};
 
-  const targetVersion = currentCloudVersion(data);
   const now = Date.now();
   const selfId = getDeviceId();
   const selfName = getDeviceName();
 
-  const rows = Object.entries(ackMap)
-    .map(([id, x]) => {
-      const seen = firestoreMillisValue(x?.seenAt);
-      return {
-        id,
-        name: x?.name || "Gerät",
-        seen,
-        version: Number(x?.version || 0)
-      };
-    })
+  const activeOthers = Object.entries(ackMap)
+    .map(([id, x]) => ({
+      id,
+      name: x?.name || "Gerät",
+      seen: firestoreMillisValue(x?.seenAt),
+      token: String(x?.token || "")
+    }))
     .filter(x => x.id !== selfId && x.seen && now - x.seen < 15 * 60 * 1000);
 
-  if (!rows.length) {
+  if (!activeOthers.length) {
     ackWrap.textContent = "";
     return;
   }
 
-  const labels = rows
-    .sort((a,b) => b.seen - a.seen)
+  const labels = activeOthers
+    .sort((x,y) => y.seen - x.seen)
     .map(x => {
-      // Falls Browser/UA beide Geräte gleich benennt, bleibt die Aussage trotzdem eindeutig.
       const label = x.name === selfName ? "anderes Gerät" : x.name;
-      const current = targetVersion && x.version >= targetVersion;
-      return `${label} ${current ? "✓" : "…"}`;
+      return `${label} ${token && x.token === token ? "✓" : "…"}`;
     });
 
   ackWrap.textContent = labels.length ? " · " + labels.join(" · ") : "";
@@ -330,6 +327,8 @@ function scheduleCloudSave() {
   cloudSaveTimer = setTimeout(async () => {
     try {
       const payload = cloudPayload();
+      const syncToken = `${Date.now()}-${getDeviceId()}-${Math.random().toString(36).slice(2,8)}`;
+      payload.syncToken = syncToken;
       payload.updatedAt = firebase.firestore.FieldValue.serverTimestamp();
       await firebase.firestore().collection("families").doc("shared").set(payload, { merge: true });
       updateSyncStatus("synced");
@@ -340,7 +339,82 @@ function scheduleCloudSave() {
   }, 300);
 }
 
+
+// ===== Robuster To-do-Geräte-Sync =====
+let todoSyncFingerprints = new Map();
+
+function todoSyncFingerprint(item) {
+  if (!item || typeof item !== "object") return "";
+  const copy = {...item};
+  delete copy.updatedAt;
+  delete copy.syncRev;
+  return JSON.stringify(copy);
+}
+
+function refreshTodoSyncFingerprints() {
+  todoSyncFingerprints = new Map(
+    (state.todos || [])
+      .filter(item => item?.id)
+      .map(item => [item.id, todoSyncFingerprint(item)])
+  );
+}
+
+function touchChangedTodosBeforeSave() {
+  const now = Date.now();
+
+  (state.todos || []).forEach(item => {
+    if (!item?.id) return;
+    const fingerprint = todoSyncFingerprint(item);
+    const previous = todoSyncFingerprints.get(item.id);
+
+    if (previous === undefined || previous !== fingerprint) {
+      item.syncRev = Math.max(0, Number(item.syncRev || 0)) + 1;
+      item.updatedAt = now;
+    }
+  });
+
+  refreshTodoSyncFingerprints();
+}
+
+function mergeTodosByRevision(localValue, cloudValue) {
+  const local = Array.isArray(localValue) ? localValue : [];
+  const remote = Array.isArray(cloudValue) ? cloudValue : [];
+  const map = new Map();
+
+  local.forEach(item => {
+    if (item?.id) map.set(item.id, item);
+  });
+
+  remote.forEach(remoteItem => {
+    if (!remoteItem?.id) return;
+    const localItem = map.get(remoteItem.id);
+
+    if (!localItem) {
+      map.set(remoteItem.id, remoteItem);
+      return;
+    }
+
+    const localRev = Number(localItem.syncRev || 0);
+    const remoteRev = Number(remoteItem.syncRev || 0);
+
+    if (remoteRev > localRev) {
+      map.set(remoteItem.id, remoteItem);
+      return;
+    }
+    if (localRev > remoteRev) return;
+
+    const localTs = itemTimestamp(localItem);
+    const remoteTs = itemTimestamp(remoteItem);
+    if (remoteTs > localTs) map.set(remoteItem.id, remoteItem);
+  });
+
+  return [...map.values()];
+}
+
+refreshTodoSyncFingerprints();
+
 function save() {
+  touchChangedTodosBeforeSave();
   saveLocal();
   scheduleCloudSave();
 }
@@ -5544,7 +5618,7 @@ function applyCloudData(data) {
 
     state.videos = guardedMergeById(state.videos, data.videos, "Videos");
 
-    state.todos = guardedMergeById(state.todos, data.todos, "To-dos & Termine")
+    state.todos = mergeTodosByRevision(state.todos, data.todos)
       .filter(item => !isTodoTombstoned(item?.id));
 
     state.trash = guardedMergeById(state.trash, data.trash, "Papierkorb");
@@ -5582,6 +5656,7 @@ function applyCloudData(data) {
       ...(state.settings || {})
     };
 
+    refreshTodoSyncFingerprints();
     saveLocal();
     renderAll();
   } finally {
@@ -5661,7 +5736,7 @@ function startCloudSync() {
     cloudReady = true;
     updateSyncStatus(navigator.onLine ? "synced" : "offline");
     renderDeviceAcks(cloudData);
-    acknowledgeCloudSnapshot(cloudData);
+    acknowledgeCloudSnapshot(cloudData, snap.metadata);
 
     if (firstSnapshot) {
       firstSnapshot = false;
@@ -8303,7 +8378,7 @@ function applyCloudData(data) {
 
     state.videos = guardedMergeById(state.videos, data.videos, "Videos");
 
-    state.todos = guardedMergeById(state.todos, data.todos, "To-dos & Termine")
+    state.todos = mergeTodosByRevision(state.todos, data.todos)
       .filter(item => !isTodoTombstoned(item?.id));
 
     state.trash = guardedMergeById(state.trash, data.trash, "Papierkorb");
@@ -8341,6 +8416,7 @@ function applyCloudData(data) {
       ...(state.settings || {})
     };
 
+    refreshTodoSyncFingerprints();
     saveLocal();
     renderAll();
   } finally {
