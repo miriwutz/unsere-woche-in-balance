@@ -1491,6 +1491,14 @@ function sharedGroupGradient(items = []) {
   document.head.appendChild(style);
 })();
 
+
+function weekHolidayLabel(date) {
+  const holiday = typeof austrianPublicHoliday === "function" ? austrianPublicHoliday(date) : "";
+  return holiday || "";
+}
+
+const expandedWeekTodoDays = new Set();
+
 function renderWeek() {
   weekLabel();
   const grid = document.querySelector("#weekGrid");
@@ -1557,10 +1565,20 @@ function renderWeek() {
       </div>
     `).join("");
 
+    const todoLimit = 4;
+    const todoDayKey = dateKey(date);
+    const sortedTodos = [...todos].sort((a,b) =>
+      Number(!!b.superImportant) - Number(!!a.superImportant) ||
+      Number(a.createdAt || 0) - Number(b.createdAt || 0)
+    );
+    const todoExpanded = expandedWeekTodoDays.has(todoDayKey);
+    const visibleTodos = todoExpanded ? sortedTodos : sortedTodos.slice(0, todoLimit);
+    const hiddenTodoCount = Math.max(0, sortedTodos.length - todoLimit);
+
     const todoHtml = todos.length ? `
       <div class="day-todos">
         <div class="day-todos-title">To-dos</div>
-        ${groupTodosByPerson(todos).map(([groupKey, groupItems]) => `
+        ${groupTodosByPerson(visibleTodos).map(([groupKey, groupItems]) => `
           <div class="person-todo-group grouped-family-block ${groupAccentClass(groupKey)}"
                style="${groupKey === "shared"
                  ? `--group-border:${sharedGroupGradient(groupItems)}`
@@ -1583,6 +1601,10 @@ function renderWeek() {
             `).join("")}
           </div>
         `).join("")}
+        ${hiddenTodoCount > 0 ? `
+          <button type="button" class="week-more-todos" data-date="${todoDayKey}">
+            ${todoExpanded ? "Weniger anzeigen" : `+ ${hiddenTodoCount} weitere`}
+          </button>` : ""}
       </div>
     ` : "";
 
@@ -1635,9 +1657,10 @@ const singleDayEvents = events
   .filter(t => !multiDayIds.has(t.id))
   .sort((a,b) => (a.time || "").localeCompare(b.time || ""));
 
+const hasVisibleEventToday = events.length > 0;
 const eventHtml = (events.length || multiDayEventLanes.length) ? `
-  <div class="day-events">
-    <div class="day-todos-title">Termine</div>
+  <div class="day-events ${hasVisibleEventToday ? "" : "day-events-placeholder-only"}">
+    ${hasVisibleEventToday ? `<div class="day-todos-title">Termine</div>` : ""}
     <div class="multiday-event-lanes">
       ${multiDayEventLanes.map(t => occursOnDate(t, date)
         ? `<div class="multiday-event-lane">${renderEventCard(t)}</div>`
@@ -1678,6 +1701,10 @@ const eventHtml = (events.length || multiDayEventLanes.length) ? `
 
     dayEl.innerHTML = `
       <h3>${day}<span class="day-date">${dateLabel}</span></h3>
+      ${(() => {
+        const holiday = weekHolidayLabel(date);
+        return holiday ? `<div class="week-holiday-label">✦ ${escapeHtml(holiday)}</div>` : "";
+      })()}
       ${(() => {
         const schoolFree = noeSchoolFreeLabel(date);
         if (schoolFree) {
@@ -1771,6 +1798,14 @@ const eventHtml = (events.length || multiDayEventLanes.length) ? `
     save();
     renderAll();
     showMotivation("Auf heute verschoben ✓");
+  }));
+
+  document.querySelectorAll(".week-more-todos").forEach(btn => btn.addEventListener("click", e => {
+    const key = e.currentTarget.dataset.date;
+    if (!key) return;
+    if (expandedWeekTodoDays.has(key)) expandedWeekTodoDays.delete(key);
+    else expandedWeekTodoDays.add(key);
+    renderWeek();
   }));
 
   document.querySelectorAll(".school-week-check").forEach(el => el.addEventListener("change", e => {
@@ -1873,7 +1908,7 @@ function bindFamilySettings(){
 function isNewEntry(item) {
   if (!item.createdAt) return false;
 
-  const threeDays = 3 * 24 * 60 * 60 * 1000;
+  const threeDays = 24 * 60 * 60 * 1000;
   return Date.now() - item.createdAt < threeDays;
 }
 const expandedTodoGroups = new Set();
@@ -3930,7 +3965,7 @@ document.querySelector("#addManualTimeBtn")?.addEventListener("click", addManual
 
 document.querySelector("#printWeekBtn")?.addEventListener("click",()=>window.print());
 
-const TRASH_KEEP_MS = 3 * 24 * 60 * 60 * 1000;
+const TRASH_KEEP_MS = 24 * 60 * 60 * 1000;
 let undoTimer = null, lastUndoAction = null;
 
 function pruneTrash(){
