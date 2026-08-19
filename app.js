@@ -1711,7 +1711,8 @@ const eventHtml = (events.length || multiDayEventLanes.length) ? `
       });
     });
 
-    const mealStored = normalizeMealEntry ? normalizeMealEntry(state.meals?.[dateKey(date)]) : state.meals?.[dateKey(date)];
+    const mealRawStored = normalizeMealEntry ? normalizeMealEntry(state.meals?.[dateKey(date)]) : state.meals?.[dateKey(date)];
+    const mealStored = mealRawStored?.deleted ? null : mealRawStored;
     const mealLabel = typeof mealStored === "string" ? mealStored : (mealStored?.label || "");
     const mealRecipeId = typeof mealStored === "object" ? (mealStored?.recipeId || "") : "";
     const mealUrl = typeof mealStored === "object" ? (mealStored?.url || "") : "";
@@ -4403,7 +4404,9 @@ document.querySelectorAll(".workroom-todo-edit").forEach(btn => {
 // Schul-To-dos per Maus oder Touch sortieren
 const todoList = document.querySelector("#schoolWorkTodoList");
 
-if (todoList && typeof Sortable !== "undefined") {
+const workroomPointerCanDrag = window.matchMedia?.("(hover: hover) and (pointer: fine)")?.matches ?? true;
+
+if (todoList && typeof Sortable !== "undefined" && workroomPointerCanDrag) {
   new Sortable(todoList, {
     animation: 180,
     handle: ".workroom-drag-handle",
@@ -4725,7 +4728,7 @@ const prints = [...state.workroom.prints]
     });
   });
 
-  if (typeof Sortable !== "undefined") {
+  if (typeof Sortable !== "undefined" && workroomPointerCanDrag) {
     const printList = document.querySelector("#schoolPrintList");
 
     if (printList) {
@@ -7056,6 +7059,7 @@ function normalizeMealEntry(entry) {
     label,
     recipeId: String(entry.recipeId || ""),
     url,
+    deleted: !!entry.deleted,
     updatedAt: Number(entry.updatedAt) || 0
   };
 }
@@ -7074,7 +7078,8 @@ function mergeMeals(localMeals, cloudMeals) {
     if (!l) { merged[key] = c; return; }
     if (!c) { merged[key] = l; return; }
 
-    // Neue Einträge tragen updatedAt. Dann gewinnt immer die neuere Fassung.
+    // Neue Einträge und Löschungen tragen updatedAt.
+    // Damit kann ein älteres Gerät einen gelöschten Essensplan-Eintrag nicht wieder zurückholen.
     if (l.updatedAt || c.updatedAt) {
       merged[key] = l.updatedAt >= c.updatedAt ? l : c;
       return;
@@ -7105,7 +7110,8 @@ function renderMealPlan() {
     date.setDate(monday.getDate() + index);
     const key = dateKey(date);
 
-    const stored = normalizeMealEntry ? normalizeMealEntry(state.meals?.[key]) : state.meals?.[key];
+    const rawStored = normalizeMealEntry ? normalizeMealEntry(state.meals?.[key]) : state.meals?.[key];
+    const stored = rawStored?.deleted ? null : rawStored;
     const value = typeof stored === "string" ? stored : (stored?.label || "");
     const customUrl = typeof stored === "object" ? (stored?.url || "") : "";
     const recipeId = typeof stored === "object" ? (stored?.recipeId || "") : "";
@@ -7181,12 +7187,19 @@ function renderMealPlan() {
     state.meals = state.meals && typeof state.meals === "object" ? state.meals : {};
 
     if (!label && !url) {
-      delete state.meals[key];
+      state.meals[key] = {
+        label: "",
+        recipeId: "",
+        url: "",
+        deleted: true,
+        updatedAt: Date.now()
+      };
     } else {
       state.meals[key] = {
         label: matched ? matched.title : label,
         recipeId: matched ? matched.id : "",
         url,
+        deleted: false,
         updatedAt: Date.now()
       };
     }
