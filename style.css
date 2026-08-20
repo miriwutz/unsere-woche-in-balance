@@ -14283,3 +14283,49 @@ body.child-view-active #papaOverviewModal{
     grid-column:1 !important;
   }
 }
+
+
+/* =========================================================
+   V15 – Kinderrezept: Salzstreuer + engere Zutatenabstände
+   ========================================================= */
+
+/* Zutatenzeilen deutlich kompakter, ohne gequetscht zu wirken. */
+.recipe-card.recipe-child-mode li.recipe-child-checkable,
+#recipeDetailBody.recipe-detail-child-mode li.recipe-child-checkable{
+  margin-top:0 !important;
+  margin-bottom:0 !important;
+  padding-top:4px !important;
+  padding-bottom:4px !important;
+  min-height:34px !important;
+  line-height:1.12 !important;
+}
+
+/* Auch die eigentliche Maßzeile enger zusammenhalten. */
+.recipe-card.recipe-child-mode .recipe-child-measure-row,
+#recipeDetailBody.recipe-detail-child-mode .recipe-child-measure-row{
+  min-height:30px !important;
+  gap:7px !important;
+  line-height:1.08 !important;
+}
+
+.recipe-card.recipe-child-mode .recipe-child-measures,
+#recipeDetailBody.recipe-detail-child-mode .recipe-child-measures{
+  gap:5px !important;
+}
+
+.recipe-card.recipe-child-mode .recipe-child-measure-part,
+#recipeDetailBody.recipe-detail-child-mode .recipe-child-measure-part{
+  gap:4px !important;
+}
+
+/* Symbole etwas kompakter und optisch tiefer zur Schrift ausrichten. */
+.recipe-card.recipe-child-mode .recipe-child-measure-part .recipe-measure-svg-wrap,
+#recipeDetailBody.recipe-detail-child-mode .recipe-child-measure-part .recipe-measure-svg-wrap{
+  transform:translateY(2px) !important;
+}
+
+/* Abstand zwischen Überschrift ZUTATEN und erster Zeile etwas reduzieren. */
+.recipe-card.recipe-child-mode .recipe-body h4,
+#recipeDetailBody.recipe-detail-child-mode h4{
+  margin-bottom:8px !important;
+}
