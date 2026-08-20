@@ -10642,3 +10642,130 @@ button.day-meal{cursor:pointer}
     padding-right:140px !important;
   }
 }
+
+
+/* =========================================================
+   V49 – Wochenplan-Rezeptpopup spiegelt die Rezeptkarte
+   ========================================================= */
+
+.recipe-detail-dialog{
+  width:min(980px,calc(100% - 26px)) !important;
+}
+
+.recipe-detail-card{
+  max-height:min(88vh,920px) !important;
+  padding:0 !important;
+  overflow:auto !important;
+}
+
+/* Der Kartenkopf enthält bereits Titel, Drucken, Schließen usw. */
+.recipe-detail-card > .dialog-head{
+  display:none !important;
+}
+
+#recipeDetailBody{
+  padding:0 !important;
+}
+
+#recipeDetailBody .recipe-detail-mirror-card{
+  margin:0 !important;
+  border-radius:18px !important;
+  overflow:hidden !important;
+  box-shadow:none !important;
+}
+
+/* Dieselbe Kinderansicht wie in "Unsere Rezeptkarten",
+   im Popup aber deutlich kompakter. */
+#recipeDetailBody .recipe-detail-mirror-card.recipe-child-mode .recipe-card-head{
+  min-height:155px !important;
+  padding-left:235px !important;
+  padding-right:155px !important;
+}
+
+#recipeDetailBody .recipe-detail-mirror-card.recipe-child-mode > .recipe-child-illustration{
+  left:12px !important;
+  top:5px !important;
+  width:210px !important;
+  height:145px !important;
+}
+
+#recipeDetailBody .recipe-detail-mirror-card.recipe-child-mode > .recipe-child-illustration img{
+  width:210px !important;
+  height:145px !important;
+}
+
+#recipeDetailBody .recipe-detail-mirror-card .recipe-card-body{
+  gap:10px !important;
+  padding:10px !important;
+}
+
+#recipeDetailBody .recipe-detail-mirror-card .recipe-column{
+  margin:0 !important;
+  padding:11px 12px !important;
+}
+
+#recipeDetailBody .recipe-detail-mirror-card.recipe-child-mode li.recipe-child-checkable{
+  padding:3px 7px !important;
+  margin:1px 0 !important;
+}
+
+#recipeDetailBody .recipe-detail-mirror-card.recipe-child-mode .recipe-prep-line.recipe-child-checkable{
+  padding:5px 8px !important;
+  margin:2px 0 !important;
+}
+
+#recipeDetailBody .recipe-detail-mirror-card.recipe-child-mode .recipe-child-measure-row{
+  min-height:30px !important;
+}
+
+#recipeDetailBody .recipe-detail-mirror-card.recipe-child-mode .recipe-card-body,
+#recipeDetailBody .recipe-detail-mirror-card.recipe-child-mode .recipe-card-body *{
+  font-size:.97rem !important;
+  line-height:1.35 !important;
+}
+
+/* Obere Bedienleiste wie auf der großen Kinderkarte. */
+#recipeDetailBody .recipe-detail-mirror-card.recipe-child-mode .recipe-card-top-controls{
+  display:flex !important;
+  right:9px !important;
+  left:auto !important;
+  top:8px !important;
+}
+
+/* Im Erwachsenenmodus keine obere Duplikatleiste außer im Popup:
+   hier brauchen wir sie für Schließen/Bearbeiten. */
+#recipeDetailBody .recipe-detail-mirror-card:not(.recipe-child-mode) .recipe-card-top-controls{
+  display:flex !important;
+}
+
+/* Keine zusätzliche Fußleiste im Popup. */
+#recipeDetailBody .recipe-card-footer{
+  display:none !important;
+}
+
+@media(max-width:700px){
+  .recipe-detail-dialog{
+    width:calc(100% - 12px) !important;
+  }
+
+  #recipeDetailBody .recipe-detail-mirror-card.recipe-child-mode .recipe-card-head{
+    min-height:120px !important;
+    padding-left:125px !important;
+    padding-right:100px !important;
+  }
+
+  #recipeDetailBody .recipe-detail-mirror-card.recipe-child-mode > .recipe-child-illustration{
+    width:112px !important;
+    height:105px !important;
+    left:5px !important;
+  }
+
+  #recipeDetailBody .recipe-detail-mirror-card.recipe-child-mode > .recipe-child-illustration img{
+    width:112px !important;
+    height:105px !important;
+  }
+
+  #recipeDetailBody .recipe-detail-mirror-card .recipe-card-body{
+    grid-template-columns:1fr !important;
+  }
+}
