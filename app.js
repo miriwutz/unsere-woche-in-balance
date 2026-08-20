@@ -2797,6 +2797,17 @@ function showManualTimetable(id){
 
   title.textContent=`${c.name||id} – Stundenplan`;
 
+  let subtitle = d.querySelector(".tt-person-subtitle");
+  if (!subtitle) {
+    subtitle = document.createElement("div");
+    subtitle.className = "tt-person-subtitle";
+    title.insertAdjacentElement("afterend", subtitle);
+  }
+  subtitle.textContent =
+    id === "1" ? "Hier siehst du Lou's Woche im Überblick." :
+    id === "2" ? "Hier siehst du Fina's Woche im Überblick." :
+    "Hier ist Mamas Woche auf einen Blick.";
+
   /* V51: In der linken Personenleiste nur die aktuell gewählte Person markieren. */
   d.querySelectorAll(".timetable-switch").forEach(btn => {
     const active = btn.dataset.person === String(id);
