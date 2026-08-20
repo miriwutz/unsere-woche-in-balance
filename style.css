@@ -9447,3 +9447,118 @@ button.day-meal{cursor:pointer}
   border-radius:12px;
   padding:7px;
 }
+
+/* =========================================================
+   V38 – Kinderrezept: klare Schul-/Legasthenie-freundliche Schrift
+   ========================================================= */
+.recipe-card.recipe-child-mode .recipe-card-body,
+.recipe-card.recipe-child-mode .recipe-card-body *,
+#recipeDetailBody.recipe-detail-child-mode,
+#recipeDetailBody.recipe-detail-child-mode *{
+  font-family:"Comic Sans MS","Segoe Print","Trebuchet MS",Arial,sans-serif !important;
+  font-style:normal !important;
+  letter-spacing:.025em !important;
+  word-spacing:.08em !important;
+}
+.recipe-card.recipe-child-mode .recipe-card-body li,
+.recipe-card.recipe-child-mode .recipe-prep-line,
+#recipeDetailBody.recipe-detail-child-mode .recipe-cook-line{
+  font-size:1.12rem !important;
+  line-height:1.7 !important;
+}
+
+/* kompakte Kindermenge: 1 [Symbol] + 1 [Symbol] Mehl */
+.recipe-child-measure-row{
+  display:flex !important;
+  align-items:center !important;
+  gap:10px !important;
+  flex-wrap:wrap;
+}
+.recipe-child-measures{
+  display:inline-flex;
+  align-items:center;
+  gap:7px;
+}
+.recipe-child-measure-part{
+  display:inline-flex;
+  align-items:center;
+  gap:5px;
+}
+.recipe-child-amount{font-size:1.08em}
+.recipe-child-plus{font-weight:800;color:#6d736f}
+.recipe-child-measure-ingredient{
+  font-weight:600;
+  text-transform:none;
+}
+
+/* Mappingeditor: mehrere Maße in EINER Zuordnung */
+.beaker-map-row{
+  display:grid !important;
+  grid-template-columns:minmax(220px,1.15fr) auto minmax(380px,1fr) auto !important;
+  align-items:center !important;
+  gap:10px !important;
+}
+.beaker-map-source{display:grid;gap:3px}
+.beaker-map-source small{font-size:.72rem;color:#8a817a}
+.beaker-measures{
+  display:flex;
+  align-items:center;
+  gap:7px;
+  flex-wrap:wrap;
+}
+.beaker-measure-editor{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  padding:5px;
+  border:1px solid #ddd3cb;
+  border-radius:11px;
+  background:#fff;
+}
+.beaker-measure-editor .beaker-map-amount{width:68px !important}
+.beaker-measure-editor .beaker-map-unit{width:120px !important}
+.beaker-measure-editor .beaker-map-color{width:92px !important}
+.beaker-editor-plus{font-weight:800;color:#81776f}
+.beaker-add-measure{
+  border:1px dashed #b9aaa0;
+  background:#fffdf9;
+  border-radius:999px;
+  padding:7px 10px;
+  cursor:pointer;
+}
+.beaker-measure-remove{
+  border:0;background:transparent;cursor:pointer;font-size:1rem;color:#a08f84
+}
+
+/* EL wirklich groß, TL wirklich klein */
+.recipe-measure-icon.measure-tbsp{
+  width:43px !important;height:25px !important;min-width:43px !important;
+}
+.recipe-measure-icon.measure-tbsp::before{
+  width:19px !important;height:13px !important;left:1px !important;top:5px !important;
+  border-width:2px !important;
+}
+.recipe-measure-icon.measure-tbsp::after{
+  left:19px !important;top:11px !important;width:24px !important;height:4px !important;
+}
+.recipe-measure-icon.measure-tsp{
+  width:29px !important;height:18px !important;min-width:29px !important;
+}
+.recipe-measure-icon.measure-tsp::before{
+  width:10px !important;height:7px !important;left:1px !important;top:5px !important;
+  border-width:1.5px !important;
+}
+.recipe-measure-icon.measure-tsp::after{
+  left:10px !important;top:8px !important;width:17px !important;height:2px !important;
+}
+
+/* Legende: mehr Luft, damit EL/TL sichtbar bleiben */
+.recipe-measure-legend,
+.beaker-measure-legend{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.recipe-measure-legend > *,
+.beaker-measure-legend > *{min-width:max-content}
+
+@media(max-width:900px){
+  .beaker-map-row{grid-template-columns:1fr !important}
+  .beaker-map-arrow{display:none}
+}
