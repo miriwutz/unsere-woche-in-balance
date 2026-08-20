@@ -6739,39 +6739,34 @@ function recipeMeasureIconHtml(line, recipe) {
 
 
 function normalizedBeakerMappings(recipe) {
-  return Array.isArray(recipe?.beakerMappings) ? recipe.beakerMappings : [];
+  const rows = Array.isArray(recipe?.beakerMappings) ? recipe.beakerMappings : [];
+  // V38 accepts old V37 rows and new grouped rows.
+  return rows.map(row => {
+    if (Array.isArray(row?.measures)) return row;
+    return {
+      ingredient: row?.ingredient || "",
+      measures: [{
+        amount: row?.amount || "",
+        unit: row?.unit || "cup",
+        color: row?.color || "blue"
+      }]
+    };
+  });
 }
 
 function normalizeIngredientKey(value) {
   return String(value || "")
     .toLowerCase()
     .replace(/[0-9]+([.,][0-9]+)?/g, " ")
-    .replace(/\b(g|kg|gramm|gram|ml|l|el|tl|esslöffel|teelöffel|becher|topfenbecher|joghurtbecher|prise|stück|stk)\b/g, " ")
+    .replace(/\b(g|kg|gramm|gram|ml|milliliter|l|liter|el|tl|esslöffel|teelöffel|becher|topfenbecher|joghurtbecher|prise|stück|stk)\b/g, " ")
+    .replace(/\b(blau(?:er|e|es|en)?|rot(?:er|e|es|en)?|grün(?:er|e|es|en)?|gruen(?:er|e|es|en)?|gelb(?:er|e|es|en)?|orange(?:r|e|s|n)?|lila)\b/g, " ")
     .replace(/[^a-zäöüß]+/g, " ")
     .replace(/\s+/g, " ")
     .trim();
 }
 
-function childMeasureLabel(mapping) {
-  const amount = String(mapping?.amount || "").trim();
-  const unit = mapping?.unit || "cup";
-  const color = mapping?.color || "blue";
-  const unitLabel = {
-    cup: ({
-      blue:"blauer Becher",
-      red:"roter Becher",
-      green:"grüner Becher",
-      yellow:"gelber Becher",
-      orange:"oranger Becher",
-      purple:"lila Becher"
-    })[color] || "Becher",
-    quark:"Topfenbecher",
-    yogurt:"Joghurtbecher",
-    tbsp:"EL",
-    tsp:"TL",
-    pinch:"Prise"
-  }[unit] || "Becher";
-  return `${amount ? amount + " " : ""}${unitLabel}`.trim();
+function ingredientDisplayName(line) {
+  return normalizeIngredientKey(line) || String(line || "").trim();
 }
 
 function childMeasureIconHtml(mapping) {
@@ -6785,7 +6780,19 @@ function childMeasureIconHtml(mapping) {
     tsp:"measure-tsp",
     pinch:"measure-salt"
   }[unit] || "measure-beaker";
-  return `<span class="recipe-measure-icon ${cls}" aria-hidden="true"><i></i></span>`;
+  const title = {
+    cup:"Becher", quark:"Topfenbecher", yogurt:"Joghurtbecher",
+    tbsp:"Esslöffel", tsp:"Teelöffel", pinch:"Prise"
+  }[unit] || "Maß";
+  return `<span class="recipe-measure-icon ${cls}" title="${title}" aria-label="${title}"><i></i></span>`;
+}
+
+function childMeasureCompactHtml(mapping) {
+  const amount = String(mapping?.amount || "").trim();
+  return `<span class="recipe-child-measure-part">
+    ${amount ? `<b class="recipe-child-amount">${escapeHtml(amount)}</b>` : ""}
+    ${childMeasureIconHtml(mapping)}
+  </span>`;
 }
 
 function childIngredientReplacementHtml(line, recipe) {
@@ -6795,21 +6802,23 @@ function childIngredientReplacementHtml(line, recipe) {
   const lineKey = normalizeIngredientKey(line);
   if (!lineKey) return "";
 
-  const matches = mappings.filter(m => {
+  const match = mappings.find(m => {
     const mapKey = normalizeIngredientKey(m.ingredient);
     return mapKey && (mapKey === lineKey || lineKey.includes(mapKey) || mapKey.includes(lineKey));
   });
+  if (!match) return "";
 
-  if (!matches.length) return "";
+  const measures = Array.isArray(match.measures) ? match.measures.filter(Boolean) : [];
+  if (!measures.length) return "";
 
-  const ingredientName = lineKey;
-  return matches.map(m => `
+  return `
     <span class="recipe-child-measure-row">
-      ${childMeasureIconHtml(m)}
-      <span class="recipe-child-measure-label">${escapeHtml(childMeasureLabel(m))}</span>
-      <span class="recipe-child-measure-ingredient">${escapeHtml(ingredientName)}</span>
+      <span class="recipe-child-measures">
+        ${measures.map(childMeasureCompactHtml).join('<span class="recipe-child-plus">+</span>')}
+      </span>
+      <span class="recipe-child-measure-ingredient">${escapeHtml(ingredientDisplayName(line))}</span>
     </span>
-  `).join("");
+  `;
 }
 
 function recipeIngredientHtml(line, recipe) {
@@ -10331,23 +10340,20 @@ document.addEventListener("change", (event) => {
    Erwachsenen-Zutat bleibt unverändert; Kindermaß wird separat
    am Rezept unter beakerMappings gespeichert.
    ========================================================= */
-function recipeBeakerRowTemplate(value = {}) {
-  const ingredient = String(value.ingredient || "");
+function recipeMeasureEditorTemplate(value = {}) {
   const amount = String(value.amount || "");
   const unit = String(value.unit || "cup");
   const color = String(value.color || "blue");
   const esc = (s) => String(s).replace(/[&<>"']/g, m => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
   return `
-    <div class="beaker-map-row">
-      <input class="beaker-map-ingredient" type="text" placeholder="z. B. 200 g Mehl" value="${esc(ingredient)}">
-      <span class="beaker-map-arrow">→</span>
-      <input class="beaker-map-amount" type="text" placeholder="Menge" value="${esc(amount)}">
+    <span class="beaker-measure-editor">
+      <input class="beaker-map-amount" type="text" inputmode="decimal" placeholder="Menge" value="${esc(amount)}">
       <select class="beaker-map-unit">
         <option value="cup" ${unit==="cup"?"selected":""}>Becher</option>
         <option value="quark" ${unit==="quark"?"selected":""}>Topfenbecher</option>
         <option value="yogurt" ${unit==="yogurt"?"selected":""}>Joghurtbecher</option>
-        <option value="tbsp" ${unit==="tbsp"?"selected":""}>Esslöffel (EL)</option>
-        <option value="tsp" ${unit==="tsp"?"selected":""}>Teelöffel (TL)</option>
+        <option value="tbsp" ${unit==="tbsp"?"selected":""}>EL</option>
+        <option value="tsp" ${unit==="tsp"?"selected":""}>TL</option>
         <option value="pinch" ${unit==="pinch"?"selected":""}>Prise</option>
       </select>
       <select class="beaker-map-color ${unit==="cup" ? "" : "hidden"}">
@@ -10358,29 +10364,60 @@ function recipeBeakerRowTemplate(value = {}) {
         <option value="orange" ${color==="orange"?"selected":""}>Orange</option>
         <option value="purple" ${color==="purple"?"selected":""}>Lila</option>
       </select>
-      <button class="beaker-map-remove" type="button" title="Zeile entfernen">×</button>
+      <button class="beaker-measure-remove" type="button" title="Dieses Maß entfernen">×</button>
+    </span>`;
+}
+
+function recipeBeakerRowTemplate(value = {}) {
+  const ingredient = String(value.ingredient || "");
+  const measures = Array.isArray(value.measures)
+    ? value.measures
+    : [{amount:value.amount || "", unit:value.unit || "cup", color:value.color || "blue"}];
+  const esc = (s) => String(s).replace(/[&<>"']/g, m => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
+  return `
+    <div class="beaker-map-row">
+      <div class="beaker-map-source">
+        <input class="beaker-map-ingredient" type="text" placeholder="Zutat, z. B. Mehl" value="${esc(ingredient)}">
+        <small>Nur die Zutat genügt – „Mehl“ erkennt auch „100 g Mehl“.</small>
+      </div>
+      <span class="beaker-map-arrow">→</span>
+      <div class="beaker-measures">
+        ${measures.map(recipeMeasureEditorTemplate).join('<span class="beaker-editor-plus">+</span>')}
+        <button class="beaker-add-measure" type="button">+ weiteres Maß</button>
+      </div>
+      <button class="beaker-map-remove" type="button" title="Zuordnung entfernen">×</button>
     </div>`;
 }
+
 function addRecipeBeakerRow(value = {}) {
   const host = document.querySelector("#recipeBeakerRows");
   if (!host) return;
   host.insertAdjacentHTML("beforeend", recipeBeakerRowTemplate(value));
 }
+
 function readRecipeBeakerMappings() {
   return [...document.querySelectorAll(".beaker-map-row")].map(row => ({
     ingredient: row.querySelector(".beaker-map-ingredient")?.value.trim() || "",
-    amount: row.querySelector(".beaker-map-amount")?.value.trim() || "",
-    unit: row.querySelector(".beaker-map-unit")?.value || "cup",
-    color: row.querySelector(".beaker-map-color")?.value || "blue"
-  })).filter(x => x.ingredient || x.amount);
+    measures: [...row.querySelectorAll(".beaker-measure-editor")].map(m => ({
+      amount: m.querySelector(".beaker-map-amount")?.value.trim() || "",
+      unit: m.querySelector(".beaker-map-unit")?.value || "cup",
+      color: m.querySelector(".beaker-map-color")?.value || "blue"
+    })).filter(x => x.amount || x.unit)
+  })).filter(x => x.ingredient || x.measures.length);
 }
+
 function setRecipeBeakerMappings(rows = []) {
   const host = document.querySelector("#recipeBeakerRows");
   if (!host) return;
   host.innerHTML = "";
-  (Array.isArray(rows) ? rows : []).forEach(addRecipeBeakerRow);
+  const normalized = (Array.isArray(rows) ? rows : []).map(row => Array.isArray(row?.measures) ? row : ({
+    ingredient: row?.ingredient || "",
+    measures: [{amount:row?.amount || "", unit:row?.unit || "cup", color:row?.color || "blue"}]
+  }));
+  normalized.forEach(addRecipeBeakerRow);
   if (!host.children.length) addRecipeBeakerRow();
 }
+
 function updateBeakerMappingVisibility() {
   const checked = !!document.querySelector("#recipeBeakerKitchen")?.checked;
   document.querySelector("#recipeBeakerMapping")?.classList.toggle("hidden", !checked);
@@ -10388,12 +10425,30 @@ function updateBeakerMappingVisibility() {
 document.addEventListener("click", e => {
   if (e.target?.id === "addRecipeBeakerRow") addRecipeBeakerRow();
   if (e.target?.classList?.contains("beaker-map-remove")) e.target.closest(".beaker-map-row")?.remove();
+  if (e.target?.classList?.contains("beaker-add-measure")) {
+    const host = e.target.closest(".beaker-measures");
+    const btn = e.target;
+    const plus = document.createElement("span");
+    plus.className = "beaker-editor-plus";
+    plus.textContent = "+";
+    btn.before(plus);
+    btn.insertAdjacentHTML("beforebegin", recipeMeasureEditorTemplate());
+  }
+  if (e.target?.classList?.contains("beaker-measure-remove")) {
+    const editor = e.target.closest(".beaker-measure-editor");
+    const wrap = e.target.closest(".beaker-measures");
+    editor?.previousElementSibling?.classList?.contains("beaker-editor-plus") && editor.previousElementSibling.remove();
+    editor?.remove();
+    if (wrap && !wrap.querySelector(".beaker-measure-editor")) {
+      wrap.querySelector(".beaker-add-measure")?.insertAdjacentHTML("beforebegin", recipeMeasureEditorTemplate());
+    }
+  }
 });
 document.addEventListener("change", e => {
   if (e.target?.id === "recipeBeakerKitchen") updateBeakerMappingVisibility();
   if (e.target?.classList?.contains("beaker-map-unit")) {
-    const row = e.target.closest(".beaker-map-row");
-    row?.querySelector(".beaker-map-color")?.classList.toggle("hidden", e.target.value !== "cup");
+    const editor = e.target.closest(".beaker-measure-editor");
+    editor?.querySelector(".beaker-map-color")?.classList.toggle("hidden", e.target.value !== "cup");
   }
 });
 
