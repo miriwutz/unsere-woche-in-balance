@@ -7519,7 +7519,8 @@ function showRecipeDetail(recipeOrTitle) {
 
   body.querySelectorAll(".recipe-child-checkable").forEach(line => {
     const toggleDone = () => {
-      if (!card?.classList.contains("recipe-child-mode")) return;
+      // In beiden Ansichten nutzbar:
+      // Eltern = schlicht durchgestrichen, Kinder = Regenbogenstil per CSS.
       line.classList.toggle("recipe-child-done");
     };
     line.addEventListener("click", e => {
@@ -7527,7 +7528,7 @@ function showRecipeDetail(recipeOrTitle) {
       toggleDone();
     });
     line.addEventListener("keydown", e => {
-      if ((e.key === "Enter" || e.key === " ") && card?.classList.contains("recipe-child-mode")) {
+      if (e.key === "Enter" || e.key === " ") {
         e.preventDefault();
         toggleDone();
       }
@@ -7731,8 +7732,6 @@ function renderRecipes() {
 
   host.querySelectorAll(".recipe-child-checkable").forEach(line => {
     const toggleDone = () => {
-      const card = line.closest(".recipe-card");
-      if (!card?.classList.contains("recipe-child-mode")) return;
       line.classList.toggle("recipe-child-done");
     };
     line.addEventListener("click", e => {
@@ -7740,7 +7739,7 @@ function renderRecipes() {
       toggleDone();
     });
     line.addEventListener("keydown", e => {
-      if ((e.key === "Enter" || e.key === " ") && line.closest(".recipe-card")?.classList.contains("recipe-child-mode")) {
+      if (e.key === "Enter" || e.key === " ") {
         e.preventDefault();
         toggleDone();
       }
@@ -10913,6 +10912,44 @@ document.querySelector("#schoolMotivationBanner")?.addEventListener("click", e =
   const childId=btn.dataset.schoolTimetableLink || activeSchoolChild;
   if(!childId) return;
   showManualTimetable(childId);
+});
+
+
+// Kinder-Dashboard-Kacheln
+document.querySelectorAll("[data-school-panel='links']").forEach(btn => {
+  btn.addEventListener("click", () => {
+    const id=btn.dataset.child;
+    document.querySelector(`#schoolLinksPanel${id}`)?.classList.remove("hidden");
+  });
+});
+
+document.querySelectorAll("[data-close-school-panel='links']").forEach(btn => {
+  btn.addEventListener("click", () => {
+    const id=btn.dataset.child;
+    document.querySelector(`#schoolLinksPanel${id}`)?.classList.add("hidden");
+  });
+});
+
+document.querySelectorAll("[data-school-open-timetable]").forEach(btn => {
+  btn.addEventListener("click", () => {
+    const id=btn.dataset.schoolOpenTimetable;
+    const child=state.school.children[id];
+    if(child && hasManualTimetable(child)){
+      showManualTimetable(id);
+      return;
+    }
+    // Falls noch kein schöner Stundenplan eingetragen wurde,
+    // direkt die Bearbeitung öffnen statt ins Leere zu führen.
+    document.querySelector(`#schoolTimetableManage${id}`)?.classList.toggle("is-open");
+    document.querySelector(`#manualTimetableWrap${id}`)?.classList.remove("hidden");
+    renderTTMatrix(id);
+  });
+});
+
+document.querySelectorAll("[data-school-open-week]").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelector('.tab[data-view="week"]')?.click();
+  });
 });
 
 document.querySelector("#schoolIconChoices")?.addEventListener("click",e=>{
