@@ -10769,3 +10769,160 @@ button.day-meal{cursor:pointer}
     grid-template-columns:1fr !important;
   }
 }
+
+
+/* =========================================================
+   V50 – Rezeptkarte und Wochenplan-Popup wirklich angleichen
+   ========================================================= */
+
+/* Alter türkisfarbener Dialog-Footer vollständig entfernen */
+.recipe-detail-card::after{
+  content:none !important;
+  display:none !important;
+}
+
+/* Große Kinderkarte: Bild fast so hoch wie der ganze Kopf */
+.recipe-card.recipe-child-mode .recipe-card-head{
+  min-height:228px !important;
+  padding-left:330px !important;
+  padding-right:185px !important;
+}
+
+.recipe-card.recipe-child-mode > .recipe-child-illustration{
+  left:12px !important;
+  top:10px !important;
+  width:305px !important;
+  height:208px !important;
+}
+
+.recipe-card.recipe-child-mode > .recipe-child-illustration img{
+  width:305px !important;
+  height:208px !important;
+  object-fit:contain !important;
+  object-position:left center !important;
+}
+
+/* Wochenplan-Popup: dieselbe Karte, nur weniger Außenabstand */
+#recipeDetailBody .recipe-detail-mirror-card{
+  border-radius:18px !important;
+  margin:0 !important;
+}
+
+#recipeDetailBody .recipe-detail-mirror-card.recipe-child-mode .recipe-card-head{
+  min-height:190px !important;
+  padding-left:275px !important;
+  padding-right:165px !important;
+  background:
+    linear-gradient(
+      90deg,
+      #f9e7e8 0%,
+      #faead9 18%,
+      #fbf3d9 36%,
+      #e8f2df 55%,
+      #dfeef3 73%,
+      #e8e4f4 88%,
+      #f2e3ef 100%
+    ) !important;
+}
+
+#recipeDetailBody .recipe-detail-mirror-card.recipe-child-mode > .recipe-child-illustration{
+  left:10px !important;
+  top:8px !important;
+  width:250px !important;
+  height:174px !important;
+}
+
+#recipeDetailBody .recipe-detail-mirror-card.recipe-child-mode > .recipe-child-illustration img{
+  width:250px !important;
+  height:174px !important;
+  object-fit:contain !important;
+  object-position:left center !important;
+}
+
+/* Nicht eigene Mini-Typografie erfinden:
+   gleiche Schrift wie große Karte, nur minimal engere Abstände. */
+#recipeDetailBody .recipe-detail-mirror-card.recipe-child-mode .recipe-card-body,
+#recipeDetailBody .recipe-detail-mirror-card.recipe-child-mode .recipe-card-body *{
+  font-size:inherit !important;
+  line-height:inherit !important;
+}
+
+#recipeDetailBody .recipe-detail-mirror-card .recipe-card-body{
+  gap:8px !important;
+  padding:8px !important;
+}
+
+#recipeDetailBody .recipe-detail-mirror-card .recipe-column{
+  margin:0 !important;
+  padding:12px 14px !important;
+}
+
+#recipeDetailBody .recipe-detail-mirror-card.recipe-child-mode li.recipe-child-checkable{
+  padding:5px 8px !important;
+  margin:2px 0 !important;
+}
+
+#recipeDetailBody .recipe-detail-mirror-card.recipe-child-mode .recipe-prep-line.recipe-child-checkable{
+  padding:6px 9px !important;
+  margin:2px 0 !important;
+}
+
+#recipeDetailBody .recipe-detail-mirror-card.recipe-child-mode .recipe-child-measure-row{
+  min-height:34px !important;
+}
+
+/* Popup selbst ohne zusätzliche farbige Fläche/Rand unten */
+.recipe-detail-card{
+  background:transparent !important;
+  border:0 !important;
+  box-shadow:none !important;
+}
+
+.recipe-detail-dialog{
+  background:transparent !important;
+}
+
+/* Bedienleiste identisch zur großen Karte */
+#recipeDetailBody .recipe-detail-mirror-card.recipe-child-mode .recipe-card-top-controls{
+  right:10px !important;
+  top:9px !important;
+}
+
+/* Mobile */
+@media(max-width:760px){
+  .recipe-card.recipe-child-mode .recipe-card-head{
+    min-height:155px !important;
+    padding-left:150px !important;
+    padding-right:105px !important;
+  }
+
+  .recipe-card.recipe-child-mode > .recipe-child-illustration{
+    left:6px !important;
+    top:6px !important;
+    width:136px !important;
+    height:143px !important;
+  }
+
+  .recipe-card.recipe-child-mode > .recipe-child-illustration img{
+    width:136px !important;
+    height:143px !important;
+  }
+
+  #recipeDetailBody .recipe-detail-mirror-card.recipe-child-mode .recipe-card-head{
+    min-height:138px !important;
+    padding-left:132px !important;
+    padding-right:100px !important;
+  }
+
+  #recipeDetailBody .recipe-detail-mirror-card.recipe-child-mode > .recipe-child-illustration{
+    left:5px !important;
+    top:5px !important;
+    width:118px !important;
+    height:128px !important;
+  }
+
+  #recipeDetailBody .recipe-detail-mirror-card.recipe-child-mode > .recipe-child-illustration img{
+    width:118px !important;
+    height:128px !important;
+  }
+}
