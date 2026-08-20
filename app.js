@@ -1556,7 +1556,9 @@ function renderWeek() {
 
     const dateLabel = date.toLocaleDateString("de-AT",{day:"2-digit",month:"2-digit"});
 
-    const videos = state.videos.filter(v => v.day === day && v.weekKey === weekKey);
+    const videos = state.videos
+      .filter(v => v.day === day && v.weekKey === weekKey)
+      .filter(v => !(v.done && ratingFor(v.url)));
     const occurrences = state.todos.filter(t => occursOnDate(t, date));
  const todos = occurrences.filter(t =>
   (t.type || "todo") === "todo" &&
@@ -6758,10 +6760,15 @@ function updateRecipeSourceForm() {
   const internalIds = ["recipeTime","recipeIngredients","recipeSteps","recipeBakeTime","recipeTemperature"];
   internalIds.forEach(id => document.querySelector(`#${id}`)?.classList.toggle("recipe-source-hidden", external));
   const web = document.querySelector("#recipeWebUrl");
+  const webLabel = document.querySelector("#recipeWebLabel");
   if (web) {
     web.placeholder = external ? "Link zum Internetrezept …" : "Link zur Quelle – optional";
     web.classList.toggle("recipe-external-required", external);
   }
+  if (webLabel) {
+    webLabel.textContent = external ? "Link zum Internetrezept" : "Link – optional";
+  }
+  document.querySelector(".recipe-entry-content")?.classList.toggle("recipe-section-hidden", external);
 }
 
 function resetRecipeForm() {
