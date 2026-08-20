@@ -1285,14 +1285,15 @@ state.school = (() => {
   try { return JSON.parse(localStorage.getItem("balanceProd.school")) || null; } catch { return null; }
 })() || {
   children:{
-    "1":{name:"Lou",tasks:[],links:[],timetableUrl:"",timetableByYear:{}},
-    "2":{name:"Fina",tasks:[],links:[],timetableUrl:"",timetableByYear:{}}
+    "1":{name:"Lou",tasks:[],links:[],interestLinks:[],timetableUrl:"",timetableByYear:{}},
+    "2":{name:"Fina",tasks:[],links:[],interestLinks:[],timetableUrl:"",timetableByYear:{}}
   }
 };
 ["1","2"].forEach(id=>{
   state.school.children[id]=state.school.children[id]||{name:(id === "1" ? "Lou" : "Fina"),tasks:[],links:[]};
   state.school.children[id].tasks=Array.isArray(state.school.children[id].tasks)?state.school.children[id].tasks:[];
   state.school.children[id].links=Array.isArray(state.school.children[id].links)?state.school.children[id].links:[];
+  state.school.children[id].interestLinks=Array.isArray(state.school.children[id].interestLinks)?state.school.children[id].interestLinks:[];
 });
 
 
@@ -1530,17 +1531,6 @@ function renderWeek() {
   grid.innerHTML = "";
   const weekKey = currentWeekKey();
 
-  // Mehrtägige Termine bekommen wochenweit feste Zeilen (Lanes).
-  // Dadurch steht z. B. „Urlaub“ an jedem betroffenen Tag exakt auf derselben Höhe.
-  const weekStartKey = dateKey(currentWeekMonday);
-  const weekEndKey = dateKey(dayDate(currentWeekMonday, 6));
-  const multiDayEventLanes = state.todos
-    .filter(t => !t.archived && t.type === "event" && (t.recurrence || "none") === "none")
-    .filter(t => !["birthday","nameday","anniversary"].includes(t.eventCategory || "normal"))
-    .filter(t => t.date && (t.endDate || t.date) > t.date)
-    .filter(t => t.date <= weekEndKey && (t.endDate || t.date) >= weekStartKey)
-    .sort((a,b) => (a.date || "").localeCompare(b.date || "") || (a.time || "").localeCompare(b.time || "") || String(a.id).localeCompare(String(b.id)));
-
   days.forEach((day, index) => {
     const dayEl = document.createElement("article");
     dayEl.className = "day";
@@ -1661,6 +1651,8 @@ const renderEventCard = (t) => {
     displayTime = t.time || "";
   } else if (currentKey === endKey) {
     displayTime = t.endTime ? "bis " + t.endTime : "";
+  } else {
+    displayTime = "";
   }
 
   const groupKey = todoGroupKey(t);
@@ -1685,25 +1677,32 @@ const renderEventCard = (t) => {
     </div>`;
 };
 
-const multiDayIds = new Set(multiDayEventLanes.map(t => t.id));
 const quietBottomCategories = new Set(["birthday","nameday","anniversary"]);
 const quietBottomEvents = events
   .filter(t => quietBottomCategories.has(t.eventCategory || "normal"))
   .sort((a,b) => (a.time || "").localeCompare(b.time || ""));
 
-const singleDayEvents = events
-  .filter(t => !multiDayIds.has(t.id))
+const visibleEvents = events
   .filter(t => !quietBottomCategories.has(t.eventCategory || "normal"))
-  .sort((a,b) => (a.time || "").localeCompare(b.time || ""));
+  .sort((a,b) => {
+    const aStart = a.date || "";
+    const bStart = b.date || "";
+    const aMulti = !!(a.endDate && a.endDate !== a.date);
+    const bMulti = !!(b.endDate && b.endDate !== b.date);
 
-const multiDayEventsToday = multiDayEventLanes
-  .filter(t => occursOnDate(t, date))
-  .sort((a,b) => (a.time || "").localeCompare(b.time || "") || String(a.id).localeCompare(String(b.id)));
+    // Mehrtagestermine zuerst, danach Uhrzeit.
+    if (aMulti !== bMulti) return aMulti ? -1 : 1;
+    return (a.time || "").localeCompare(b.time || "") ||
+           aStart.localeCompare(bStart) ||
+           String(a.id).localeCompare(String(b.id));
+  });
 
-const eventHtml = (multiDayEventsToday.length || singleDayEvents.length) ? `
+const eventHtml = visibleEvents.length ? `
   <div class="day-events">
-    ${multiDayEventsToday.map(t => `<div class="multiday-event-lane">${renderEventCard(t)}</div>`).join("")}
-    ${singleDayEvents.map(t => renderEventCard(t)).join("")}
+    ${visibleEvents.map(t => {
+      const isMulti = !!(t.endDate && t.endDate !== t.date);
+      return `<div class="${isMulti ? "multiday-event-lane" : "single-event-lane"}">${renderEventCard(t)}</div>`;
+    }).join("")}
   </div>
 ` : "";
 
@@ -2877,7 +2876,9 @@ function renderSchool(){
   ["1","2"].forEach(id=>{
     const c=state.school.children[id], n=document.querySelector(`#schoolName${id}`);
     if(n && document.activeElement!==n)n.value=c.name||(id === "1" ? "Lou" : "Fina");
-    const te=document.querySelector(`#schoolTasks${id}`), le=document.querySelector(`#schoolLinks${id}`);
+    const te=document.querySelector(`#schoolTasks${id}`),
+          le=document.querySelector(`#schoolLinks${id}`),
+          fe=document.querySelector(`#schoolFinds${id}`);
     if(!te||!le)return;
     ensureManualTimetable(c);
     const manualViewBtn = document.querySelector(`#manualTimetableViewBtn${id}`);
@@ -2888,6 +2889,40 @@ function renderSchool(){
       <div><div class="school-task-text">${escapeHtml(t.text)}</div><div class="school-meta"><span>${{homework:"☀ Hausübung",test:"✎ Test",bring:"♥ Mitbringen",appointment:"○ Termin",other:"✦ Schule"}[t.type] || "✦ Schule"}</span>${t.subject?`<span>${escapeHtml(t.subject)}</span>`:""}${t.due?`<span>bis ${parseLocalDate(t.due).toLocaleDateString("de-AT",{day:"2-digit",month:"2-digit"})}</span>`:""}</div></div>
       <button class="school-del" data-kind="task" data-child="${id}" data-id="${t.id}">×</button></div>`).join(""):'<div class="school-empty">Gerade ist hier nichts offen. 🌿</div>';
     le.innerHTML=c.links.length?c.links.map(x=>`<div class="school-link"><a href="${escapeHtml(x.url)}" target="_blank" rel="noopener">${escapeHtml(x.name)}</a><button class="school-del" data-kind="link" data-child="${id}" data-id="${x.id}">×</button></div>`).join(""):'<span class="school-empty-inline">Noch keine Lernlinks hinterlegt.</span>';
+    if(fe){
+      const categoryMeta={
+        ideen:["✨","Ideen"],
+        lernen:["📚","Lernen"],
+        lesen:["📖","Lesen"],
+        musik:["🎧","Musik & Video"],
+        hobby:["♡","Hobby"],
+        sonstiges:["🌿","Sonstiges"]
+      };
+      const finds=Array.isArray(c.interestLinks)?c.interestLinks:[];
+      fe.innerHTML=finds.length
+        ? Object.entries(
+            finds.reduce((groups,x)=>{
+              const key=x.category || "sonstiges";
+              (groups[key] ||= []).push(x);
+              return groups;
+            },{})
+          ).map(([category,items])=>{
+            const meta=categoryMeta[category] || categoryMeta.sonstiges;
+            return `<section class="school-find-group">
+              <div class="school-find-group-title"><span>${meta[0]}</span><strong>${meta[1]}</strong></div>
+              <div class="school-find-group-items">
+                ${items.map(x=>`<div class="school-find">
+                  <a href="${escapeHtml(x.url)}" target="_blank" rel="noopener">
+                    <span class="school-find-name">${escapeHtml(x.name)}</span>
+                    <span class="school-find-domain">${escapeHtml((()=>{try{return new URL(x.url).hostname.replace(/^www\\./,"")}catch{return ""}})())}</span>
+                  </a>
+                  <button class="school-del" data-kind="find" data-child="${id}" data-id="${x.id}" aria-label="Fundstück löschen">×</button>
+                </div>`).join("")}
+              </div>
+            </section>`;
+          }).join("")
+        : '<div class="school-finds-empty">Noch nichts gesammelt. Wenn dir etwas gefällt, kannst du es hier für später merken. ✨</div>';
+    }
     const ti=document.querySelector(`#timetableUrl${id}`),to=document.querySelector(`#timetableOpen${id}`);
     if(ti && document.activeElement!==ti) ti.value=c.timetableUrl||"";
     if(to){
@@ -2905,7 +2940,9 @@ function renderSchool(){
   }));
   document.querySelectorAll(".school-del").forEach(x=>x.addEventListener("click",e=>{
     const d=e.currentTarget.dataset,c=state.school.children[d.child];
-    if(d.kind==="task")c.tasks=c.tasks.filter(z=>z.id!==d.id);else c.links=c.links.filter(z=>z.id!==d.id);
+    if(d.kind==="task") c.tasks=c.tasks.filter(z=>z.id!==d.id);
+    else if(d.kind==="find") c.interestLinks=(c.interestLinks||[]).filter(z=>z.id!==d.id);
+    else c.links=c.links.filter(z=>z.id!==d.id);
     save();renderSchool();
   }));
 }
@@ -2952,6 +2989,34 @@ function addSchoolLink(id){
   state.school.children[id].links.push({id:uid(),name:n.value.trim(),url});n.value="";u.value="";save();renderSchool();
 }
 
+function addSchoolFind(id){
+  const n=document.querySelector(`#schoolFindName${id}`);
+  const u=document.querySelector(`#schoolFindUrl${id}`);
+  const c=document.querySelector(`#schoolFindCategory${id}`);
+  if(!n || !u) return;
+
+  let url=u.value.trim();
+  const name=n.value.trim();
+  if(!name || !url) return;
+  if(!/^https?:\/\//i.test(url)) url="https://"+url;
+
+  const child=state.school.children[id];
+  child.interestLinks=Array.isArray(child.interestLinks)?child.interestLinks:[];
+  child.interestLinks.push({
+    id:uid(),
+    name,
+    url,
+    category:c?.value || "sonstiges",
+    createdAt:Date.now()
+  });
+
+  n.value="";
+  u.value="";
+  if(c) c.value="ideen";
+  save();
+  renderSchool();
+}
+
 ["1","2"].forEach(id=>{
   const select=document.querySelector(`#schoolSubject${id}`);
   const other=document.querySelector(`#schoolSubjectOther${id}`);
@@ -2963,6 +3028,7 @@ function addSchoolLink(id){
 
 document.querySelectorAll(".add-school-task").forEach(b=>b.addEventListener("click",e=>addSchoolTask(e.currentTarget.dataset.child)));
 document.querySelectorAll(".add-school-link").forEach(b=>b.addEventListener("click",e=>addSchoolLink(e.currentTarget.dataset.child)));
+document.querySelectorAll(".add-school-find").forEach(b=>b.addEventListener("click",e=>addSchoolFind(e.currentTarget.dataset.child)));
 ["1","2"].forEach(id=>document.querySelector(`#schoolName${id}`)?.addEventListener("change",e=>{state.school.children[id].name=e.currentTarget.value.trim()||(id === "1" ? "Lou" : "Fina");save();}));
 
 document.querySelectorAll(".save-timetable").forEach(b=>b.addEventListener("click",e=>{
@@ -9596,6 +9662,7 @@ function mergeSchool(localSchool, cloudSchool) {
         .filter(task => !deletedTaskIds.includes(task.id)),
       links: mergeByIdPreferNewer(l.links, c.links)
         .filter(link => !deletedLinkIds.includes(link.id)),
+      interestLinks: mergeByIdPreferNewer(l.interestLinks, c.interestLinks),
       timetableUrl: l.timetableUrl || c.timetableUrl || "",
       manualTimetable: l.manualTimetable || c.manualTimetable || null,
       timetableByYear: {
@@ -9654,6 +9721,7 @@ function normalizeWorkroom(w) {
     todos: Array.isArray(src.todos) ? src.todos : [],
     prints: Array.isArray(src.prints) ? src.prints : [],
     links: Array.isArray(src.links) ? src.links : [],
+    interestLinks: Array.isArray(src.interestLinks) ? src.interestLinks : [],
     shopping: Array.isArray(src.shopping) ? src.shopping : [],
     substitutions: Array.isArray(src.substitutions) ? src.substitutions : [],
     plans: src.plans && typeof src.plans === "object"
@@ -11494,6 +11562,20 @@ document.querySelectorAll("[data-close-school-panel='links']").forEach(btn => {
   btn.addEventListener("click", () => {
     const id=btn.dataset.child;
     document.querySelector(`#schoolLinksPanel${id}`)?.classList.add("hidden");
+  });
+});
+
+document.querySelectorAll("[data-school-panel='finds']").forEach(btn => {
+  btn.addEventListener("click", () => {
+    const id=btn.dataset.child;
+    document.querySelector(`#schoolFindsPanel${id}`)?.classList.remove("hidden");
+  });
+});
+
+document.querySelectorAll("[data-close-school-panel='finds']").forEach(btn => {
+  btn.addEventListener("click", () => {
+    const id=btn.dataset.child;
+    document.querySelector(`#schoolFindsPanel${id}`)?.classList.add("hidden");
   });
 });
 
