@@ -12628,3 +12628,143 @@ button.day-meal{cursor:pointer}
     min-height:76px !important;
   }
 }
+
+
+/* =========================================================
+   V7 – Kinderaufgabe ruhiger + Rezeptzeilen kompakter
+   ========================================================= */
+
+/* Der Name steht bereits im persönlichen Header.
+   Im Aufgabenblock daher keine zweite "Lou/Fina"-Überschrift. */
+.school-child-dashboard .school-card > .school-head{
+  display:none !important;
+}
+
+/* Der eigentliche Aufgabenbereich wird zu einer kompakten Kinderkarte. */
+.school-child-dashboard .school-add{
+  position:relative !important;
+  display:grid !important;
+  grid-template-columns:minmax(0,1.15fr) minmax(145px,.78fr) minmax(180px,1fr) auto !important;
+  gap:8px !important;
+  margin:0 !important;
+  padding:14px !important;
+  border:1px solid rgba(176,160,154,.18) !important;
+  border-radius:20px !important;
+  box-shadow:0 5px 18px rgba(78,65,60,.035) !important;
+}
+.school-child-dashboard[data-child="1"] .school-add{
+  background:linear-gradient(135deg,rgba(244,240,249,.88),rgba(248,249,245,.86)) !important;
+}
+.school-child-dashboard[data-child="2"] .school-add{
+  background:linear-gradient(135deg,rgba(255,241,241,.90),rgba(255,249,235,.88)) !important;
+}
+
+/* Erste Zeile: persönliches Zeichen + große freundliche Frage. */
+.school-child-dashboard .school-task-main-entry{
+  grid-column:1 / -1 !important;
+  display:grid !important;
+  grid-template-columns:48px minmax(0,1fr) !important;
+  gap:9px !important;
+  align-items:center !important;
+}
+.school-child-dashboard .school-task-icon-select{
+  width:48px !important;
+  min-width:48px !important;
+  height:46px !important;
+  padding:5px 2px !important;
+  border-radius:15px !important;
+  border:1px solid rgba(180,164,157,.26) !important;
+  background:rgba(255,255,255,.82) !important;
+  font-size:1.22rem !important;
+}
+.school-child-dashboard .school-task-main-entry input{
+  height:46px !important;
+  padding:0 15px !important;
+  border-radius:15px !important;
+  background:rgba(255,255,255,.82) !important;
+  font-size:.88rem !important;
+}
+
+/* Fach / Datum / Art bewusst eine Ebene ruhiger. */
+.school-child-dashboard .school-add > select:not(.school-task-icon-select),
+.school-child-dashboard .school-add > input[type="date"]{
+  height:39px !important;
+  border-radius:13px !important;
+  background:rgba(255,255,255,.68) !important;
+  font-size:.75rem !important;
+}
+.school-child-dashboard .school-add .add-school-task{
+  height:39px !important;
+  align-self:center !important;
+  padding:0 18px !important;
+  border-radius:999px !important;
+  white-space:nowrap !important;
+}
+
+/* Keine große leere Verwaltungsbox, wenn alles erledigt ist. */
+.school-child-dashboard .school-tasks:empty{
+  min-height:0 !important;
+  margin:9px 0 0 !important;
+  padding:8px 4px 2px !important;
+  border:0 !important;
+  background:transparent !important;
+}
+.school-child-dashboard .school-tasks:empty::after{
+  content:"Alles erledigt 🌿" !important;
+  display:block !important;
+  text-align:center !important;
+  color:#9a918b !important;
+  font-size:.73rem !important;
+}
+
+/* Bereits vorhandener programmgenerierter Leerzustand soll ebenfalls
+   wesentlich unauffälliger wirken. */
+.school-child-dashboard .school-tasks .empty-state,
+.school-child-dashboard .school-tasks .school-empty{
+  min-height:0 !important;
+  margin:9px 0 0 !important;
+  padding:8px 4px !important;
+  border:0 !important;
+  background:transparent !important;
+  color:#9a918b !important;
+}
+
+/* Die drei Dashboard-Kacheln rücken etwas näher an die Aufgaben. */
+.school-child-dashboard .school-dashboard-tiles{
+  margin-top:12px !important;
+  padding-top:12px !important;
+}
+
+/* REZEPT-KINDERANSICHT:
+   gleiche Gestaltung, nur deutlich weniger vertikaler Abstand. */
+.recipe-card.recipe-child-mode li.recipe-child-checkable,
+#recipeDetailBody.recipe-detail-child-mode li.recipe-child-checkable{
+  margin-top:0 !important;
+  margin-bottom:0 !important;
+  padding-top:5px !important;
+  padding-bottom:5px !important;
+  min-height:36px !important;
+  line-height:1.25 !important;
+}
+.recipe-card.recipe-child-mode .recipe-child-measure-ingredient,
+#recipeDetailBody.recipe-detail-child-mode .recipe-child-measure-ingredient{
+  min-height:28px !important;
+  line-height:1.2 !important;
+}
+.recipe-card.recipe-child-mode .recipe-ingredients ul,
+#recipeDetailBody.recipe-detail-child-mode .recipe-ingredients ul{
+  row-gap:0 !important;
+}
+
+/* Mobil weiterhin sauber stapeln. */
+@media(max-width:760px){
+  .school-child-dashboard .school-add{
+    grid-template-columns:1fr 1fr !important;
+  }
+  .school-child-dashboard .school-task-main-entry{
+    grid-column:1 / -1 !important;
+  }
+  .school-child-dashboard .school-add .add-school-task{
+    grid-column:1 / -1 !important;
+  }
+}
