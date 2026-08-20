@@ -13920,3 +13920,62 @@ body:has(.school-child-dashboard:not(.hidden)) #editTimetablesBtn{
     max-height:min(760px,94vh) !important;
   }
 }
+
+
+/* =========================================================
+   V13 – kleine optische Korrekturen
+   ========================================================= */
+
+/* Papa-Popup etwas breiter, damit Text und Tageskarten mehr Luft haben. */
+.papa-overview-dialog{
+  width:min(650px,92vw) !important;
+  max-width:650px !important;
+}
+
+/* Unter der letzten Papa-Tageskarte muss die abgerundete Kontur
+   vollständig sichtbar bleiben. */
+.papa-overview-list{
+  padding-bottom:30px !important;
+  box-sizing:border-box !important;
+}
+.papa-overview-day:last-child,
+.papa-day-card:last-child{
+  margin-bottom:5px !important;
+  border-bottom-width:1px !important;
+  overflow:visible !important;
+}
+
+/* Kinderrezept: Zutaten kompakter – weniger Luft zwischen den Zeilen. */
+.recipe-card.recipe-child-mode .recipe-ingredients li,
+#recipeDetailBody .recipe-detail-mirror-card.recipe-child-mode .recipe-ingredients li{
+  margin-top:0 !important;
+  margin-bottom:0 !important;
+  padding-top:4px !important;
+  padding-bottom:4px !important;
+  min-height:30px !important;
+  line-height:1.22 !important;
+}
+
+/* Falls die Zutaten über generische Reihen statt li aufgebaut sind. */
+.recipe-card.recipe-child-mode .ingredient-row,
+.recipe-card.recipe-child-mode .recipe-ingredient-row,
+#recipeDetailBody .recipe-detail-mirror-card.recipe-child-mode .ingredient-row,
+#recipeDetailBody .recipe-detail-mirror-card.recipe-child-mode .recipe-ingredient-row{
+  margin:0 !important;
+  padding-top:4px !important;
+  padding-bottom:4px !important;
+  min-height:30px !important;
+  line-height:1.22 !important;
+}
+
+/* Auch Absatzabstände innerhalb einer Zutatenzeile reduzieren. */
+.recipe-card.recipe-child-mode .recipe-ingredients p,
+#recipeDetailBody .recipe-detail-mirror-card.recipe-child-mode .recipe-ingredients p{
+  margin:0 !important;
+}
+
+/* Sicherheitsregel: Papa-Modal in expliziten Kinder-Modi nicht anzeigen. */
+body.child-school-mode #papaOverviewModal,
+body.child-view-active #papaOverviewModal{
+  display:none !important;
+}
