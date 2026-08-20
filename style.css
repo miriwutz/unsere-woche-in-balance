@@ -14909,3 +14909,157 @@ body.child-view-active #papaOverviewModal{
 .child-symbol-check *{
   pointer-events:none !important;
 }
+
+
+/* =========================================================
+   V19 – Hauptwochenplan wirklich aufgeräumt
+   ========================================================= */
+
+/* Diese drei Überschriften werden im JS nicht mehr gerendert.
+   Sicherheitsnetz für ältere Cache-Stände. */
+.day-meal-kicker,
+.day-events > .day-todos-title,
+.day-todos > .day-todos-title{
+  display:none !important;
+}
+
+/* Bereiche direkt hintereinander – ohne reservierte Höhen. */
+.day .day-meal-section,
+.day .day-events,
+.day .day-school,
+.day .day-todos{
+  height:auto !important;
+  min-height:0 !important;
+  margin-top:0 !important;
+  margin-bottom:12px !important;
+}
+
+/* Essen sitzt kompakt oben. */
+.day .day-meal-section{
+  margin-top:8px !important;
+}
+
+/* Termine unmittelbar nach dem Essen.
+   Mehrtagestermine haben KEINE leeren Platzhalter-Lanes mehr. */
+.day .day-events{
+  display:flex !important;
+  flex-direction:column !important;
+  justify-content:flex-start !important;
+  gap:8px !important;
+}
+.day .multiday-event-lanes{
+  display:contents !important;
+}
+.day .multiday-event-lane{
+  height:auto !important;
+  min-height:0 !important;
+  margin:0 !important;
+}
+.day .multiday-event-placeholder{
+  display:none !important;
+}
+
+/* Einzelne Karten nicht nach unten drücken. */
+.day .event-person-block,
+.day .person-todo-group{
+  margin-top:0 !important;
+  height:auto !important;
+}
+
+/* Schule bleibt als einzige Gruppenüberschrift sichtbar. */
+.day .day-school > .day-todos-title{
+  margin-top:2px !important;
+  margin-bottom:8px !important;
+}
+
+/* =========================================================
+   V19 – Einkaufsvorschläge: anbieten, niemals ungefragt ausfüllen
+   ========================================================= */
+
+.shopping-add{
+  position:relative !important;
+}
+
+.shopping-suggest-wrap{
+  position:relative !important;
+  min-width:0 !important;
+}
+
+/* Desktop-Grid: Wrap übernimmt exakt den bisherigen Platz des Inputs. */
+@media(min-width:981px){
+  .shopping-add > .shopping-suggest-wrap{
+    grid-column:1 / 2 !important;
+    grid-row:2 !important;
+  }
+}
+@media(max-width:980px){
+  .shopping-add > .shopping-suggest-wrap{
+    grid-column:1 / 2 !important;
+    grid-row:2 !important;
+  }
+}
+
+.shopping-suggest-wrap > #shoppingItemInput{
+  width:100% !important;
+  min-height:46px !important;
+  font-size:.96rem !important;
+}
+
+.shopping-suggestions{
+  position:absolute !important;
+  z-index:40 !important;
+  left:0 !important;
+  right:0 !important;
+  top:calc(100% + 5px) !important;
+  padding:5px !important;
+  border:1px solid rgba(177,164,156,.28) !important;
+  border-radius:14px !important;
+  background:rgba(255,253,251,.98) !important;
+  box-shadow:0 12px 28px rgba(71,59,54,.12) !important;
+  overflow:hidden !important;
+}
+
+.shopping-suggestions.hidden{
+  display:none !important;
+}
+
+.shopping-suggestion-item{
+  width:100% !important;
+  min-height:42px !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:space-between !important;
+  gap:12px !important;
+  padding:8px 10px !important;
+  border:0 !important;
+  border-radius:10px !important;
+  background:transparent !important;
+  text-align:left !important;
+  cursor:pointer !important;
+}
+
+.shopping-suggestion-item:hover,
+.shopping-suggestion-item:focus-visible{
+  background:#f2f6f1 !important;
+  outline:none !important;
+}
+
+.shopping-suggestion-name{
+  color:#4f4845 !important;
+  font-size:.86rem !important;
+  font-weight:620 !important;
+}
+
+.shopping-suggestion-meta{
+  flex:0 0 auto !important;
+  color:#9a8f89 !important;
+  font-size:.66rem !important;
+}
+
+/* Der Button bleibt im Desktop an seiner bisherigen Stelle. */
+@media(min-width:981px){
+  .shopping-add > #shoppingCategory{grid-column:2 / 3 !important;grid-row:2 !important}
+  .shopping-add > #shoppingWhen{grid-column:3 / 4 !important;grid-row:2 !important}
+  .shopping-add > #shoppingSaleStore{grid-column:4 / 5 !important;grid-row:2 !important}
+  .shopping-add > #addShoppingItemBtn{grid-column:5 / 6 !important;grid-row:2 !important}
+}
