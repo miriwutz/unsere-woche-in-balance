@@ -869,8 +869,8 @@ function uid() {
 const defaultFamilySettings = {
   a:{name:"Mama", color:"#c8897e"},
   b:{name:"Papa", color:"#c84d4d"},
-  c:{name:"Lou", color:"#8f78b8", icon:"⭐"},
-  d:{name:"Fina", color:"#d58c9b", icon:"🌙"}
+  c:{name:"Lou", color:"#8f78b8", icon:"⭐", taskIcon:"🌙"},
+  d:{name:"Fina", color:"#d58c9b", icon:"🌙", taskIcon:"⭐"}
 };
 
 state.familySettings = (() => {
@@ -886,6 +886,7 @@ state.familySettings = (() => {
   state.familySettings[key].name = state.familySettings[key].name || defaultFamilySettings[key].name;
   state.familySettings[key].color = state.familySettings[key].color || defaultFamilySettings[key].color;
   state.familySettings[key].icon = state.familySettings[key].icon || defaultFamilySettings[key].icon || "⭐";
+  state.familySettings[key].taskIcon = state.familySettings[key].taskIcon || defaultFamilySettings[key].taskIcon || state.familySettings[key].icon || "⭐";
 });
 
 function familyName(key){
@@ -2919,7 +2920,7 @@ function addSchoolTask(id){
   if(!t.value.trim())return;
 
   const subject = s.value === "other" ? so.value.trim() : s.value;
-  const taskIcon = iconSelect?.value || schoolChildDefaultIcon(id);
+  const taskIcon = iconSelect?.value || schoolTaskDefaultIcon(id);
 
   state.school.children[id].tasks.push({
     id:uid(),
@@ -2938,7 +2939,7 @@ function addSchoolTask(id){
   d.value="";
   y.value="homework";
   if(iconSelect){
-    const defaultIcon=schoolChildDefaultIcon(id);
+    const defaultIcon=schoolTaskDefaultIcon(id);
     iconSelect.innerHTML=schoolTaskIconOptions(defaultIcon);
     iconSelect.value=defaultIcon;
     delete iconSelect.dataset.userChanged;
@@ -3027,6 +3028,186 @@ document.querySelector("#openFamilyTimetableBtn")?.addEventListener("click", () 
 document.querySelector("#closeFamilyTimetableDialog")?.addEventListener("click", () => {
   familyTimetableDialog?.close();
 });
+
+
+// ===== KINDER – Meine Woche =====
+
+let activeChildWeekId = null;
+let activeChildWeekOffset = 0;
+const childWeekDialog = document.querySelector("#childWeekDialog");
+
+function childWeekFamilyKey(id){
+  return id === "1" ? "c" : "d";
+}
+
+function childWeekTodoRelevant(todo,id){
+  const family=Array.isArray(todo.family) ? todo.family : [];
+  return family.includes(childWeekFamilyKey(id));
+}
+
+function childWeekSchoolTasksForDate(id,date){
+  const key=dateKey(date);
+  return (state.school.children[id]?.tasks || [])
+    .filter(t => !t.done)
+    .filter(t => String(t.due || "") === key)
+    .map(t => ({
+      kind:"school",
+      text:t.text || "",
+      subject:t.subject || "",
+      schoolType:t.type || "",
+      icon:schoolTaskIcon(t,id)
+    }));
+}
+
+function childWeekTodosForDate(id,date){
+  return (state.todos || [])
+    .filter(t => !t.archived)
+    .filter(t => occursOnDate(t,date))
+    .filter(t => childWeekTodoRelevant(t,id))
+    .filter(t => (t.type || "todo") !== "todo" || !isOccurrenceDone(t,date))
+    .map(t => ({
+      kind:(t.type || "todo") === "event" ? "event" : "todo",
+      text:t.text || "",
+      time:t.time || "",
+      endTime:t.endTime || "",
+      important:!!t.superImportant
+    }));
+}
+
+function childWeekTypeLabel(item){
+  if(item.kind === "school"){
+    const map={homework:"Hausübung",test:"Test",bring:"Mitbringen"};
+    return map[item.schoolType] || "Schule";
+  }
+  return item.kind === "event" ? "Termin" : "To-do";
+}
+
+function renderChildWeekOverview(id,weekOffset=0){
+  const list=document.querySelector("#childWeekList");
+  const title=document.querySelector("#childWeekTitle");
+  const subtitle=document.querySelector("#childWeekSubtitle");
+  const image=document.querySelector("#childWeekImage");
+  const icon=document.querySelector("#childWeekIcon");
+  if(!list) return;
+
+  const child=state.school.children[id];
+  const name=child?.name || (id === "1" ? "Lou" : "Fina");
+  const personalIcon=schoolChildDefaultIcon(id);
+
+  if(title) title.textContent=`${name}s Woche`;
+  if(subtitle) subtitle.textContent=weekOffset===0 ? "Das ist diese Woche wichtig." : "Ein Blick nach vorne.";
+  if(icon) icon.textContent=personalIcon;
+  if(image){
+    image.src=id === "1" ? "./lou-stundenplan.png?v=53" : "./fina-stundenplan.png?v=53";
+    image.alt="";
+  }
+
+  document.querySelector("#childWeekDialog")?.setAttribute("data-child",id);
+  document.querySelectorAll(".child-week-tab").forEach(btn=>{
+    btn.classList.toggle("active",Number(btn.dataset.weekOffset||0)===weekOffset);
+  });
+
+  const monday=new Date(currentWeekMonday);
+  monday.setDate(monday.getDate()+weekOffset*7);
+
+  const today=new Date();
+  today.setHours(0,0,0,0);
+
+  const dayCards=[];
+
+  days.forEach((dayName,index)=>{
+    const date=dayDate(monday,index);
+    const check=new Date(date);
+    check.setHours(0,0,0,0);
+
+    const todoItems=childWeekTodosForDate(id,date);
+    const schoolItems=childWeekSchoolTasksForDate(id,date);
+    const items=[...todoItems,...schoolItems].sort((a,b)=>{
+      const order={event:0,school:1,todo:2};
+      const kindDiff=(order[a.kind]??9)-(order[b.kind]??9);
+      if(kindDiff) return kindDiff;
+      if(a.kind==="event") return String(a.time||"99:99").localeCompare(String(b.time||"99:99"));
+      return 0;
+    });
+
+    const isToday=check.getTime()===today.getTime();
+
+    // Wie bei Papa: leere Tage ausblenden, aber "Heute" in der aktuellen Woche zeigen.
+    if(!items.length && !(weekOffset===0 && isToday)) return;
+
+    dayCards.push({dayName,date,items,isToday});
+  });
+
+  if(!dayCards.length){
+    list.innerHTML=`
+      <div class="child-week-empty">
+        <span>${personalIcon}</span>
+        <strong>Hier ist gerade nichts eingetragen.</strong>
+        <small>Sieht nach einer ziemlich freien Woche aus.</small>
+      </div>`;
+    return;
+  }
+
+  list.innerHTML=dayCards.map(day=>{
+    const dateLabel=day.date.toLocaleDateString("de-AT",{day:"2-digit",month:"2-digit"});
+    return `
+      <section class="child-week-day ${day.isToday?"is-today":""}">
+        <header class="child-week-day-head">
+          <div>
+            <strong>${day.dayName}</strong>
+            <span>${dateLabel}</span>
+          </div>
+          ${day.isToday?`<em>Heute</em>`:""}
+        </header>
+        <div class="child-week-items">
+          ${day.items.length ? day.items.map(item=>{
+            let time="";
+            if(item.kind==="event"){
+              if(item.time && item.endTime) time=`${item.time}–${item.endTime}`;
+              else if(item.time) time=item.time;
+              else if(item.endTime) time=`bis ${item.endTime}`;
+            }
+            return `
+              <div class="child-week-item kind-${item.kind}">
+                <span class="child-week-item-symbol">${item.kind==="school" ? item.icon : item.kind==="event" ? "✦" : item.important ? "★" : "○"}</span>
+                <div class="child-week-item-copy">
+                  <span class="child-week-item-meta">
+                    ${escapeHtml(childWeekTypeLabel(item))}
+                    ${item.kind==="school" && item.subject ? ` · ${escapeHtml(item.subject)}` : ""}
+                  </span>
+                  <strong>${escapeHtml(item.text)}</strong>
+                  ${time ? `<small>${escapeHtml(time)}</small>` : ""}
+                </div>
+              </div>`;
+          }).join("") : `<div class="child-week-today-empty">Heute ist nichts eingetragen. 🌿</div>`}
+        </div>
+      </section>`;
+  }).join("");
+
+  const todayCard=list.querySelector(".child-week-day.is-today");
+  if(todayCard) requestAnimationFrame(()=>todayCard.scrollIntoView({block:"nearest"}));
+}
+
+function openChildWeekOverview(id){
+  if(!["1","2"].includes(String(id))) return;
+  activeChildWeekId=String(id);
+  activeChildWeekOffset=0;
+  renderChildWeekOverview(activeChildWeekId,0);
+  childWeekDialog?.showModal();
+}
+
+document.querySelector("#closeChildWeekBtn")?.addEventListener("click",()=>{
+  childWeekDialog?.close();
+});
+
+document.querySelectorAll(".child-week-tab").forEach(btn=>{
+  btn.addEventListener("click",()=>{
+    if(!activeChildWeekId) return;
+    activeChildWeekOffset=Number(btn.dataset.weekOffset||0);
+    renderChildWeekOverview(activeChildWeekId,activeChildWeekOffset);
+  });
+});
+
 
 // ===== PAPA – Alles auf einen Blick =====
 
@@ -10835,8 +11016,13 @@ function schoolChildDefaultIcon(id){
   return id === "1" ? (state.familySettings.c?.icon || "⭐") : (state.familySettings.d?.icon || "🌙");
 }
 
+function schoolTaskDefaultIcon(id){
+  const key=schoolMemberKey(id);
+  return state.familySettings[key]?.taskIcon || (id === "1" ? "🌙" : "⭐");
+}
+
 function schoolTaskIcon(task, childId){
-  return task?.icon || schoolChildDefaultIcon(childId);
+  return task?.icon || schoolTaskDefaultIcon(childId);
 }
 
 function schoolTaskIconOptions(selected){
@@ -10889,13 +11075,12 @@ function renderSchoolChildDashboard(id){
     ).join("");
   }
 
-  // Beim Öffnen der Kinderansicht wird das persönliche Zeichen zugleich
-  // als Standard für NEUE Aufgaben vorausgewählt. Bereits vorhandene
-  // Aufgaben behalten ihr eigenes gespeichertes Zeichen.
+  // Aufgaben-Zeichen ist unabhängig vom persönlichen Header-Zeichen.
   const taskIconSelect=document.querySelector(`#schoolTaskIcon${id}`);
-  if(taskIconSelect && !taskIconSelect.dataset.userChanged){
-    taskIconSelect.innerHTML=schoolTaskIconOptions(icon);
-    taskIconSelect.value=icon;
+  if(taskIconSelect){
+    const taskDefault=schoolTaskDefaultIcon(id);
+    taskIconSelect.innerHTML=schoolTaskIconOptions(taskDefault);
+    taskIconSelect.value=taskDefault;
   }
 }
 function closeSchoolChildDashboard(){
@@ -10933,22 +11118,19 @@ document.querySelectorAll("[data-close-school-panel='links']").forEach(btn => {
 document.querySelectorAll("[data-school-open-timetable]").forEach(btn => {
   btn.addEventListener("click", () => {
     const id=btn.dataset.schoolOpenTimetable;
-    const child=state.school.children[id];
-    if(child && hasManualTimetable(child)){
-      showManualTimetable(id);
-      return;
-    }
-    // Falls noch kein schöner Stundenplan eingetragen wurde,
-    // direkt die Bearbeitung öffnen statt ins Leere zu führen.
-    document.querySelector(`#schoolTimetableManage${id}`)?.classList.toggle("is-open");
-    document.querySelector(`#manualTimetableWrap${id}`)?.classList.remove("hidden");
-    renderTTMatrix(id);
+    const manage=document.querySelector(`#schoolTimetableManage${id}`);
+    manage?.classList.add("is-open");
+    openManualTimetableEditor(id);
+    requestAnimationFrame(() => {
+      document.querySelector(`#manualTimetableWrap${id}`)?.scrollIntoView({behavior:"smooth",block:"start"});
+    });
   });
 });
 
 document.querySelectorAll("[data-school-open-week]").forEach(btn => {
   btn.addEventListener("click", () => {
-    document.querySelector('.tab[data-view="week"]')?.click();
+    const id=btn.dataset.schoolOpenWeek;
+    openChildWeekOverview(id);
   });
 });
 
@@ -10956,12 +11138,6 @@ document.querySelector("#schoolIconChoices")?.addEventListener("click",e=>{
   const b=e.target.closest(".school-icon-choice"); if(!b||!activeSchoolChild)return;
   const key=schoolMemberKey(activeSchoolChild);
   state.familySettings[key].icon=b.dataset.icon;
-  const taskIconSelect=document.querySelector(`#schoolTaskIcon${activeSchoolChild}`);
-  if(taskIconSelect){
-    taskIconSelect.innerHTML=schoolTaskIconOptions(b.dataset.icon);
-    taskIconSelect.value=b.dataset.icon;
-    delete taskIconSelect.dataset.userChanged;
-  }
   save();
   renderAll();
   renderSchoolChildDashboard(activeSchoolChild);
@@ -10973,15 +11149,17 @@ document.querySelector('.tab[data-view="school"]')?.addEventListener("click", ()
   closeSchoolChildDashboard();
 });
 
-// Aufgaben-Zeichen-Auswahl: bewusst pro Aufgabe möglich.
-// Standard bleibt das persönliche Zeichen des Kindes.
+// Aufgaben-Zeichen-Auswahl: vollständig unabhängig vom persönlichen Zeichen.
 ["1","2"].forEach(id => {
   const select=document.querySelector(`#schoolTaskIcon${id}`);
   if(!select) return;
-  select.innerHTML=schoolTaskIconOptions(schoolChildDefaultIcon(id));
-  select.value=schoolChildDefaultIcon(id);
+  const taskDefault=schoolTaskDefaultIcon(id);
+  select.innerHTML=schoolTaskIconOptions(taskDefault);
+  select.value=taskDefault;
   select.addEventListener("change", () => {
-    select.dataset.userChanged="1";
+    const key=schoolMemberKey(id);
+    state.familySettings[key].taskIcon=select.value;
+    save();
   });
 });
 
