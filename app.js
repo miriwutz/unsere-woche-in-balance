@@ -3030,6 +3030,137 @@ document.querySelector("#closeFamilyTimetableDialog")?.addEventListener("click",
 });
 
 
+
+// ===== WERKRAUM – Meine Woche =====
+
+const workroomWeekDialog = document.querySelector("#workroomWeekDialog");
+let activeWorkroomWeekOffset = 0;
+
+function workroomWeekPersonalIcon(){
+  // Eigenes Zeichen für Mama. Falls bereits eines gespeichert ist, wird es verwendet.
+  // Bei älteren Daten ohne bewusst gewähltes Zeichen bleibt der ruhige Werkraum-Stern.
+  const stored=state.familySettings.a?.icon;
+  return stored && stored !== "⭐" ? stored : "✦";
+}
+
+function workroomWeekEntriesForDate(date){
+  return (state.todos || [])
+    .filter(t => !t.archived)
+    .filter(t => occursOnDate(t,date))
+    .filter(t => Array.isArray(t.family) && t.family.includes("a"))
+    .filter(t => (t.type || "todo") !== "todo" || !isOccurrenceDone(t,date))
+    .sort((a,b)=>{
+      const ae=(a.type||"todo")==="event" ? 0 : 1;
+      const be=(b.type||"todo")==="event" ? 0 : 1;
+      if(ae!==be) return ae-be;
+      if(ae===0) return String(a.time||"99:99").localeCompare(String(b.time||"99:99"));
+      return Number(!!b.superImportant)-Number(!!a.superImportant);
+    });
+}
+
+function renderWorkroomWeekOverview(weekOffset=0){
+  const list=document.querySelector("#workroomWeekList");
+  if(!list) return;
+
+  activeWorkroomWeekOffset=weekOffset;
+  const icon=workroomWeekPersonalIcon();
+  const heroIcon=document.querySelector("#workroomWeekHeroIcon");
+  const buttonIcon=document.querySelector("#workroomWeekIcon");
+  if(heroIcon) heroIcon.textContent=icon;
+  if(buttonIcon) buttonIcon.textContent=icon;
+
+  document.querySelectorAll(".workroom-week-tab").forEach(btn=>{
+    btn.classList.toggle("active",Number(btn.dataset.weekOffset||0)===weekOffset);
+  });
+
+  const monday=new Date(currentWeekMonday);
+  monday.setDate(monday.getDate()+weekOffset*7);
+
+  const today=new Date();
+  today.setHours(0,0,0,0);
+
+  const cards=[];
+  days.forEach((dayName,index)=>{
+    const date=dayDate(monday,index);
+    const check=new Date(date);
+    check.setHours(0,0,0,0);
+
+    // Vergangene Tage sind in der Schnellansicht nicht mehr relevant.
+    if(check<today) return;
+
+    const entries=workroomWeekEntriesForDate(date);
+    const isToday=check.getTime()===today.getTime();
+
+    if(!entries.length && !(weekOffset===0 && isToday)) return;
+    cards.push({dayName,date,entries,isToday});
+  });
+
+  if(!cards.length){
+    list.innerHTML=`
+      <div class="workroom-week-empty">
+        <span>${icon}</span>
+        <strong>Hier ist gerade nichts eingetragen.</strong>
+        <small>Eine angenehm freie Woche.</small>
+      </div>`;
+    return;
+  }
+
+  list.innerHTML=cards.map(day=>{
+    const dateLabel=day.date.toLocaleDateString("de-AT",{day:"2-digit",month:"2-digit"});
+    return `
+      <section class="workroom-week-day ${day.isToday?"is-today":""}">
+        <header class="workroom-week-day-head">
+          <div>
+            <strong>${day.dayName}</strong>
+            <span>${dateLabel}</span>
+          </div>
+          ${day.isToday?`<em>Heute</em>`:""}
+        </header>
+
+        <div class="workroom-week-items">
+          ${day.entries.length ? day.entries.map(t=>{
+            const isEvent=(t.type||"todo")==="event";
+            let time="";
+            if(isEvent){
+              if(t.time&&t.endTime) time=`${t.time}–${t.endTime}`;
+              else if(t.time) time=t.time;
+              else if(t.endTime) time=`bis ${t.endTime}`;
+            }
+
+            return `
+              <div class="workroom-week-item ${isEvent?"event":"todo"}">
+                <span class="workroom-week-item-symbol">${isEvent?"✦":t.superImportant?"★":icon}</span>
+                <div>
+                  <span class="workroom-week-item-meta">${isEvent?"Termin":"To-do"}</span>
+                  <strong>${escapeHtml(t.text||"")}</strong>
+                  ${time?`<small>${escapeHtml(time)}</small>`:""}
+                </div>
+              </div>`;
+          }).join("") : `<div class="workroom-week-today-empty">Heute ist nichts eingetragen. 🌿</div>`}
+        </div>
+      </section>`;
+  }).join("");
+
+  const todayCard=list.querySelector(".workroom-week-day.is-today");
+  if(todayCard) requestAnimationFrame(()=>todayCard.scrollIntoView({block:"nearest"}));
+}
+
+document.querySelector("#openWorkroomWeekBtn")?.addEventListener("click",()=>{
+  renderWorkroomWeekOverview(0);
+  workroomWeekDialog?.showModal();
+});
+
+document.querySelector("#closeWorkroomWeekBtn")?.addEventListener("click",()=>{
+  workroomWeekDialog?.close();
+});
+
+document.querySelectorAll(".workroom-week-tab").forEach(btn=>{
+  btn.addEventListener("click",()=>{
+    renderWorkroomWeekOverview(Number(btn.dataset.weekOffset||0));
+  });
+});
+
+
 // ===== KINDER – Meine Woche =====
 
 let activeChildWeekId = null;
@@ -3392,6 +3523,7 @@ function renderPapaOverview(weekOffset = 0) {
 
 document.querySelector("#openPapaOverviewBtn")?.addEventListener("click", () => {
   setRandomPapaQuote();
+  document.querySelectorAll(".papa-tab").forEach(btn=>btn.classList.toggle("active",Number(btn.dataset.weekOffset||0)===0));
   renderPapaOverview(0);
   papaOverviewDialog?.showModal();
 });
@@ -3403,6 +3535,7 @@ document.querySelector("#closePapaOverviewBtn")?.addEventListener("click", () =>
 document.querySelectorAll(".papa-tab").forEach(btn => {
   btn.addEventListener("click", () => {
     const offset = Number(btn.dataset.weekOffset || 0);
+    document.querySelectorAll(".papa-tab").forEach(b=>b.classList.toggle("active",b===btn));
     renderPapaOverview(offset);
   });
 });
