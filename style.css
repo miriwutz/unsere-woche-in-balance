@@ -13061,3 +13061,135 @@ button.day-meal{cursor:pointer}
     align-items:center !important;
   }
 }
+
+
+/* V9 – Kinderansicht oben aufräumen */
+.school-child-dashboard:not(.hidden) ~ * {}
+body:has(.school-child-dashboard:not(.hidden)) #backToSchoolChooser,
+body:has(.school-child-dashboard:not(.hidden)) #editTimetablesBtn{
+  display:none !important;
+}
+
+
+/* V9 – Meine Woche: Header klarer und sauberer */
+.child-week-hero{
+  height:155px !important;
+  min-height:155px !important;
+  grid-template-columns:minmax(0,1fr) 240px !important;
+  padding:18px 72px 14px 24px !important;
+  align-items:center !important;
+}
+.child-week-hero-copy{
+  align-self:center !important;
+  min-width:0 !important;
+}
+.child-week-hero-copy h2{
+  font-size:1.72rem !important;
+  line-height:1.05 !important;
+  white-space:normal !important;
+  overflow:visible !important;
+}
+.child-week-hero-copy>div>span{
+  margin-top:5px !important;
+}
+.child-week-hero>img{
+  height:145px !important;
+  width:220px !important;
+  justify-self:end !important;
+  object-fit:contain !important;
+  object-position:center bottom !important;
+  padding:0 !important;
+}
+.child-week-shell{
+  padding-top:0 !important;
+}
+.child-week-tabs{
+  position:sticky !important;
+  top:155px !important;
+  z-index:4 !important;
+  background:#fffdfb !important;
+  padding-top:10px !important;
+}
+
+/* Tageskarten etwas luftiger/übersichtlicher */
+.child-week-day{
+  grid-template-columns:115px minmax(0,1fr) !important;
+  padding:10px 12px !important;
+}
+.child-week-item{
+  min-height:50px !important;
+  padding:7px 10px !important;
+}
+
+
+/* V9 – Stundenplan-Editor mit eigenem X */
+.school-timetable-manage-hidden.is-open{
+  position:relative !important;
+  padding-top:44px !important;
+}
+.school-timetable-panel-close{
+  position:absolute !important;
+  top:10px !important;
+  right:10px !important;
+  width:34px !important;
+  height:34px !important;
+  min-width:34px !important;
+  padding:0 !important;
+  display:grid !important;
+  place-items:center !important;
+  border:1px solid rgba(184,163,152,.34) !important;
+  border-radius:50% !important;
+  background:#fffdfb !important;
+  color:#6a5e58 !important;
+  font-family:Arial,sans-serif !important;
+  font-size:20px !important;
+  font-weight:300 !important;
+  box-shadow:0 4px 12px rgba(76,61,55,.07) !important;
+  cursor:pointer !important;
+}
+.school-timetable-panel-close:hover{
+  background:#fff7f3 !important;
+}
+
+
+/* V9 – etwas cooler, jugendlicher, weniger "Erwachsenenformular" */
+.school-child-dashboard,
+.school-child-dashboard button,
+.school-child-dashboard input,
+.school-child-dashboard select,
+.child-week-dialog,
+.child-week-dialog button{
+  font-family:"Aptos","Trebuchet MS","Segoe UI",sans-serif !important;
+}
+
+.school-child-dashboard .school-hero-v4-text>span,
+.school-child-dashboard .school-hero-v4-text>small,
+.school-child-dashboard .school-dashboard-tile small,
+.child-week-item-meta,
+.child-week-item-copy small{
+  letter-spacing:.01em !important;
+}
+
+.school-child-dashboard .school-hero-v4-text>strong,
+.school-child-dashboard .school-dashboard-tile strong,
+.child-week-hero-copy h2,
+.child-week-day-head strong,
+.child-week-item-copy strong{
+  font-family:"Aptos Display","Trebuchet MS","Segoe UI",sans-serif !important;
+  font-weight:650 !important;
+  letter-spacing:-.02em !important;
+}
+
+/* Lou etwas ruhiger, Fina etwas lebendiger – gleicher Aufbau */
+.school-child-dashboard[data-child="1"]{
+  --child-accent:#8f78b8;
+}
+.school-child-dashboard[data-child="2"]{
+  --child-accent:#d58c9b;
+}
+.school-child-dashboard .school-dashboard-tile{
+  transition:transform .14s ease, box-shadow .14s ease !important;
+}
+.school-child-dashboard .school-dashboard-tile:hover{
+  transform:translateY(-2px) !important;
+}
