@@ -2503,23 +2503,6 @@ function archiveCardHtml(a) {
           <a class="video-link" href="${escapeHtml(a.url)}" target="_blank" rel="noopener">YouTube öffnen</a>
         </div>
       </div>
-
-      <footer class="recipe-card-footer">
-        <div class="recipe-card-status">
-          <button type="button" class="recipe-favorite-btn ${r.favorite ? "active" : ""}" data-id="${r.id}" title="Lieblingsrezept">${r.favorite ? "★" : "☆"} Favorit</button>
-          <div class="recipe-rating-buttons" aria-label="Rezept bewerten">
-            <button type="button" class="recipe-rating-btn ${r.rating === "good" ? "active" : ""}" data-id="${r.id}" data-rating="good" title="Gut">😊</button>
-            <button type="button" class="recipe-rating-btn ${r.rating === "medium" ? "active" : ""}" data-id="${r.id}" data-rating="medium" title="Mittel">🙂</button>
-            <button type="button" class="recipe-rating-btn ${r.rating === "bad" ? "active" : ""}" data-id="${r.id}" data-rating="bad" title="Schlecht">😕</button>
-          </div>
-          ${r.rating ? `<span class="recipe-rating-label">${recipeRatingLabel(r.rating)}</span>` : ""}
-        </div>
-        <div class="recipe-card-actions">
-          ${normalizedRecipeSource(r) === "internal" ? `<button class="recipe-print" data-id="${r.id}" type="button" title="Rezept drucken" aria-label="Rezept drucken">🖨</button>` : ""}
-          <button class="recipe-edit" data-id="${r.id}" type="button" title="Rezept bearbeiten">✎</button>
-          <button class="recipe-delete" data-id="${r.id}" type="button" title="Rezept löschen">×</button>
-        </div>
-      </footer>
     </article>`;
 }
 
@@ -7485,6 +7468,23 @@ function renderRecipes() {
             <div class="recipe-prep-lines">${normalizedRecipeLines(r.steps).map((x,i) => `<div class="recipe-prep-line recipe-child-checkable" data-kind="step" data-index="${i}" tabindex="0"><span class="recipe-child-step-number">${i+1}</span><span>${escapeHtml(x)}</span></div>`).join("")}</div>
           </section>
         </div>`}
+
+      <footer class="recipe-card-footer">
+        <div class="recipe-card-status">
+          <button type="button" class="recipe-favorite-btn ${r.favorite ? "active" : ""}" data-id="${r.id}" title="Lieblingsrezept">${r.favorite ? "★" : "☆"} Favorit</button>
+          <div class="recipe-rating-buttons" aria-label="Rezept bewerten">
+            <button type="button" class="recipe-rating-btn ${r.rating === "good" ? "active" : ""}" data-id="${r.id}" data-rating="good" title="Gut">😊</button>
+            <button type="button" class="recipe-rating-btn ${r.rating === "medium" ? "active" : ""}" data-id="${r.id}" data-rating="medium" title="Mittel">🙂</button>
+            <button type="button" class="recipe-rating-btn ${r.rating === "bad" ? "active" : ""}" data-id="${r.id}" data-rating="bad" title="Schlecht">😕</button>
+          </div>
+          ${r.rating ? `<span class="recipe-rating-label">${recipeRatingLabel(r.rating)}</span>` : ""}
+        </div>
+        <div class="recipe-card-actions">
+          ${normalizedRecipeSource(r) === "internal" ? `<button class="recipe-print" data-id="${r.id}" type="button" title="Rezept drucken" aria-label="Rezept drucken">🖨</button>` : ""}
+          <button class="recipe-edit" data-id="${r.id}" type="button" title="Rezept bearbeiten">✎</button>
+          <button class="recipe-delete" data-id="${r.id}" type="button" title="Rezept löschen">×</button>
+        </div>
+      </footer>
     </article>
   `).join("");
 
