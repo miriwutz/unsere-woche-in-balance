@@ -7288,98 +7288,179 @@ function showRecipeDetail(recipeOrTitle) {
   if (!dialog || !title || !body) return false;
 
   title.textContent = recipe.title || "Rezept";
-  body.classList.remove("recipe-detail-child-mode");
+
   const external = normalizedRecipeSource(recipe) === "external";
-  const childIllustrationHtml = recipeSelfCook(recipe)
-    ? `<div class="recipe-detail-child-illustration" aria-hidden="true"><img src="./cooking-kids.png?v=47" alt=""></div>`
-    : "";
+  const startInChildMode = !external && recipeSelfCook(recipe);
+
+  body.classList.toggle("recipe-detail-child-mode", startInChildMode);
+
+  const ingredientLines = normalizedRecipeLines(recipe.ingredients);
+  const stepLines = normalizedRecipeLines(recipe.steps);
 
   body.innerHTML = `
-    <div class="recipe-detail-banner ${recipeCategoryClass(recipe.category || "main")} ${recipe.kids ? "recipe-detail-kids" : ""} ${recipeSelfCook(recipe) ? "recipe-detail-selfcook" : ""}">
-      <div class="recipe-detail-time">
-        <span class="recipe-detail-clock">${external ? "🔗" : "◔"}</span>
-        <span>${external ? "Internetrezept" : escapeHtml(recipe.time || "–")}</span>
-      </div>
-      <div class="recipe-detail-center">
-        <span class="recipe-detail-ribbon">${external ? "LINK" : "REZEPT"}</span>
-        <div class="recipe-detail-tags">
-          <span>${escapeHtml(recipeCategoryLabel(recipe.category || "main"))}</span>
-          <span>${escapeHtml(recipeDifficultyLabel(recipe.difficulty))}</span>
-          ${recipe.favorite ? `<span class="recipe-favorite-badge">★ Lieblingsrezept</span>` : ""}
-          ${recipe.rating ? `<span>${recipeRatingLabel(recipe.rating)}</span>` : ""}
-          ${recipe.kids ? `<span class="recipe-kids-badge">🧒 Kindergericht</span>` : ""}
-          ${recipeSelfCook(recipe) ? `<button type="button" class="recipe-selfcook-toggle recipe-detail-selfcook-toggle" data-id="${recipe.id}" aria-pressed="false">👧 Das kannst du selbst kochen!</button>` : ""}
-          ${recipeBeakerKitchen(recipe) ? `<span class="recipe-beaker-badge">🥣 Becherküche</span>` : ""}
-          ${recipe.healthy ? `<span class="recipe-healthy-badge">🌿 Gesund & bunt</span>` : ""}
-        </div>
-      </div>
-      <div class="recipe-detail-utensil">${escapeHtml(recipeCardMark(recipe))}</div>
-    </div>
+    <article class="recipe-card recipe-detail-mirror-card
+      ${recipeCategoryClass(recipe.category || "main")}
+      ${recipe.kids ? "recipe-card-kids" : ""}
+      ${recipeSelfCook(recipe) ? "recipe-card-selfcook" : ""}
+      ${startInChildMode ? "recipe-child-mode" : ""}"
+      data-recipe-id="${recipe.id}">
 
-    ${external ? `
-      <div class="recipe-external-detail">
-        <p>Dieses Rezept liegt im Internet. Hier bleibt nur die Bezeichnung mit dem Link gespeichert.</p>
-        ${recipe.webUrl ? `<a class="primary-btn recipe-external-detail-link" href="${escapeHtml(recipe.webUrl)}" target="_blank" rel="noopener">🔗 Rezept öffnen</a>` : ""}
-        ${recipe.youtubeUrl ? `<a class="secondary-btn recipe-external-detail-link" href="${escapeHtml(recipe.youtubeUrl)}" target="_blank" rel="noopener">▶ Video öffnen</a>` : ""}
-      </div>
-    ` : `
-      ${childIllustrationHtml}
-      <div class="recipe-detail-grid">
-        <section>
-          <h3>Zutaten</h3>
-          <div class="recipe-cook-checklist">
-            ${normalizedRecipeLines(recipe.ingredients).map(x => `
-              <button type="button" class="recipe-cook-line recipe-ingredient-line">
-                <span class="recipe-cook-dot">○</span>
-                <span class="recipe-adult-ingredient">
-                  ${recipeMeasureIconHtml(x, recipe)}
-                  <span class="recipe-ingredient-text">${escapeHtml(x)}</span>
-                </span>
-                ${(childIngredientReplacementHtml(x, recipe) || automaticChildMeasureHtml(x, recipe)) ? `<span class="recipe-child-ingredient">${childIngredientReplacementHtml(x, recipe) || automaticChildMeasureHtml(x, recipe)}</span>` : ""}
-              </button>
-            `).join("")}
+      <header class="recipe-card-head">
+        <div class="recipe-time-mark">
+          <span class="recipe-clock">${external ? "🔗" : "◔"}</span>
+          <span>${external ? "Link" : escapeHtml(recipe.time || "–")}</span>
+        </div>
+
+        <div class="recipe-title-wrap">
+          <span class="recipe-ribbon">${external ? "LINK" : "REZEPT"}</span>
+          <div class="recipe-title-button recipe-detail-title-static">${escapeHtml(recipe.title || "Rezept")}</div>
+
+          <div class="recipe-badges">
+            <span>${escapeHtml(recipeCategoryLabel(recipe.category || "main"))}</span>
+            <span>${escapeHtml(recipeDifficultyLabel(recipe.difficulty))}</span>
+            ${recipe.favorite ? `<span class="recipe-favorite-badge">★ Lieblingsrezept</span>` : ""}
+            ${recipe.kids ? `<span class="recipe-kids-badge">🧒 Kindergericht</span>` : ""}
+            ${recipeSelfCook(recipe) ? `
+              <button type="button"
+                class="recipe-selfcook-toggle recipe-detail-selfcook-toggle"
+                data-id="${recipe.id}"
+                aria-pressed="${startInChildMode ? "true" : "false"}">
+                ${startInChildMode ? "🌈 Kinderansicht aktiv" : "👧 Das kannst du selbst kochen!"}
+              </button>` : ""}
+            ${recipeBeakerKitchen(recipe) ? `<span class="recipe-beaker-badge">🥣 Becherküche</span>` : ""}
+            ${recipe.healthy ? `<span class="recipe-healthy-badge">🌿 Gesund & bunt</span>` : ""}
           </div>
-        </section>
-        <section>
-          <h3>Zubereitung</h3>
-          <div class="recipe-cook-checklist">
-            ${normalizedRecipeLines(recipe.steps).map((x,i) => `
-              <button type="button" class="recipe-cook-line recipe-step-line">
-                <span class="recipe-cook-dot">○</span>
-                <span class="recipe-child-step-number">${i+1}</span>
-                <span>${escapeHtml(x)}</span>
-              </button>
-            `).join("")}
+        </div>
+
+        <div class="recipe-card-top-controls">
+          <button type="button"
+            class="recipe-favorite-btn recipe-detail-favorite ${recipe.favorite ? "active" : ""}"
+            data-id="${recipe.id}" title="Lieblingsrezept">${recipe.favorite ? "★" : "☆"}</button>
+
+          <div class="recipe-rating-buttons" aria-label="Rezept bewerten">
+            <button type="button" class="recipe-rating-btn recipe-detail-rating ${recipe.rating === "good" ? "active" : ""}" data-rating="good" title="Gut">😊</button>
+            <button type="button" class="recipe-rating-btn recipe-detail-rating ${recipe.rating === "medium" ? "active" : ""}" data-rating="medium" title="Mittel">🙂</button>
+            <button type="button" class="recipe-rating-btn recipe-detail-rating ${recipe.rating === "bad" ? "active" : ""}" data-rating="bad" title="Schlecht">😕</button>
           </div>
-        </section>
-      </div>
-      <div class="recipe-detail-links">
-        ${recipe.webUrl ? `<a href="${escapeHtml(recipe.webUrl)}" target="_blank" rel="noopener">↗ Quelle öffnen</a>` : ""}
-        ${recipe.youtubeUrl ? `<a href="${escapeHtml(recipe.youtubeUrl)}" target="_blank" rel="noopener">▶ YouTube öffnen</a>` : ""}
-      </div>
-    `}
+
+          ${!external ? `<button class="recipe-print recipe-detail-inline-print" type="button" title="Rezept drucken">🖨</button>` : ""}
+          <button class="recipe-edit recipe-detail-inline-edit" type="button" title="Rezept bearbeiten">✎</button>
+          <button class="recipe-detail-inline-close" type="button" title="Schließen">×</button>
+        </div>
+
+        <div class="recipe-tools">${escapeHtml(recipeCardMark(recipe))}</div>
+      </header>
+
+      ${recipeSelfCook(recipe)
+        ? `<div class="recipe-child-illustration" aria-hidden="true"><img src="./cooking-kids.png?v=49" alt=""></div>`
+        : ""}
+
+      ${external ? `
+        <div class="recipe-card-body recipe-external-body">
+          <div class="recipe-external-copy">
+            <strong>🔗 Internetrezept</strong>
+            <span>Bezeichnung und Link.</span>
+          </div>
+          ${recipe.webUrl ? `<a class="recipe-external-open" href="${escapeHtml(recipe.webUrl)}" target="_blank" rel="noopener">Rezept öffnen ↗</a>` : ""}
+          ${recipe.youtubeUrl ? `<a class="recipe-external-open" href="${escapeHtml(recipe.youtubeUrl)}" target="_blank" rel="noopener">Video öffnen ▶</a>` : ""}
+        </div>
+      ` : `
+        <div class="recipe-card-body">
+          <section class="recipe-column">
+            <h4>ZUTATEN</h4>
+            <ul>
+              ${ingredientLines.map((x,i) => `
+                <li class="recipe-child-checkable" data-kind="ingredient" data-index="${i}" tabindex="0">
+                  ${recipeIngredientHtml(x, recipe)}
+                </li>
+              `).join("")}
+            </ul>
+          </section>
+
+          <section class="recipe-column">
+            <h4>ZUBEREITUNG</h4>
+            <div class="recipe-prep-lines">
+              ${stepLines.map((x,i) => `
+                <div class="recipe-prep-line recipe-child-checkable" data-kind="step" data-index="${i}" tabindex="0">
+                  <span class="recipe-child-step-number">${i+1}</span>
+                  <span>${escapeHtml(x)}</span>
+                </div>
+              `).join("")}
+            </div>
+          </section>
+        </div>
+
+        <div class="recipe-detail-links">
+          ${recipe.webUrl ? `<a href="${escapeHtml(recipe.webUrl)}" target="_blank" rel="noopener">↗ Quelle öffnen</a>` : ""}
+          ${recipe.youtubeUrl ? `<a href="${escapeHtml(recipe.youtubeUrl)}" target="_blank" rel="noopener">▶ YouTube öffnen</a>` : ""}
+        </div>
+      `}
+    </article>
   `;
 
+  const card = body.querySelector(".recipe-detail-mirror-card");
+
   body.querySelectorAll(".recipe-detail-selfcook-toggle").forEach(btn => {
-    btn.addEventListener("click", () => {
-      const active = body.classList.toggle("recipe-detail-child-mode");
+    btn.addEventListener("click", e => {
+      e.stopPropagation();
+      const active = card?.classList.toggle("recipe-child-mode");
+      body.classList.toggle("recipe-detail-child-mode", !!active);
       btn.setAttribute("aria-pressed", active ? "true" : "false");
       btn.textContent = active ? "🌈 Kinderansicht aktiv" : "👧 Das kannst du selbst kochen!";
     });
   });
 
-  body.querySelectorAll(".recipe-cook-line").forEach(line => {
-    line.addEventListener("click", () => {
-      const done = line.classList.toggle("done");
-      const dot = line.querySelector(".recipe-cook-dot");
-      if (dot) dot.textContent = done ? "✓" : "○";
+  body.querySelectorAll(".recipe-child-checkable").forEach(line => {
+    const toggleDone = () => {
+      if (!card?.classList.contains("recipe-child-mode")) return;
+      line.classList.toggle("recipe-child-done");
+    };
+    line.addEventListener("click", e => {
+      if (e.target.closest("button,a,input,select")) return;
+      toggleDone();
+    });
+    line.addEventListener("keydown", e => {
+      if ((e.key === "Enter" || e.key === " ") && card?.classList.contains("recipe-child-mode")) {
+        e.preventDefault();
+        toggleDone();
+      }
+    });
+  });
+
+  body.querySelector(".recipe-detail-inline-close")?.addEventListener("click", () => dialog.close());
+
+  body.querySelector(".recipe-detail-inline-print")?.addEventListener("click", () => {
+    printRecipe(recipe);
+  });
+
+  body.querySelector(".recipe-detail-inline-edit")?.addEventListener("click", () => {
+    dialog.close();
+    startRecipeEdit(recipe);
+  });
+
+  body.querySelector(".recipe-detail-favorite")?.addEventListener("click", e => {
+    recipe.favorite = !recipe.favorite;
+    e.currentTarget.classList.toggle("active", recipe.favorite);
+    e.currentTarget.textContent = recipe.favorite ? "★" : "☆";
+    save();
+    renderRecipes();
+  });
+
+  body.querySelectorAll(".recipe-detail-rating").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const rating = btn.dataset.rating || "";
+      recipe.rating = recipe.rating === rating ? "" : rating;
+      save();
+      body.querySelectorAll(".recipe-detail-rating").forEach(b => {
+        b.classList.toggle("active", b.dataset.rating === recipe.rating);
+      });
+      renderRecipes();
     });
   });
 
   dialog.showModal();
   return true;
 }
-
 function renderRecipePager(totalItems) {
   const host = document.querySelector("#recipePager");
   if (!host) return;
@@ -7490,7 +7571,7 @@ function renderRecipes() {
         </div>
         <div class="recipe-tools">${escapeHtml(recipeCardMark(r))}</div>
       </header>
-      ${recipeSelfCook(r) ? `<div class="recipe-child-illustration" aria-hidden="true"><img src="./cooking-kids.png?v=47" alt=""></div>` : ""}
+      ${recipeSelfCook(r) ? `<div class="recipe-child-illustration" aria-hidden="true"><img src="./cooking-kids.png?v=49" alt=""></div>` : ""}
       ${normalizedRecipeSource(r) === "external" ? `
         <div class="recipe-card-body recipe-external-body">
           <div class="recipe-external-copy">
