@@ -15063,3 +15063,144 @@ body.child-view-active #papaOverviewModal{
   .shopping-add > #shoppingSaleStore{grid-column:4 / 5 !important;grid-row:2 !important}
   .shopping-add > #addShoppingItemBtn{grid-column:5 / 6 !important;grid-row:2 !important}
 }
+
+
+/* =========================================================
+   V20 – vier Kinder-Dashboardbereiche + robuste Mehrtagestermine
+   ========================================================= */
+
+/* Vier gleichwertige Bereiche unten. */
+.school-dashboard-tiles{
+  grid-template-columns:repeat(4,minmax(0,1fr)) !important;
+}
+.school-tile-finds{
+  background:linear-gradient(135deg,#fff8ec,#f8f2fb) !important;
+}
+.school-tile-finds .school-tile-icon{
+  background:#fffdf9 !important;
+  color:#a9817a !important;
+}
+
+/* Fundstücke-Panel */
+.school-finds-panel{
+  background:linear-gradient(180deg,#fffdfb,#fcfaf7) !important;
+}
+.school-find-add{
+  display:grid !important;
+  grid-template-columns:minmax(180px,.9fr) minmax(300px,1.8fr) minmax(150px,.7fr) auto !important;
+  gap:8px !important;
+  margin-top:12px !important;
+}
+.school-find-add input,
+.school-find-add select{
+  min-height:42px !important;
+  border-radius:12px !important;
+}
+.school-finds{
+  display:grid !important;
+  gap:12px !important;
+  margin-top:14px !important;
+}
+.school-find-group{
+  padding:12px !important;
+  border:1px solid rgba(175,161,154,.20) !important;
+  border-radius:15px !important;
+  background:#fff !important;
+}
+.school-find-group-title{
+  display:flex !important;
+  align-items:center !important;
+  gap:7px !important;
+  margin-bottom:8px !important;
+  color:#655b56 !important;
+}
+.school-find-group-title strong{
+  font-size:.82rem !important;
+}
+.school-find-group-items{
+  display:grid !important;
+  grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+  gap:7px !important;
+}
+.school-find{
+  min-width:0 !important;
+  display:grid !important;
+  grid-template-columns:minmax(0,1fr) 28px !important;
+  align-items:center !important;
+  gap:5px !important;
+  padding:8px 9px !important;
+  border-radius:11px !important;
+  background:#faf8f6 !important;
+}
+.school-find>a{
+  min-width:0 !important;
+  display:block !important;
+  text-decoration:none !important;
+}
+.school-find-name{
+  display:block !important;
+  overflow:hidden !important;
+  text-overflow:ellipsis !important;
+  white-space:nowrap !important;
+  color:#504846 !important;
+  font-size:.78rem !important;
+  font-weight:650 !important;
+}
+.school-find-domain{
+  display:block !important;
+  margin-top:2px !important;
+  overflow:hidden !important;
+  text-overflow:ellipsis !important;
+  white-space:nowrap !important;
+  color:#a09690 !important;
+  font-size:.61rem !important;
+}
+.school-finds-empty{
+  padding:22px 12px !important;
+  border:1px dashed rgba(177,164,157,.26) !important;
+  border-radius:13px !important;
+  color:#9a908a !important;
+  text-align:center !important;
+  font-size:.72rem !important;
+}
+
+/* Mehrtagestermine: keinerlei Lane-Höhen/Platzhalter mehr.
+   Jeder betroffene Tag rendert genau eine normale Karte direkt nach dem Essen. */
+.day .multiday-event-lane,
+.day .single-event-lane{
+  display:block !important;
+  height:auto !important;
+  min-height:0 !important;
+  margin:0 !important;
+  padding:0 !important;
+}
+.day .day-events{
+  display:grid !important;
+  gap:8px !important;
+  margin-top:0 !important;
+  padding-top:0 !important;
+}
+
+/* Bei Essen + Termin wirklich direkt hintereinander. */
+.day .day-meal-section + .day-events{
+  margin-top:0 !important;
+}
+
+/* Responsive */
+@media(max-width:1050px){
+  .school-dashboard-tiles{
+    grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+  }
+  .school-find-add{
+    grid-template-columns:1fr 1fr !important;
+  }
+}
+@media(max-width:650px){
+  .school-dashboard-tiles{
+    grid-template-columns:1fr !important;
+  }
+  .school-find-add,
+  .school-find-group-items{
+    grid-template-columns:1fr !important;
+  }
+}
