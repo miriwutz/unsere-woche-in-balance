@@ -2789,6 +2789,7 @@ function saveTTMatrix(id) {
   closeManualTimetableEditor(id);
 }
 function showManualTimetable(id){
+  localStorage.setItem("balanceProd.lastTimetablePerson", String(id));
  const c=timetablePerson(id),t=ensureManualTimetable(c),
     d=document.querySelector("#manualTimetableDialog"),
     title=document.querySelector("#manualTimetableDialogTitle"),
@@ -2821,13 +2822,7 @@ function showManualTimetable(id){
     dialogCard.classList.add(id === "1" ? "tt-person-lou" : id === "2" ? "tt-person-fina" : "tt-person-mama");
   }
 
-const ttIllustration = id === "1"
-    ? `<img class="tt-person-illustration tt-lou-illustration" src="./lou-stundenplan.png?v=51" alt="">`
-    : id === "2"
-      ? `<img class="tt-person-illustration tt-fina-illustration" src="./fina-stundenplan.png?v=51" alt="">`
-      : `<img class="tt-person-illustration tt-mama-illustration" src="./workroom-meditation.png?v=51" alt="">`;
-
-out.innerHTML=`${ttIllustration}<div class="tt-table-wrap"><table class="tt-table tt-view-table ${id === "mama" ? "tt-mama" : id === "1" ? "tt-lou" : "tt-fina"}">
+out.innerHTML=`<div class="tt-table-wrap"><table class="tt-table tt-view-table ${id === "mama" ? "tt-mama" : id === "1" ? "tt-lou" : "tt-fina"}">
     <thead><tr><th>Zeit</th>${manualTimetableDayNames.map(x=>`<th>${x}</th>`).join("")}</tr></thead>
     <tbody>
       <tr class="tt-home-row tt-home-row-top"><th>⌂ Zu Hause bis</th>${manualTimetableDayKeys.map(day=>`<td>${escapeHtml(t.homeBy[day]||"–")}</td>`).join("")}</tr>
@@ -3006,18 +3001,18 @@ document.querySelectorAll(".timetable-view-btn").forEach(btn => btn.addEventList
 }));
 document.querySelectorAll(".timetable-switch").forEach(btn => {
   btn.addEventListener("click", () => {
-    showManualTimetable(btn.dataset.person);
+    const person = btn.dataset.person;
+    if (!["1","2","mama"].includes(person)) return;
+    localStorage.setItem("balanceProd.lastTimetablePerson", person);
+    showManualTimetable(person);
   });
 });
 // Stundenplan-Auswahl auf der Wochenplan-Seite
 const familyTimetableDialog = document.querySelector("#familyTimetableDialog");
 
 document.querySelector("#openFamilyTimetableBtn")?.addEventListener("click", () => {
-  document.querySelector("#manualTimetableWrapmama")?.classList.add("hidden");
-  document.querySelector("#familyTimetableDialog .family-timetable-buttons")?.classList.remove("hidden");
-  const title = document.querySelector("#familyTimetableDialogTitle");
-  if (title) title.textContent = "Welchen Stundenplan ansehen?";
-  familyTimetableDialog?.showModal();
+  const lastPerson = localStorage.getItem("balanceProd.lastTimetablePerson") || "1";
+  showManualTimetable(["1","2","mama"].includes(lastPerson) ? lastPerson : "1");
 });
 
 document.querySelector("#closeFamilyTimetableDialog")?.addEventListener("click", () => {
