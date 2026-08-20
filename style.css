@@ -9880,3 +9880,133 @@ button.day-meal{cursor:pointer}
     height:102px !important;
   }
 }
+
+
+/* =========================================================
+   V42 – Rezeptkopf repariert + Stundenplan-Illustrationen
+   ========================================================= */
+
+/* Rezeptkarte braucht einen Positionierungsanker */
+.recipe-card{position:relative !important}
+
+/* Kinderrezept: Titel wieder frei und mittig */
+.recipe-card.recipe-child-mode .recipe-card-head{
+  min-height:132px !important;
+  padding:18px 175px 14px 175px !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+}
+.recipe-card.recipe-child-mode .recipe-title-wrap{
+  position:relative !important;
+  z-index:6 !important;
+  width:100% !important;
+  text-align:center !important;
+}
+.recipe-card.recipe-child-mode .recipe-title-button{
+  display:inline-block !important;
+  max-width:100% !important;
+}
+.recipe-card.recipe-child-mode .recipe-badges{
+  justify-content:center !important;
+}
+
+/* Funktionsknöpfe oben rechts – nicht mehr über dem Titel */
+.recipe-card.recipe-child-mode .recipe-card-top-controls{
+  left:auto !important;
+  right:12px !important;
+  top:10px !important;
+  z-index:12 !important;
+  background:rgba(255,255,255,.88) !important;
+}
+
+/* Kochbild oben links im Kopf; kein eigener leerer Bildstreifen */
+.recipe-card.recipe-child-mode > .recipe-child-illustration{
+  display:flex !important;
+  position:absolute !important;
+  left:18px !important;
+  right:auto !important;
+  top:8px !important;
+  width:145px !important;
+  height:118px !important;
+  margin:0 !important;
+  overflow:visible !important;
+  background:transparent !important;
+  pointer-events:none !important;
+  z-index:5 !important;
+}
+.recipe-card.recipe-child-mode > .recipe-child-illustration img{
+  display:block !important;
+  width:145px !important;
+  height:118px !important;
+  object-fit:contain !important;
+  object-position:left center !important;
+}
+
+/* Stundenplan: Bild als ruhige Randillustration, Tabelle bleibt voll lesbar */
+#manualTimetableDisplay{
+  position:relative !important;
+}
+#manualTimetableDisplay .tt-person-illustration{
+  position:absolute;
+  right:8px;
+  top:-64px;
+  width:92px;
+  height:92px;
+  object-fit:contain;
+  object-position:center bottom;
+  opacity:.72;
+  pointer-events:none;
+  z-index:4;
+}
+#manualTimetableDisplay .tt-fina-illustration{
+  width:100px;
+  height:100px;
+  opacity:.78;
+}
+#manualTimetableDisplay .tt-lou-illustration{
+  width:94px;
+  height:94px;
+  opacity:.72;
+}
+#manualTimetableDisplay .tt-mama-illustration{
+  width:88px;
+  height:88px;
+  opacity:.58;
+}
+
+/* Platz für die Illustration im Dialogkopf */
+#manualTimetableDialog .dialog-head{
+  padding-right:105px !important;
+}
+
+@media(max-width:760px){
+  .recipe-card.recipe-child-mode .recipe-card-head{
+    min-height:112px !important;
+    padding:42px 105px 10px 105px !important;
+  }
+  .recipe-card.recipe-child-mode > .recipe-child-illustration{
+    left:7px !important;
+    top:8px !important;
+    width:92px !important;
+    height:94px !important;
+  }
+  .recipe-card.recipe-child-mode > .recipe-child-illustration img{
+    width:92px !important;
+    height:94px !important;
+  }
+  .recipe-card.recipe-child-mode .recipe-card-top-controls{
+    right:6px !important;
+    top:5px !important;
+  }
+  #manualTimetableDisplay .tt-person-illustration{
+    width:62px !important;
+    height:62px !important;
+    right:4px !important;
+    top:-52px !important;
+    opacity:.48 !important;
+  }
+  #manualTimetableDialog .dialog-head{
+    padding-right:68px !important;
+  }
+}
