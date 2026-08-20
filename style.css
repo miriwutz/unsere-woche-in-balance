@@ -14662,3 +14662,250 @@ body.child-view-active #papaOverviewModal{
     grid-column:auto !important;
   }
 }
+
+
+/* =========================================================
+   V18 – Wochenplan: klarer, top-ausgerichtet, weniger Überschriften
+   ========================================================= */
+
+/* Tagesinhalt immer von oben nach unten, ohne künstliche Verteilung. */
+.week-day-column,
+.week-day-column .day-content,
+.week-day-column .day-sections,
+.day-column,
+.day-column .day-content,
+.day-column .day-sections{
+  display:flex !important;
+  flex-direction:column !important;
+  justify-content:flex-start !important;
+  align-content:flex-start !important;
+}
+
+/* Kein Bereich darf Leerhöhe reservieren. */
+.week-day-column .day-section,
+.week-day-column .week-section,
+.week-day-column .meal-section,
+.week-day-column .appointment-section,
+.week-day-column .school-section,
+.week-day-column .todo-section,
+.day-column .day-section,
+.day-column .week-section,
+.day-column .meal-section,
+.day-column .appointment-section,
+.day-column .school-section,
+.day-column .todo-section{
+  flex:0 0 auto !important;
+  height:auto !important;
+  min-height:0 !important;
+  margin-top:0 !important;
+  margin-bottom:10px !important;
+}
+
+/* Die zuletzt sichtbare Gruppe braucht unten keinen Extraabstand. */
+.week-day-column .day-section:last-child,
+.week-day-column .week-section:last-child,
+.day-column .day-section:last-child,
+.day-column .week-section:last-child{
+  margin-bottom:0 !important;
+}
+
+/* Leere Gruppen verschwinden vollständig. */
+.week-day-column .day-section:empty,
+.week-day-column .week-section:empty,
+.day-column .day-section:empty,
+.day-column .week-section:empty{
+  display:none !important;
+}
+
+/* Die großen Bereichsüberschriften nur dort behalten, wo sie Orientierung
+   wirklich bringen: SCHULE bleibt, ESSEN / TERMINE / TO-DOS verschwinden. */
+.week-day-column .meal-section > .section-label,
+.week-day-column .meal-section > .day-section-title,
+.week-day-column .appointment-section > .section-label,
+.week-day-column .appointment-section > .day-section-title,
+.week-day-column .todo-section > .section-label,
+.week-day-column .todo-section > .day-section-title,
+.day-column .meal-section > .section-label,
+.day-column .meal-section > .day-section-title,
+.day-column .appointment-section > .section-label,
+.day-column .appointment-section > .day-section-title,
+.day-column .todo-section > .section-label,
+.day-column .todo-section > .day-section-title{
+  display:none !important;
+}
+
+/* Falls die Überschriften generisch als h4/h5 gerendert werden. */
+.week-day-column .meal-section > h4,
+.week-day-column .meal-section > h5,
+.week-day-column .appointment-section > h4,
+.week-day-column .appointment-section > h5,
+.week-day-column .todo-section > h4,
+.week-day-column .todo-section > h5,
+.day-column .meal-section > h4,
+.day-column .meal-section > h5,
+.day-column .appointment-section > h4,
+.day-column .appointment-section > h5,
+.day-column .todo-section > h4,
+.day-column .todo-section > h5{
+  display:none !important;
+}
+
+/* Essen kompakt direkt unter dem Tageskopf. */
+.week-day-column .meal-section,
+.day-column .meal-section{
+  margin-top:2px !important;
+  margin-bottom:12px !important;
+}
+
+/* Termine beginnen unmittelbar nach Essen – keine "unsichtbare Spur". */
+.week-day-column .appointment-section,
+.day-column .appointment-section{
+  margin-top:0 !important;
+}
+
+/* Mehrtägige / längere Termine: Karte selbst immer oben ausrichten. */
+.week-day-column .event-card,
+.week-day-column .appointment-card,
+.week-day-column .calendar-event,
+.day-column .event-card,
+.day-column .appointment-card,
+.day-column .calendar-event{
+  align-self:stretch !important;
+  margin-top:0 !important;
+  margin-bottom:8px !important;
+  height:auto !important;
+  min-height:0 !important;
+}
+
+/* Samstag/Sonntag: einzelne Termine nicht mehr vertikal "mittig" platzieren. */
+.week-day-column.weekend,
+.day-column.weekend{
+  justify-content:flex-start !important;
+}
+
+/* ---------------------------------------------------------
+   "Meine Woche" Kachel im Werkraum – weicher, romantischer,
+   aber immer noch erwachsen.
+   --------------------------------------------------------- */
+.workroom-week-button{
+  position:relative !important;
+  width:min(355px,100%) !important;
+  min-height:72px !important;
+  margin-top:16px !important;
+  padding:11px 42px 11px 13px !important;
+  grid-template-columns:44px minmax(0,1fr) !important;
+  border:1px solid rgba(173,151,137,.24) !important;
+  border-radius:20px !important;
+  background:
+    linear-gradient(135deg,rgba(255,251,247,.96),rgba(247,246,238,.92)) !important;
+  box-shadow:
+    0 7px 20px rgba(91,72,63,.055),
+    inset 0 1px 0 rgba(255,255,255,.9) !important;
+  overflow:hidden !important;
+}
+.workroom-week-button::after{
+  content:"✧";
+  position:absolute !important;
+  right:15px !important;
+  top:50% !important;
+  transform:translateY(-52%) !important;
+  color:#b69a78 !important;
+  font-size:1.1rem !important;
+}
+.workroom-week-button::before{
+  content:"";
+  position:absolute !important;
+  inset:0 !important;
+  pointer-events:none !important;
+  background:
+    radial-gradient(circle at 85% 28%, rgba(231,213,192,.22), transparent 20%),
+    radial-gradient(circle at 73% 70%, rgba(211,224,205,.18), transparent 24%) !important;
+}
+.workroom-week-button-icon{
+  position:relative !important;
+  z-index:1 !important;
+  width:42px !important;
+  height:42px !important;
+  border:1px solid rgba(185,163,147,.20) !important;
+  background:#fffdf9 !important;
+  color:#8f745b !important;
+  box-shadow:0 4px 12px rgba(87,70,62,.05) !important;
+}
+.workroom-week-button-copy{
+  position:relative !important;
+  z-index:1 !important;
+}
+.workroom-week-button-copy strong{
+  font-family:"Cormorant Garamond","Georgia",serif !important;
+  font-size:1.04rem !important;
+  font-weight:600 !important;
+  color:#51473f !important;
+  letter-spacing:.01em !important;
+}
+.workroom-week-button-copy small{
+  margin-top:3px !important;
+  color:#9a8d82 !important;
+  font-size:.69rem !important;
+}
+.workroom-week-button-arrow{
+  display:none !important;
+}
+
+/* ---------------------------------------------------------
+   Wochen-Popups: Termine oben links, nicht vertikal zentriert.
+   Gilt für Lou, Fina und Werkraum.
+   --------------------------------------------------------- */
+.child-week-item,
+.workroom-week-item{
+  align-items:flex-start !important;
+  justify-content:flex-start !important;
+  min-height:0 !important;
+  padding:11px 12px !important;
+}
+.child-week-item-symbol,
+.workroom-week-item-symbol{
+  align-self:flex-start !important;
+  margin-top:1px !important;
+}
+.child-week-item-copy,
+.workroom-week-item > div{
+  align-self:flex-start !important;
+  padding-top:0 !important;
+}
+.child-week-item-meta,
+.workroom-week-item-meta{
+  margin-top:0 !important;
+  line-height:1.05 !important;
+}
+.child-week-item-copy strong,
+.workroom-week-item strong{
+  margin-top:3px !important;
+  line-height:1.18 !important;
+}
+.child-week-item-copy small,
+.workroom-week-item small{
+  margin-top:3px !important;
+}
+
+/* Termin-Karten dürfen bei nur einem kurzen Termin nicht künstlich riesig sein. */
+.child-week-item.kind-event,
+.workroom-week-item.event{
+  min-height:64px !important;
+  height:auto !important;
+}
+
+/* ---------------------------------------------------------
+   Kinder-Aufgabenzeichen im Wochenplan:
+   kompletter Kreis klickbar, nicht nur der Glyph.
+   --------------------------------------------------------- */
+.school-week-check,
+.child-symbol-check{
+  display:grid !important;
+  place-items:center !important;
+  cursor:pointer !important;
+  user-select:none !important;
+}
+.school-week-check *,
+.child-symbol-check *{
+  pointer-events:none !important;
+}
