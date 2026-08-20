@@ -14329,3 +14329,336 @@ body.child-view-active #papaOverviewModal{
 #recipeDetailBody.recipe-detail-child-mode h4{
   margin-bottom:8px !important;
 }
+
+
+/* =========================================================
+   V16 – Wochenansichten: saubere vertikale Anordnung
+   ========================================================= */
+
+/* Modal: Tabs bleiben oben; Tage beginnen unmittelbar darunter.
+   Keine space-between/stretch-Verteilung bei wenigen Terminen. */
+.week-overview-modal .week-overview-body,
+.week-overview-modal .week-overview-days,
+.child-week-modal .week-overview-body,
+.child-week-modal .week-overview-days,
+.my-week-modal .week-overview-body,
+.my-week-modal .week-overview-days{
+  display:flex !important;
+  flex-direction:column !important;
+  justify-content:flex-start !important;
+  align-items:stretch !important;
+  gap:10px !important;
+  height:auto !important;
+  min-height:0 !important;
+}
+
+.week-overview-modal .week-day-row,
+.child-week-modal .week-day-row,
+.my-week-modal .week-day-row{
+  flex:0 0 auto !important;
+  min-height:0 !important;
+  height:auto !important;
+}
+
+/* Ein einzelner Termin/To-do sitzt oben in seiner Tageskarte. */
+.week-overview-modal .week-day-items,
+.child-week-modal .week-day-items,
+.my-week-modal .week-day-items{
+  display:flex !important;
+  flex-direction:column !important;
+  justify-content:flex-start !important;
+  gap:7px !important;
+  align-self:start !important;
+}
+
+/* Hauptwochenplan:
+   Essen, Termine, Schule und To-dos dürfen keine reservierten Leerhöhen erzeugen.
+   Damit rutschen mehrtägige Termine nicht nach unten, wenn oben Essen vorhanden ist. */
+.week-day-column .day-section,
+.week-day-column .week-section,
+.week-day-column .meal-section,
+.week-day-column .appointment-section,
+.week-day-column .school-section,
+.week-day-column .todo-section{
+  min-height:0 !important;
+  height:auto !important;
+}
+
+.week-day-column{
+  align-content:start !important;
+}
+
+.week-day-column .day-content,
+.week-day-column .day-sections{
+  display:flex !important;
+  flex-direction:column !important;
+  justify-content:flex-start !important;
+  gap:12px !important;
+}
+
+/* Mehrtägige Termine: keine zusätzliche obere Reserve in Folge-Tagen. */
+.week-day-column .appointment-section:empty,
+.week-day-column .school-section:empty,
+.week-day-column .todo-section:empty,
+.week-day-column .meal-section:empty{
+  display:none !important;
+}
+
+
+/* =========================================================
+   V17 – Rezept-Eingabe nach Nutzungshäufigkeit geordnet
+   ========================================================= */
+
+#recipeForm.recipe-form-v17{
+  display:grid !important;
+  grid-template-columns:1fr !important;
+  gap:12px !important;
+  padding:14px !important;
+  background:#f6faf8 !important;
+  border:1px solid rgba(121,151,140,.22) !important;
+  border-radius:22px !important;
+}
+#recipeForm.recipe-form-v17.hidden{
+  display:none !important;
+}
+
+/* Häufiges = prominent */
+.recipe-v17-main,
+.recipe-v17-content,
+.recipe-v17-tags{
+  padding:15px !important;
+  border:1px solid rgba(151,164,157,.18) !important;
+  border-radius:17px !important;
+  background:#fffdfb !important;
+}
+
+.recipe-v17-kicker{
+  margin-bottom:7px !important;
+  color:#81968d !important;
+  font-size:.64rem !important;
+  font-weight:700 !important;
+  letter-spacing:.14em !important;
+}
+
+.recipe-v17-main-grid{
+  display:grid !important;
+  grid-template-columns:minmax(0,2.35fr) minmax(240px,1fr) !important;
+  gap:11px !important;
+  align-items:end !important;
+}
+
+/* Rezeptname darf sofort ins Auge fallen. */
+.recipe-v17-title input{
+  min-height:52px !important;
+  padding:10px 14px !important;
+  font-size:1.05rem !important;
+  font-weight:650 !important;
+  border:1.5px solid rgba(125,156,144,.40) !important;
+  background:#fff !important;
+}
+.recipe-v17-category select{
+  min-height:52px !important;
+  font-weight:600 !important;
+  border:1.5px solid rgba(125,156,144,.34) !important;
+  background:#f8fbf8 !important;
+}
+
+.recipe-v17-section-head{
+  display:flex !important;
+  justify-content:space-between !important;
+  align-items:end !important;
+  margin-bottom:10px !important;
+}
+.recipe-v17-section-head strong{
+  display:block !important;
+  color:#40534b !important;
+  font-size:.93rem !important;
+}
+.recipe-v17-section-head small{
+  display:block !important;
+  margin-top:2px !important;
+  color:#9a918c !important;
+  font-size:.67rem !important;
+}
+
+/* Zutaten + Zubereitung = größter Arbeitsbereich. */
+.recipe-content-grid-v17{
+  display:grid !important;
+  grid-template-columns:1fr 1fr !important;
+  gap:12px !important;
+}
+.recipe-content-grid-v17 label>span{
+  color:#4e7567 !important;
+  font-size:.72rem !important;
+  font-weight:750 !important;
+  letter-spacing:.045em !important;
+}
+.recipe-content-grid-v17 textarea{
+  min-height:225px !important;
+  padding:13px 14px !important;
+  border:1.5px solid rgba(127,157,146,.33) !important;
+  border-radius:13px !important;
+  background:#fff !important;
+  font-size:.84rem !important;
+  line-height:1.5 !important;
+}
+
+/* Merkmale: eine ruhige Zeile statt großer Verwaltungsblöcke. */
+.recipe-feature-row-v17{
+  display:flex !important;
+  flex-wrap:wrap !important;
+  gap:8px !important;
+}
+.recipe-feature-row-v17 label{
+  min-height:38px !important;
+  margin:0 !important;
+  padding:7px 11px !important;
+  display:flex !important;
+  align-items:center !important;
+  gap:7px !important;
+  border:1px solid rgba(184,168,161,.34) !important;
+  border-radius:999px !important;
+  background:#fff !important;
+}
+.recipe-feature-row-v17 label:has(input:checked){
+  background:#edf5f0 !important;
+  border-color:#a9c8ba !important;
+}
+.recipe-feature-row-v17 span{
+  font-size:.74rem !important;
+}
+
+.recipe-v17-unit-hint{
+  margin-top:9px !important;
+  padding:7px 10px !important;
+  border-radius:9px !important;
+  background:#f4f7f1 !important;
+  color:#817a73 !important;
+  font-size:.65rem !important;
+}
+
+/* Becherküche: NIE sichtbar, solange Checkbox nicht aktiv ist. */
+#recipeBeakerMapping.hidden{
+  display:none !important;
+}
+#recipeBeakerMapping:not(.hidden){
+  display:block !important;
+}
+#recipeBeakerMapping{
+  grid-column:auto !important;
+  margin:0 !important;
+  padding:15px !important;
+  border:1px solid rgba(124,157,144,.20) !important;
+  border-radius:17px !important;
+  background:#fbfdfb !important;
+}
+
+/* Seltenes in EINEM Aufklapper. */
+.recipe-v17-more{
+  border:1px solid rgba(174,163,156,.24) !important;
+  border-radius:14px !important;
+  background:#fffdfb !important;
+}
+.recipe-v17-more>summary{
+  display:flex !important;
+  align-items:center !important;
+  gap:9px !important;
+  padding:11px 14px !important;
+  cursor:pointer !important;
+  list-style:none !important;
+}
+.recipe-v17-more>summary::-webkit-details-marker{
+  display:none !important;
+}
+.recipe-v17-more>summary::before{
+  content:"›" !important;
+  color:#8a827d !important;
+  font-size:1rem !important;
+  transition:transform .15s ease !important;
+}
+.recipe-v17-more[open]>summary::before{
+  transform:rotate(90deg) !important;
+}
+.recipe-v17-more>summary span{
+  color:#625b57 !important;
+  font-size:.76rem !important;
+  font-weight:650 !important;
+}
+.recipe-v17-more>summary small{
+  color:#a09791 !important;
+  font-size:.64rem !important;
+}
+.recipe-v17-more-grid{
+  display:grid !important;
+  grid-template-columns:repeat(4,minmax(0,1fr)) !important;
+  gap:9px !important;
+  padding:2px 14px 14px !important;
+}
+.recipe-v17-more-grid .recipe-v17-link{
+  grid-column:span 2 !important;
+}
+.recipe-v17-more-grid input,
+.recipe-v17-more-grid select{
+  min-height:38px !important;
+  border-radius:10px !important;
+}
+
+/* Links bewusst klein – sie sind Zusatzinfo, kein Hauptinhalt. */
+.recipe-v17-link input{
+  font-size:.72rem !important;
+}
+
+/* Buttons unten. */
+.recipe-form-actions-v17{
+  display:flex !important;
+  justify-content:flex-end !important;
+  gap:8px !important;
+  padding-top:1px !important;
+}
+
+/* Persönliches Kinderzeichen: Klick landet sicher auf dem Button. */
+.child-symbol-check .child-symbol-glyph,
+.child-symbol-check .child-symbol-done{
+  pointer-events:none !important;
+}
+.school-week-check,
+.school-check{
+  cursor:pointer !important;
+  position:relative !important;
+  z-index:2 !important;
+}
+
+/* Alte V14-Gridregeln für das Formular neutralisieren. */
+#recipeForm.recipe-form-v17 .recipe-entry-basic,
+#recipeForm.recipe-form-v17 .recipe-entry-features,
+#recipeForm.recipe-form-v17 .recipe-entry-content{
+  grid-column:auto !important;
+  grid-row:auto !important;
+}
+
+/* Becher-Anleitung etwas kompakter. */
+#recipeForm.recipe-form-v17 .beaker-map-instructions{
+  margin-bottom:10px !important;
+}
+#recipeForm.recipe-form-v17 .beaker-map-instructions>div{
+  min-height:46px !important;
+}
+
+/* Responsive */
+@media(max-width:900px){
+  .recipe-v17-main-grid,
+  .recipe-content-grid-v17{
+    grid-template-columns:1fr !important;
+  }
+  .recipe-v17-more-grid{
+    grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+  }
+}
+@media(max-width:560px){
+  .recipe-v17-more-grid{
+    grid-template-columns:1fr !important;
+  }
+  .recipe-v17-more-grid .recipe-v17-link{
+    grid-column:auto !important;
+  }
+}
