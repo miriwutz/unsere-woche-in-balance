@@ -1818,6 +1818,33 @@
   </div>
 </dialog>
 
+
+<dialog id="childWeekDialog" class="child-week-dialog">
+  <div class="child-week-shell">
+    <header class="child-week-hero">
+      <div class="child-week-hero-copy">
+        <span id="childWeekIcon" class="child-week-hero-icon"></span>
+        <div>
+          <p>MEINE WOCHE</p>
+          <h2 id="childWeekTitle">Meine Woche</h2>
+          <span id="childWeekSubtitle"></span>
+        </div>
+      </div>
+      <img id="childWeekImage" src="" alt="">
+      <button id="closeChildWeekBtn" type="button" aria-label="Schließen">×</button>
+    </header>
+
+    <nav class="child-week-tabs" aria-label="Woche auswählen">
+      <button class="child-week-tab active" data-week-offset="0" type="button">Diese Woche</button>
+      <button class="child-week-tab" data-week-offset="1" type="button">Nächste Woche</button>
+      <button class="child-week-tab" data-week-offset="2" type="button">+2 Wochen</button>
+      <button class="child-week-tab" data-week-offset="3" type="button">+3 Wochen</button>
+    </nav>
+
+    <div id="childWeekList" class="child-week-list"></div>
+  </div>
+</dialog>
+
 <dialog id="papaOverviewDialog" class="papa-overview-dialog">
   <div class="papa-overview-header">
     <div>
