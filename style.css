@@ -8480,3 +8480,49 @@ button.day-meal{cursor:pointer}
   .workroom-shopping-add,.workroom-shopping-archive-tools{grid-template-columns:1fr}
   .workroom-shopping-add > *{grid-column:1 !important}
 }
+
+
+/* =========================================================
+   V32 – Wochenplan-Datenreparatur
+   ========================================================= */
+
+/* Geburtstag / Namenstag / Jahrestag: bewusst fein und IMMER ganz unten. */
+.day{
+  display:flex !important;
+  flex-direction:column !important;
+}
+.day-quiet-events{
+  margin-top:auto;
+  padding-top:8px;
+  display:grid;
+  gap:3px;
+}
+.day-quiet-event{
+  display:flex;
+  align-items:center;
+  gap:5px;
+  min-height:20px;
+  padding:3px 6px;
+  border-top:1px solid rgba(181,155,145,.13);
+  color:#8e817b;
+  font-size:.62rem;
+  line-height:1.2;
+}
+.day-quiet-event > span:first-child{
+  font-size:.68rem;
+  opacity:.72;
+}
+
+/* Unser Überblick: 4 Gruppen inklusive "Noch bewerten". */
+.archive-columns{
+  grid-template-columns:repeat(4,minmax(0,1fr)) !important;
+}
+.archive-column.unrated{
+  background:rgba(248,246,242,.62);
+}
+@media(max-width:1100px){
+  .archive-columns{grid-template-columns:repeat(2,minmax(0,1fr)) !important}
+}
+@media(max-width:620px){
+  .archive-columns{grid-template-columns:1fr !important}
+}
