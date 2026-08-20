@@ -12397,3 +12397,86 @@ button.day-meal{cursor:pointer}
     display:none !important;
   }
 }
+
+
+/* =========================================================
+   Kinderansicht V5 – Rezeptzeichen sauber getrennt
+   Elternansicht klassisch, Kinderansicht mit Zeichen
+   ========================================================= */
+
+/* Elternansicht: garantiert KEINE Maßzeichen. */
+.recipe-card:not(.recipe-child-mode) .recipe-measure-svg-wrap,
+#recipeDetailBody:not(.recipe-detail-child-mode) .recipe-measure-svg-wrap{
+  display:none !important;
+}
+
+/* SVGs dürfen das Abhaken in der Kinderansicht nie blockieren. */
+.recipe-child-checkable .measure-svg,
+.recipe-child-checkable .recipe-measure-svg-wrap{
+  pointer-events:none !important;
+}
+
+/* Die ganze Kinderzeile bleibt klickbar. */
+.recipe-card.recipe-child-mode .recipe-child-checkable,
+#recipeDetailBody.recipe-detail-child-mode .recipe-child-checkable{
+  cursor:pointer !important;
+  user-select:none !important;
+}
+
+/* Alle Zeichen etwas tiefer zur Textgrundlinie. */
+.recipe-card.recipe-child-mode .recipe-measure-svg-wrap,
+#recipeDetailBody.recipe-detail-child-mode .recipe-measure-svg-wrap{
+  transform:translateY(3px) !important;
+}
+
+/* Joghurtbecher schmaler/höher als Becher und Topfenbecher. */
+.measure-svg-yogurt{
+  width:20px !important;
+  height:36px !important;
+}
+.recipe-card.recipe-child-mode .measure-svg-yogurt,
+#recipeDetailBody.recipe-detail-child-mode .measure-svg-yogurt{
+  width:21px !important;
+  height:38px !important;
+}
+
+/* Topfenbecher flach und filigran. */
+.measure-svg-topfen{
+  width:35px !important;
+  height:27px !important;
+}
+.recipe-card.recipe-child-mode .measure-svg-topfen,
+#recipeDetailBody.recipe-detail-child-mode .measure-svg-topfen{
+  width:37px !important;
+  height:29px !important;
+}
+
+/* Kindermaß IMMER: Menge -> Zeichen -> Zutat.
+   Das behebt speziell die verrutschte Menge beim Topfenbecher. */
+.recipe-card.recipe-child-mode .recipe-child-measure-part,
+#recipeDetailBody.recipe-detail-child-mode .recipe-child-measure-part{
+  display:inline-flex !important;
+  flex-direction:row !important;
+  align-items:center !important;
+  gap:5px !important;
+}
+
+.recipe-card.recipe-child-mode .recipe-child-amount,
+#recipeDetailBody.recipe-detail-child-mode .recipe-child-amount{
+  order:1 !important;
+  display:inline-block !important;
+  min-width:auto !important;
+  margin:0 !important;
+}
+
+.recipe-card.recipe-child-mode .recipe-child-measure-part .recipe-measure-svg-wrap,
+#recipeDetailBody.recipe-detail-child-mode .recipe-child-measure-part .recipe-measure-svg-wrap{
+  order:2 !important;
+  margin:0 !important;
+}
+
+/* Wenn eine Kinderersetzung existiert, Erwachsenenfassung in der Kinderansicht ausblenden. */
+.recipe-card.recipe-child-mode .recipe-child-checkable:has(.recipe-child-ingredient) > .recipe-adult-ingredient,
+#recipeDetailBody.recipe-detail-child-mode .recipe-child-checkable:has(.recipe-child-ingredient) > .recipe-adult-ingredient{
+  display:none !important;
+}
