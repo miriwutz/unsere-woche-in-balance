@@ -637,8 +637,22 @@
 
         <label class="recipe-kids-toggle">
           <input id="recipeKids" type="checkbox">
-          <span>🧒 Kindgerecht</span>
+          <span>🧒 Kindergericht</span>
         </label>
+
+        <label class="recipe-selfcook-toggle-form" title="Eigene größere Kinderansicht aktivieren">
+          <input id="recipeSelfCook" type="checkbox">
+          <span>👧 Das kannst du selbst kochen</span>
+        </label>
+
+        <label class="recipe-beaker-toggle" title="Zutaten bleiben in derselben Liste; Becher/Löffel werden in der Kinderansicht automatisch erkannt">
+          <input id="recipeBeakerKitchen" type="checkbox">
+          <span>🥣 Becherküche</span>
+        </label>
+
+        <div class="recipe-beaker-note">
+          Zutaten weiterhin ganz normal eingeben, z. B. „2 Topfenbecher Topfen“, „1 EL Kakao“, „1 Prise Salz“.
+        </div>
 
         <label class="recipe-healthy-toggle">
           <input id="recipeHealthy" type="checkbox">
@@ -694,6 +708,11 @@
       <label class="recipe-kids-filter">
         <input id="recipeKidsOnlyFilter" type="checkbox">
         <span>🧒 Kindergerichte</span>
+      </label>
+
+      <label class="recipe-selfcook-filter">
+        <input id="recipeSelfCookOnlyFilter" type="checkbox">
+        <span>👧 Selbst kochen</span>
       </label>
 
       <label class="recipe-healthy-filter">
