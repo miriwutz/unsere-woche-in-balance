@@ -7288,7 +7288,8 @@ function automaticChildIngredientName(line) {
   return String(line || "")
     .replace(/^\s*([0-9]+(?:[.,][0-9]+)?|[¼½¾⅓⅔])\s*/i, "")
     .replace(/\b(blau(?:er|e|es|en)?|rot(?:er|e|es|en)?|grün(?:er|e|es|en)?|gruen(?:er|e|es|en)?|gelb(?:er|e|es|en)?|orange(?:r|e|s|n)?|lila)\b/gi, "")
-    .replace(/\b(topfenbecher|joghurtbecher|becher|esslöffel|el|teelöffel|tl|prise)\b/gi, "")
+    .replace(/\b(topfenbecher|joghurtbecher|becher|esslöffel|el|teelöffel|tl)\b/gi, "")
+    .replace(/^\s*prise\s+/i, "")
     .replace(/\s+/g, " ")
     .trim();
 }
