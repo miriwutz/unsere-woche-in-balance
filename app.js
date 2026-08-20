@@ -2803,10 +2803,10 @@ function showManualTimetable(id){
   }
 
 const ttIllustration = id === "1"
-    ? `<img class="tt-person-illustration tt-lou-illustration" src="./lou-stundenplan.png?v=42" alt="">`
+    ? `<img class="tt-person-illustration tt-lou-illustration" src="./lou-stundenplan.png?v=47" alt="">`
     : id === "2"
-      ? `<img class="tt-person-illustration tt-fina-illustration" src="./fina-stundenplan.png?v=42" alt="">`
-      : `<img class="tt-person-illustration tt-mama-illustration" src="./workroom-meditation.png?v=42" alt="">`;
+      ? `<img class="tt-person-illustration tt-fina-illustration" src="./fina-stundenplan.png?v=47" alt="">`
+      : `<img class="tt-person-illustration tt-mama-illustration" src="./workroom-meditation.png?v=47" alt="">`;
 
 out.innerHTML=`${ttIllustration}<div class="tt-table-wrap"><table class="tt-table tt-view-table ${id === "mama" ? "tt-mama" : id === "1" ? "tt-lou" : "tt-fina"}">
     <thead><tr><th>Zeit</th>${manualTimetableDayNames.map(x=>`<th>${x}</th>`).join("")}</tr></thead>
@@ -6863,10 +6863,10 @@ function recipeLeadingAmount(line) {
 
 function automaticChildIngredientName(line) {
   return String(line || "")
-    .replace(/^\\s*([0-9]+(?:[.,][0-9]+)?|[¼½¾⅓⅔])\\s*/i, "")
-    .replace(/\\b(blau(?:er|e|es|en)?|rot(?:er|e|es|en)?|grün(?:er|e|es|en)?|gruen(?:er|e|es|en)?|gelb(?:er|e|es|en)?|orange(?:r|e|s|n)?|lila)\\b/gi, "")
-    .replace(/\\b(topfenbecher|joghurtbecher|becher|esslöffel|el|teelöffel|tl|prise)\\b/gi, "")
-    .replace(/\\s+/g, " ")
+    .replace(/^\s*([0-9]+(?:[.,][0-9]+)?|[¼½¾⅓⅔])\s*/i, "")
+    .replace(/\b(blau(?:er|e|es|en)?|rot(?:er|e|es|en)?|grün(?:er|e|es|en)?|gruen(?:er|e|es|en)?|gelb(?:er|e|es|en)?|orange(?:r|e|s|n)?|lila)\b/gi, "")
+    .replace(/\b(topfenbecher|joghurtbecher|becher|esslöffel|el|teelöffel|tl|prise)\b/gi, "")
+    .replace(/\s+/g, " ")
     .trim();
 }
 
@@ -7249,7 +7249,7 @@ function showRecipeDetail(recipeOrTitle) {
   body.classList.remove("recipe-detail-child-mode");
   const external = normalizedRecipeSource(recipe) === "external";
   const childIllustrationHtml = recipeSelfCook(recipe)
-    ? `<div class="recipe-detail-child-illustration" aria-hidden="true"><img src="./cooking-kids.png?v=42" alt=""></div>`
+    ? `<div class="recipe-detail-child-illustration" aria-hidden="true"><img src="./cooking-kids.png?v=47" alt=""></div>`
     : "";
 
   body.innerHTML = `
@@ -7448,7 +7448,7 @@ function renderRecipes() {
         </div>
         <div class="recipe-tools">${escapeHtml(recipeCardMark(r))}</div>
       </header>
-      ${recipeSelfCook(r) ? `<div class="recipe-child-illustration" aria-hidden="true"><img src="./cooking-kids.png?v=42" alt=""></div>` : ""}
+      ${recipeSelfCook(r) ? `<div class="recipe-child-illustration" aria-hidden="true"><img src="./cooking-kids.png?v=47" alt=""></div>` : ""}
       ${normalizedRecipeSource(r) === "external" ? `
         <div class="recipe-card-body recipe-external-body">
           <div class="recipe-external-copy">
