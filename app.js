@@ -5141,10 +5141,10 @@ document.querySelector("#addSchoolPrintBtn")?.addEventListener("click", () => {
 // =============================
 
 let activeWorkroomLinkCategory = "all";
+let activeWorkroomLinkUse = "all";
+let activeWorkroomLinkImportant = false;
 
 function renderWorkroomLinks() {
-  // Datensicherheits-Hydration: vorhandene lokale Werkraumdaten haben Vorrang,
-  // falls der In-Memory-State durch einen unvollständigen Cloudstand leerer ist.
   try {
     const localWorkroom = JSON.parse(localStorage.getItem("balanceProd.workroom") || "null");
     if (localWorkroom && typeof localWorkroom === "object") {
@@ -5163,50 +5163,73 @@ function renderWorkroomLinks() {
   const list = document.querySelector("#workroomLinkList");
   if (!list) return;
 
+  state.workroom = normalizeWorkroom(state.workroom);
+
   const categoryLabels = {
     wood: "🪵 Holz",
     paper: "📄 Papier",
     free: "✂️ Freies Arbeiten",
     experiment: "🧪 Experimentieren",
+    documents: "📎 Unterlagen & Belege",
+    bureaucracy: "🗂 Bürokratie",
+    current: "📌 Aktuell",
     other: "✨ Sonstiges"
+  };
+
+  const useLabels = {
+    soon: "Demnächst",
+    current: "📌 Aktuell",
+    bureaucracy: "🗂 Bürokratie",
+    year: "🗓 Jahresplanung",
+    later: "🌙 Später vorgemerkt"
   };
 
   const links = [...state.workroom.links]
     .filter(link =>
       activeWorkroomLinkCategory === "all" ||
-      link.category === activeWorkroomLinkCategory
-    );
+      (link.category || "other") === activeWorkroomLinkCategory
+    )
+    .filter(link =>
+      activeWorkroomLinkUse === "all" ||
+      (link.use || "soon") === activeWorkroomLinkUse
+    )
+    .filter(link =>
+      !activeWorkroomLinkImportant || !!link.important
+    )
+    .sort((a,b) => {
+      if (!!b.important !== !!a.important) return Number(!!b.important) - Number(!!a.important);
+      return Number(b.updatedAt || b.createdAt || 0) - Number(a.updatedAt || a.createdAt || 0);
+    });
 
   if (!links.length) {
     list.innerHTML =
-      `<div class="workroom-empty">Noch keine Links in dieser Kategorie gespeichert.</div>`;
+      `<div class="workroom-empty">Keine Links passen zu diesem Filter.</div>`;
     return;
   }
 
   list.innerHTML = links.map(link => `
-    <div class="workroom-link-item" data-id="${link.id}">
+    <div class="workroom-link-item ${link.important ? "workroom-link-item-important" : ""}" data-id="${link.id}">
+      <div class="workroom-link-main">
+        <div class="workroom-link-texts">
+          <a
+            href="${escapeHtml(link.url)}"
+            target="_blank"
+            rel="noopener"
+            class="workroom-link-title">
+            ${link.important ? `<span class="workroom-link-star" title="Wichtig">★</span>` : ""}
+            ${escapeHtml(link.title)}
+          </a>
 
- <div class="workroom-link-main">
+          ${link.note
+            ? `<div class="workroom-link-note">${escapeHtml(link.note)}</div>`
+            : ""}
 
-  <div class="workroom-link-texts">
-    <a
-      href="${escapeHtml(link.url)}"
-      target="_blank"
-      rel="noopener"
-      class="workroom-link-title">
-      ${escapeHtml(link.title)}
-    </a>
-
-    ${link.note
-      ? `<div class="workroom-link-note">${escapeHtml(link.note)}</div>`
-      : ""}
-  </div>
-
-  <span class="workroom-link-category">
-    ${categoryLabels[link.category] || "✨ Sonstiges"}
-  </span>
-
-</div>
+          <div class="workroom-link-meta">
+            <span class="workroom-link-category">${categoryLabels[link.category] || "✨ Sonstiges"}</span>
+            <span class="workroom-link-use">${useLabels[link.use || "soon"] || "Demnächst"}</span>
+          </div>
+        </div>
+      </div>
 
       <div class="workroom-link-actions">
         <button
@@ -5221,57 +5244,54 @@ function renderWorkroomLinks() {
           data-id="${link.id}"
           title="Löschen">×</button>
       </div>
-
     </div>
   `).join("");
 
-  document.querySelectorAll(".workroom-link-delete").forEach(btn => {
+  list.querySelectorAll(".workroom-link-delete").forEach(btn => {
     btn.addEventListener("click", e => {
       const id = e.currentTarget.dataset.id;
-
-      state.workroom.links =
-        state.workroom.links.filter(link => link.id !== id);
-
+      state.workroom.links = state.workroom.links.filter(link => link.id !== id);
       save();
       renderWorkroomLinks();
     });
   });
 
-  document.querySelectorAll(".workroom-link-edit").forEach(btn => {
+  list.querySelectorAll(".workroom-link-edit").forEach(btn => {
     btn.addEventListener("click", e => {
       const id = e.currentTarget.dataset.id;
       const link = state.workroom.links.find(link => link.id === id);
-
       if (!link) return;
 
       document.querySelector("#workroomLinkTitle").value = link.title || "";
       document.querySelector("#workroomLinkNote").value = link.note || "";
       document.querySelector("#workroomLinkUrl").value = link.url || "";
-      document.querySelector("#workroomLinkCategory").value =
-        link.category || "other";
+      document.querySelector("#workroomLinkCategory").value = link.category || "other";
+      document.querySelector("#workroomLinkUse").value = link.use || "soon";
+      document.querySelector("#workroomLinkImportant").checked = !!link.important;
 
       const addBtn = document.querySelector("#addWorkroomLinkBtn");
-
       addBtn.dataset.editId = link.id;
       addBtn.textContent = "Änderung speichern";
     });
   });
 }
 
-
 // Link speichern / bearbeiten
 document.querySelector("#addWorkroomLinkBtn")?.addEventListener("click", () => {
-
   const titleInput = document.querySelector("#workroomLinkTitle");
   const noteInput = document.querySelector("#workroomLinkNote");
   const urlInput = document.querySelector("#workroomLinkUrl");
   const categoryInput = document.querySelector("#workroomLinkCategory");
+  const useInput = document.querySelector("#workroomLinkUse");
+  const importantInput = document.querySelector("#workroomLinkImportant");
   const button = document.querySelector("#addWorkroomLinkBtn");
 
-  const title = titleInput.value.trim();
-  const note = noteInput.value.trim();
-  let url = urlInput.value.trim();
-  const category = categoryInput.value || "other";
+  const title = titleInput?.value.trim() || "";
+  const note = noteInput?.value.trim() || "";
+  let url = urlInput?.value.trim() || "";
+  const category = categoryInput?.value || "other";
+  const use = useInput?.value || "soon";
+  const important = !!importantInput?.checked;
 
   if (!title || !url) return;
 
@@ -5279,22 +5299,23 @@ document.querySelector("#addWorkroomLinkBtn")?.addEventListener("click", () => {
     url = "https://" + url;
   }
 
-  const editId = button.dataset.editId;
+  const editId = button?.dataset.editId;
 
   if (editId) {
-    const item =
-      state.workroom.links.find(link => link.id === editId);
+    const item = state.workroom.links.find(link => link.id === editId);
 
     if (item) {
       item.title = title;
       item.note = note;
       item.url = url;
       item.category = category;
+      item.use = use;
+      item.important = important;
+      item.updatedAt = Date.now();
     }
 
     delete button.dataset.editId;
     button.textContent = "+ Speichern";
-
   } else {
     state.workroom.links.push({
       id: uid(),
@@ -5302,38 +5323,42 @@ document.querySelector("#addWorkroomLinkBtn")?.addEventListener("click", () => {
       note,
       url,
       category,
-      createdAt: Date.now()
+      use,
+      important,
+      createdAt: Date.now(),
+      updatedAt: Date.now()
     });
   }
 
-  titleInput.value = "";
-  noteInput.value = "";
-  urlInput.value = "";
-  categoryInput.value = "wood";
+  if (titleInput) titleInput.value = "";
+  if (noteInput) noteInput.value = "";
+  if (urlInput) urlInput.value = "";
+  if (categoryInput) categoryInput.value = "wood";
+  if (useInput) useInput.value = "soon";
+  if (importantInput) importantInput.checked = false;
 
   save();
   renderWorkroomLinks();
 });
 
+// Kategorie-Filter
+document.querySelector("#workroomLinkCategoryFilter")?.addEventListener("change", e => {
+  activeWorkroomLinkCategory = e.currentTarget.value || "all";
+  renderWorkroomLinks();
+});
 
-// Kategorien filtern
-document.querySelectorAll(".workroom-link-filter").forEach(btn => {
+// Zeitraum-Filter
+document.querySelector("#workroomLinkUseFilterSelect")?.addEventListener("change", e => {
+  activeWorkroomLinkUse = e.currentTarget.value || "all";
+  renderWorkroomLinks();
+});
 
-  btn.addEventListener("click", e => {
-
-    activeWorkroomLinkCategory =
-      e.currentTarget.dataset.category || "all";
-
-    document.querySelectorAll(".workroom-link-filter")
-      .forEach(filter =>
-        filter.classList.toggle(
-          "active",
-          filter === e.currentTarget
-        )
-      );
-
-    renderWorkroomLinks();
-  });
+// Wichtig-Filter
+document.querySelector("#workroomLinkImportantFilter")?.addEventListener("click", e => {
+  activeWorkroomLinkImportant = !activeWorkroomLinkImportant;
+  e.currentTarget.classList.toggle("active", activeWorkroomLinkImportant);
+  e.currentTarget.setAttribute("aria-pressed", activeWorkroomLinkImportant ? "true" : "false");
+  renderWorkroomLinks();
 });
 
 document.querySelector("#addVideoBtn").addEventListener("click", () => {
