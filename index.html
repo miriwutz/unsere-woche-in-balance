@@ -494,11 +494,15 @@
     
     <div class="shopping-add">
 
-      <input
-        id="shoppingItemInput"
-        type="text"
-        placeholder="Was brauchen wir?"
-      >
+      <div class="shopping-suggest-wrap">
+        <input
+          id="shoppingItemInput"
+          type="text"
+          placeholder="Was brauchen wir?"
+          autocomplete="off"
+        >
+        <div id="shoppingSuggestions" class="shopping-suggestions hidden" role="listbox" aria-label="Vorschläge"></div>
+      </div>
 
       <select id="shoppingCategory">
         <option value="">Kategorie wählen</option>
