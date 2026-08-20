@@ -11115,6 +11115,15 @@ document.querySelectorAll("[data-close-school-panel='links']").forEach(btn => {
   });
 });
 
+
+document.querySelectorAll("[data-close-school-timetable]").forEach(btn => {
+  btn.addEventListener("click", () => {
+    const id=btn.dataset.closeSchoolTimetable;
+    document.querySelector(`#schoolTimetableManage${id}`)?.classList.remove("is-open");
+    document.querySelector(`#manualTimetableWrap${id}`)?.classList.add("hidden");
+  });
+});
+
 document.querySelectorAll("[data-school-open-timetable]").forEach(btn => {
   btn.addEventListener("click", () => {
     const id=btn.dataset.schoolOpenTimetable;
