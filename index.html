@@ -561,113 +561,193 @@
       <button id="toggleRecipeFormBtn" class="secondary-btn" type="button">＋ Rezept hinzufügen</button>
     </div>
 
-    <div id="recipeForm" class="card recipe-form hidden">
-      <div class="recipe-form-grid">
-        <input id="recipeTitle" type="text" placeholder="Rezeptname …">
+    <div id="recipeForm" class="card recipe-form recipe-form-v35 hidden">
+      <div class="recipe-entry-section recipe-entry-basic">
+        <div class="recipe-entry-section-head">
+          <div>
+            <span>1</span>
+            <div>
+              <strong>Grunddaten</strong>
+              <small>Das brauchst du fast immer.</small>
+            </div>
+          </div>
+        </div>
 
-        <select id="recipeSourceType" title="Rezeptart">
-          <option value="internal" selected>📖 Internes Rezept</option>
-          <option value="external">🔗 Internetrezept</option>
-        </select>
+        <div class="recipe-basic-grid">
+          <label class="recipe-field recipe-field-title">
+            <span>Rezeptname</span>
+            <input id="recipeTitle" type="text" placeholder="z. B. Topfenheulchen">
+          </label>
 
-        <select id="recipeCategory">
-          <option value="main" selected>🍝 Hauptgericht</option>
-          <option value="breakfast">🥣 Frühstück & Morgenideen</option>
-          <option value="spread">🥖 Aufstriche & Dips</option>
-          <option value="soup">🍲 Suppen & Eintöpfe</option>
-          <option value="small">🥙 Kleine Sachen & Jause</option>
-          <option value="salad">🥗 Salate & Frisches</option>
-          <option value="sweet">🍓 Süßes & Backen</option>
-          <option value="drink">🥤 Getränke & Smoothies</option>
-          <option value="other">✨ Sonstiges</option>
-        </select>
+          <label class="recipe-field">
+            <span>Rezeptart</span>
+            <select id="recipeSourceType" title="Rezeptart">
+              <option value="internal" selected>📖 Internes Rezept</option>
+              <option value="external">🔗 Internetrezept</option>
+            </select>
+          </label>
 
-        <select id="recipeDifficulty">
-          <option value="easy">Einfach</option>
-          <option value="medium" selected>Mittel</option>
-          <option value="advanced">Etwas aufwendiger</option>
-        </select>
+          <label class="recipe-field">
+            <span>Kategorie</span>
+            <select id="recipeCategory">
+              <option value="main" selected>🍝 Hauptgericht</option>
+              <option value="breakfast">🥣 Frühstück & Morgenideen</option>
+              <option value="spread">🥖 Aufstriche & Dips</option>
+              <option value="soup">🍲 Suppen & Eintöpfe</option>
+              <option value="small">🥙 Kleine Sachen & Jause</option>
+              <option value="salad">🥗 Salate & Frisches</option>
+              <option value="sweet">🍓 Süßes & Backen</option>
+              <option value="drink">🥤 Getränke & Smoothies</option>
+              <option value="other">✨ Sonstiges</option>
+            </select>
+          </label>
 
-        <select id="recipeRating" title="Wie war es?">
-          <option value="">Noch nicht bewertet</option>
-          <option value="good">😊 Gut</option>
-          <option value="medium">🙂 Mittel</option>
-          <option value="bad">😕 Schlecht</option>
-        </select>
+          <label class="recipe-field">
+            <span>Schwierigkeit</span>
+            <select id="recipeDifficulty">
+              <option value="easy">Einfach</option>
+              <option value="medium" selected>Mittel</option>
+              <option value="advanced">Etwas aufwendiger</option>
+            </select>
+          </label>
 
-        <input id="recipeTime" type="text" placeholder="Zeit, z. B. 20 Min.">
-        <textarea id="recipeIngredients" rows="6" placeholder="Zutaten – eine Zutat pro Zeile"></textarea>
-        <textarea id="recipeSteps" rows="6" placeholder="Zubereitung – ein Schritt pro Zeile"></textarea>
-        <input id="recipeWebUrl" type="url" placeholder="Link zum Onlinerezept – optional">
-        <input id="recipeYoutubeUrl" type="url" placeholder="YouTube-Link – optional">
+          <label class="recipe-field recipe-time-field">
+            <span>Zeit</span>
+            <input id="recipeTime" type="text" placeholder="z. B. 20 Min.">
+          </label>
+        </div>
 
-        <label class="recipe-card-mark-field">
-          <span>Kartenzeichen</span>
-          <select id="recipeCardMark">
-            <optgroup label="Ruhig & geschmackvoll">
-              <option value="⌁">⌁ Feine Linie</option>
-              <option value="✦">✦ Stern</option>
-              <option value="☾">☾ Mond</option>
-              <option value="♡">♡ Herz</option>
-              <option value="❋">❋ Blüte</option>
-              <option value="◌">◌ Kreis</option>
-              <option value="≈">≈ Welle</option>
-              <option value="∞">∞ Unendlich</option>
-            </optgroup>
-            <optgroup label="Cool">
-              <option value="⚡︎">⚡ Blitz</option>
-              <option value="★">★ Star</option>
-              <option value="☻">☻ Smiley</option>
-              <option value="♬">♬ Musik</option>
-              <option value="✌︎">✌ Peace</option>
-              <option value="✪">✪ Cool Star</option>
-            </optgroup>
-          </select>
+        <label class="recipe-field recipe-web-main">
+          <span id="recipeWebLabel">Link – optional</span>
+          <input id="recipeWebUrl" type="url" placeholder="Link zur Quelle – optional">
         </label>
+      </div>
 
-        <label class="recipe-bake-field">
-          <span>Backzeit</span>
-          <input id="recipeBakeTime" type="text" inputmode="numeric" placeholder="z. B. 35 Min.">
-        </label>
+      <div class="recipe-entry-section recipe-entry-features">
+        <div class="recipe-entry-section-head compact">
+          <div>
+            <span>2</span>
+            <div>
+              <strong>Was passt zu diesem Rezept?</strong>
+              <small>Nur anklicken, was wirklich zutrifft.</small>
+            </div>
+          </div>
+        </div>
 
-        <label class="recipe-temp-field">
-          <span>Grad</span>
-          <input id="recipeTemperature" type="text" inputmode="numeric" placeholder="z. B. 180 °C">
-        </label>
+        <div class="recipe-feature-row">
+          <label class="recipe-kids-toggle">
+            <input id="recipeKids" type="checkbox">
+            <span>🧒 Kindergericht</span>
+          </label>
 
-        <label class="recipe-kids-toggle">
-          <input id="recipeKids" type="checkbox">
-          <span>🧒 Kindergericht</span>
-        </label>
+          <label class="recipe-selfcook-toggle-form" title="Eigene größere Kinderansicht aktivieren">
+            <input id="recipeSelfCook" type="checkbox">
+            <span>👧 Selbst kochen</span>
+          </label>
 
-        <label class="recipe-selfcook-toggle-form" title="Eigene größere Kinderansicht aktivieren">
-          <input id="recipeSelfCook" type="checkbox">
-          <span>👧 Das kannst du selbst kochen</span>
-        </label>
+          <label class="recipe-beaker-toggle" title="Becher/Löffel werden in der Kinderansicht automatisch erkannt">
+            <input id="recipeBeakerKitchen" type="checkbox">
+            <span>🥣 Becherküche</span>
+          </label>
 
-        <label class="recipe-beaker-toggle" title="Zutaten bleiben in derselben Liste; Becher/Löffel werden in der Kinderansicht automatisch erkannt">
-          <input id="recipeBeakerKitchen" type="checkbox">
-          <span>🥣 Becherküche</span>
-        </label>
+          <label class="recipe-healthy-toggle">
+            <input id="recipeHealthy" type="checkbox">
+            <span>🌿 Gesund & bunt</span>
+          </label>
+
+          <label class="recipe-favorite-toggle" title="Als Lieblingsrezept markieren">
+            <input id="recipeFavorite" type="checkbox">
+            <span>☆ Favorit</span>
+          </label>
+        </div>
 
         <div class="recipe-beaker-note">
-          Zutaten weiterhin ganz normal eingeben, z. B. „2 Topfenbecher Topfen“, „1 EL Kakao“, „1 Prise Salz“.
+          Bei Becherküche Zutaten einfach normal schreiben: „2 Topfenbecher Topfen“, „1 EL Kakao“, „1 Prise Salz“.
+        </div>
+      </div>
+
+      <div class="recipe-entry-section recipe-entry-content">
+        <div class="recipe-entry-section-head">
+          <div>
+            <span>3</span>
+            <div>
+              <strong>Rezept</strong>
+              <small>Eine Zutat bzw. ein Schritt pro Zeile.</small>
+            </div>
+          </div>
         </div>
 
-        <label class="recipe-healthy-toggle">
-          <input id="recipeHealthy" type="checkbox">
-          <span>🌿 Gesund & bunt</span>
-        </label>
+        <div class="recipe-content-grid">
+          <label class="recipe-field recipe-ingredients-field">
+            <span>Zutaten</span>
+            <textarea id="recipeIngredients" rows="8" placeholder="z. B.&#10;2 Topfenbecher Topfen&#10;1 Becher Mehl&#10;2 Eier"></textarea>
+          </label>
 
-        <label class="recipe-favorite-toggle" title="Als Lieblingsrezept markieren">
-          <input id="recipeFavorite" type="checkbox">
-          <span>☆ Favorit</span>
-        </label>
-
-        <div class="recipe-form-actions">
-          <button id="cancelRecipeEditBtn" class="secondary-btn hidden" type="button">Bearbeiten abbrechen</button>
-          <button id="saveRecipeBtn" class="primary-btn" type="button">Rezept speichern</button>
+          <label class="recipe-field recipe-steps-field">
+            <span>Zubereitung</span>
+            <textarea id="recipeSteps" rows="8" placeholder="z. B.&#10;Alle Zutaten vermischen.&#10;Teig kurz rasten lassen.&#10;In der Pfanne backen."></textarea>
+          </label>
         </div>
+      </div>
+
+      <details class="recipe-entry-more">
+        <summary>Weitere Angaben – nur wenn du sie brauchst</summary>
+
+        <div class="recipe-more-grid">
+          <label class="recipe-field">
+            <span>YouTube-Link</span>
+            <input id="recipeYoutubeUrl" type="url" placeholder="optional">
+          </label>
+
+          <label class="recipe-field recipe-bake-field">
+            <span>Backzeit</span>
+            <input id="recipeBakeTime" type="text" inputmode="numeric" placeholder="z. B. 35 Min.">
+          </label>
+
+          <label class="recipe-field recipe-temp-field">
+            <span>Grad</span>
+            <input id="recipeTemperature" type="text" inputmode="numeric" placeholder="z. B. 180 °C">
+          </label>
+
+          <label class="recipe-field recipe-card-mark-field">
+            <span>Kartenzeichen</span>
+            <select id="recipeCardMark">
+              <optgroup label="Ruhig & geschmackvoll">
+                <option value="⌁">⌁ Feine Linie</option>
+                <option value="✦">✦ Stern</option>
+                <option value="☾">☾ Mond</option>
+                <option value="♡">♡ Herz</option>
+                <option value="❋">❋ Blüte</option>
+                <option value="◌">◌ Kreis</option>
+                <option value="≈">≈ Welle</option>
+                <option value="∞">∞ Unendlich</option>
+              </optgroup>
+              <optgroup label="Cool">
+                <option value="⚡︎">⚡ Blitz</option>
+                <option value="★">★ Star</option>
+                <option value="☻">☻ Smiley</option>
+                <option value="♬">♬ Musik</option>
+                <option value="✌︎">✌ Peace</option>
+                <option value="✪">✪ Cool Star</option>
+              </optgroup>
+            </select>
+          </label>
+
+          <label class="recipe-field">
+            <span>Bewertung</span>
+            <select id="recipeRating" title="Wie war es?">
+              <option value="">Noch nicht bewertet</option>
+              <option value="good">😊 Gut</option>
+              <option value="medium">🙂 Mittel</option>
+              <option value="bad">😕 Schlecht</option>
+            </select>
+          </label>
+        </div>
+      </details>
+
+      <div class="recipe-form-actions recipe-form-actions-v35">
+        <button id="cancelRecipeEditBtn" class="secondary-btn hidden" type="button">Bearbeiten abbrechen</button>
+        <button id="saveRecipeBtn" class="primary-btn" type="button">Rezept speichern</button>
       </div>
     </div>
 
