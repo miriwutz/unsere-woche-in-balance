@@ -8925,3 +8925,254 @@ button.day-meal{cursor:pointer}
     font-size:1.05rem !important;
   }
 }
+
+
+/* =========================================================
+   V35 – Rezeptformular: einfache, schrittweise Eingabe
+   ========================================================= */
+
+.recipes-section #recipeForm.recipe-form-v35{
+  display:block !important;
+  padding:16px !important;
+  background:linear-gradient(135deg,rgba(236,246,242,.76),rgba(255,253,251,.90)) !important;
+}
+.recipes-section #recipeForm.recipe-form-v35.hidden{
+  display:none !important;
+}
+
+.recipe-form-v35 .recipe-entry-section{
+  display:block !important;
+  padding:14px !important;
+  margin:0 0 12px !important;
+  border:1px solid rgba(137,157,148,.16) !important;
+  border-radius:16px !important;
+  background:rgba(255,253,251,.72) !important;
+}
+.recipe-entry-section-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom:12px;
+}
+.recipe-entry-section-head > div{
+  display:flex;
+  align-items:center;
+  gap:9px;
+}
+.recipe-entry-section-head > div > span{
+  display:grid;
+  place-items:center;
+  width:27px;
+  height:27px;
+  flex:0 0 27px;
+  border-radius:50%;
+  background:#e4efea;
+  color:#5d7168;
+  font-size:.72rem;
+  font-weight:700;
+}
+.recipe-entry-section-head strong{
+  display:block;
+  color:#4f5752;
+  font-size:.88rem;
+}
+.recipe-entry-section-head small{
+  display:block;
+  margin-top:2px;
+  color:#968b84;
+  font-size:.66rem;
+  font-weight:400;
+}
+
+.recipe-basic-grid{
+  display:grid !important;
+  grid-template-columns:minmax(250px,1.65fr) minmax(175px,.9fr) minmax(185px,1fr) minmax(145px,.72fr) minmax(130px,.65fr) !important;
+  gap:9px !important;
+  align-items:end !important;
+}
+.recipe-field{
+  display:grid !important;
+  gap:5px !important;
+  min-width:0 !important;
+  width:auto !important;
+}
+.recipe-field > span{
+  color:#746a64;
+  font-size:.67rem;
+}
+.recipe-field input,
+.recipe-field select,
+.recipe-field textarea{
+  width:100% !important;
+  min-width:0 !important;
+  box-sizing:border-box !important;
+}
+.recipe-basic-grid input,
+.recipe-basic-grid select,
+.recipe-web-main input,
+.recipe-more-grid input,
+.recipe-more-grid select{
+  min-height:42px !important;
+}
+
+.recipe-web-main{
+  margin-top:9px !important;
+}
+.recipe-web-main input{
+  max-width:none !important;
+}
+
+.recipe-feature-row,
+.recipe-flags-row{
+  display:flex !important;
+  align-items:center !important;
+  flex-wrap:wrap !important;
+  gap:8px !important;
+  margin:0 !important;
+  padding:0 !important;
+  border:0 !important;
+  background:transparent !important;
+}
+.recipe-feature-row label,
+.recipe-flags-row label{
+  width:auto !important;
+  min-width:0 !important;
+  min-height:36px !important;
+  display:inline-flex !important;
+  align-items:center !important;
+  gap:6px !important;
+  padding:7px 10px !important;
+  margin:0 !important;
+  border:1px solid rgba(203,193,186,.46) !important;
+  border-radius:999px !important;
+  background:#fffdfb !important;
+  white-space:nowrap !important;
+}
+.recipe-feature-row label:has(input:checked),
+.recipe-flags-row label:has(input:checked){
+  background:#edf4ef !important;
+  border-color:rgba(113,147,132,.42) !important;
+}
+.recipe-beaker-note{
+  display:block !important;
+  margin:9px 0 0 !important;
+  padding:7px 9px !important;
+  border-radius:9px !important;
+  background:rgba(238,242,232,.70) !important;
+  color:#7b786c !important;
+  font-size:.67rem !important;
+}
+
+.recipe-content-grid{
+  display:grid !important;
+  grid-template-columns:1fr 1fr !important;
+  gap:12px !important;
+}
+.recipe-content-grid textarea{
+  min-height:190px !important;
+  resize:vertical !important;
+  line-height:1.5 !important;
+  padding:11px 12px !important;
+}
+.recipe-section-hidden{
+  display:none !important;
+}
+
+.recipe-entry-more{
+  margin:0 0 12px !important;
+  border:1px solid rgba(203,193,186,.40) !important;
+  border-radius:14px !important;
+  background:rgba(255,253,251,.62) !important;
+  overflow:hidden !important;
+}
+.recipe-entry-more summary{
+  padding:11px 13px !important;
+  cursor:pointer !important;
+  color:#6e6560 !important;
+  font-size:.75rem !important;
+  font-weight:600 !important;
+}
+.recipe-entry-more[open] summary{
+  border-bottom:1px solid rgba(203,193,186,.28) !important;
+}
+.recipe-more-grid{
+  display:grid !important;
+  grid-template-columns:1.25fr .7fr .7fr 1fr 1fr !important;
+  gap:9px !important;
+  padding:12px !important;
+}
+
+.recipe-form-actions-v35{
+  display:flex !important;
+  justify-content:flex-end !important;
+  gap:8px !important;
+  margin:0 !important;
+  padding:0 !important;
+}
+.recipe-form-actions-v35 button{
+  min-height:40px !important;
+}
+
+/* Alte Positionsregeln des früheren Rezept-Grids neutralisieren */
+.recipe-form-v35 #recipeTitle,
+.recipe-form-v35 #recipeCategory,
+.recipe-form-v35 #recipeDifficulty,
+.recipe-form-v35 #recipeTime,
+.recipe-form-v35 #recipeIngredients,
+.recipe-form-v35 #recipeSteps,
+.recipe-form-v35 #recipeWebUrl,
+.recipe-form-v35 #recipeYoutubeUrl,
+.recipe-form-v35 #recipeBakeTime,
+.recipe-form-v35 #recipeTemperature,
+.recipe-form-v35 #recipeRating,
+.recipe-form-v35 #recipeCardMark,
+.recipe-form-v35 #recipeSourceType{
+  grid-column:auto !important;
+  grid-row:auto !important;
+  max-width:none !important;
+}
+
+@media(max-width:1100px){
+  .recipe-basic-grid{
+    grid-template-columns:2fr 1fr 1fr !important;
+  }
+  .recipe-time-field{
+    grid-column:auto !important;
+  }
+  .recipe-more-grid{
+    grid-template-columns:1fr 1fr 1fr !important;
+  }
+}
+@media(max-width:760px){
+  .recipe-basic-grid,
+  .recipe-content-grid,
+  .recipe-more-grid{
+    grid-template-columns:1fr 1fr !important;
+  }
+  .recipe-field-title,
+  .recipe-web-main{
+    grid-column:1 / -1 !important;
+  }
+}
+@media(max-width:520px){
+  .recipe-basic-grid,
+  .recipe-content-grid,
+  .recipe-more-grid{
+    grid-template-columns:1fr !important;
+  }
+  .recipe-field-title,
+  .recipe-web-main{
+    grid-column:1 !important;
+  }
+  .recipe-feature-row,
+  .recipe-flags-row{
+    align-items:stretch !important;
+  }
+  .recipe-feature-row label,
+  .recipe-flags-row label{
+    flex:1 1 calc(50% - 6px) !important;
+    justify-content:flex-start !important;
+    white-space:normal !important;
+  }
+}
