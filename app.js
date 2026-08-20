@@ -6250,6 +6250,7 @@ let activeRecipeDifficulty = "all";
 let activeRecipeCategory = "all";
 let recipeCategoryTouched = false;
 let recipeKidsOnly = false;
+let recipeSelfCookOnly = false;
 let recipeHealthyOnly = false;
 let recipeFavoriteOnly = false;
 let activeRecipeSource = "all";
@@ -6692,6 +6693,52 @@ document.querySelector("#emptyTrashBtn")?.addEventListener("click",()=>{
 // Rezept-Statusvariablen wurden aus Sicherheitsgründen vor die Auth-Initialisierung verschoben.
 
 
+
+function recipeSelfCook(recipe) {
+  // Alte Kinderrezepte hatten "Das kannst du selbst kochen" noch an recipe.kids gekoppelt.
+  // Bis sie einmal bearbeitet werden, bleibt dieses Verhalten erhalten.
+  return typeof recipe?.selfCook === "boolean" ? recipe.selfCook : !!recipe?.kids;
+}
+
+function recipeBeakerKitchen(recipe) {
+  return !!recipe?.beakerKitchen;
+}
+
+function recipeMeasureType(line, allowBeakers = false) {
+  const value = String(line || "").toLowerCase();
+
+  if (/\btopfenbecher\b/.test(value)) return {type:"topfen", label:"Topfenbecher"};
+  if (/\bjoghurtbecher\b/.test(value)) return {type:"yogurt", label:"Joghurtbecher"};
+  if (/\b(esslöffel|el)\b/.test(value)) return {type:"tbsp", label:"Esslöffel"};
+  if (/\b(teelöffel|tl)\b/.test(value)) return {type:"tsp", label:"Teelöffel"};
+  if (/\bprise\b/.test(value)) return {type:"salt", label:"Prise"};
+  if (/\b(ei|eier)\b/.test(value)) return {type:"egg", label:"Ei"};
+  if (/\b(ml|milliliter)\b/.test(value)) return {type:"liquid", label:"Flüssigkeit"};
+
+  if (allowBeakers && /\bbecher\b/.test(value)) {
+    let color = "neutral";
+    if (/gelb/.test(value)) color = "yellow";
+    else if (/grün|gruen/.test(value)) color = "green";
+    else if (/orange/.test(value)) color = "orange";
+    else if (/rot/.test(value)) color = "red";
+    else if (/blau/.test(value)) color = "blue";
+    return {type:"beaker", color, label:"Becher"};
+  }
+
+  return null;
+}
+
+function recipeMeasureIconHtml(line, recipe) {
+  const measure = recipeMeasureType(line, recipeBeakerKitchen(recipe));
+  if (!measure) return "";
+  const colorClass = measure.color ? ` measure-${measure.color}` : "";
+  return `<span class="recipe-measure-icon measure-${measure.type}${colorClass}" title="${escapeHtml(measure.label)}" aria-label="${escapeHtml(measure.label)}"><i></i></span>`;
+}
+
+function recipeIngredientHtml(line, recipe) {
+  return `${recipeMeasureIconHtml(line, recipe)}<span class="recipe-ingredient-text">${escapeHtml(line)}</span>`;
+}
+
 function normalizedRecipeSource(recipe) {
   if (!recipe) return "internal";
   if (recipe.sourceType === "external" || recipe.sourceType === "internal") return recipe.sourceType;
@@ -6743,6 +6790,12 @@ function resetRecipeForm() {
   const kids = document.querySelector("#recipeKids");
   if (kids) kids.checked = false;
 
+  const selfCook = document.querySelector("#recipeSelfCook");
+  if (selfCook) selfCook.checked = false;
+
+  const beakerKitchen = document.querySelector("#recipeBeakerKitchen");
+  if (beakerKitchen) beakerKitchen.checked = false;
+
   const healthy = document.querySelector("#recipeHealthy");
   if (healthy) healthy.checked = false;
 
@@ -6772,6 +6825,8 @@ function startRecipeEdit(recipe) {
   document.querySelector("#recipeSourceType").value = normalizedRecipeSource(recipe);
   document.querySelector("#recipeRating").value = recipe.rating || "";
   document.querySelector("#recipeKids").checked = !!recipe.kids;
+  document.querySelector("#recipeSelfCook").checked = recipeSelfCook(recipe);
+  document.querySelector("#recipeBeakerKitchen").checked = recipeBeakerKitchen(recipe);
   document.querySelector("#recipeHealthy").checked = !!recipe.healthy;
   document.querySelector("#recipeFavorite").checked = !!recipe.favorite;
   document.querySelector("#recipeTime").value = recipe.time || "";
@@ -7008,10 +7063,11 @@ function showRecipeDetail(recipeOrTitle) {
   if (!dialog || !title || !body) return false;
 
   title.textContent = recipe.title || "Rezept";
+  body.classList.remove("recipe-detail-child-mode");
   const external = normalizedRecipeSource(recipe) === "external";
 
   body.innerHTML = `
-    <div class="recipe-detail-banner ${recipeCategoryClass(recipe.category || "main")} ${recipe.kids ? "recipe-detail-kids" : ""}">
+    <div class="recipe-detail-banner ${recipeCategoryClass(recipe.category || "main")} ${recipe.kids ? "recipe-detail-kids" : ""} ${recipeSelfCook(recipe) ? "recipe-detail-selfcook" : ""}">
       <div class="recipe-detail-time">
         <span class="recipe-detail-clock">${external ? "🔗" : "◔"}</span>
         <span>${external ? "Internetrezept" : escapeHtml(recipe.time || "–")}</span>
@@ -7023,7 +7079,9 @@ function showRecipeDetail(recipeOrTitle) {
           <span>${escapeHtml(recipeDifficultyLabel(recipe.difficulty))}</span>
           ${recipe.favorite ? `<span class="recipe-favorite-badge">★ Lieblingsrezept</span>` : ""}
           ${recipe.rating ? `<span>${recipeRatingLabel(recipe.rating)}</span>` : ""}
-          ${recipe.kids ? `<span class="recipe-kids-badge">🧒 Das kannst du selbst kochen!</span>` : ""}
+          ${recipe.kids ? `<span class="recipe-kids-badge">🧒 Kindergericht</span>` : ""}
+          ${recipeSelfCook(recipe) ? `<button type="button" class="recipe-selfcook-toggle recipe-detail-selfcook-toggle" data-id="${recipe.id}" aria-pressed="false">👧 Das kannst du selbst kochen!</button>` : ""}
+          ${recipeBeakerKitchen(recipe) ? `<span class="recipe-beaker-badge">🥣 Becherküche</span>` : ""}
           ${recipe.healthy ? `<span class="recipe-healthy-badge">🌿 Gesund & bunt</span>` : ""}
         </div>
       </div>
@@ -7042,9 +7100,10 @@ function showRecipeDetail(recipeOrTitle) {
           <h3>Zutaten</h3>
           <div class="recipe-cook-checklist">
             ${normalizedRecipeLines(recipe.ingredients).map(x => `
-              <button type="button" class="recipe-cook-line">
+              <button type="button" class="recipe-cook-line recipe-ingredient-line">
                 <span class="recipe-cook-dot">○</span>
-                <span>${escapeHtml(x)}</span>
+                ${recipeMeasureIconHtml(x, recipe)}
+                <span class="recipe-ingredient-text">${escapeHtml(x)}</span>
               </button>
             `).join("")}
           </div>
@@ -7052,9 +7111,10 @@ function showRecipeDetail(recipeOrTitle) {
         <section>
           <h3>Zubereitung</h3>
           <div class="recipe-cook-checklist">
-            ${normalizedRecipeLines(recipe.steps).map(x => `
-              <button type="button" class="recipe-cook-line">
+            ${normalizedRecipeLines(recipe.steps).map((x,i) => `
+              <button type="button" class="recipe-cook-line recipe-step-line">
                 <span class="recipe-cook-dot">○</span>
+                <span class="recipe-child-step-number">${i+1}</span>
                 <span>${escapeHtml(x)}</span>
               </button>
             `).join("")}
@@ -7067,6 +7127,14 @@ function showRecipeDetail(recipeOrTitle) {
       </div>
     `}
   `;
+
+  body.querySelectorAll(".recipe-detail-selfcook-toggle").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const active = body.classList.toggle("recipe-detail-child-mode");
+      btn.setAttribute("aria-pressed", active ? "true" : "false");
+      btn.textContent = active ? "🌈 Kinderansicht aktiv" : "👧 Das kannst du selbst kochen!";
+    });
+  });
 
   body.querySelectorAll(".recipe-cook-line").forEach(line => {
     line.addEventListener("click", () => {
@@ -7126,6 +7194,7 @@ function renderRecipes() {
       const matchesDifficulty =
         activeRecipeDifficulty === "all" || r.difficulty === activeRecipeDifficulty;
       const matchesKids = !recipeKidsOnly || !!r.kids;
+      const matchesSelfCook = !recipeSelfCookOnly || recipeSelfCook(r);
       const matchesHealthy = !recipeHealthyOnly || !!r.healthy;
       const matchesFavorite = !recipeFavoriteOnly || !!r.favorite;
       const matchesSource = activeRecipeSource === "all" || normalizedRecipeSource(r) === activeRecipeSource;
@@ -7134,7 +7203,7 @@ function renderRecipes() {
         ...(Array.isArray(r.ingredients) ? r.ingredients : [])
       ].join(" ").toLowerCase();
       const matchesSearch = !query || haystack.includes(query);
-      return matchesCategory && matchesDifficulty && matchesKids && matchesHealthy &&
+      return matchesCategory && matchesDifficulty && matchesKids && matchesSelfCook && matchesHealthy &&
         matchesFavorite && matchesSource && matchesSearch;
     })
     .sort((a,b) => (b.createdAt || 0) - (a.createdAt || 0));
@@ -7157,7 +7226,7 @@ function renderRecipes() {
   }
 
   host.innerHTML = visibleRecipes.map(r => `
-    <article class="recipe-card ${recipeCategoryClass(r.category || "main")} ${r.kids ? "recipe-card-kids" : ""}" id="recipe-${r.id}">
+    <article class="recipe-card ${recipeCategoryClass(r.category || "main")} ${r.kids ? "recipe-card-kids" : ""} ${recipeSelfCook(r) ? "recipe-card-selfcook" : ""}" id="recipe-${r.id}">
       <header class="recipe-card-head">
         <div class="recipe-time-mark"><span class="recipe-clock">◔</span><span>${escapeHtml(r.time || "–")}</span></div>
         <div class="recipe-title-wrap">
@@ -7170,7 +7239,9 @@ function renderRecipes() {
             <span>${escapeHtml(recipeDifficultyLabel(r.difficulty))}</span>
             <span>${normalizedRecipeSource(r) === "external" ? "🔗 Internet" : "📖 Intern"}</span>
             ${r.favorite ? `<span class="recipe-favorite-badge">★ Lieblingsrezept</span>` : ""}
-            ${r.kids ? `<span class="recipe-kids-badge">🧒 Das kannst du selbst kochen!</span>` : ""}
+            ${r.kids ? `<span class="recipe-kids-badge">🧒 Kindergericht</span>` : ""}
+            ${recipeSelfCook(r) ? `<button type="button" class="recipe-selfcook-toggle" data-id="${r.id}" aria-pressed="false">👧 Das kannst du selbst kochen!</button>` : ""}
+            ${recipeBeakerKitchen(r) ? `<span class="recipe-beaker-badge">🥣 Becherküche</span>` : ""}
             ${r.healthy ? `<span class="recipe-healthy-badge">🌿 Gesund & bunt</span>` : ""}
           </div>
         </div>
@@ -7188,11 +7259,11 @@ function renderRecipes() {
         <div class="recipe-card-body">
           <section class="recipe-column">
             <h4>ZUTATEN</h4>
-            <ul>${normalizedRecipeLines(r.ingredients).map(x => `<li>${escapeHtml(x)}</li>`).join("")}</ul>
+            <ul>${normalizedRecipeLines(r.ingredients).map(x => `<li>${recipeIngredientHtml(x, r)}</li>`).join("")}</ul>
           </section>
           <section class="recipe-column">
             <h4>ZUBEREITUNG</h4>
-            <div class="recipe-prep-lines">${normalizedRecipeLines(r.steps).map(x => `<div class="recipe-prep-line">${escapeHtml(x)}</div>`).join("")}</div>
+            <div class="recipe-prep-lines">${normalizedRecipeLines(r.steps).map((x,i) => `<div class="recipe-prep-line"><span class="recipe-child-step-number">${i+1}</span><span>${escapeHtml(x)}</span></div>`).join("")}</div>
           </section>
         </div>`}
       <footer class="recipe-card-footer">
@@ -7213,6 +7284,17 @@ function renderRecipes() {
       </footer>
     </article>
   `).join("");
+
+  host.querySelectorAll(".recipe-selfcook-toggle").forEach(btn => {
+    btn.addEventListener("click", e => {
+      e.stopPropagation();
+      const card = btn.closest(".recipe-card");
+      if (!card) return;
+      const active = card.classList.toggle("recipe-child-mode");
+      btn.setAttribute("aria-pressed", active ? "true" : "false");
+      btn.textContent = active ? "🌈 Kinderansicht aktiv" : "👧 Das kannst du selbst kochen!";
+    });
+  });
 
   host.querySelectorAll(".recipe-delete").forEach(btn => btn.addEventListener("click", () => {
     const recipe = state.recipes.find(r => r.id === btn.dataset.id);
@@ -7339,9 +7421,36 @@ function renderRecipeToc() {
     return;
   }
 
-  host.innerHTML = recipes
-    .map(r => `<button type="button" class="recipe-toc-link" data-id="${r.id}" data-title="${escapeHtml(r.title || "")}">${escapeHtml(r.title || "Ohne Titel")}</button>`)
-    .join("");
+  const categoryOrder = ["breakfast","spread","soup","main","small","salad","sweet","drink","other"];
+  const groups = categoryOrder
+    .map(category => ({
+      category,
+      label: recipeCategoryLabel(category),
+      recipes: recipes.filter(r => (r.category || "main") === category)
+    }))
+    .filter(group => group.recipes.length);
+
+  host.innerHTML = `
+    <div class="recipe-toc-groups">
+      ${groups.map(group => `
+        <section class="recipe-toc-group">
+          <h4>${escapeHtml(group.label)}</h4>
+          <div class="recipe-toc-group-list">
+            ${group.recipes.map(r => `
+              <button type="button" class="recipe-toc-link" data-id="${r.id}" data-title="${escapeHtml(r.title || "")}">
+                <span class="recipe-toc-name">${escapeHtml(r.title || "Ohne Titel")}</span>
+                <span class="recipe-toc-marks">
+                  ${recipeSelfCook(r) ? `<span title="Selbst kochen">👧</span>` : ""}
+                  ${recipeBeakerKitchen(r) ? `<span title="Becherküche">🥣</span>` : ""}
+                  ${r.favorite ? `<span title="Lieblingsrezept">★</span>` : ""}
+                </span>
+              </button>
+            `).join("")}
+          </div>
+        </section>
+      `).join("")}
+    </div>
+  `;
 
   host.querySelectorAll(".recipe-toc-link").forEach(btn => {
     btn.addEventListener("click", () => {
@@ -7713,6 +7822,12 @@ document.querySelector("#recipeKidsOnlyFilter")?.addEventListener("change", e =>
   renderRecipes();
 });
 
+document.querySelector("#recipeSelfCookOnlyFilter")?.addEventListener("change", e => {
+  recipeSelfCookOnly = !!e.currentTarget.checked;
+  recipePage = 0;
+  renderRecipes();
+});
+
 document.querySelector("#recipeHealthyOnlyFilter")?.addEventListener("change", e => {
   recipeHealthyOnly = !!e.currentTarget.checked;
   recipePage = 0;
@@ -7756,6 +7871,8 @@ document.querySelector("#saveRecipeBtn")?.addEventListener("click", () => {
     cardMark: document.querySelector("#recipeCardMark")?.value || "⌁",
     difficulty: document.querySelector("#recipeDifficulty")?.value || "medium",
     kids: !!document.querySelector("#recipeKids")?.checked,
+    selfCook: !!document.querySelector("#recipeSelfCook")?.checked,
+    beakerKitchen: !!document.querySelector("#recipeBeakerKitchen")?.checked,
     healthy: !!document.querySelector("#recipeHealthy")?.checked,
     time: document.querySelector("#recipeTime")?.value.trim() || "",
     ingredients: recipeLines(document.querySelector("#recipeIngredients")?.value),
@@ -8490,14 +8607,18 @@ function nonEmptyWorkroomScore(w) {
 
 function normalizeRecipeFlagLayout() {
   const kids = document.querySelector("#recipeKids");
+  const selfCook = document.querySelector("#recipeSelfCook");
+  const beakerKitchen = document.querySelector("#recipeBeakerKitchen");
   const healthy = document.querySelector("#recipeHealthy");
   const favorite = document.querySelector("#recipeFavorite");
-  if (!kids || !healthy || !favorite) return;
+  if (!kids || !selfCook || !beakerKitchen || !healthy || !favorite) return;
 
   const kidsLabel = kids.closest("label");
+  const selfCookLabel = selfCook.closest("label");
+  const beakerLabel = beakerKitchen.closest("label");
   const healthyLabel = healthy.closest("label");
   const favoriteLabel = favorite.closest("label");
-  if (!kidsLabel || !healthyLabel || !favoriteLabel) return;
+  if (!kidsLabel || !selfCookLabel || !beakerLabel || !healthyLabel || !favoriteLabel) return;
 
   kidsLabel.id = "recipeKidsLabel";
   healthyLabel.id = "recipeHealthyLabel";
@@ -8508,6 +8629,8 @@ function normalizeRecipeFlagLayout() {
   row.className = "recipe-flags-row";
   kidsLabel.parentElement.insertBefore(row, kidsLabel);
   row.appendChild(kidsLabel);
+  row.appendChild(selfCookLabel);
+  row.appendChild(beakerLabel);
   row.appendChild(healthyLabel);
   row.appendChild(favoriteLabel);
 }
