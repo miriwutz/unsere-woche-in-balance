@@ -8526,3 +8526,114 @@ button.day-meal{cursor:pointer}
 @media(max-width:620px){
   .archive-columns{grid-template-columns:1fr !important}
 }
+
+
+/* =========================================================
+   V33 – Schöne Stundenplanansichten
+   ========================================================= */
+#manualTimetableDialog .tt-view-table{
+  border-collapse:separate !important;
+  border-spacing:5px !important;
+  background:transparent !important;
+}
+#manualTimetableDialog .tt-view-table th,
+#manualTimetableDialog .tt-view-table td{
+  border:0 !important;
+  border-radius:10px;
+  padding:10px 9px !important;
+  text-align:center;
+}
+#manualTimetableDialog .tt-view-table thead th{
+  font-weight:700;
+  letter-spacing:.02em;
+}
+#manualTimetableDialog .tt-view-table tbody th{
+  white-space:nowrap;
+  font-size:.74rem;
+}
+#manualTimetableDialog .tt-home-row td,
+#manualTimetableDialog .tt-home-row th{
+  font-weight:600;
+}
+
+/* Mama: ruhig und erwachsen */
+#manualTimetableDialog .tt-person-mama{
+  background:linear-gradient(145deg,#fffdfa,#f7f6f0) !important;
+}
+#manualTimetableDialog .tt-person-mama .dialog-head h2{color:#4d4a42}
+#manualTimetableDialog .tt-mama thead th{
+  background:#e8eee2 !important;color:#596453 !important
+}
+#manualTimetableDialog .tt-mama tbody th{
+  background:#f0eee8 !important;color:#746c64 !important
+}
+#manualTimetableDialog .tt-mama td{
+  background:#fbfaf6 !important;color:#504c46 !important
+}
+#manualTimetableDialog .tt-mama .tt-home-row th,
+#manualTimetableDialog .tt-mama .tt-home-row td{background:#edf2e8 !important}
+
+/* Lou: teeniger, klarer, moderner */
+#manualTimetableDialog .tt-person-lou{
+  background:linear-gradient(145deg,#fbfafc,#f2f0f6) !important
+}
+#manualTimetableDialog .tt-person-lou .dialog-head h2{
+  font-family:system-ui,-apple-system,"Segoe UI",sans-serif !important;
+  font-weight:700;letter-spacing:-.02em;color:#4e485b
+}
+#manualTimetableDialog .tt-lou{
+  font-family:system-ui,-apple-system,"Segoe UI",sans-serif !important
+}
+#manualTimetableDialog .tt-lou thead th{
+  background:#e7e2ef !important;color:#575064 !important
+}
+#manualTimetableDialog .tt-lou tbody th{
+  background:#eeeaf2 !important;color:#716b7a !important
+}
+#manualTimetableDialog .tt-lou td{
+  background:#faf8fc !important;color:#504a58 !important;font-weight:550
+}
+#manualTimetableDialog .tt-lou .tt-home-row th,
+#manualTimetableDialog .tt-lou .tt-home-row td{
+  background:#e5ebef !important;color:#50606a !important
+}
+
+/* Fina: kindlich-cool, nicht babyhaft */
+#manualTimetableDialog .tt-person-fina{
+  background:linear-gradient(145deg,#fffdfb,#f5faf7) !important
+}
+#manualTimetableDialog .tt-person-fina .dialog-head h2{
+  font-family:"Trebuchet MS",system-ui,sans-serif !important;
+  font-weight:700;color:#53645d
+}
+#manualTimetableDialog .tt-fina{
+  font-family:"Trebuchet MS",system-ui,sans-serif !important
+}
+#manualTimetableDialog .tt-fina thead th:nth-child(2){background:#e5f1ec !important}
+#manualTimetableDialog .tt-fina thead th:nth-child(3){background:#f3e8ef !important}
+#manualTimetableDialog .tt-fina thead th:nth-child(4){background:#f7eedc !important}
+#manualTimetableDialog .tt-fina thead th:nth-child(5){background:#e8edf6 !important}
+#manualTimetableDialog .tt-fina thead th:nth-child(6){background:#ece9f5 !important}
+#manualTimetableDialog .tt-fina thead th:first-child{background:#ecebe6 !important}
+#manualTimetableDialog .tt-fina tbody th{
+  background:#f0eee8 !important;color:#716a62 !important
+}
+#manualTimetableDialog .tt-fina td{
+  background:#fffdfb !important;color:#4f5652 !important;font-weight:600
+}
+#manualTimetableDialog .tt-fina tbody tr:nth-child(even) td{background:#f8fbf8 !important}
+#manualTimetableDialog .tt-fina .tt-home-row th,
+#manualTimetableDialog .tt-fina .tt-home-row td{
+  background:#e4f0e8 !important;color:#557061 !important
+}
+
+@media(max-width:760px){
+  #manualTimetableDialog .tt-view-table{
+    border-spacing:3px !important;
+    font-size:.76rem
+  }
+  #manualTimetableDialog .tt-view-table th,
+  #manualTimetableDialog .tt-view-table td{
+    padding:8px 5px !important;border-radius:8px
+  }
+}
