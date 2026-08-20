@@ -8637,3 +8637,291 @@ button.day-meal{cursor:pointer}
     padding:8px 5px !important;border-radius:8px
   }
 }
+
+
+/* =========================================================
+   V34 – Kinderrezepte, Becherküche und Inhaltsverzeichnis
+   ========================================================= */
+
+/* Neue Formularoptionen */
+.recipe-selfcook-toggle-form,
+.recipe-beaker-toggle{
+  display:inline-flex !important;
+  align-items:center !important;
+  gap:7px !important;
+  width:auto !important;
+  min-height:38px !important;
+  padding:8px 10px !important;
+  border:1px solid rgba(216,205,198,.55) !important;
+  border-radius:12px !important;
+  background:#fffdfb !important;
+}
+.recipe-beaker-note{
+  grid-column:1 / -1 !important;
+  margin-top:-2px;
+  color:#8a817b;
+  font-size:.68rem;
+  line-height:1.35;
+}
+.recipe-selfcook-filter{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  white-space:nowrap;
+}
+
+/* "Das kannst du selbst kochen" ist ein echter Umschalter */
+.recipe-selfcook-toggle{
+  border:1px solid #e5c26f;
+  border-radius:999px;
+  padding:4px 8px;
+  background:#fff2c4;
+  color:#745b26;
+  font:inherit;
+  cursor:pointer;
+}
+.recipe-selfcook-toggle[aria-pressed="true"]{
+  background:#e8f0e4;
+  border-color:#aec59e;
+  color:#506444;
+}
+.recipe-beaker-badge{
+  background:#eef1e5 !important;
+  color:#68765b !important;
+}
+
+/* Kinderansicht: bewusst größer und schulschriftähnlich */
+.recipe-card.recipe-child-mode .recipe-card-body,
+#recipeDetailBody.recipe-detail-child-mode .recipe-detail-grid{
+  font-family:"ABeeZee","Trebuchet MS",Arial,sans-serif !important;
+}
+.recipe-card.recipe-child-mode .recipe-column h4,
+#recipeDetailBody.recipe-detail-child-mode .recipe-detail-grid h3{
+  font-family:"ABeeZee","Trebuchet MS",Arial,sans-serif !important;
+  font-size:1rem !important;
+  letter-spacing:.04em !important;
+}
+.recipe-card.recipe-child-mode .recipe-column li{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  margin:8px 0 !important;
+  font-size:1rem !important;
+  line-height:1.45 !important;
+}
+.recipe-card.recipe-child-mode .recipe-prep-line{
+  display:grid !important;
+  grid-template-columns:30px minmax(0,1fr);
+  gap:10px;
+  align-items:start;
+  padding:9px 0 !important;
+  font-size:1rem !important;
+  line-height:1.5 !important;
+}
+.recipe-child-step-number{
+  display:none;
+}
+.recipe-card.recipe-child-mode .recipe-child-step-number,
+#recipeDetailBody.recipe-detail-child-mode .recipe-child-step-number{
+  display:grid;
+  place-items:center;
+  width:28px;
+  height:28px;
+  border-radius:50%;
+  background:#e7efe7;
+  color:#526557;
+  font-weight:700;
+  flex:0 0 28px;
+}
+#recipeDetailBody.recipe-detail-child-mode .recipe-cook-line{
+  min-height:50px !important;
+  padding:10px 12px !important;
+  font-family:"ABeeZee","Trebuchet MS",Arial,sans-serif !important;
+  font-size:1.02rem !important;
+  line-height:1.5 !important;
+}
+#recipeDetailBody.recipe-detail-child-mode .recipe-step-line{
+  display:grid !important;
+  grid-template-columns:26px 30px minmax(0,1fr);
+  align-items:start;
+  gap:9px;
+}
+
+/* Mess-Symbole: nur in Kinderansicht sichtbar */
+.recipe-measure-icon{
+  display:none;
+  position:relative;
+  flex:0 0 30px;
+  width:30px;
+  height:30px;
+}
+.recipe-child-mode .recipe-measure-icon,
+.recipe-detail-child-mode .recipe-measure-icon{
+  display:inline-block;
+}
+
+/* generischer Becher */
+.measure-beaker{
+  border:2px solid #74847a;
+  border-top-width:1px;
+  border-radius:4px 4px 9px 9px;
+  height:24px;
+  margin-top:2px;
+  background:#f4f5ef;
+}
+.measure-beaker::after{
+  content:"";
+  position:absolute;
+  right:-7px;
+  top:5px;
+  width:8px;
+  height:10px;
+  border:2px solid currentColor;
+  border-left:0;
+  border-radius:0 7px 7px 0;
+}
+.measure-yellow{background:#f4d65c;border-color:#c5a52b;color:#c5a52b}
+.measure-green{background:#a9ce87;border-color:#749b55;color:#749b55}
+.measure-orange{background:#efad65;border-color:#c77d2f;color:#c77d2f}
+.measure-red{background:#dc7771;border-color:#aa4f49;color:#aa4f49}
+.measure-blue{background:#7fb2d2;border-color:#4c85aa;color:#4c85aa}
+
+/* Joghurtbecher */
+.measure-yogurt{
+  width:25px;height:25px;margin-left:2px;margin-top:2px;
+  border:2px solid #9ba29c;border-top:4px solid #858d87;
+  border-radius:4px 4px 8px 8px;
+  background:#fff;
+  clip-path:polygon(8% 0,92% 0,82% 100%,18% 100%);
+}
+
+/* Topfenbecher – klein, weiß, rechteckig */
+.measure-topfen{
+  width:28px;height:21px;margin-top:4px;
+  border:2px solid #969f98;border-radius:4px;
+  background:#fff;
+  box-shadow:inset 0 4px 0 #eef0ec;
+}
+
+/* TL / EL */
+.measure-tsp::before,
+.measure-tbsp::before{
+  content:"";
+  position:absolute;
+  border:2px solid #828c86;
+  border-radius:50%;
+  background:#f8f8f5;
+}
+.measure-tsp::before{width:10px;height:7px;left:2px;top:3px}
+.measure-tbsp::before{width:14px;height:10px;left:0;top:1px}
+.measure-tsp::after,
+.measure-tbsp::after{
+  content:"";
+  position:absolute;
+  width:3px;
+  border-radius:3px;
+  background:#828c86;
+  transform:rotate(-38deg);
+  transform-origin:top center;
+}
+.measure-tsp::after{height:20px;left:13px;top:8px}
+.measure-tbsp::after{height:20px;left:16px;top:10px}
+
+/* Salzstreuer für Prise */
+.measure-salt{
+  width:22px;height:23px;margin:3px 0 0 3px;
+  border:2px solid #89908b;border-radius:5px 5px 7px 7px;
+  background:#fff;
+}
+.measure-salt::before{
+  content:"···";
+  position:absolute;
+  left:3px;top:-9px;
+  color:#777f79;
+  font-size:12px;
+  letter-spacing:1px;
+}
+
+/* Ei */
+.measure-egg{
+  width:20px;height:27px;margin-left:4px;
+  border:2px solid #b5a78c;
+  border-radius:50% 50% 46% 46% / 58% 58% 42% 42%;
+  background:#fff9e9;
+}
+
+/* Flüssigkeit */
+.measure-liquid{
+  width:21px;height:27px;margin-left:4px;
+  border:2px solid #7e9ca6;
+  border-radius:3px 3px 7px 7px;
+  background:linear-gradient(to top,#dcecf0 0 55%,transparent 55%);
+}
+
+/* Inhaltsverzeichnis: echte Gruppen, keine Chip-Wurst */
+.recipe-toc-list{
+  display:block !important;
+}
+.recipe-toc-groups{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:12px;
+  padding:10px 2px 2px;
+}
+.recipe-toc-group{
+  min-width:0;
+  padding:11px;
+  border:1px solid rgba(119,151,143,.16);
+  border-radius:14px;
+  background:rgba(248,251,248,.62);
+}
+.recipe-toc-group h4{
+  margin:0 0 7px;
+  color:#59645f;
+  font-size:.76rem;
+  font-weight:700;
+}
+.recipe-toc-group-list{
+  display:grid;
+  gap:2px;
+}
+.recipe-toc-link{
+  width:100% !important;
+  display:flex !important;
+  justify-content:space-between !important;
+  align-items:center !important;
+  gap:8px !important;
+  padding:6px 4px !important;
+  border:0 !important;
+  border-radius:7px !important;
+  background:transparent !important;
+  color:#5c5753 !important;
+  text-align:left !important;
+}
+.recipe-toc-link:hover{
+  background:rgba(228,239,234,.72) !important;
+}
+.recipe-toc-name{
+  min-width:0;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.recipe-toc-marks{
+  flex:0 0 auto;
+  display:flex;
+  gap:3px;
+  font-size:.7rem;
+}
+
+@media(max-width:900px){
+  .recipe-toc-groups{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:600px){
+  .recipe-toc-groups{grid-template-columns:1fr}
+  .recipe-card.recipe-child-mode .recipe-column li,
+  .recipe-card.recipe-child-mode .recipe-prep-line,
+  #recipeDetailBody.recipe-detail-child-mode .recipe-cook-line{
+    font-size:1.05rem !important;
+  }
+}
