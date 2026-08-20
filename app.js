@@ -10861,14 +10861,30 @@ function renderSchoolChildDashboard(id){
   dash.dataset.child=id;
   const child=state.school.children[id];
   const key=schoolMemberKey(id), icon=state.familySettings[key]?.icon || (id==="1"?"⭐":"🌙");
-  const img=document.querySelector("#schoolBannerImage"); if(img) img.src=id==="1"?"./lou-stundenplan.png?v=53":"./fina-stundenplan.png?v=53";
-  const hello=document.querySelector("#schoolBannerHello"); if(hello) hello.textContent=`Hey ${child?.name || (id==="1"?"Lou":"Fina")}!`;
-  const quote=document.querySelector("#schoolBannerQuote"); if(quote){const a=schoolChildQuotes[id]; quote.textContent=a[Math.floor(Date.now()/86400000)%a.length];}
-  const bi=document.querySelector("#schoolBannerIcon");
-  if(bi){
-    bi.textContent=icon;
-    bi.title=`${child?.name || (id==="1"?"Lou":"Fina")} – Stundenplan ansehen`;
-    bi.setAttribute("aria-label",`${child?.name || (id==="1"?"Lou":"Fina")} – Stundenplan ansehen`);
+  const banner=document.querySelector("#schoolMotivationBanner");
+  if(banner){
+    const childName=child?.name || (id==="1"?"Lou":"Fina");
+    const quotes=schoolChildQuotes[id] || [];
+    const quoteText=quotes.length ? quotes[Math.floor(Date.now()/86400000)%quotes.length] : "Du kannst das.";
+    const imageSrc=id==="1"?"./lou-stundenplan.png?v=53":"./fina-stundenplan.png?v=53";
+
+    banner.innerHTML=`
+      <div class="school-hero-v4-copy">
+        <button type="button"
+                class="school-hero-v4-icon"
+                data-school-timetable-link="${id}"
+                title="${childName} – Stundenplan ansehen"
+                aria-label="${childName} – Stundenplan ansehen">${icon}</button>
+        <div class="school-hero-v4-text">
+          <span>Hey ${escapeHtml(childName)}!</span>
+          <strong>${escapeHtml(quoteText)}</strong>
+          <small>Tippe auf dein Zeichen für deinen Stundenplan.</small>
+        </div>
+      </div>
+      <div class="school-hero-v4-image">
+        <img src="${imageSrc}" alt="">
+      </div>
+    `;
   }
   const host=document.querySelector("#schoolIconChoices");
   if(host){
@@ -10894,9 +10910,12 @@ function closeSchoolChildDashboard(){
 document.querySelectorAll("[data-open-school-child]").forEach(b=>b.addEventListener("click",()=>renderSchoolChildDashboard(b.dataset.openSchoolChild)));
 document.querySelector("#backToSchoolChooser")?.addEventListener("click",closeSchoolChildDashboard);
 
-document.querySelector("#schoolBannerIcon")?.addEventListener("click", () => {
-  if(!activeSchoolChild) return;
-  showManualTimetable(activeSchoolChild);
+document.querySelector("#schoolMotivationBanner")?.addEventListener("click", e => {
+  const btn=e.target.closest("[data-school-timetable-link]");
+  if(!btn) return;
+  const childId=btn.dataset.schoolTimetableLink || activeSchoolChild;
+  if(!childId) return;
+  showManualTimetable(childId);
 });
 
 document.querySelector("#schoolIconChoices")?.addEventListener("click",e=>{
