@@ -9261,3 +9261,189 @@ button.day-meal{cursor:pointer}
   content:"•••"!important;position:absolute!important;top:-10px!important;left:1px!important;
   font-size:9px!important;color:#4f5653!important;letter-spacing:-1px!important;
 }
+
+/* V37 – "Intern" auf Karten sicher ausblenden */
+.recipe-card .recipe-source-label,
+.recipe-card .recipe-source-pill,
+.recipe-card .recipe-badge-source{
+  display:none !important;
+}
+
+/* V37 – tatsächliche Kinderansicht */
+.recipe-card.recipe-child-mode .recipe-card-body,
+.recipe-card.recipe-child-mode .recipe-card-body *,
+#recipeDetailBody.recipe-detail-child-mode,
+#recipeDetailBody.recipe-detail-child-mode *{
+  font-family:"Segoe Print","Comic Sans MS","Bradley Hand","Chalkboard SE",cursive !important;
+}
+.recipe-card.recipe-child-mode .recipe-card-body li,
+.recipe-card.recipe-child-mode .recipe-card-body p,
+.recipe-card.recipe-child-mode .recipe-prep-line,
+#recipeDetailBody.recipe-detail-child-mode .recipe-cook-line{
+  font-size:1.08rem !important;
+  line-height:1.6 !important;
+}
+
+/* Adult ingredient hidden only when a manual child conversion exists */
+.recipe-child-ingredient{display:none}
+.recipe-card.recipe-child-mode .recipe-child-ingredient,
+#recipeDetailBody.recipe-detail-child-mode .recipe-child-ingredient{
+  display:grid !important;
+  gap:5px;
+}
+.recipe-card.recipe-child-mode .recipe-child-ingredient + *,
+#recipeDetailBody.recipe-detail-child-mode .recipe-child-ingredient + *{
+  margin-top:0;
+}
+.recipe-card.recipe-child-mode .recipe-adult-ingredient:has(+ .recipe-child-ingredient),
+#recipeDetailBody.recipe-detail-child-mode .recipe-adult-ingredient:has(+ .recipe-child-ingredient){
+  display:none !important;
+}
+
+.recipe-child-measure-row{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  min-height:34px;
+}
+.recipe-child-measure-label{
+  font-weight:700;
+  white-space:nowrap;
+}
+.recipe-child-measure-ingredient{
+  color:#4c4a47;
+}
+
+/* V37 – kräftigere Becherfarben */
+.measure-blue,.unit-icon.cup.blue{background:#278bd2 !important;border-color:#1267a0 !important;color:#1267a0 !important}
+.measure-red,.unit-icon.cup.red{background:#ef3f45 !important;border-color:#b91f26 !important;color:#b91f26 !important}
+.measure-green,.unit-icon.cup.green{background:#47b94f !important;border-color:#267f2d !important;color:#267f2d !important}
+.measure-yellow,.unit-icon.cup.yellow{background:#ffd633 !important;border-color:#c7a000 !important;color:#c7a000 !important}
+.measure-orange,.unit-icon.cup.orange{background:#ff8c2f !important;border-color:#c65a0e !important;color:#c65a0e !important}
+.measure-purple,.unit-icon.cup.purple{background:#a75be8 !important;border-color:#7432aa !important;color:#7432aa !important}
+
+/* Topfenbecher: flach/rechteckig */
+.measure-topfen,
+.unit-icon.quark{
+  width:30px !important;
+  height:18px !important;
+  border:2px solid #7e8783 !important;
+  border-radius:3px !important;
+  background:#fff !important;
+  box-shadow:inset 0 5px 0 #ecefea !important;
+}
+.measure-topfen::before,
+.unit-icon.quark::before{
+  content:"" !important;
+  position:absolute !important;
+  left:-3px !important;
+  right:-3px !important;
+  top:-5px !important;
+  height:5px !important;
+  border:2px solid #7e8783 !important;
+  background:#fff !important;
+  border-radius:3px !important;
+}
+
+/* Joghurtbecher: deutlich hoch/rund-konisch */
+.measure-yogurt,
+.unit-icon.yogurt{
+  width:20px !important;
+  height:31px !important;
+  border:2px solid #7e8783 !important;
+  border-radius:3px 3px 8px 8px !important;
+  background:#fff !important;
+  clip-path:polygon(8% 0,92% 0,80% 100%,20% 100%) !important;
+}
+.measure-yogurt::before,
+.unit-icon.yogurt::before{
+  content:"" !important;
+  position:absolute !important;
+  left:-2px !important;
+  right:-2px !important;
+  top:-2px !important;
+  height:3px !important;
+  background:#7e8783 !important;
+}
+
+/* Löffel: Schale + gerader Griff, statt abstrakter Linie */
+.measure-tsp,
+.measure-tbsp,
+.unit-icon.spoon{
+  width:34px !important;
+  height:20px !important;
+  border:0 !important;
+  background:transparent !important;
+  transform:none !important;
+}
+.measure-tsp::before,
+.measure-tbsp::before,
+.unit-icon.spoon::before{
+  content:"" !important;
+  position:absolute !important;
+  left:1px !important;
+  top:5px !important;
+  width:12px !important;
+  height:8px !important;
+  border:2px solid #747c78 !important;
+  border-radius:50% !important;
+  background:#f7f7f4 !important;
+}
+.measure-tbsp::before{
+  width:15px !important;
+  height:10px !important;
+  top:4px !important;
+}
+.measure-tsp::after,
+.measure-tbsp::after,
+.unit-icon.spoon::after{
+  content:"" !important;
+  position:absolute !important;
+  left:13px !important;
+  top:9px !important;
+  width:19px !important;
+  height:3px !important;
+  background:#747c78 !important;
+  border-radius:3px !important;
+  transform:rotate(-18deg) !important;
+  transform-origin:left center !important;
+}
+
+/* Salzstreuer: Deckel, Körper und sichtbare Löcher */
+.measure-salt,
+.unit-icon.salt{
+  width:19px !important;
+  height:28px !important;
+  border:2px solid #69716e !important;
+  border-radius:5px 5px 6px 6px !important;
+  background:linear-gradient(#d7dcd9 0 6px,#fff 6px 100%) !important;
+}
+.measure-salt::before,
+.unit-icon.salt::before{
+  content:"•••" !important;
+  position:absolute !important;
+  top:-10px !important;
+  left:1px !important;
+  width:17px !important;
+  text-align:center !important;
+  font-size:9px !important;
+  letter-spacing:0 !important;
+  color:#3f4744 !important;
+}
+.measure-salt::after,
+.unit-icon.salt::after{
+  content:"" !important;
+  position:absolute !important;
+  left:3px !important;
+  right:3px !important;
+  top:5px !important;
+  height:2px !important;
+  background:#69716e !important;
+}
+
+.beaker-map-row{
+  background:#fffdfb;
+  border:1px solid rgba(212,198,188,.45);
+  border-radius:12px;
+  padding:7px;
+}
