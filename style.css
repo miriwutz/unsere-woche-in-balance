@@ -9562,3 +9562,168 @@ button.day-meal{cursor:pointer}
   .beaker-map-row{grid-template-columns:1fr !important}
   .beaker-map-arrow{display:none}
 }
+
+
+/* =========================================================
+   V39 – Kinderansicht: kindlich/teenig + Fina/Lou-Kochbild
+   ========================================================= */
+
+.recipe-card .recipe-source-display{display:none !important}
+.recipe-card:has(.recipe-external-body) .recipe-source-display{display:inline-flex !important}
+
+/* Nur der aktive Kinderansicht-Button bleibt in der Badge-Zeile sichtbar */
+.recipe-card.recipe-child-mode .recipe-badges > *{display:none !important}
+.recipe-card.recipe-child-mode .recipe-badges > .recipe-selfcook-toggle{display:inline-flex !important}
+
+/* deutlich eigener Look für die Kinderansicht */
+.recipe-card.recipe-child-mode{
+  border:1px solid rgba(197,160,88,.38) !important;
+  background:linear-gradient(145deg,#fffdf8,#faf5e9) !important;
+  box-shadow:0 8px 26px rgba(97,78,54,.08) !important;
+}
+.recipe-card.recipe-child-mode .recipe-card-head{
+  min-height:125px !important;
+  background:linear-gradient(135deg,#f2ead9,#e8f0e8) !important;
+}
+.recipe-card.recipe-child-mode .recipe-title-button{
+  font-family:"Comic Sans MS","Segoe Print","Trebuchet MS",Arial,sans-serif !important;
+  font-size:1.65rem !important;
+  color:#4f6256 !important;
+}
+.recipe-card.recipe-child-mode .recipe-time-mark,
+.recipe-card.recipe-child-mode .recipe-tools{
+  opacity:.28 !important;
+}
+.recipe-card.recipe-child-mode .recipe-column{
+  margin:10px !important;
+  padding:14px !important;
+  border-radius:16px !important;
+  background:rgba(255,255,255,.78) !important;
+  border:1px solid rgba(135,161,145,.18) !important;
+}
+.recipe-card.recipe-child-mode .recipe-column h4{
+  color:#557166 !important;
+  border-bottom:2px solid #e7c66b !important;
+  padding-bottom:5px !important;
+  text-decoration:none !important;
+}
+
+/* Illustration ist nur in Kinderansicht sichtbar */
+.recipe-child-illustration{display:none}
+.recipe-card.recipe-child-mode .recipe-child-illustration{
+  display:flex !important;
+  justify-content:center;
+  align-items:flex-end;
+  height:190px;
+  margin:0 18px;
+  overflow:hidden;
+  border-radius:18px 18px 0 0;
+  background:linear-gradient(180deg,rgba(255,255,255,.1),rgba(249,241,224,.7));
+}
+.recipe-card.recipe-child-mode .recipe-child-illustration img{
+  height:205px;
+  width:auto;
+  max-width:94%;
+  object-fit:contain;
+  object-position:center bottom;
+}
+
+.recipe-detail-child-illustration{display:none}
+#recipeDetailBody.recipe-detail-child-mode .recipe-detail-child-illustration{
+  display:flex !important;
+  justify-content:center;
+  height:205px;
+  overflow:hidden;
+  background:linear-gradient(180deg,#fffdf9,#f8f1e5);
+}
+#recipeDetailBody.recipe-detail-child-mode .recipe-detail-child-illustration img{
+  height:220px;
+  max-width:92%;
+  width:auto;
+  object-fit:contain;
+}
+
+/* In Kinderansicht: keine ausgeschriebenen Maße wie "blauer Becher".
+   Nur Menge + Symbol + Zutat. */
+.recipe-child-measure-label{display:none !important}
+
+/* EL und TL jetzt sehr deutlich verschieden */
+.recipe-measure-icon.measure-tbsp{
+  width:52px !important;
+  min-width:52px !important;
+  height:29px !important;
+}
+.recipe-measure-icon.measure-tbsp::before{
+  width:22px !important;
+  height:15px !important;
+  left:1px !important;
+  top:5px !important;
+  border:2.2px solid #65706b !important;
+}
+.recipe-measure-icon.measure-tbsp::after{
+  width:30px !important;
+  height:4px !important;
+  left:21px !important;
+  top:12px !important;
+  background:#65706b !important;
+}
+.recipe-measure-icon.measure-tsp{
+  width:29px !important;
+  min-width:29px !important;
+  height:20px !important;
+}
+.recipe-measure-icon.measure-tsp::before{
+  width:9px !important;
+  height:6px !important;
+  left:1px !important;
+  top:6px !important;
+  border:1.5px solid #65706b !important;
+}
+.recipe-measure-icon.measure-tsp::after{
+  width:17px !important;
+  height:2px !important;
+  left:9px !important;
+  top:9px !important;
+  background:#65706b !important;
+}
+
+/* Salzstreuer */
+.recipe-measure-icon.measure-salt{
+  width:21px !important;
+  min-width:21px !important;
+  height:30px !important;
+  border:2px solid #66716c !important;
+  border-radius:5px 5px 7px 7px !important;
+  background:linear-gradient(#bcc6c0 0 7px,#fff 7px 100%) !important;
+}
+.recipe-measure-icon.measure-salt::before{
+  content:"•••" !important;
+  position:absolute !important;
+  top:-11px !important;
+  left:2px !important;
+  font-size:10px !important;
+  color:#46504b !important;
+}
+
+/* Erwachseneintrag wird nur dann verborgen, wenn es wirklich eine
+   alternative Kinder-Darstellung gibt. */
+.recipe-card.recipe-child-mode .recipe-adult-ingredient:has(+ .recipe-child-ingredient),
+#recipeDetailBody.recipe-detail-child-mode .recipe-adult-ingredient:has(+ .recipe-child-ingredient){
+  display:none !important;
+}
+
+/* Schul-/Legasthenie-freundlicher Satz */
+.recipe-card.recipe-child-mode .recipe-card-body,
+.recipe-card.recipe-child-mode .recipe-card-body *,
+#recipeDetailBody.recipe-detail-child-mode,
+#recipeDetailBody.recipe-detail-child-mode *{
+  font-family:"Comic Sans MS","Segoe Print","Trebuchet MS",Arial,sans-serif !important;
+  font-style:normal !important;
+  letter-spacing:.025em !important;
+  word-spacing:.08em !important;
+}
+
+@media(max-width:700px){
+  .recipe-card.recipe-child-mode .recipe-child-illustration{height:145px}
+  .recipe-card.recipe-child-mode .recipe-child-illustration img{height:160px}
+}
