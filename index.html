@@ -135,8 +135,6 @@
     <span id="pinboardBadge" class="pinboard-badge hidden">0</span>
   </button>
 
-  <button id="openPapaOverviewBtn" class="secondary-btn papa-overview-btn" type="button">♡ Papa</button>
-
   <button id="addVideoBtn" class="primary-btn" type="button">＋ Übung eintragen</button>
 
   <button id="openFamilyTimetableBtn"
@@ -567,8 +565,8 @@
           <div>
             <span>1</span>
             <div>
-              <strong>Grunddaten</strong>
-              <small>Das brauchst du fast immer.</small>
+              <strong>Das Rezept</strong>
+              <small>Name, Art und die wichtigsten Angaben.</small>
             </div>
           </div>
         </div>
@@ -628,8 +626,8 @@
           <div>
             <span>2</span>
             <div>
-              <strong>Was passt zu diesem Rezept?</strong>
-              <small>Nur anklicken, was wirklich zutrifft.</small>
+              <strong>Was trifft zu?</strong>
+              <small>Nur auswählen, was du später wirklich brauchst.</small>
             </div>
           </div>
         </div>
@@ -663,7 +661,7 @@
 
         <div class="recipe-beaker-note recipe-beaker-quickhelp">
           <strong>So einfach geht’s:</strong>
-          <span>Maße wie „1 EL Kakao“, „1 TL Vanille“, „1 Prise Salz“ oder „1 Joghurtbecher Joghurt“ einfach ganz normal bei den Zutaten eingeben – das passende Zeichen erscheint automatisch.</span>
+          <span>EL, TL, Prise, Joghurtbecher usw. einfach normal bei den Zutaten schreiben – die Zeichen erscheinen automatisch.</span>
         </div>
       </div>
 
@@ -680,10 +678,10 @@
         </div>
 
         <div class="beaker-map-help beaker-map-instructions">
-          <div><b>1.</b> Das normale Rezept bleibt unverändert, z. B. <b>200 g Mehl</b>.</div>
-          <div><b>2.</b> Nur wenn du eine Grammangabe für Kinder in Becher umwandeln möchtest, trägst du links dieselbe Zutat ein.</div>
-          <div><b>3.</b> Rechts wählst du das Kindermaß. Für mehrere Becherfarben einfach weitere Kindermaße hinzufügen, z. B. <b>1 blauer + 1 roter Becher</b>.</div>
-          <small>Groß-/Kleinschreibung und Grammangaben sind für die Zuordnung egal: „200 g Mehl“ und „Mehl“ werden derselben Zutat zugeordnet.</small>
+          <div><b>1.</b> Links die normale Zutat, z. B. <b>200 g Mehl</b>.</div>
+          <div><b>2.</b> Rechts das passende Kindermaß wählen.</div>
+          <div><b>3.</b> Für mehrere Becher einfach ein weiteres Kindermaß hinzufügen.</div>
+          <small>„200 g Mehl“ und „Mehl“ werden automatisch derselben Zutat zugeordnet.</small>
         </div>
 
         <div id="recipeBeakerRows" class="beaker-map-rows"></div>
@@ -1880,54 +1878,6 @@
 
     <div id="childWeekList" class="child-week-list"></div>
   </div>
-</dialog>
-
-<dialog id="papaOverviewDialog" class="papa-overview-dialog">
-  <div class="papa-overview-header">
-    <div>
-      <p class="small-label">PAPA</p>
-      <h2>Alles auf einen Blick</h2>
-
-    <div class="papa-quote-panel">
-
-  <div class="papa-triquetra-wrap">
-<div class="papa-triquetra-ring">
-  <img
-    src="triquetra.png.png"
-    class="papa-triquetra-image"
-    alt="Das Leben fließt – wir fließen mit"
-  >
-</div>
-  </div>
-
-  <p id="papaQuote" class="papa-quote"></p>
-
-</div>
-      
-    </div>
-
-    <button id="closePapaOverviewBtn"
-            class="text-btn"
-            type="button"
-            aria-label="Schließen">×</button>
-  </div>
-
-  <div class="papa-overview-tabs elegant-week-switch">
-    <button class="secondary-btn papa-tab" data-week-offset="0" type="button">
-      Diese Woche
-    </button>
-    <button class="secondary-btn papa-tab" data-week-offset="1" type="button">
-      Nächste Woche
-    </button>
-    <button class="secondary-btn papa-tab" data-week-offset="2" type="button">
-      +2 Wochen
-    </button>
-    <button class="secondary-btn papa-tab" data-week-offset="3" type="button">
-      +3 Wochen
-    </button>
-  </div>
-
-  <div id="papaOverviewList" class="papa-overview-list"></div>
 </dialog>
   
   <script>
