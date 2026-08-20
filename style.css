@@ -13636,3 +13636,287 @@ body:has(.school-child-dashboard:not(.hidden)) #editTimetablesBtn{
     grid-template-columns:1fr !important;
   }
 }
+
+
+/* =========================================================
+   V12 – Wochenansichten stabil + Rezeptbild repariert
+   ========================================================= */
+
+/* ---------------------------------------------------------
+   REZEPT: Illustration wieder sauber IM Header links.
+   Kein großer leerer Zwischenraum mehr.
+   --------------------------------------------------------- */
+.recipe-card{
+  position:relative !important;
+}
+
+.recipe-card.recipe-child-mode > .recipe-child-illustration,
+#recipeDetailBody .recipe-detail-mirror-card.recipe-child-mode > .recipe-child-illustration{
+  position:absolute !important;
+  z-index:6 !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:flex-start !important;
+  margin:0 !important;
+  padding:0 !important;
+  overflow:visible !important;
+  border-radius:0 !important;
+  background:transparent !important;
+  pointer-events:auto !important;
+}
+
+/* große Rezeptkarte */
+.recipe-card.recipe-child-mode > .recipe-child-illustration{
+  left:18px !important;
+  top:10px !important;
+  width:300px !important;
+  height:205px !important;
+}
+.recipe-card.recipe-child-mode > .recipe-child-illustration img{
+  display:block !important;
+  width:300px !important;
+  height:205px !important;
+  max-width:none !important;
+  object-fit:contain !important;
+  object-position:left center !important;
+  pointer-events:none !important;
+}
+
+/* Popup/Detail */
+#recipeDetailBody .recipe-detail-mirror-card.recipe-child-mode > .recipe-child-illustration{
+  left:12px !important;
+  top:8px !important;
+  width:245px !important;
+  height:172px !important;
+}
+#recipeDetailBody .recipe-detail-mirror-card.recipe-child-mode > .recipe-child-illustration img{
+  display:block !important;
+  width:245px !important;
+  height:172px !important;
+  max-width:none !important;
+  object-fit:contain !important;
+  object-position:left center !important;
+  pointer-events:none !important;
+}
+
+/* Header reserviert exakt den Platz für das Bild. */
+.recipe-card.recipe-child-mode .recipe-card-head{
+  min-height:225px !important;
+  padding-left:325px !important;
+}
+#recipeDetailBody .recipe-detail-mirror-card.recipe-child-mode .recipe-card-head{
+  min-height:188px !important;
+  padding-left:270px !important;
+}
+
+/* Lou-Umschalter wirklich anklickbar. */
+.recipe-view-switch{
+  cursor:pointer !important;
+}
+.recipe-view-switch[data-active-recipe-view="lou"]{
+  filter:drop-shadow(0 3px 9px rgba(118,93,128,.10)) !important;
+}
+
+/* Hinweis in Lou-Ansicht bleibt klein und sitzt im Bildbereich. */
+.recipe-card.recipe-child-mode.recipe-lou-mode .recipe-view-switch::after,
+#recipeDetailBody.recipe-detail-child-mode.recipe-detail-lou-mode .recipe-view-switch::after{
+  left:8px !important;
+  bottom:4px !important;
+}
+
+/* ---------------------------------------------------------
+   KINDER: Wochenleiste immer direkt unter dem Header,
+   niemals mitten in der Liste kleben.
+   --------------------------------------------------------- */
+.child-week-dialog{
+  height:min(680px,88vh) !important;
+  max-height:min(680px,88vh) !important;
+  overflow:hidden !important;
+}
+.child-week-shell{
+  height:100% !important;
+  max-height:none !important;
+  display:flex !important;
+  flex-direction:column !important;
+  overflow:hidden !important;
+  padding:0 20px 18px !important;
+}
+.child-week-hero{
+  position:relative !important;
+  top:auto !important;
+  flex:0 0 155px !important;
+  height:155px !important;
+  min-height:155px !important;
+  margin:0 -20px !important;
+}
+.child-week-tabs.elegant-week-switch{
+  position:relative !important;
+  top:auto !important;
+  z-index:3 !important;
+  flex:0 0 auto !important;
+  width:100% !important;
+  margin:12px 0 12px !important;
+  background:#fffdfb !important;
+}
+.child-week-list{
+  flex:1 1 auto !important;
+  min-height:0 !important;
+  overflow:auto !important;
+  padding:0 1px 2px !important;
+}
+
+/* "Heute"-Pill komplett weg – die leichte Tageshinterlegung reicht. */
+.child-week-day-head em{
+  display:none !important;
+}
+
+/* ---------------------------------------------------------
+   WERKRAUM: gleiches stabiles Prinzip.
+   Frau mittiger und etwas höher.
+   --------------------------------------------------------- */
+.workroom-week-dialog{
+  height:min(680px,88vh) !important;
+  max-height:min(680px,88vh) !important;
+  overflow:hidden !important;
+}
+.workroom-week-shell{
+  height:100% !important;
+  max-height:none !important;
+  display:flex !important;
+  flex-direction:column !important;
+  overflow:hidden !important;
+  padding:0 20px 18px !important;
+}
+.workroom-week-hero{
+  position:relative !important;
+  top:auto !important;
+  flex:0 0 165px !important;
+  height:165px !important;
+  min-height:165px !important;
+  margin:0 -20px !important;
+  grid-template-columns:minmax(0,1fr) 260px !important;
+}
+.workroom-week-hero>img{
+  width:220px !important;
+  height:155px !important;
+  justify-self:center !important;
+  align-self:center !important;
+  object-position:center center !important;
+  transform:translateY(-13px) !important;
+}
+.workroom-week-tabs.elegant-week-switch{
+  position:relative !important;
+  top:auto !important;
+  z-index:3 !important;
+  flex:0 0 auto !important;
+  width:100% !important;
+  margin:12px 0 12px !important;
+  background:#fffdfb !important;
+}
+.workroom-week-list{
+  flex:1 1 auto !important;
+  min-height:0 !important;
+  overflow:auto !important;
+  padding:0 1px 2px !important;
+}
+.workroom-week-day-head em{
+  display:none !important;
+}
+
+/* ---------------------------------------------------------
+   PAPA: Dialoghöhe konstant, Wochenleiste bleibt immer
+   an derselben Stelle – unabhängig von Anzahl der Einträge.
+   --------------------------------------------------------- */
+.papa-overview-dialog{
+  height:min(720px,86vh) !important;
+  max-height:min(720px,86vh) !important;
+  overflow:hidden !important;
+  display:grid !important;
+  grid-template-rows:auto auto minmax(0,1fr) !important;
+}
+
+.papa-overview-dialog .papa-overview-header{
+  grid-row:1 !important;
+  overflow:visible !important;
+}
+
+.papa-overview-tabs.elegant-week-switch{
+  grid-row:2 !important;
+  position:relative !important;
+  top:auto !important;
+  width:calc(100% - 52px) !important;
+  margin:0 26px 12px !important;
+  flex:0 0 auto !important;
+}
+
+.papa-overview-list{
+  grid-row:3 !important;
+  min-height:0 !important;
+  overflow:auto !important;
+  padding:10px 26px 22px !important;
+}
+
+.papa-today-badge{
+  display:none !important;
+}
+
+/* ---------------------------------------------------------
+   Wochenleiste: noch etwas ruhiger und klarer.
+   --------------------------------------------------------- */
+.elegant-week-switch{
+  border-radius:15px !important;
+  background:#faf8f6 !important;
+  box-shadow:none !important;
+}
+.elegant-week-switch button{
+  min-height:39px !important;
+  font-size:.74rem !important;
+}
+.elegant-week-switch button.active{
+  background:#fff !important;
+  box-shadow:0 3px 10px rgba(67,55,61,.055) !important;
+}
+.elegant-week-switch button.active::before{
+  bottom:4px !important;
+  width:16px !important;
+}
+
+/* Mobile */
+@media(max-width:760px){
+  .recipe-card.recipe-child-mode .recipe-card-head{
+    min-height:150px !important;
+    padding-left:145px !important;
+  }
+  .recipe-card.recipe-child-mode > .recipe-child-illustration{
+    left:6px !important;
+    top:6px !important;
+    width:132px !important;
+    height:136px !important;
+  }
+  .recipe-card.recipe-child-mode > .recipe-child-illustration img{
+    width:132px !important;
+    height:136px !important;
+  }
+
+  #recipeDetailBody .recipe-detail-mirror-card.recipe-child-mode .recipe-card-head{
+    min-height:135px !important;
+    padding-left:130px !important;
+  }
+  #recipeDetailBody .recipe-detail-mirror-card.recipe-child-mode > .recipe-child-illustration{
+    left:5px !important;
+    top:5px !important;
+    width:116px !important;
+    height:124px !important;
+  }
+  #recipeDetailBody .recipe-detail-mirror-card.recipe-child-mode > .recipe-child-illustration img{
+    width:116px !important;
+    height:124px !important;
+  }
+
+  .child-week-dialog,
+  .workroom-week-dialog,
+  .papa-overview-dialog{
+    height:min(760px,94vh) !important;
+    max-height:min(760px,94vh) !important;
+  }
+}
