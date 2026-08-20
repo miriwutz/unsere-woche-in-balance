@@ -1900,7 +1900,10 @@ const eventHtml = (normalEventsForHeader.length || multiDayEventLanes.length) ? 
     renderWeek();
   }));
 
-  document.querySelectorAll(".school-week-check").forEach(el => el.addEventListener("change", e => {
+  document.querySelectorAll(".school-week-check").forEach(el => el.addEventListener("click", e => {
+    e.preventDefault();
+    e.stopPropagation();
+
     const childId = e.currentTarget.dataset.child;
     const taskId = e.currentTarget.dataset.id;
     const child = state.school.children[childId];
