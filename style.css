@@ -10010,3 +10010,43 @@ button.day-meal{cursor:pointer}
     padding-right:68px !important;
   }
 }
+
+
+/* =========================================================
+   V43 – Linksammlung Filter vollständig verdrahtet
+   ========================================================= */
+.workroom-link-meta{
+  display:flex;
+  gap:6px;
+  flex-wrap:wrap;
+  margin-top:5px;
+}
+.workroom-link-category,
+.workroom-link-use{
+  display:inline-flex;
+  align-items:center;
+  min-height:22px;
+  padding:3px 7px;
+  border-radius:999px;
+  background:rgba(239,242,237,.78);
+  color:#77766c;
+  font-size:.66rem;
+}
+.workroom-link-use{
+  background:rgba(245,239,229,.78);
+  color:#827365;
+}
+.workroom-link-item-important{
+  border-color:rgba(218,175,79,.34) !important;
+  background:linear-gradient(90deg,rgba(255,248,224,.50),rgba(255,253,251,.72)) !important;
+}
+.workroom-link-star{
+  color:#d2a43d;
+  margin-right:4px;
+}
+.workroom-link-important-filter.active{
+  background:#fff2c9 !important;
+  border-color:#d8b55c !important;
+  color:#71561d !important;
+  box-shadow:inset 0 0 0 1px rgba(216,181,92,.12);
+}
