@@ -2793,7 +2793,14 @@ function showManualTimetable(id){
   if(!d||!out)return;
 
   title.textContent=`${c.name||id} – Stundenplan`;
-out.innerHTML=`<div class="tt-table-wrap"><table class="tt-table tt-view-table ${id === "mama" ? "tt-mama" : ""}">
+
+  const dialogCard = d.querySelector(".timetable-dialog-card") || d.querySelector(".dialog-card");
+  if (dialogCard) {
+    dialogCard.classList.remove("tt-person-lou","tt-person-fina","tt-person-mama");
+    dialogCard.classList.add(id === "1" ? "tt-person-lou" : id === "2" ? "tt-person-fina" : "tt-person-mama");
+  }
+
+out.innerHTML=`<div class="tt-table-wrap"><table class="tt-table tt-view-table ${id === "mama" ? "tt-mama" : id === "1" ? "tt-lou" : "tt-fina"}">
     <thead><tr><th>Zeit</th>${manualTimetableDayNames.map(x=>`<th>${x}</th>`).join("")}</tr></thead>
     <tbody>
       <tr class="tt-home-row tt-home-row-top"><th>⌂ Zu Hause bis</th>${manualTimetableDayKeys.map(day=>`<td>${escapeHtml(t.homeBy[day]||"–")}</td>`).join("")}</tr>
@@ -2980,6 +2987,9 @@ const familyTimetableDialog = document.querySelector("#familyTimetableDialog");
 
 document.querySelector("#openFamilyTimetableBtn")?.addEventListener("click", () => {
   document.querySelector("#manualTimetableWrapmama")?.classList.add("hidden");
+  document.querySelector("#familyTimetableDialog .family-timetable-buttons")?.classList.remove("hidden");
+  const title = document.querySelector("#familyTimetableDialogTitle");
+  if (title) title.textContent = "Welchen Stundenplan ansehen?";
   familyTimetableDialog?.showModal();
 });
 
@@ -3188,19 +3198,9 @@ document.querySelectorAll(".papa-tab").forEach(btn => {
 document.querySelectorAll(".family-timetable-person").forEach(btn => {
   btn.addEventListener("click", () => {
     const person = btn.dataset.person;
-
-           
- if (person === "1" || person === "2") {
+    if (!["1","2","mama"].includes(person)) return;
     familyTimetableDialog?.close();
     showManualTimetable(person);
-    return;
-}
-
-       if (person === "mama") {
-  renderTTMatrix("mama");
-  document.querySelector("#manualTimetableWrapmama")?.classList.remove("hidden");
-  return;
-}
   });
 });
 const manualTimetableDialog = document.querySelector("#manualTimetableDialog");
