@@ -2802,7 +2802,13 @@ function showManualTimetable(id){
     dialogCard.classList.add(id === "1" ? "tt-person-lou" : id === "2" ? "tt-person-fina" : "tt-person-mama");
   }
 
-out.innerHTML=`<div class="tt-table-wrap"><table class="tt-table tt-view-table ${id === "mama" ? "tt-mama" : id === "1" ? "tt-lou" : "tt-fina"}">
+const ttIllustration = id === "1"
+    ? `<img class="tt-person-illustration tt-lou-illustration" src="./lou-stundenplan.png?v=42" alt="">`
+    : id === "2"
+      ? `<img class="tt-person-illustration tt-fina-illustration" src="./fina-stundenplan.png?v=42" alt="">`
+      : `<img class="tt-person-illustration tt-mama-illustration" src="./workroom-meditation.png?v=42" alt="">`;
+
+out.innerHTML=`${ttIllustration}<div class="tt-table-wrap"><table class="tt-table tt-view-table ${id === "mama" ? "tt-mama" : id === "1" ? "tt-lou" : "tt-fina"}">
     <thead><tr><th>Zeit</th>${manualTimetableDayNames.map(x=>`<th>${x}</th>`).join("")}</tr></thead>
     <tbody>
       <tr class="tt-home-row tt-home-row-top"><th>⌂ Zu Hause bis</th>${manualTimetableDayKeys.map(day=>`<td>${escapeHtml(t.homeBy[day]||"–")}</td>`).join("")}</tr>
@@ -7218,7 +7224,7 @@ function showRecipeDetail(recipeOrTitle) {
   body.classList.remove("recipe-detail-child-mode");
   const external = normalizedRecipeSource(recipe) === "external";
   const childIllustrationHtml = recipeSelfCook(recipe)
-    ? `<div class="recipe-detail-child-illustration" aria-hidden="true"><img src="cooking-kids.png" alt=""></div>`
+    ? `<div class="recipe-detail-child-illustration" aria-hidden="true"><img src="./cooking-kids.png?v=42" alt=""></div>`
     : "";
 
   body.innerHTML = `
@@ -7417,7 +7423,7 @@ function renderRecipes() {
         </div>
         <div class="recipe-tools">${escapeHtml(recipeCardMark(r))}</div>
       </header>
-      ${recipeSelfCook(r) ? `<div class="recipe-child-illustration" aria-hidden="true"><img src="cooking-kids.png" alt=""></div>` : ""}
+      ${recipeSelfCook(r) ? `<div class="recipe-child-illustration" aria-hidden="true"><img src="./cooking-kids.png?v=42" alt=""></div>` : ""}
       ${normalizedRecipeSource(r) === "external" ? `
         <div class="recipe-card-body recipe-external-body">
           <div class="recipe-external-copy">
