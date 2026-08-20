@@ -901,13 +901,19 @@
 </dialog>
 
 <section id="school" class="view">
-      <div class="section-head"><div><p class="small-label">SCHULE</p><h2>Lernen & Schule</h2>
-      <p class="school-intro">Deine Lernaufgaben, Termine und Lieblings-Lernseiten – alles an einem Ort.</p></div>
-      <button id="openSchoolTimetableEditorBtn" class="secondary-btn school-timetable-editor-btn" type="button">🗓 Stundenpläne bearbeiten</button>
+      <div id="schoolChildChooser" class="school-child-chooser">
+        <div class="school-chooser-copy"><p class="small-label">SCHULE</p><h2>Wer bist du heute?</h2><p>Tippe auf dein Bild und öffne deinen eigenen Bereich.</p></div>
+        <div class="school-chooser-grid">
+          <button class="school-person-card lou" type="button" data-open-school-child="1"><img src="./lou-stundenplan.png?v=53" alt=""><span class="school-person-name">Lou</span><span class="school-person-sub">Mein Bereich ✦</span></button>
+          <button class="school-person-card fina" type="button" data-open-school-child="2"><img src="./fina-stundenplan.png?v=53" alt=""><span class="school-person-name">Fina</span><span class="school-person-sub">Mein Bereich ☾</span></button>
+        </div>
       </div>
-      <div class="school-kind-note">💛 Trag ein, was du erledigen oder nicht vergessen möchtest. Wenn du fertig bist, darfst du abhaken.</div>
+      <div id="schoolChildDashboard" class="school-child-dashboard hidden">
+        <div class="school-dashboard-top"><button id="backToSchoolChooser" class="secondary-btn" type="button">‹ Wechseln</button><button id="openSchoolTimetableEditorBtn" class="secondary-btn school-timetable-editor-btn" type="button">🗓 Stundenpläne bearbeiten</button></div>
+        <div id="schoolMotivationBanner" class="school-motivation-banner"><img id="schoolBannerImage" src="" alt=""><div class="school-banner-overlay"><span id="schoolBannerIcon" class="school-banner-icon"></span><div><p id="schoolBannerHello"></p><strong id="schoolBannerQuote"></strong></div></div></div>
+        <div class="school-icon-picker"><span>Mein Zeichen:</span><div id="schoolIconChoices"></div></div>
       <div class="school-grid">
-<article class="card school-card">
+<article class="card school-card school-card-child-1">
       <div class="school-head"><div><input id="schoolName1" class="school-name" value="Lou"><span class="school-question">Was steht als Nächstes an?</span></div><span class="school-icon">✦</span></div>
       <div class="school-add">
         <input id="schoolTask1" placeholder="✨ Neue Lernaufgabe eintragen">
@@ -966,7 +972,7 @@
     </div><button id="manualTimetableViewBtn1" class="timetable-view-btn hidden" data-child="1" type="button">♡ Stundenplan ansehen</button>
         </div>
 
-    </article><article class="card school-card">
+    </article><article class="card school-card school-card-child-2">
       <div class="school-head"><div><input id="schoolName2" class="school-name" value="Fina"><span class="school-question">Was steht als Nächstes an?</span></div><span class="school-icon">☾</span></div>
       <div class="school-add">
         <input id="schoolTask2" placeholder="✨ Neue Lernaufgabe eintragen">
@@ -1032,7 +1038,7 @@
         >♡ Stundenplan ansehen</button>
       </div>
 
-    </article></div></section>
+    </article></div></div></section>
 <section id="workroom" class="view">
   <div class="section-head">
     <div>
