@@ -7880,6 +7880,7 @@ document.querySelector("#saveRecipeBtn")?.addEventListener("click", () => {
     kids: !!document.querySelector("#recipeKids")?.checked,
     selfCook: !!document.querySelector("#recipeSelfCook")?.checked,
     beakerKitchen: !!document.querySelector("#recipeBeakerKitchen")?.checked,
+      beakerMappings: readRecipeBeakerMappings(),
     healthy: !!document.querySelector("#recipeHealthy")?.checked,
     time: document.querySelector("#recipeTime")?.value.trim() || "",
     ingredients: recipeLines(document.querySelector("#recipeIngredients")?.value),
@@ -10224,4 +10225,91 @@ document.addEventListener("click", (e) => {
     renderSchoolPrints();
     renderWorkroomLinks();
   }, 0);
+});
+/* V36: Becherküche => Selbst-kochen automatisch */
+document.addEventListener("change", (event) => {
+  if (event.target?.id === "recipeBeakerKitchen" && event.target.checked) {
+    const selfCook = document.querySelector("#recipeSelfCook");
+    if (selfCook && !selfCook.checked) {
+      selfCook.checked = true;
+      selfCook.dispatchEvent(new Event("change", { bubbles: true }));
+    }
+  }
+});
+
+/* =========================================================
+   V36 – manuelle Becherküche-Zuordnung
+   Erwachsenen-Zutat bleibt unverändert; Kindermaß wird separat
+   am Rezept unter beakerMappings gespeichert.
+   ========================================================= */
+function recipeBeakerRowTemplate(value = {}) {
+  const ingredient = String(value.ingredient || "");
+  const amount = String(value.amount || "");
+  const unit = String(value.unit || "cup");
+  const color = String(value.color || "blue");
+  const esc = (s) => String(s).replace(/[&<>"']/g, m => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
+  return `
+    <div class="beaker-map-row">
+      <input class="beaker-map-ingredient" type="text" placeholder="z. B. 200 g Mehl" value="${esc(ingredient)}">
+      <span class="beaker-map-arrow">→</span>
+      <input class="beaker-map-amount" type="text" placeholder="Menge" value="${esc(amount)}">
+      <select class="beaker-map-unit">
+        <option value="cup" ${unit==="cup"?"selected":""}>Becher</option>
+        <option value="quark" ${unit==="quark"?"selected":""}>Topfenbecher</option>
+        <option value="yogurt" ${unit==="yogurt"?"selected":""}>Joghurtbecher</option>
+        <option value="tbsp" ${unit==="tbsp"?"selected":""}>Esslöffel (EL)</option>
+        <option value="tsp" ${unit==="tsp"?"selected":""}>Teelöffel (TL)</option>
+        <option value="pinch" ${unit==="pinch"?"selected":""}>Prise</option>
+      </select>
+      <select class="beaker-map-color ${unit==="cup" ? "" : "hidden"}">
+        <option value="blue" ${color==="blue"?"selected":""}>Blau</option>
+        <option value="red" ${color==="red"?"selected":""}>Rot</option>
+        <option value="green" ${color==="green"?"selected":""}>Grün</option>
+        <option value="yellow" ${color==="yellow"?"selected":""}>Gelb</option>
+        <option value="orange" ${color==="orange"?"selected":""}>Orange</option>
+        <option value="purple" ${color==="purple"?"selected":""}>Lila</option>
+      </select>
+      <button class="beaker-map-remove" type="button" title="Zeile entfernen">×</button>
+    </div>`;
+}
+function addRecipeBeakerRow(value = {}) {
+  const host = document.querySelector("#recipeBeakerRows");
+  if (!host) return;
+  host.insertAdjacentHTML("beforeend", recipeBeakerRowTemplate(value));
+}
+function readRecipeBeakerMappings() {
+  return [...document.querySelectorAll(".beaker-map-row")].map(row => ({
+    ingredient: row.querySelector(".beaker-map-ingredient")?.value.trim() || "",
+    amount: row.querySelector(".beaker-map-amount")?.value.trim() || "",
+    unit: row.querySelector(".beaker-map-unit")?.value || "cup",
+    color: row.querySelector(".beaker-map-color")?.value || "blue"
+  })).filter(x => x.ingredient || x.amount);
+}
+function setRecipeBeakerMappings(rows = []) {
+  const host = document.querySelector("#recipeBeakerRows");
+  if (!host) return;
+  host.innerHTML = "";
+  (Array.isArray(rows) ? rows : []).forEach(addRecipeBeakerRow);
+  if (!host.children.length) addRecipeBeakerRow();
+}
+function updateBeakerMappingVisibility() {
+  const checked = !!document.querySelector("#recipeBeakerKitchen")?.checked;
+  document.querySelector("#recipeBeakerMapping")?.classList.toggle("hidden", !checked);
+}
+document.addEventListener("click", e => {
+  if (e.target?.id === "addRecipeBeakerRow") addRecipeBeakerRow();
+  if (e.target?.classList?.contains("beaker-map-remove")) e.target.closest(".beaker-map-row")?.remove();
+});
+document.addEventListener("change", e => {
+  if (e.target?.id === "recipeBeakerKitchen") updateBeakerMappingVisibility();
+  if (e.target?.classList?.contains("beaker-map-unit")) {
+    const row = e.target.closest(".beaker-map-row");
+    row?.querySelector(".beaker-map-color")?.classList.toggle("hidden", e.target.value !== "cup");
+  }
+});
+
+/* V36: beim Öffnen/Bearbeiten vorhandene Mappingdaten nachladen, sofern das
+   bestehende Editiersystem die aktuelle Rezept-ID am Formular hinterlegt. */
+document.addEventListener("click", () => {
+  setTimeout(updateBeakerMappingVisibility, 0);
 });
