@@ -10438,3 +10438,207 @@ button.day-meal{cursor:pointer}
 .recipe-measure-icon.measure-tsp i{
   display:none !important;
 }
+
+
+/* =========================================================
+   V47 – Kinderansicht: echte Regenbogenfläche + größeres Bild
+   ========================================================= */
+
+/* Die Kategorienfarben dürfen die Kinderansicht NICHT überstimmen. */
+.recipe-card.recipe-child-mode .recipe-card-head{
+  background:
+    linear-gradient(
+      90deg,
+      #f9e7e8 0%,
+      #faead9 18%,
+      #fbf3d9 36%,
+      #e8f2df 55%,
+      #dfeef3 73%,
+      #e8e4f4 88%,
+      #f2e3ef 100%
+    ) !important;
+  min-height:220px !important;
+  padding-left:365px !important;
+  padding-right:185px !important;
+  border-bottom:1px solid rgba(134,151,139,.14) !important;
+}
+
+/* Bild wirklich deutlich größer – links in der Regenbogenfläche */
+.recipe-card.recipe-child-mode > .recipe-child-illustration{
+  left:22px !important;
+  top:7px !important;
+  width:330px !important;
+  height:205px !important;
+}
+.recipe-card.recipe-child-mode > .recipe-child-illustration img{
+  width:330px !important;
+  height:205px !important;
+  object-fit:contain !important;
+  object-position:left center !important;
+}
+
+/* Titel/Badge bleiben vertikal sauber mittig */
+.recipe-card.recipe-child-mode .recipe-title-wrap{
+  align-self:center !important;
+  justify-self:center !important;
+}
+.recipe-card.recipe-child-mode .recipe-badges{
+  margin-top:5px !important;
+}
+
+/* Menge + Symbol + Zutat wirklich als EINE Zeile */
+.recipe-card.recipe-child-mode .recipe-child-measure-row{
+  display:flex !important;
+  align-items:center !important;
+  flex-wrap:nowrap !important;
+  gap:9px !important;
+}
+.recipe-card.recipe-child-mode .recipe-child-measures{
+  display:inline-flex !important;
+  align-items:center !important;
+  flex-wrap:nowrap !important;
+  gap:6px !important;
+}
+.recipe-card.recipe-child-mode .recipe-child-measure-part{
+  display:inline-flex !important;
+  align-items:center !important;
+  gap:5px !important;
+}
+.recipe-card.recipe-child-mode .recipe-child-measure-ingredient{
+  display:inline-flex !important;
+  align-items:center !important;
+  margin:0 !important;
+  padding:0 !important;
+  line-height:1 !important;
+}
+
+/* In einer automatisch erzeugten Kinderzeile wird die ursprüngliche
+   Erwachsenenmenge/-einheit vollständig ausgeblendet. */
+.recipe-card.recipe-child-mode .recipe-child-checkable:has(.recipe-child-ingredient) > .recipe-adult-ingredient{
+  display:none !important;
+}
+
+/* Sanfter Regenbogen bei erledigten Zutaten/Schritten */
+.recipe-card.recipe-child-mode .recipe-child-checkable.recipe-child-done{
+  background:linear-gradient(
+    90deg,
+    #fbe1e5 0%,
+    #fbe8d8 18%,
+    #faf1d6 36%,
+    #e5f2df 55%,
+    #deedf4 74%,
+    #e8e2f3 88%,
+    #f1e1ed 100%
+  ) !important;
+  opacity:.82 !important;
+}
+
+@media(max-width:900px){
+  .recipe-card.recipe-child-mode .recipe-card-head{
+    min-height:175px !important;
+    padding-left:230px !important;
+    padding-right:125px !important;
+  }
+  .recipe-card.recipe-child-mode > .recipe-child-illustration{
+    width:210px !important;
+    height:160px !important;
+    left:10px !important;
+  }
+  .recipe-card.recipe-child-mode > .recipe-child-illustration img{
+    width:210px !important;
+    height:160px !important;
+  }
+}
+
+@media(max-width:620px){
+  .recipe-card.recipe-child-mode .recipe-card-head{
+    min-height:150px !important;
+    padding-left:135px !important;
+    padding-right:100px !important;
+  }
+  .recipe-card.recipe-child-mode > .recipe-child-illustration{
+    width:122px !important;
+    height:132px !important;
+    left:5px !important;
+  }
+  .recipe-card.recipe-child-mode > .recipe-child-illustration img{
+    width:122px !important;
+    height:132px !important;
+  }
+}
+
+
+/* =========================================================
+   V47 – Stundenplanbilder in der Wochenplanansicht sichtbar
+   ========================================================= */
+
+#manualTimetableDialog .timetable-dialog-card{
+  position:relative !important;
+  overflow:visible !important;
+}
+
+/* Nicht mehr relativ zum Tabellenbereich positionieren. */
+#manualTimetableDisplay{
+  position:static !important;
+}
+
+#manualTimetableDisplay .tt-person-illustration{
+  position:absolute !important;
+  z-index:6 !important;
+  right:70px !important;
+  top:14px !important;
+  display:block !important;
+  pointer-events:none !important;
+  object-fit:contain !important;
+  object-position:center bottom !important;
+}
+
+/* Fina: tanzendes Mädchen */
+#manualTimetableDisplay .tt-fina-illustration{
+  width:150px !important;
+  height:150px !important;
+  opacity:.82 !important;
+}
+
+/* Lou: lesendes Mädchen */
+#manualTimetableDisplay .tt-lou-illustration{
+  width:138px !important;
+  height:138px !important;
+  opacity:.76 !important;
+}
+
+/* Mama: Werkraum-/Meditationsbild */
+#manualTimetableDisplay .tt-mama-illustration{
+  width:125px !important;
+  height:125px !important;
+  opacity:.64 !important;
+}
+
+/* Damit Titel nicht mit der Illustration kollidiert */
+#manualTimetableDialog .dialog-head{
+  min-height:125px !important;
+  padding-right:225px !important;
+}
+
+@media(max-width:760px){
+  #manualTimetableDisplay .tt-person-illustration{
+    right:45px !important;
+    top:12px !important;
+  }
+  #manualTimetableDisplay .tt-fina-illustration{
+    width:92px !important;
+    height:92px !important;
+  }
+  #manualTimetableDisplay .tt-lou-illustration{
+    width:86px !important;
+    height:86px !important;
+  }
+  #manualTimetableDisplay .tt-mama-illustration{
+    width:80px !important;
+    height:80px !important;
+  }
+  #manualTimetableDialog .dialog-head{
+    min-height:88px !important;
+    padding-right:140px !important;
+  }
+}
