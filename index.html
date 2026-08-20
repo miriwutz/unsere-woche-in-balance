@@ -937,43 +937,61 @@
         <button class="secondary-btn add-school-task" data-child="1">✨ Eintragen</button>
       </div>
       <div id="schoolTasks1" class="school-tasks"></div>
-      <div class="school-links-title"><strong>Lernlinks</strong><span>Direkt zu euren Lernseiten</span></div>
-      <div class="school-link-add"><input id="schoolLinkName1" placeholder="Name, z. B. ANTON"><input id="schoolLinkUrl1" placeholder="https://…"><button class="secondary-btn add-school-link" data-child="1">+ Link</button></div>
-      <div id="schoolLinks1" class="school-links"></div><div class="timetable-box"><div><strong>Aktueller Stundenplan</strong><span>Damit du schnell nachsehen kannst.</span></div><div class="timetable-actions"><input id="timetableUrl1" placeholder="Link zum Stundenplan"><button class="secondary-btn save-timetable" data-child="1">♥ Speichern</button><a id="timetableOpen1" class="secondary-btn timetable-open hidden" target="_blank" rel="noopener">☀ Stundenplan öffnen</a></div></div>
+      <div class="school-dashboard-tiles" data-child="1">
+        <button type="button" class="school-dashboard-tile school-tile-links" data-school-panel="links" data-child="1">
+          <span class="school-tile-icon">🔗</span>
+          <span><strong>Meine Lernseiten</strong><small>ANTON & Co. schnell öffnen</small></span>
+          <span class="school-tile-arrow">›</span>
+        </button>
+        <button type="button" class="school-dashboard-tile school-tile-timetable" data-school-open-timetable="1">
+          <span class="school-tile-icon">🗓</span>
+          <span><strong>Mein Stundenplan</strong><small>Heute schnell nachsehen</small></span>
+          <span class="school-tile-arrow">›</span>
+        </button>
+        <button type="button" class="school-dashboard-tile school-tile-week" data-school-open-week="1">
+          <span class="school-tile-icon">✨</span>
+          <span><strong>Meine Woche</strong><small>Was steht wann an?</small></span>
+          <span class="school-tile-arrow">›</span>
+        </button>
+      </div>
+
+      <div id="schoolLinksPanel1" class="school-dashboard-panel hidden">
+        <div class="school-panel-head">
+          <div><strong>Meine Lernseiten</strong><span>Hier kannst du Links öffnen oder neue hinzufügen.</span></div>
+          <button type="button" class="school-panel-close" data-close-school-panel="links" data-child="1">×</button>
+        </div>
+        <div class="school-link-add">
+          <input id="schoolLinkName1" placeholder="Name, z. B. ANTON">
+          <input id="schoolLinkUrl1" placeholder="https://…">
+          <button class="secondary-btn add-school-link" data-child="1">+ Link</button>
+        </div>
+        <div id="schoolLinks1" class="school-links"></div>
+      </div>
+
+      <div id="schoolTimetableManage1" class="school-timetable-manage-hidden">
+        <div class="timetable-box">
+          <div><strong>Aktueller Stundenplan</strong><span>Optionaler externer Link.</span></div>
+          <div class="timetable-actions">
+            <input id="timetableUrl1" placeholder="Link zum Stundenplan">
+            <button class="secondary-btn save-timetable" data-child="1">♥ Speichern</button>
+            <a id="timetableOpen1" class="secondary-btn timetable-open hidden" target="_blank" rel="noopener">☀ Stundenplan öffnen</a>
+          </div>
+        </div>
         <div class="manual-timetable-section">
           <button class="secondary-btn toggle-manual-timetable" data-child="1" type="button">✦ Stundenplan selbst eintragen</button>
           <div id="manualTimetableWrap1" class="manual-timetable-wrap hidden">
-      <p class="manual-timetable-hint">Unterrichtszeiten einmal festlegen, danach nur noch die Fächer auswählen.</p>
-      <div id="ttMatrix1" class="tt-matrix-host"></div>
-<div class="manual-timetable-actions">
-
-  <button class="secondary-btn add-tt-row"
-          data-child="1"
-          type="button">
-    + Stunde
-  </button>
-
-  <button class="secondary-btn remove-tt-row"
-          data-child="1"
-          type="button">
-    − Letzte Stunde
-  </button>
-
-  <button class="primary-btn save-tt-matrix"
-          data-child="1"
-          type="button">
-    Speichern
-  </button>
-
-  <button class="secondary-btn close-manual-timetable"
-          data-child="1"
-          type="button">
-    Schließen
-  </button>
-
-</div>
-    </div><button id="manualTimetableViewBtn1" class="timetable-view-btn hidden" data-child="1" type="button">♡ Stundenplan ansehen</button>
+            <p class="manual-timetable-hint">Unterrichtszeiten einmal festlegen, danach nur noch die Fächer auswählen.</p>
+            <div id="ttMatrix1" class="tt-matrix-host"></div>
+            <div class="manual-timetable-actions">
+              <button class="secondary-btn add-tt-row" data-child="1" type="button">+ Stunde</button>
+              <button class="secondary-btn remove-tt-row" data-child="1" type="button">− Letzte Stunde</button>
+              <button class="primary-btn save-tt-matrix" data-child="1" type="button">Speichern</button>
+              <button class="secondary-btn close-manual-timetable" data-child="1" type="button">Schließen</button>
+            </div>
+          </div>
+          <button id="manualTimetableViewBtn1" class="timetable-view-btn hidden" data-child="1" type="button">♡ Stundenplan ansehen</button>
         </div>
+      </div>
 
     </article><article class="card school-card school-card-child-2">
       <div class="school-head"><div><input id="schoolName2" class="school-name" value="Fina"><span class="school-question">Was steht als Nächstes an?</span></div><span class="school-icon">☾</span></div>
@@ -999,49 +1017,60 @@
         <button class="secondary-btn add-school-task" data-child="2">✨ Eintragen</button>
       </div>
       <div id="schoolTasks2" class="school-tasks"></div>
-      <div class="school-links-title"><strong>Lernlinks</strong><span>Direkt zu euren Lernseiten</span></div>
-      <div class="school-link-add"><input id="schoolLinkName2" placeholder="Name, z. B. ANTON"><input id="schoolLinkUrl2" placeholder="https://…"><button class="secondary-btn add-school-link" data-child="2">+ Link</button></div>
-      <div id="schoolLinks2" class="school-links"></div><div class="timetable-box"><div><strong>Aktueller Stundenplan</strong><span>Damit du schnell nachsehen kannst.</span></div><div class="timetable-actions"><input id="timetableUrl2" placeholder="Link zum Stundenplan"><button class="secondary-btn save-timetable" data-child="2">♥ Speichern</button><a id="timetableOpen2" class="secondary-btn timetable-open hidden" target="_blank" rel="noopener">☀ Stundenplan öffnen</a></div></div>
+      <div class="school-dashboard-tiles" data-child="2">
+        <button type="button" class="school-dashboard-tile school-tile-links" data-school-panel="links" data-child="2">
+          <span class="school-tile-icon">🔗</span>
+          <span><strong>Meine Lernseiten</strong><small>ANTON & Co. schnell öffnen</small></span>
+          <span class="school-tile-arrow">›</span>
+        </button>
+        <button type="button" class="school-dashboard-tile school-tile-timetable" data-school-open-timetable="2">
+          <span class="school-tile-icon">🗓</span>
+          <span><strong>Mein Stundenplan</strong><small>Heute schnell nachsehen</small></span>
+          <span class="school-tile-arrow">›</span>
+        </button>
+        <button type="button" class="school-dashboard-tile school-tile-week" data-school-open-week="2">
+          <span class="school-tile-icon">✨</span>
+          <span><strong>Meine Woche</strong><small>Was steht wann an?</small></span>
+          <span class="school-tile-arrow">›</span>
+        </button>
+      </div>
+
+      <div id="schoolLinksPanel2" class="school-dashboard-panel hidden">
+        <div class="school-panel-head">
+          <div><strong>Meine Lernseiten</strong><span>Hier kannst du Links öffnen oder neue hinzufügen.</span></div>
+          <button type="button" class="school-panel-close" data-close-school-panel="links" data-child="2">×</button>
+        </div>
+        <div class="school-link-add">
+          <input id="schoolLinkName2" placeholder="Name, z. B. ANTON">
+          <input id="schoolLinkUrl2" placeholder="https://…">
+          <button class="secondary-btn add-school-link" data-child="2">+ Link</button>
+        </div>
+        <div id="schoolLinks2" class="school-links"></div>
+      </div>
+
+      <div id="schoolTimetableManage2" class="school-timetable-manage-hidden">
+        <div class="timetable-box">
+          <div><strong>Aktueller Stundenplan</strong><span>Optionaler externer Link.</span></div>
+          <div class="timetable-actions">
+            <input id="timetableUrl2" placeholder="Link zum Stundenplan">
+            <button class="secondary-btn save-timetable" data-child="2">♥ Speichern</button>
+            <a id="timetableOpen2" class="secondary-btn timetable-open hidden" target="_blank" rel="noopener">☀ Stundenplan öffnen</a>
+          </div>
+        </div>
         <div class="manual-timetable-section">
           <button class="secondary-btn toggle-manual-timetable" data-child="2" type="button">✦ Stundenplan selbst eintragen</button>
           <div id="manualTimetableWrap2" class="manual-timetable-wrap hidden">
-      <p class="manual-timetable-hint">Unterrichtszeiten einmal festlegen, danach nur noch die Fächer auswählen.</p>
-      <div id="ttMatrix2" class="tt-matrix-host"></div>
-<div class="manual-timetable-actions">
-
-  <button class="secondary-btn add-tt-row"
-          data-child="2"
-          type="button">
-    + Stunde
-  </button>
-
-  <button class="secondary-btn remove-tt-row"
-          data-child="2"
-          type="button">
-    − Letzte Stunde
-  </button>
-
-  <button class="primary-btn save-tt-matrix"
-          data-child="2"
-          type="button">
-    Speichern
-  </button>
-
-  <button class="secondary-btn close-manual-timetable"
-          data-child="2"
-          type="button">
-    Schließen
-  </button>
-
-</div>
+            <p class="manual-timetable-hint">Unterrichtszeiten einmal festlegen, danach nur noch die Fächer auswählen.</p>
+            <div id="ttMatrix2" class="tt-matrix-host"></div>
+            <div class="manual-timetable-actions">
+              <button class="secondary-btn add-tt-row" data-child="2" type="button">+ Stunde</button>
+              <button class="secondary-btn remove-tt-row" data-child="2" type="button">− Letzte Stunde</button>
+              <button class="primary-btn save-tt-matrix" data-child="2" type="button">Speichern</button>
+              <button class="secondary-btn close-manual-timetable" data-child="2" type="button">Schließen</button>
+            </div>
+          </div>
+          <button id="manualTimetableViewBtn2" class="timetable-view-btn hidden" data-child="2" type="button">♡ Stundenplan ansehen</button>
         </div>
-
-        <button
-          id="manualTimetableViewBtn2"
-          class="timetable-view-btn hidden"
-          data-child="2"
-          type="button"
-        >♡ Stundenplan ansehen</button>
       </div>
 
     </article></div></div></section>
