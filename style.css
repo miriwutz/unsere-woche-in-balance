@@ -13285,3 +13285,354 @@ body:has(.school-child-dashboard:not(.hidden)) #editTimetablesBtn{
 #recipeDetailBody.recipe-detail-child-mode.recipe-detail-lou-mode .recipe-prep-line{
   font-family:"Aptos","Trebuchet MS","Segoe UI",sans-serif !important;
 }
+
+
+/* =========================================================
+   V11 – elegante Wochenwahl überall
+   ========================================================= */
+
+/* Keine vier losen Pillen mehr, sondern eine ruhige zusammengehörige Leiste. */
+.elegant-week-switch{
+  position:relative !important;
+  display:grid !important;
+  grid-template-columns:repeat(4,minmax(0,1fr)) !important;
+  gap:0 !important;
+  width:min(620px,100%) !important;
+  margin:14px 0 18px !important;
+  padding:4px !important;
+  border:1px solid rgba(170,154,148,.20) !important;
+  border-radius:17px !important;
+  background:rgba(248,246,244,.78) !important;
+  box-shadow:inset 0 1px 3px rgba(74,62,57,.025) !important;
+  overflow:visible !important;
+}
+.elegant-week-switch button{
+  position:relative !important;
+  min-width:0 !important;
+  min-height:42px !important;
+  padding:7px 12px !important;
+  border:0 !important;
+  border-radius:13px !important;
+  background:transparent !important;
+  box-shadow:none !important;
+  color:#8e817c !important;
+  font-family:"Aptos","Trebuchet MS","Segoe UI",sans-serif !important;
+  font-size:.76rem !important;
+  font-weight:520 !important;
+  white-space:nowrap !important;
+  transition:background .15s ease,color .15s ease,box-shadow .15s ease,transform .15s ease !important;
+}
+.elegant-week-switch button:not(:last-child)::after{
+  content:"" !important;
+  position:absolute !important;
+  right:0 !important;
+  top:12px !important;
+  bottom:12px !important;
+  width:1px !important;
+  background:rgba(170,154,148,.15) !important;
+}
+.elegant-week-switch button:hover{
+  color:#5e5551 !important;
+  background:rgba(255,255,255,.58) !important;
+}
+.elegant-week-switch button.active{
+  z-index:2 !important;
+  color:#514851 !important;
+  background:linear-gradient(135deg,#f1ecf6,#faf4e8) !important;
+  box-shadow:0 5px 14px rgba(72,59,65,.07) !important;
+  font-weight:650 !important;
+}
+.elegant-week-switch button.active::before{
+  content:"" !important;
+  position:absolute !important;
+  left:50% !important;
+  bottom:5px !important;
+  width:18px !important;
+  height:2px !important;
+  border-radius:99px !important;
+  background:#aa8db7 !important;
+  transform:translateX(-50%) !important;
+}
+
+/* Papa etwas wärmer */
+.papa-overview-tabs.elegant-week-switch button.active{
+  background:linear-gradient(135deg,#f6efeb,#fbf5ee) !important;
+}
+.papa-overview-tabs.elegant-week-switch button.active::before{
+  background:#b68d79 !important;
+}
+
+/* Kinder: Fina etwas rosiger */
+.child-week-dialog[data-child="2"] .elegant-week-switch button.active{
+  background:linear-gradient(135deg,#fff0f2,#fff7e8) !important;
+}
+.child-week-dialog[data-child="2"] .elegant-week-switch button.active::before{
+  background:#d88d9c !important;
+}
+
+/* =========================================================
+   Werkraum – "Meine Woche" im ruhigen Header
+   ========================================================= */
+.workroom-week-button{
+  margin-top:14px !important;
+  width:min(330px,100%) !important;
+  display:grid !important;
+  grid-template-columns:42px minmax(0,1fr) 18px !important;
+  align-items:center !important;
+  gap:10px !important;
+  padding:9px 12px !important;
+  border:1px solid rgba(129,119,100,.18) !important;
+  border-radius:16px !important;
+  background:rgba(255,255,255,.64) !important;
+  color:#59544b !important;
+  text-align:left !important;
+  box-shadow:0 4px 14px rgba(71,63,55,.04) !important;
+  cursor:pointer !important;
+}
+.workroom-week-button:hover{
+  background:rgba(255,255,255,.88) !important;
+  transform:translateY(-1px) !important;
+}
+.workroom-week-button-icon{
+  width:38px !important;
+  height:38px !important;
+  display:grid !important;
+  place-items:center !important;
+  border-radius:50% !important;
+  background:rgba(255,255,255,.86) !important;
+  font-size:1.15rem !important;
+}
+.workroom-week-button-copy strong{
+  display:block !important;
+  font-size:.88rem !important;
+}
+.workroom-week-button-copy small{
+  display:block !important;
+  margin-top:2px !important;
+  color:#948b81 !important;
+  font-size:.68rem !important;
+}
+.workroom-week-button-arrow{
+  color:#9e958a !important;
+  font-size:1.2rem !important;
+}
+
+/* =========================================================
+   Werkraum-Wochenübersicht
+   ========================================================= */
+.workroom-week-dialog{
+  width:min(940px,calc(100vw - 28px)) !important;
+  max-height:min(89vh,860px) !important;
+  padding:0 !important;
+  border:0 !important;
+  border-radius:25px !important;
+  background:#fffdfb !important;
+  box-shadow:0 24px 68px rgba(62,54,48,.19) !important;
+  overflow:hidden !important;
+}
+.workroom-week-dialog::backdrop{
+  background:rgba(55,50,46,.30) !important;
+  backdrop-filter:blur(2px) !important;
+}
+.workroom-week-shell{
+  max-height:min(89vh,860px) !important;
+  overflow:auto !important;
+  padding:0 20px 20px !important;
+}
+.workroom-week-hero{
+  position:sticky !important;
+  top:0 !important;
+  z-index:5 !important;
+  height:165px !important;
+  margin:0 -20px 0 !important;
+  padding:20px 72px 16px 28px !important;
+  display:grid !important;
+  grid-template-columns:minmax(0,1fr) 250px !important;
+  align-items:center !important;
+  overflow:hidden !important;
+  background:linear-gradient(105deg,#f3f0ea 0%,#f7f5ea 48%,#eef4ed 100%) !important;
+  border-bottom:1px solid rgba(156,147,132,.14) !important;
+}
+.workroom-week-hero-copy{
+  display:flex !important;
+  align-items:center !important;
+  gap:14px !important;
+}
+.workroom-week-hero-icon{
+  width:52px !important;
+  height:52px !important;
+  flex:0 0 52px !important;
+  display:grid !important;
+  place-items:center !important;
+  border-radius:50% !important;
+  background:rgba(255,255,255,.80) !important;
+  box-shadow:0 6px 18px rgba(72,65,57,.07) !important;
+  font-size:1.35rem !important;
+}
+.workroom-week-hero-copy p{
+  margin:0 0 4px !important;
+  color:#928777 !important;
+  font-size:.66rem !important;
+  letter-spacing:.18em !important;
+}
+.workroom-week-hero-copy h2{
+  margin:0 !important;
+  color:#47423b !important;
+  font-family:"Aptos Display","Trebuchet MS","Segoe UI",sans-serif !important;
+  font-size:1.72rem !important;
+  line-height:1.05 !important;
+}
+.workroom-week-hero-copy>div>span{
+  display:block !important;
+  margin-top:6px !important;
+  color:#90877c !important;
+  font-size:.78rem !important;
+}
+.workroom-week-hero>img{
+  width:100% !important;
+  height:155px !important;
+  object-fit:contain !important;
+  object-position:center bottom !important;
+  transform:translateY(-6px) !important;
+  opacity:.80 !important;
+}
+#closeWorkroomWeekBtn{
+  position:absolute !important;
+  right:18px !important;
+  top:17px !important;
+  width:39px !important;
+  height:39px !important;
+  padding:0 !important;
+  border-radius:50% !important;
+  border:1px solid rgba(175,158,143,.35) !important;
+  background:rgba(255,253,251,.94) !important;
+  color:#655d55 !important;
+  font-size:20px !important;
+}
+
+.workroom-week-tabs.elegant-week-switch{
+  position:sticky !important;
+  top:165px !important;
+  z-index:4 !important;
+  margin:10px 0 14px !important;
+  background:rgba(255,253,251,.94) !important;
+}
+
+.workroom-week-list{
+  display:grid !important;
+  gap:9px !important;
+}
+.workroom-week-day{
+  display:grid !important;
+  grid-template-columns:115px minmax(0,1fr) !important;
+  gap:12px !important;
+  padding:11px !important;
+  border:1px solid rgba(169,157,145,.19) !important;
+  border-radius:17px !important;
+  background:#fffdfb !important;
+}
+.workroom-week-day.is-today{
+  background:linear-gradient(100deg,#f3f1e9,#fffdfb 42%) !important;
+  border-color:rgba(150,137,116,.30) !important;
+}
+.workroom-week-day-head{
+  display:flex !important;
+  justify-content:space-between !important;
+  align-items:flex-start !important;
+  padding:6px 4px !important;
+}
+.workroom-week-day-head strong{
+  display:block !important;
+  color:#4d4740 !important;
+  font-size:.94rem !important;
+}
+.workroom-week-day-head span{
+  display:block !important;
+  margin-top:2px !important;
+  color:#998f83 !important;
+  font-size:.7rem !important;
+}
+.workroom-week-day-head em{
+  padding:3px 7px !important;
+  border-radius:999px !important;
+  background:#ece9df !important;
+  color:#756b5d !important;
+  font-size:.62rem !important;
+  font-style:normal !important;
+}
+.workroom-week-items{
+  display:grid !important;
+  gap:6px !important;
+}
+.workroom-week-item{
+  min-height:49px !important;
+  display:grid !important;
+  grid-template-columns:36px minmax(0,1fr) !important;
+  gap:8px !important;
+  align-items:center !important;
+  padding:7px 10px !important;
+  border-radius:13px !important;
+  border:1px solid rgba(169,157,145,.12) !important;
+}
+.workroom-week-item.event{background:#fbf4e8 !important}
+.workroom-week-item.todo{background:#eff4ed !important}
+.workroom-week-item-symbol{
+  width:32px !important;
+  height:32px !important;
+  display:grid !important;
+  place-items:center !important;
+  border-radius:10px !important;
+  background:rgba(255,255,255,.78) !important;
+}
+.workroom-week-item-meta{
+  display:block !important;
+  color:#998e82 !important;
+  font-size:.62rem !important;
+  text-transform:uppercase !important;
+  letter-spacing:.08em !important;
+}
+.workroom-week-item strong{
+  display:block !important;
+  margin-top:2px !important;
+  color:#4d4741 !important;
+  font-size:.86rem !important;
+}
+.workroom-week-item small{
+  display:block !important;
+  margin-top:2px !important;
+  color:#857c73 !important;
+  font-size:.7rem !important;
+}
+.workroom-week-empty{
+  min-height:200px !important;
+  display:grid !important;
+  place-items:center !important;
+  align-content:center !important;
+  gap:5px !important;
+  text-align:center !important;
+  color:#8d847a !important;
+}
+.workroom-week-empty>span{font-size:1.9rem !important}
+.workroom-week-today-empty{
+  padding:12px !important;
+  text-align:center !important;
+  color:#958c82 !important;
+  font-size:.73rem !important;
+}
+
+@media(max-width:650px){
+  .elegant-week-switch{
+    width:100% !important;
+  }
+  .elegant-week-switch button{
+    padding:7px 5px !important;
+    font-size:.68rem !important;
+  }
+  .workroom-week-hero{
+    grid-template-columns:minmax(0,1fr) 135px !important;
+    padding-left:18px !important;
+  }
+  .workroom-week-day{
+    grid-template-columns:1fr !important;
+  }
+}
