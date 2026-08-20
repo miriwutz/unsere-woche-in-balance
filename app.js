@@ -7640,7 +7640,13 @@ function showRecipeDetail(recipeOrTitle) {
       </header>
 
       ${recipeSelfCook(recipe)
-        ? `<div class="recipe-child-illustration" aria-hidden="true"><img src="./cooking-kids-tight.png?v=50" alt=""></div>`
+        ? `<div class="recipe-child-illustration recipe-view-switch"
+              data-recipe-view-switch="detail"
+              role="button"
+              tabindex="0"
+              title="Links auf Lou klicken: Lou-Ansicht · rechts: Kinderansicht">
+              <img src="./cooking-kids-tight.png?v=50" alt="Zwei Mädchen beim Kochen">
+           </div>`
         : ""}
 
       ${external ? `
@@ -7692,9 +7698,51 @@ function showRecipeDetail(recipeOrTitle) {
     btn.addEventListener("click", e => {
       e.stopPropagation();
       const active = card?.classList.toggle("recipe-child-mode");
+      if (!active) card?.classList.remove("recipe-lou-mode");
       body.classList.toggle("recipe-detail-child-mode", !!active);
+      if (!active) body.classList.remove("recipe-detail-lou-mode");
       btn.setAttribute("aria-pressed", active ? "true" : "false");
-      btn.textContent = active ? "🌈 Kinderansicht aktiv" : "👧 Das kannst du selbst kochen!";
+      btn.textContent = active
+        ? (card?.classList.contains("recipe-lou-mode") ? "✨ Lou-Ansicht aktiv" : "🌈 Kinderansicht aktiv")
+        : "👧 Das kannst du selbst kochen!";
+    });
+  });
+
+
+  body.querySelectorAll(".recipe-view-switch").forEach(illustration => {
+    const setRecipeViewFromPointer = (clientX) => {
+      if (!card?.classList.contains("recipe-child-mode")) return;
+      const rect=illustration.getBoundingClientRect();
+      const relativeX=clientX-rect.left;
+      const louMode=relativeX < rect.width * 0.50;
+
+      card.classList.toggle("recipe-lou-mode", louMode);
+      body.classList.toggle("recipe-detail-lou-mode", louMode);
+
+      const toggle=body.querySelector(".recipe-detail-selfcook-toggle");
+      if(toggle) toggle.textContent=louMode ? "✨ Lou-Ansicht aktiv" : "🌈 Kinderansicht aktiv";
+    };
+
+    illustration.addEventListener("click", e => {
+      e.stopPropagation();
+      setRecipeViewFromPointer(e.clientX);
+    });
+
+    illustration.addEventListener("keydown", e => {
+      if(e.key==="l" || e.key==="L"){
+        e.preventDefault();
+        card?.classList.add("recipe-lou-mode");
+        body.classList.add("recipe-detail-lou-mode");
+        const toggle=body.querySelector(".recipe-detail-selfcook-toggle");
+        if(toggle) toggle.textContent="✨ Lou-Ansicht aktiv";
+      }
+      if(e.key==="k" || e.key==="K"){
+        e.preventDefault();
+        card?.classList.remove("recipe-lou-mode");
+        body.classList.remove("recipe-detail-lou-mode");
+        const toggle=body.querySelector(".recipe-detail-selfcook-toggle");
+        if(toggle) toggle.textContent="🌈 Kinderansicht aktiv";
+      }
     });
   });
 
@@ -7860,7 +7908,13 @@ function renderRecipes() {
         </div>
         <div class="recipe-tools">${escapeHtml(recipeCardMark(r))}</div>
       </header>
-      ${recipeSelfCook(r) ? `<div class="recipe-child-illustration" aria-hidden="true"><img src="./cooking-kids-tight.png?v=50" alt=""></div>` : ""}
+      ${recipeSelfCook(r) ? `<div class="recipe-child-illustration recipe-view-switch"
+            data-recipe-view-switch="card"
+            role="button"
+            tabindex="0"
+            title="Links auf Lou klicken: Lou-Ansicht · rechts: Kinderansicht">
+            <img src="./cooking-kids-tight.png?v=50" alt="Zwei Mädchen beim Kochen">
+          </div>` : ""}
       ${normalizedRecipeSource(r) === "external" ? `
         <div class="recipe-card-body recipe-external-body">
           <div class="recipe-external-copy">
@@ -7906,8 +7960,44 @@ function renderRecipes() {
       const card = btn.closest(".recipe-card");
       if (!card) return;
       const active = card.classList.toggle("recipe-child-mode");
+      if (!active) card.classList.remove("recipe-lou-mode");
       btn.setAttribute("aria-pressed", active ? "true" : "false");
-      btn.textContent = active ? "🌈 Kinderansicht aktiv" : "👧 Das kannst du selbst kochen!";
+      btn.textContent = active
+        ? (card.classList.contains("recipe-lou-mode") ? "✨ Lou-Ansicht aktiv" : "🌈 Kinderansicht aktiv")
+        : "👧 Das kannst du selbst kochen!";
+    });
+  });
+
+
+  host.querySelectorAll(".recipe-view-switch").forEach(illustration => {
+    illustration.addEventListener("click", e => {
+      e.stopPropagation();
+      const card=illustration.closest(".recipe-card");
+      if(!card?.classList.contains("recipe-child-mode")) return;
+
+      const rect=illustration.getBoundingClientRect();
+      const louMode=(e.clientX-rect.left) < rect.width * 0.50;
+      card.classList.toggle("recipe-lou-mode", louMode);
+
+      const toggle=card.querySelector(".recipe-selfcook-toggle");
+      if(toggle) toggle.textContent=louMode ? "✨ Lou-Ansicht aktiv" : "🌈 Kinderansicht aktiv";
+    });
+
+    illustration.addEventListener("keydown", e => {
+      const card=illustration.closest(".recipe-card");
+      if(!card?.classList.contains("recipe-child-mode")) return;
+      if(e.key==="l" || e.key==="L"){
+        e.preventDefault();
+        card.classList.add("recipe-lou-mode");
+        const toggle=card.querySelector(".recipe-selfcook-toggle");
+        if(toggle) toggle.textContent="✨ Lou-Ansicht aktiv";
+      }
+      if(e.key==="k" || e.key==="K"){
+        e.preventDefault();
+        card.classList.remove("recipe-lou-mode");
+        const toggle=card.querySelector(".recipe-selfcook-toggle");
+        if(toggle) toggle.textContent="🌈 Kinderansicht aktiv";
+      }
     });
   });
 
