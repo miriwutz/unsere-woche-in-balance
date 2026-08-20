@@ -12768,3 +12768,296 @@ button.day-meal{cursor:pointer}
     grid-column:1 / -1 !important;
   }
 }
+
+
+/* =========================================================
+   V8 – unabhängige Zeichen + Kinder-"Meine Woche" + jüngere Schrift
+   ========================================================= */
+
+/* Kinderbereich insgesamt etwas moderner/jugendlicher:
+   weniger klassische Serifenschrift, mehr ruhige runde Sans. */
+.school-child-dashboard,
+.school-child-dashboard button,
+.school-child-dashboard input,
+.school-child-dashboard select{
+  font-family:"Trebuchet MS","Aptos","Segoe UI",sans-serif !important;
+}
+.school-child-dashboard .school-hero-v4-text>strong,
+.school-child-dashboard .school-dashboard-tile strong,
+.school-child-dashboard .school-panel-head strong{
+  font-family:"Trebuchet MS","Aptos","Segoe UI",sans-serif !important;
+  letter-spacing:-.015em !important;
+}
+.school-child-dashboard .school-hero-v4-text>strong{
+  font-weight:650 !important;
+}
+.school-child-dashboard .school-dashboard-tile strong{
+  font-weight:650 !important;
+}
+
+/* Aufgaben-Zeichen optisch als eigenständige Auswahl kennzeichnen. */
+.school-task-icon-select{
+  cursor:pointer !important;
+  background:#fff !important;
+  box-shadow:0 3px 10px rgba(75,63,58,.04) !important;
+}
+
+/* =========================================================
+   MEINE WOCHE – Lou/Fina
+   ========================================================= */
+.child-week-dialog{
+  width:min(1050px,calc(100vw - 28px)) !important;
+  max-height:min(90vh,900px) !important;
+  padding:0 !important;
+  border:0 !important;
+  border-radius:26px !important;
+  background:#fffdfb !important;
+  box-shadow:0 24px 70px rgba(64,52,48,.20) !important;
+  overflow:hidden !important;
+}
+.child-week-dialog::backdrop{
+  background:rgba(56,49,47,.30) !important;
+  backdrop-filter:blur(2px) !important;
+}
+.child-week-shell{
+  max-height:min(90vh,900px) !important;
+  overflow:auto !important;
+  padding:0 22px 22px !important;
+  font-family:"Trebuchet MS","Aptos","Segoe UI",sans-serif !important;
+}
+
+/* Header mit dem vorhandenen Mädchenbild */
+.child-week-hero{
+  position:sticky !important;
+  top:0 !important;
+  z-index:5 !important;
+  height:190px !important;
+  margin:0 -22px 14px !important;
+  padding:22px 80px 18px 28px !important;
+  display:grid !important;
+  grid-template-columns:minmax(0,1fr) 300px !important;
+  align-items:center !important;
+  overflow:hidden !important;
+  background:linear-gradient(105deg,#f2edf8 0%,#faf4e4 48%,#eef6ef 100%) !important;
+  border-bottom:1px solid rgba(163,148,155,.16) !important;
+}
+.child-week-dialog[data-child="2"] .child-week-hero{
+  background:linear-gradient(105deg,#fff0f1 0%,#fff5df 48%,#eef6ef 100%) !important;
+}
+.child-week-hero-copy{
+  display:flex !important;
+  align-items:center !important;
+  gap:15px !important;
+  min-width:0 !important;
+}
+.child-week-hero-icon{
+  width:54px !important;
+  height:54px !important;
+  flex:0 0 54px !important;
+  display:grid !important;
+  place-items:center !important;
+  border-radius:50% !important;
+  background:rgba(255,255,255,.84) !important;
+  box-shadow:0 7px 20px rgba(75,62,69,.08) !important;
+  font-size:1.45rem !important;
+}
+.child-week-hero-copy p{
+  margin:0 0 4px !important;
+  color:#927f86 !important;
+  font-size:.68rem !important;
+  letter-spacing:.18em !important;
+}
+.child-week-hero-copy h2{
+  margin:0 !important;
+  color:#443d43 !important;
+  font-size:2rem !important;
+  line-height:1.1 !important;
+  font-weight:650 !important;
+}
+.child-week-hero-copy>div>span{
+  display:block !important;
+  margin-top:7px !important;
+  color:#8d8384 !important;
+  font-size:.86rem !important;
+}
+.child-week-hero>img{
+  width:100% !important;
+  height:100% !important;
+  object-fit:contain !important;
+  object-position:center bottom !important;
+  padding-top:5px !important;
+  opacity:.90 !important;
+}
+#closeChildWeekBtn{
+  position:absolute !important;
+  right:20px !important;
+  top:18px !important;
+  width:40px !important;
+  height:40px !important;
+  padding:0 !important;
+  border-radius:50% !important;
+  border:1px solid rgba(181,159,149,.38) !important;
+  background:rgba(255,253,251,.92) !important;
+  color:#665c58 !important;
+  font-size:21px !important;
+}
+
+/* Tabs */
+.child-week-tabs{
+  display:flex !important;
+  gap:8px !important;
+  overflow-x:auto !important;
+  margin:0 0 14px !important;
+  padding:2px 0 5px !important;
+}
+.child-week-tab{
+  flex:0 0 auto !important;
+  padding:9px 15px !important;
+  border:1px solid rgba(177,161,154,.25) !important;
+  border-radius:999px !important;
+  background:#fffdfb !important;
+  color:#756b68 !important;
+  font-size:.78rem !important;
+}
+.child-week-tab.active{
+  background:#f1edf6 !important;
+  color:#5b5362 !important;
+  border-color:#d6cbe1 !important;
+}
+
+/* Tage */
+.child-week-list{
+  display:grid !important;
+  gap:10px !important;
+}
+.child-week-day{
+  display:grid !important;
+  grid-template-columns:130px minmax(0,1fr) !important;
+  gap:14px !important;
+  padding:12px !important;
+  border:1px solid rgba(178,163,157,.20) !important;
+  border-radius:18px !important;
+  background:#fffdfb !important;
+}
+.child-week-day.is-today{
+  border-color:rgba(150,124,180,.34) !important;
+  background:linear-gradient(100deg,#f7f3fb,#fffdfb 42%) !important;
+}
+.child-week-dialog[data-child="2"] .child-week-day.is-today{
+  border-color:rgba(218,145,158,.34) !important;
+  background:linear-gradient(100deg,#fff4f4,#fffdfb 42%) !important;
+}
+.child-week-day-head{
+  display:flex !important;
+  justify-content:space-between !important;
+  align-items:flex-start !important;
+  gap:7px !important;
+  padding:7px 5px !important;
+}
+.child-week-day-head strong{
+  display:block !important;
+  color:#4c4546 !important;
+  font-size:1rem !important;
+}
+.child-week-day-head span{
+  display:block !important;
+  margin-top:3px !important;
+  color:#9a8f89 !important;
+  font-size:.72rem !important;
+}
+.child-week-day-head em{
+  padding:3px 7px !important;
+  border-radius:999px !important;
+  background:#ece6f5 !important;
+  color:#71617f !important;
+  font-size:.64rem !important;
+  font-style:normal !important;
+}
+
+/* Einträge */
+.child-week-items{
+  display:grid !important;
+  gap:7px !important;
+}
+.child-week-item{
+  display:grid !important;
+  grid-template-columns:38px minmax(0,1fr) !important;
+  gap:9px !important;
+  align-items:center !important;
+  min-height:54px !important;
+  padding:8px 11px !important;
+  border-radius:14px !important;
+  border:1px solid rgba(180,166,160,.14) !important;
+}
+.child-week-item.kind-event{background:#fff7ed !important}
+.child-week-item.kind-school{background:#f3f0fa !important}
+.child-week-dialog[data-child="2"] .child-week-item.kind-school{background:#fff1f3 !important}
+.child-week-item.kind-todo{background:#eff6f0 !important}
+.child-week-item-symbol{
+  width:34px !important;
+  height:34px !important;
+  display:grid !important;
+  place-items:center !important;
+  border-radius:11px !important;
+  background:rgba(255,255,255,.78) !important;
+  font-size:1rem !important;
+}
+.child-week-item-copy{
+  min-width:0 !important;
+}
+.child-week-item-meta{
+  display:block !important;
+  color:#998d88 !important;
+  font-size:.65rem !important;
+  text-transform:uppercase !important;
+  letter-spacing:.08em !important;
+}
+.child-week-item-copy strong{
+  display:block !important;
+  margin-top:2px !important;
+  color:#4a4443 !important;
+  font-size:.89rem !important;
+  font-weight:600 !important;
+}
+.child-week-item-copy small{
+  display:block !important;
+  margin-top:3px !important;
+  color:#857a76 !important;
+  font-size:.72rem !important;
+}
+.child-week-empty{
+  min-height:210px !important;
+  display:grid !important;
+  place-items:center !important;
+  align-content:center !important;
+  gap:5px !important;
+  text-align:center !important;
+  color:#8d8380 !important;
+}
+.child-week-empty>span{font-size:2rem !important}
+.child-week-empty>strong{color:#5b5352 !important}
+.child-week-empty>small{font-size:.78rem !important}
+.child-week-today-empty{
+  padding:14px !important;
+  text-align:center !important;
+  color:#9a918b !important;
+  font-size:.76rem !important;
+}
+
+@media(max-width:720px){
+  .child-week-hero{
+    height:160px !important;
+    grid-template-columns:minmax(0,1fr) 155px !important;
+    padding-left:18px !important;
+  }
+  .child-week-hero-copy h2{
+    font-size:1.5rem !important;
+  }
+  .child-week-day{
+    grid-template-columns:1fr !important;
+    gap:3px !important;
+  }
+  .child-week-day-head{
+    align-items:center !important;
+  }
+}
