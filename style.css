@@ -9733,7 +9733,6 @@ button.day-meal{cursor:pointer}
    V40 – Kinderrezept kompakter + Bedienung oben + Regenbogen-Abhaken
    ========================================================= */
 
-.recipe-card-footer{display:none !important}
 
 .recipe-card-head{position:relative !important}
 .recipe-card-top-controls{
@@ -10049,4 +10048,127 @@ button.day-meal{cursor:pointer}
   border-color:#d8b55c !important;
   color:#71561d !important;
   box-shadow:inset 0 0 0 1px rgba(216,181,92,.12);
+}
+
+
+/* =========================================================
+   V44 – Erwachsene wieder wie vorher, Kinderansicht eigenständig
+   ========================================================= */
+
+/* Erwachsenenansicht: untere Leiste wieder sichtbar */
+.recipe-card:not(.recipe-child-mode) .recipe-card-footer{
+  display:flex !important;
+}
+
+/* Kinderansicht: keine untere Leiste */
+.recipe-card.recipe-child-mode .recipe-card-footer{
+  display:none !important;
+}
+
+/* Obere Controls sind nur für die Kinderansicht gedacht */
+.recipe-card:not(.recipe-child-mode) .recipe-card-top-controls{
+  display:none !important;
+}
+.recipe-card.recipe-child-mode .recipe-card-top-controls{
+  display:flex !important;
+}
+
+/* Kindermaße: Menge + Zeichen + Zutat auf einer Linie */
+.recipe-card.recipe-child-mode .recipe-child-measure-row{
+  display:flex !important;
+  align-items:center !important;
+  gap:8px !important;
+  min-height:38px !important;
+}
+.recipe-card.recipe-child-mode .recipe-child-measures{
+  display:inline-flex !important;
+  align-items:center !important;
+  gap:6px !important;
+  flex:0 0 auto !important;
+}
+.recipe-card.recipe-child-mode .recipe-child-measure-part{
+  display:inline-flex !important;
+  align-items:center !important;
+  gap:5px !important;
+}
+.recipe-card.recipe-child-mode .recipe-child-measure-ingredient{
+  display:inline-flex !important;
+  align-items:center !important;
+  min-height:30px !important;
+  line-height:1.25 !important;
+}
+.recipe-card.recipe-child-mode .recipe-child-amount{
+  line-height:1 !important;
+}
+
+/* Kochbild größer, aber weiterhin platzsparend im Kopf */
+.recipe-card.recipe-child-mode .recipe-card-head{
+  min-height:168px !important;
+  padding-left:245px !important;
+  padding-right:170px !important;
+}
+.recipe-card.recipe-child-mode > .recipe-child-illustration{
+  left:18px !important;
+  top:8px !important;
+  width:215px !important;
+  height:152px !important;
+}
+.recipe-card.recipe-child-mode > .recipe-child-illustration img{
+  width:215px !important;
+  height:152px !important;
+  object-fit:contain !important;
+}
+@media(max-width:760px){
+  .recipe-card.recipe-child-mode .recipe-card-head{
+    min-height:135px !important;
+    padding-left:125px !important;
+    padding-right:110px !important;
+  }
+  .recipe-card.recipe-child-mode > .recipe-child-illustration{
+    width:115px !important;
+    height:115px !important;
+    left:6px !important;
+  }
+  .recipe-card.recipe-child-mode > .recipe-child-illustration img{
+    width:115px !important;
+    height:115px !important;
+  }
+}
+
+/* Freundlichere Regenbogenfarben beim Abhaken */
+.recipe-card.recipe-child-mode .recipe-child-checkable.recipe-child-done{
+  background:linear-gradient(
+    90deg,
+    rgba(255,205,211,.50) 0%,
+    rgba(255,225,190,.50) 18%,
+    rgba(255,244,194,.52) 36%,
+    rgba(207,238,210,.52) 55%,
+    rgba(201,228,248,.52) 74%,
+    rgba(225,211,247,.52) 100%
+  ) !important;
+  opacity:.78 !important;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.45) !important;
+}
+.recipe-card.recipe-child-mode .recipe-child-checkable.recipe-child-done::after{
+  content:"🌈 ✓";
+  color:#6a675e !important;
+  font-size:.9rem !important;
+}
+
+/* Erwachsenenansicht – häufige Aktionen leichter auffindbar */
+.recipe-card:not(.recipe-child-mode) .recipe-edit{
+  background:#f5eee6 !important;
+  border:1px solid #e7d6c7 !important;
+  color:#795f4d !important;
+}
+.recipe-card:not(.recipe-child-mode) .recipe-delete{
+  background:#faeeee !important;
+  border:1px solid #edcccc !important;
+  color:#9a5555 !important;
+}
+.recipe-card:not(.recipe-child-mode) .recipe-edit:hover{
+  background:#efe2d6 !important;
+}
+.recipe-card:not(.recipe-child-mode) .recipe-delete:hover{
+  background:#f4dddd !important;
 }
