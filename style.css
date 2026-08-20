@@ -11902,3 +11902,194 @@ button.day-meal{cursor:pointer}
 .school-dashboard-top{display:flex;justify-content:space-between;gap:12px;margin-bottom:14px}.school-motivation-banner{position:relative;height:235px;border-radius:28px;overflow:hidden;margin-bottom:16px;background:#eee}.school-motivation-banner>img{width:100%;height:100%;object-fit:cover;filter:saturate(.82) brightness(.94)}.school-banner-overlay{position:absolute;inset:auto 0 0 0;display:flex;align-items:center;gap:16px;padding:22px 26px;background:linear-gradient(transparent,rgba(35,29,39,.68));color:white}.school-banner-icon{width:52px;height:52px;display:grid;place-items:center;border-radius:50%;background:rgba(255,255,255,.88);font-size:1.7rem}.school-banner-overlay p{margin:0 0 3px;font-size:.9rem;opacity:.9}.school-banner-overlay strong{font-family:"Playfair Display",serif;font-size:clamp(1.25rem,2.4vw,2rem);font-weight:500}.school-icon-picker{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:11px 14px;margin:0 0 16px;border:1px solid var(--line);border-radius:18px;background:rgba(255,255,255,.65)}#schoolIconChoices{display:flex;gap:5px;flex-wrap:wrap}.school-icon-choice{width:36px;height:36px;border:1px solid transparent;border-radius:50%;background:transparent;font-size:1.15rem;padding:0}.school-icon-choice:hover,.school-icon-choice.active{background:white;border-color:var(--line);box-shadow:0 3px 10px rgba(0,0,0,.06)}
 .school-child-dashboard .school-grid{grid-template-columns:1fr}.school-child-dashboard .school-card{max-width:none}.school-child-dashboard[data-child="1"] .school-card{border-top:4px solid #a997c7}.school-child-dashboard[data-child="2"] .school-card{border-top:4px solid #e5a9b5}.child-symbol-check{appearance:none!important;-webkit-appearance:none!important;width:30px!important;height:30px!important;min-width:30px!important;border:1px solid var(--line)!important;border-radius:50%!important;background:#fff!important;padding:0!important;display:grid!important;place-items:center!important;font-size:1rem!important;line-height:1!important;cursor:pointer}.child-symbol-check.done{opacity:.5;filter:grayscale(.25);background:#eef1e9!important}.school-week-item.done .child-symbol-check{opacity:.48}
 @media(max-width:700px){.school-chooser-grid{grid-template-columns:1fr}.school-person-card img{height:180px}.school-motivation-banner{height:200px}.school-dashboard-top{align-items:flex-start}.school-timetable-editor-btn{font-size:.78rem}.school-banner-overlay{padding:18px}.school-icon-picker{align-items:flex-start}}
+
+
+/* =========================================================
+   Kinderansicht V2 – Bilder, Banner, Aufgabenzeichen
+   ========================================================= */
+
+/* Auswahlkarten: vorhandene Bilder vollständig zeigen, nicht beschneiden. */
+.school-person-card{
+  display:grid !important;
+  grid-template-rows:250px auto auto !important;
+}
+.school-person-card img{
+  width:100% !important;
+  height:250px !important;
+  object-fit:contain !important;
+  object-position:center bottom !important;
+  padding:14px 18px 0 !important;
+  background:transparent !important;
+}
+.school-person-card.lou img{background:linear-gradient(145deg,#f2eef8,#f7f4fb) !important}
+.school-person-card.fina img{background:linear-gradient(145deg,#fff0f1,#fff6f2) !important}
+
+/* Banner: Illustration rechts als ganze Figur, Text links.
+   Kein riesiger gecroppter Bildausschnitt mehr. */
+.school-motivation-banner{
+  height:220px !important;
+  display:grid !important;
+  grid-template-columns:minmax(0,1fr) minmax(260px,38%) !important;
+  align-items:stretch !important;
+  background:
+    linear-gradient(100deg,#f7edf5 0%,#f8f4e6 47%,#eef4ee 100%) !important;
+  border:1px solid rgba(171,157,166,.18) !important;
+}
+.school-child-dashboard[data-child="2"] .school-motivation-banner{
+  background:
+    linear-gradient(100deg,#fff0ef 0%,#fff5df 48%,#edf5ef 100%) !important;
+}
+.school-motivation-banner>img{
+  grid-column:2 !important;
+  grid-row:1 !important;
+  width:100% !important;
+  height:100% !important;
+  object-fit:contain !important;
+  object-position:center bottom !important;
+  padding:8px 18px 0 !important;
+  filter:none !important;
+  opacity:.88 !important;
+}
+.school-banner-overlay{
+  grid-column:1 !important;
+  grid-row:1 !important;
+  position:static !important;
+  inset:auto !important;
+  z-index:2 !important;
+  align-self:center !important;
+  display:flex !important;
+  padding:30px 34px !important;
+  background:transparent !important;
+  color:#514b50 !important;
+}
+.school-banner-overlay p{
+  color:#8c7d84 !important;
+  opacity:1 !important;
+  font-size:.88rem !important;
+}
+.school-banner-overlay strong{
+  color:#4d454d !important;
+  font-size:clamp(1.55rem,2.5vw,2.35rem) !important;
+  line-height:1.2 !important;
+}
+.school-banner-icon{
+  background:rgba(255,255,255,.78) !important;
+  box-shadow:0 6px 18px rgba(85,70,78,.08) !important;
+}
+
+/* Mehr Zeichen dürfen in einer klaren, scrollbaren Zeile stehen. */
+.school-icon-picker{
+  display:grid !important;
+  grid-template-columns:auto minmax(0,1fr) !important;
+  align-items:center !important;
+}
+#schoolIconChoices{
+  display:flex !important;
+  flex-wrap:nowrap !important;
+  gap:4px !important;
+  overflow-x:auto !important;
+  padding:3px 2px 6px !important;
+  scrollbar-width:thin;
+}
+.school-icon-choice{
+  flex:0 0 36px !important;
+}
+
+/* Bei jeder selbst eingegebenen Aufgabe kann das Zeichen direkt gewählt werden. */
+.school-task-main-entry{
+  grid-column:1 / -1 !important;
+  display:grid !important;
+  grid-template-columns:54px minmax(0,1fr) !important;
+  gap:8px !important;
+  align-items:stretch !important;
+}
+.school-task-icon-select{
+  width:54px !important;
+  min-width:54px !important;
+  padding:8px 4px !important;
+  text-align:center !important;
+  font-size:1.25rem !important;
+  border-radius:14px !important;
+  background:#fffdfb !important;
+}
+.school-task-main-entry input{
+  min-width:0 !important;
+}
+
+/* Persönliches Zeichen IST der Abhakknopf. Häkchen erscheint klein darauf. */
+.child-symbol-check{
+  position:relative !important;
+  width:34px !important;
+  height:34px !important;
+  min-width:34px !important;
+  border-radius:50% !important;
+  overflow:visible !important;
+  font-size:1rem !important;
+}
+.child-symbol-glyph{
+  display:grid !important;
+  place-items:center !important;
+  width:100% !important;
+  height:100% !important;
+  line-height:1 !important;
+  transition:opacity .16s ease,transform .16s ease !important;
+}
+.child-symbol-done{
+  position:absolute !important;
+  right:-3px !important;
+  bottom:-3px !important;
+  width:15px !important;
+  height:15px !important;
+  display:grid !important;
+  place-items:center !important;
+  border-radius:50% !important;
+  background:#74866f !important;
+  color:white !important;
+  border:2px solid #fff !important;
+  font-size:9px !important;
+  font-weight:700 !important;
+  line-height:1 !important;
+}
+.child-symbol-check.done .child-symbol-glyph{
+  opacity:.48 !important;
+  transform:scale(.92) !important;
+}
+
+/* Schulkarte in der persönlichen Ansicht weniger "Verwaltung":
+   mehr Luft und klarere Blöcke. */
+.school-child-dashboard .school-card{
+  padding:20px !important;
+  background:rgba(255,253,251,.9) !important;
+}
+.school-child-dashboard .school-add{
+  padding:13px !important;
+  border-radius:18px !important;
+  background:rgba(247,243,240,.72) !important;
+}
+.school-child-dashboard[data-child="1"] .school-add{
+  background:linear-gradient(135deg,rgba(241,237,248,.76),rgba(247,248,244,.72)) !important;
+}
+.school-child-dashboard[data-child="2"] .school-add{
+  background:linear-gradient(135deg,rgba(255,239,239,.78),rgba(255,247,232,.70)) !important;
+}
+
+@media(max-width:700px){
+  .school-person-card{
+    grid-template-rows:210px auto auto !important;
+  }
+  .school-person-card img{
+    height:210px !important;
+  }
+  .school-motivation-banner{
+    height:235px !important;
+    grid-template-columns:1fr 40% !important;
+  }
+  .school-banner-overlay{
+    padding:20px !important;
+  }
+  .school-banner-icon{
+    width:44px !important;
+    height:44px !important;
+    font-size:1.35rem !important;
+  }
+}
