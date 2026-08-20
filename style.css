@@ -9176,3 +9176,88 @@ button.day-meal{cursor:pointer}
     white-space:normal !important;
   }
 }
+
+/* V36 – internes Rezept ist technisch wichtig, muss aber auf der Rezeptkarte nicht stehen */
+.recipe-card .recipe-source-badge,
+.recipe-card [data-source="internal"],
+.recipe-card .source-internal,
+.recipe-card .recipe-internal-badge{
+  display:none !important;
+}
+
+/* V36 – Kinderansicht: deutlich handschriftlicher und größer */
+.recipe-card.kids-mode,
+.recipe-card.self-cook-mode,
+.recipe-kids-view{
+  --kids-font: "Comic Sans MS","Segoe Print","Bradley Hand","Chalkboard SE",cursive;
+}
+.recipe-card.kids-mode .recipe-card-body,
+.recipe-card.kids-mode .recipe-card-body li,
+.recipe-card.kids-mode .recipe-card-body p,
+.recipe-card.self-cook-mode .recipe-card-body,
+.recipe-card.self-cook-mode .recipe-card-body li,
+.recipe-card.self-cook-mode .recipe-card-body p,
+.recipe-kids-view,
+.recipe-kids-view li,
+.recipe-kids-view p{
+  font-family:var(--kids-font) !important;
+  font-size:1.06rem !important;
+  line-height:1.55 !important;
+}
+.recipe-card.kids-mode h3,
+.recipe-card.self-cook-mode h3,
+.recipe-kids-view h2,
+.recipe-kids-view h3{
+  font-family:var(--kids-font) !important;
+}
+
+/* V36 – Becherküche-Zuordnung */
+.recipe-beaker-mapping{background:rgba(249,247,235,.72)!important}
+.beaker-map-help{
+  padding:9px 11px;margin-bottom:10px;border-radius:10px;
+  background:#fff8df;color:#6e6555;font-size:.73rem;line-height:1.45
+}
+.beaker-map-rows{display:grid;gap:7px;margin-bottom:10px}
+.beaker-map-row{
+  display:grid;grid-template-columns:minmax(190px,1.4fr) 22px 80px minmax(150px,.8fr) 110px 32px;
+  gap:7px;align-items:center
+}
+.beaker-map-row input,.beaker-map-row select{min-height:38px;width:100%;box-sizing:border-box}
+.beaker-map-arrow{text-align:center;color:#9b8c7c;font-weight:700}
+.beaker-map-remove{border:0;background:transparent;font-size:1.15rem;color:#a58f86;cursor:pointer}
+.beaker-unit-legend{display:flex;flex-wrap:wrap;gap:9px 16px;margin-top:11px;font-size:.7rem;color:#756d67}
+.beaker-unit-legend>span{display:inline-flex;align-items:center;gap:6px}
+
+/* klar unterscheidbare Mini-Symbole */
+.unit-icon{display:inline-block;position:relative;box-sizing:border-box;flex:0 0 auto}
+.unit-icon.cup{width:20px;height:22px;border:1.5px solid #536d78;border-radius:2px 2px 5px 5px;background:#79a9c3}
+.unit-icon.cup:after{content:"";position:absolute;right:-7px;top:4px;width:7px;height:9px;border:1.5px solid #536d78;border-left:0;border-radius:0 5px 5px 0}
+.unit-icon.cup.red{background:#d96b66}.unit-icon.cup.green{background:#84a77c}.unit-icon.cup.yellow{background:#e6c35b}
+.unit-icon.cup.orange{background:#df9658}.unit-icon.cup.purple{background:#9d83b6}
+.unit-icon.quark{width:25px;height:16px;border:1.5px solid #737b78;background:#f7f7f2;border-radius:2px;transform:perspective(30px) rotateX(-5deg)}
+.unit-icon.quark:before{content:"";position:absolute;left:-2px;right:-2px;top:-4px;height:4px;border:1.5px solid #737b78;background:#fff;border-radius:2px}
+.unit-icon.yogurt{width:17px;height:23px;border:1.5px solid #737b78;background:#fafaf6;border-radius:2px 2px 5px 5px}
+.unit-icon.yogurt:before{content:"";position:absolute;left:-2px;right:-2px;top:-3px;border-top:2px solid #737b78}
+.unit-icon.salt{width:14px;height:22px;border:1.5px solid #6f7774;border-radius:4px 4px 3px 3px;background:#fff}
+.unit-icon.salt:before{content:"•••";position:absolute;top:-8px;left:0;font-size:7px;letter-spacing:-1px;color:#555}
+.unit-icon.spoon{width:24px;height:7px;border-bottom:2px solid #777;transform:rotate(-25deg)}
+.unit-icon.spoon:before{content:"";position:absolute;left:-3px;bottom:-4px;width:9px;height:7px;border:1.5px solid #777;border-radius:50%;background:#eee}
+.unit-icon.spoon.small{transform:scale(.82) rotate(-25deg)}
+
+@media(max-width:760px){
+ .beaker-map-row{grid-template-columns:1fr 22px 65px 1fr}
+ .beaker-map-color{grid-column:4}
+ .beaker-map-remove{grid-column:4;justify-self:end}
+}
+
+/* Salzstreuer in der Kinderansicht deutlich erkennbar */
+.recipe-card .salt-icon,.recipe-kids-view .salt-icon,
+.recipe-card .ingredient-icon.salt,.recipe-kids-view .ingredient-icon.salt{
+  width:18px!important;height:27px!important;border:1.6px solid #5f6764!important;
+  border-radius:5px 5px 3px 3px!important;background:#fff!important;position:relative!important;
+}
+.recipe-card .salt-icon:before,.recipe-kids-view .salt-icon:before,
+.recipe-card .ingredient-icon.salt:before,.recipe-kids-view .ingredient-icon.salt:before{
+  content:"•••"!important;position:absolute!important;top:-10px!important;left:1px!important;
+  font-size:9px!important;color:#4f5653!important;letter-spacing:-1px!important;
+}
