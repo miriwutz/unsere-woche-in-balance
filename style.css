@@ -13979,3 +13979,307 @@ body.child-school-mode #papaOverviewModal,
 body.child-view-active #papaOverviewModal{
   display:none !important;
 }
+
+
+/* =========================================================
+   V14 – Papa-Übersicht entfernt + Rezept-Eingabe aufgeräumt
+   ========================================================= */
+
+/* Sicherheitsnetz: alte Papa-UI aus Cache/älterem HTML niemals anzeigen. */
+#openPapaOverviewBtn,
+#papaOverviewDialog,
+.papa-overview-dialog,
+.papa-overview-btn{
+  display:none !important;
+}
+
+/* ---------------------------------------------------------
+   REZEPTFORMULAR – klare Hierarchie statt Formularwand
+   --------------------------------------------------------- */
+
+#recipeForm.recipe-form{
+  display:grid !important;
+  grid-template-columns:minmax(0,1.55fr) minmax(320px,.85fr) !important;
+  gap:14px !important;
+  padding:16px !important;
+  background:#f8faf8 !important;
+  border:1px solid rgba(129,153,145,.22) !important;
+  border-radius:22px !important;
+}
+
+#recipeForm.recipe-form.hidden{
+  display:none !important;
+}
+
+/* Jede Gruppe als eigene ruhige Karte. */
+#recipeForm .recipe-entry-section{
+  margin:0 !important;
+  padding:16px !important;
+  border:1px solid rgba(151,162,155,.18) !important;
+  border-radius:17px !important;
+  background:rgba(255,255,255,.90) !important;
+  box-shadow:0 3px 12px rgba(70,79,73,.025) !important;
+}
+
+#recipeForm .recipe-entry-basic{
+  grid-column:1 !important;
+  grid-row:1 !important;
+}
+
+#recipeForm .recipe-entry-features{
+  grid-column:2 !important;
+  grid-row:1 !important;
+}
+
+/* Becherküche und eigentlicher Rezepttext gehen über die ganze Breite. */
+#recipeForm .recipe-beaker-mapping,
+#recipeForm .recipe-entry-content{
+  grid-column:1 / -1 !important;
+}
+
+#recipeForm .recipe-entry-content{
+  grid-row:auto !important;
+}
+
+/* Überschriften: Nummer klein, Inhalt groß. */
+#recipeForm .recipe-entry-section-head{
+  margin:0 0 13px !important;
+}
+#recipeForm .recipe-entry-section-head>div{
+  display:flex !important;
+  align-items:center !important;
+  gap:10px !important;
+}
+#recipeForm .recipe-entry-section-head>div>span{
+  width:28px !important;
+  height:28px !important;
+  min-width:28px !important;
+  display:grid !important;
+  place-items:center !important;
+  border-radius:50% !important;
+  background:#e8f2ee !important;
+  color:#5c776d !important;
+  font-size:.72rem !important;
+  font-weight:700 !important;
+}
+#recipeForm .recipe-entry-section-head strong{
+  display:block !important;
+  color:#405048 !important;
+  font-size:.94rem !important;
+  line-height:1.15 !important;
+}
+#recipeForm .recipe-entry-section-head small{
+  display:block !important;
+  margin-top:2px !important;
+  color:#908a86 !important;
+  font-size:.67rem !important;
+}
+
+/* Grunddaten: erste Zeile sinnvoll gewichtet. */
+#recipeForm .recipe-basic-grid{
+  display:grid !important;
+  grid-template-columns:minmax(220px,1.55fr) minmax(145px,.8fr) minmax(170px,1fr) minmax(125px,.68fr) minmax(105px,.58fr) !important;
+  gap:9px !important;
+  align-items:end !important;
+}
+#recipeForm .recipe-field{
+  gap:4px !important;
+}
+#recipeForm .recipe-field>span{
+  color:#746f6b !important;
+  font-size:.64rem !important;
+  font-weight:600 !important;
+}
+#recipeForm input,
+#recipeForm select,
+#recipeForm textarea{
+  border:1px solid rgba(190,174,167,.42) !important;
+  background:#fffdfb !important;
+  box-shadow:none !important;
+}
+#recipeForm input,
+#recipeForm select{
+  min-height:40px !important;
+  border-radius:11px !important;
+  padding:8px 10px !important;
+}
+#recipeForm textarea{
+  border-radius:13px !important;
+  padding:11px 12px !important;
+}
+
+/* Link nicht so dominant. */
+#recipeForm .recipe-web-main{
+  margin-top:9px !important;
+}
+
+/* Merkmale als kompakte 2-Spalten-Auswahl statt langer Reihe. */
+#recipeForm .recipe-feature-row{
+  display:grid !important;
+  grid-template-columns:1fr 1fr !important;
+  gap:8px !important;
+}
+#recipeForm .recipe-feature-row label{
+  min-height:40px !important;
+  margin:0 !important;
+  padding:8px 10px !important;
+  display:flex !important;
+  align-items:center !important;
+  gap:7px !important;
+  border:1px solid rgba(189,173,166,.34) !important;
+  border-radius:12px !important;
+  background:#fffdfb !important;
+}
+#recipeForm .recipe-feature-row label:has(input:checked){
+  background:#edf5f0 !important;
+  border-color:#abc8bb !important;
+}
+#recipeForm .recipe-feature-row label span{
+  font-size:.74rem !important;
+}
+
+/* Favorit über beide Spalten, aber dezent. */
+#recipeForm .recipe-favorite-toggle{
+  grid-column:1 / -1 !important;
+}
+
+/* Schnellhilfe nur eine schmale Hinweiszeile. */
+#recipeForm .recipe-beaker-quickhelp{
+  margin-top:9px !important;
+  padding:8px 10px !important;
+  display:grid !important;
+  grid-template-columns:auto 1fr !important;
+  gap:8px !important;
+  align-items:start !important;
+  border:0 !important;
+  border-radius:10px !important;
+  background:#f4f7f1 !important;
+  color:#7d786e !important;
+  font-size:.66rem !important;
+  line-height:1.35 !important;
+}
+#recipeForm .recipe-beaker-quickhelp strong{
+  color:#657269 !important;
+  white-space:nowrap !important;
+}
+
+/* Becherküche: Anleitung kurz und nebeneinander lesbar. */
+#recipeForm .beaker-map-instructions{
+  display:grid !important;
+  grid-template-columns:repeat(3,minmax(0,1fr)) !important;
+  gap:7px !important;
+  margin:0 0 12px !important;
+  padding:0 !important;
+  background:transparent !important;
+}
+#recipeForm .beaker-map-instructions>div{
+  min-height:58px !important;
+  padding:9px 10px !important;
+  border-radius:11px !important;
+  background:#f7f8ee !important;
+  color:#726b5e !important;
+  font-size:.68rem !important;
+  line-height:1.35 !important;
+}
+#recipeForm .beaker-map-instructions>div b:first-child{
+  display:inline-grid !important;
+  place-items:center !important;
+  width:20px !important;
+  height:20px !important;
+  margin-right:4px !important;
+  border-radius:50% !important;
+  background:#e8f1e8 !important;
+  color:#607567 !important;
+}
+#recipeForm .beaker-map-instructions>small{
+  grid-column:1 / -1 !important;
+  padding:1px 3px !important;
+  color:#9a9186 !important;
+  font-size:.62rem !important;
+}
+
+/* Kindermaßzeilen luftiger voneinander, aber kompakt. */
+#recipeForm .beaker-map-rows{
+  display:grid !important;
+  gap:7px !important;
+}
+#recipeForm #addRecipeBeakerRow{
+  margin-top:10px !important;
+}
+
+/* Symbollegende als dezente untere Werkzeugleiste. */
+#recipeForm .beaker-unit-legend{
+  margin-top:12px !important;
+  padding-top:10px !important;
+  border-top:1px dashed rgba(154,166,158,.28) !important;
+  gap:14px !important;
+  opacity:.82 !important;
+}
+#recipeForm .beaker-unit-legend span{
+  font-size:.64rem !important;
+}
+
+/* Zutaten/Zubereitung: das Wichtigste bekommt optisch am meisten Platz. */
+#recipeForm .recipe-content-grid{
+  display:grid !important;
+  grid-template-columns:1fr 1fr !important;
+  gap:12px !important;
+}
+#recipeForm .recipe-content-grid textarea{
+  min-height:190px !important;
+  resize:vertical !important;
+  font-size:.8rem !important;
+  line-height:1.45 !important;
+}
+
+/* Weitere Angaben wirklich sekundär. */
+#recipeForm .recipe-entry-more{
+  grid-column:1 / -1 !important;
+  margin:0 !important;
+  border:1px solid rgba(166,157,152,.22) !important;
+  border-radius:13px !important;
+  background:#fffdfb !important;
+}
+#recipeForm .recipe-entry-more summary{
+  padding:11px 13px !important;
+  color:#736d68 !important;
+  font-size:.7rem !important;
+  cursor:pointer !important;
+}
+
+/* Speichern unten rechts, deutlich aber nicht klobig. */
+#recipeForm #saveRecipeBtn,
+#recipeForm .save-recipe-btn{
+  justify-self:end !important;
+  align-self:end !important;
+}
+
+/* Auf kleineren Bildschirmen einfach untereinander. */
+@media(max-width:1050px){
+  #recipeForm.recipe-form{
+    grid-template-columns:1fr !important;
+  }
+  #recipeForm .recipe-entry-basic,
+  #recipeForm .recipe-entry-features,
+  #recipeForm .recipe-beaker-mapping,
+  #recipeForm .recipe-entry-content,
+  #recipeForm .recipe-entry-more{
+    grid-column:1 !important;
+  }
+  #recipeForm .recipe-basic-grid{
+    grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+  }
+}
+
+@media(max-width:650px){
+  #recipeForm .recipe-basic-grid,
+  #recipeForm .recipe-feature-row,
+  #recipeForm .recipe-content-grid,
+  #recipeForm .beaker-map-instructions{
+    grid-template-columns:1fr !important;
+  }
+  #recipeForm .recipe-favorite-toggle,
+  #recipeForm .beaker-map-instructions>small{
+    grid-column:1 !important;
+  }
+}
