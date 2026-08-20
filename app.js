@@ -1534,6 +1534,7 @@ function renderWeek() {
   const weekEndKey = dateKey(dayDate(currentWeekMonday, 6));
   const multiDayEventLanes = state.todos
     .filter(t => !t.archived && t.type === "event" && (t.recurrence || "none") === "none")
+    .filter(t => !["birthday","nameday","anniversary"].includes(t.eventCategory || "normal"))
     .filter(t => t.date && (t.endDate || t.date) > t.date)
     .filter(t => t.date <= weekEndKey && (t.endDate || t.date) >= weekStartKey)
     .sort((a,b) => (a.date || "").localeCompare(b.date || "") || (a.time || "").localeCompare(b.time || "") || String(a.id).localeCompare(String(b.id)));
@@ -1583,9 +1584,9 @@ function renderWeek() {
         </div>
         ${v.done ? `
           <div class="video-rating" aria-label="Übung bewerten">
-            <button class="text-btn rate-btn ${ratingFor(v.url) === "super" ? "selected" : ""}" data-id="${v.id}" data-rating="super" title="Super" aria-label="Super">😊</button>
-            <button class="text-btn rate-btn ${ratingFor(v.url) === "okay" ? "selected" : ""}" data-id="${v.id}" data-rating="okay" title="Okay" aria-label="Okay">🙂</button>
-            <button class="text-btn rate-btn ${ratingFor(v.url) === "nope" ? "selected" : ""}" data-id="${v.id}" data-rating="nope" title="Nicht meins" aria-label="Nicht meins">😕</button>
+            <button class="text-btn rate-btn ${ratingFor(v.url) === "super" ? "selected" : ""}" data-id="${v.id}" data-rating="super" title="Gut" aria-label="Gut">😊</button>
+            <button class="text-btn rate-btn ${ratingFor(v.url) === "okay" ? "selected" : ""}" data-id="${v.id}" data-rating="okay" title="Mittel" aria-label="Mittel">🙂</button>
+            <button class="text-btn rate-btn ${ratingFor(v.url) === "nope" ? "selected" : ""}" data-id="${v.id}" data-rating="nope" title="Schlecht" aria-label="Schlecht">😕</button>
           </div>` : ""}
       </div>
     `).join("");
@@ -1682,12 +1683,19 @@ const renderEventCard = (t) => {
 };
 
 const multiDayIds = new Set(multiDayEventLanes.map(t => t.id));
-const singleDayEvents = events
-  .filter(t => !multiDayIds.has(t.id))
+const quietBottomCategories = new Set(["birthday","nameday","anniversary"]);
+const quietBottomEvents = events
+  .filter(t => quietBottomCategories.has(t.eventCategory || "normal"))
   .sort((a,b) => (a.time || "").localeCompare(b.time || ""));
 
-const hasVisibleEventToday = events.length > 0;
-const eventHtml = (events.length || multiDayEventLanes.length) ? `
+const singleDayEvents = events
+  .filter(t => !multiDayIds.has(t.id))
+  .filter(t => !quietBottomCategories.has(t.eventCategory || "normal"))
+  .sort((a,b) => (a.time || "").localeCompare(b.time || ""));
+
+const normalEventsForHeader = events.filter(t => !quietBottomCategories.has(t.eventCategory || "normal"));
+const hasVisibleEventToday = normalEventsForHeader.length > 0;
+const eventHtml = (normalEventsForHeader.length || multiDayEventLanes.length) ? `
   <div class="day-events ${hasVisibleEventToday ? "" : "day-events-placeholder-only"}">
     ${hasVisibleEventToday ? `<div class="day-todos-title">Termine</div>` : ""}
     <div class="multiday-event-lanes">
@@ -1751,6 +1759,21 @@ const eventHtml = (events.length || multiDayEventLanes.length) ? `
       </div>
     ` : "";
 
+    const quietBottomHtml = quietBottomEvents.length ? `
+      <div class="day-quiet-events">
+        ${quietBottomEvents.map(t => {
+          const meta = {
+            birthday:{icon:"🎂",label:"Geburtstag"},
+            nameday:{icon:"🌷",label:"Namenstag"},
+            anniversary:{icon:"♡",label:"Jahrestag"}
+          }[t.eventCategory] || {icon:"♡",label:""};
+          return `<div class="day-quiet-event">
+            <span aria-hidden="true">${meta.icon}</span>
+            <span>${escapeHtml(t.text || meta.label)}</span>
+          </div>`;
+        }).join("")}
+      </div>` : "";
+
     dayEl.innerHTML = `
       <h3>${day}<span class="day-date">${dateLabel}</span></h3>
       ${(() => {
@@ -1784,6 +1807,7 @@ const eventHtml = (events.length || multiDayEventLanes.length) ? `
              </details>
            </div>`
         : ""}
+      ${quietBottomHtml}
     `;
     grid.appendChild(dayEl);
   });
@@ -1907,9 +1931,9 @@ const eventHtml = (events.length || multiDayEventLanes.length) ? `
     archived.rating = rating;
 
     const ratingText = {
-      super: "Als „Super“ gespeichert 😊",
-      okay: "Als „Okay“ gespeichert 🙂",
-      nope: "Als „Nicht meins“ gespeichert 😕"
+      super: "Als „Gut“ gespeichert 😊",
+      okay: "Als „Mittel“ gespeichert 🙂",
+      nope: "Als „Schlecht“ gespeichert 😕"
     };
 
     save();
@@ -2438,9 +2462,10 @@ function renderArchive() {
 
   if (archiveFilter === "all") {
     const groups = [
-      ["super","😊 Super", byNewest(items.filter(x => x.rating === "super"))],
-      ["okay","🙂 Okay", byNewest(items.filter(x => x.rating === "okay"))],
-      ["nope","😕 Nicht meins", byNewest(items.filter(x => x.rating === "nope"))]
+      ["unrated","☆ Noch bewerten", byNewest(items.filter(x => !x.rating))],
+      ["super","😊 Gut", byNewest(items.filter(x => x.rating === "super"))],
+      ["okay","🙂 Mittel", byNewest(items.filter(x => x.rating === "okay"))],
+      ["nope","😕 Schlecht", byNewest(items.filter(x => x.rating === "nope"))]
     ];
 
     list.className = "archive-columns";
@@ -2462,7 +2487,7 @@ function renderArchive() {
 }
 
 function archiveCardHtml(a) {
-  const ratingLabel = {super:"😊 Super", okay:"🙂 Okay", nope:"😕 Nicht meins"};
+  const ratingLabel = {super:"😊 Gut", okay:"🙂 Mittel", nope:"😕 Schlecht"};
   return `
     <article class="archive-card">
       ${a.thumbnail ? `<img class="archive-thumb" src="${escapeHtml(a.thumbnail)}" alt="">` : ""}
@@ -3042,9 +3067,10 @@ function renderPapaOverview(weekOffset = 0) {
     if (checkDate < today) return;
 
     const entries = state.todos
+      .filter(t => !t.archived)
       .filter(t => occursOnDate(t, date))
       .filter(papaEntryIsRelevant)
-      .filter(papaTodoIsVisible)
+      .filter(t => (t.type || "todo") !== "todo" || !isOccurrenceDone(t, date))
       .sort((a,b) => {
         // Termine zuerst, danach To-dos; Termine nach Uhrzeit.
         const aEvent = a.type === "event" ? 0 : 1;
@@ -8442,7 +8468,11 @@ function mergeSchool(localSchool, cloudSchool) {
       links: mergeByIdPreferNewer(l.links, c.links)
         .filter(link => !deletedLinkIds.includes(link.id)),
       timetableUrl: l.timetableUrl || c.timetableUrl || "",
-      manualTimetable: l.manualTimetable || c.manualTimetable || null
+      manualTimetable: l.manualTimetable || c.manualTimetable || null,
+      timetableByYear: {
+        ...(c.timetableByYear || {}),
+        ...(l.timetableByYear || {})
+      }
     };
   });
 
