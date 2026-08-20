@@ -1090,6 +1090,14 @@
       <span class="workroom-calm-kicker">KLEINER GEDANKE FÜR DEN WERKRAUM</span>
       <p id="workroomCalmQuote">In Ruhe entsteht oft das Klarste.</p>
       <span class="workroom-calm-sub">Planen · vorbereiten · gestalten</span>
+      <button id="openWorkroomWeekBtn" class="workroom-week-button" type="button">
+        <span id="workroomWeekIcon" class="workroom-week-button-icon">✦</span>
+        <span class="workroom-week-button-copy">
+          <strong>Meine Woche</strong>
+          <small>Was steht für mich an?</small>
+        </span>
+        <span class="workroom-week-button-arrow">›</span>
+      </button>
     </div>
     <div class="workroom-calm-art" aria-hidden="true">
       <img src="workroom-meditation.png" alt="">
@@ -1821,6 +1829,33 @@
 </dialog>
 
 
+
+<dialog id="workroomWeekDialog" class="workroom-week-dialog">
+  <div class="workroom-week-shell">
+    <header class="workroom-week-hero">
+      <div class="workroom-week-hero-copy">
+        <span id="workroomWeekHeroIcon" class="workroom-week-hero-icon">✦</span>
+        <div>
+          <p>MEINE WOCHE</p>
+          <h2>Was steht für mich an?</h2>
+          <span>Termine und offene To-dos auf einen Blick.</span>
+        </div>
+      </div>
+      <img src="./workroom-meditation.png" alt="">
+      <button id="closeWorkroomWeekBtn" type="button" aria-label="Schließen">×</button>
+    </header>
+
+    <nav class="workroom-week-tabs elegant-week-switch" aria-label="Woche auswählen">
+      <button class="workroom-week-tab active" data-week-offset="0" type="button">Diese Woche</button>
+      <button class="workroom-week-tab" data-week-offset="1" type="button">Nächste Woche</button>
+      <button class="workroom-week-tab" data-week-offset="2" type="button">+2 Wochen</button>
+      <button class="workroom-week-tab" data-week-offset="3" type="button">+3 Wochen</button>
+    </nav>
+
+    <div id="workroomWeekList" class="workroom-week-list"></div>
+  </div>
+</dialog>
+
 <dialog id="childWeekDialog" class="child-week-dialog">
   <div class="child-week-shell">
     <header class="child-week-hero">
@@ -1836,7 +1871,7 @@
       <button id="closeChildWeekBtn" type="button" aria-label="Schließen">×</button>
     </header>
 
-    <nav class="child-week-tabs" aria-label="Woche auswählen">
+    <nav class="child-week-tabs elegant-week-switch" aria-label="Woche auswählen">
       <button class="child-week-tab active" data-week-offset="0" type="button">Diese Woche</button>
       <button class="child-week-tab" data-week-offset="1" type="button">Nächste Woche</button>
       <button class="child-week-tab" data-week-offset="2" type="button">+2 Wochen</button>
@@ -1877,7 +1912,7 @@
             aria-label="Schließen">×</button>
   </div>
 
-  <div class="papa-overview-tabs">
+  <div class="papa-overview-tabs elegant-week-switch">
     <button class="secondary-btn papa-tab" data-week-offset="0" type="button">
       Diese Woche
     </button>
