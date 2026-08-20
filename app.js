@@ -6802,12 +6802,10 @@ function measureSvgHtml(type, color = "neutral", title = "") {
 
   if (type === "beaker") {
     return `<svg class="measure-svg measure-svg-cup" ${common}>
-      <path d="M12 11h34l-3 27c-.4 3.6-3.1 6-6.4 6H21.4c-3.3 0-6-2.4-6.4-6L12 11Z"
+      <path d="M15 10h34l-3.2 29c-.4 3.5-3 5.8-6.2 5.8H24.4c-3.2 0-5.8-2.3-6.2-5.8L15 10Z"
         fill="${p.fill}" stroke="${p.stroke}" stroke-width="2"/>
-      <path d="M11 11h36" fill="none" stroke="${p.stroke}" stroke-width="2.2" stroke-linecap="round"/>
-      <path d="M46 18h5.5c4.2 0 6.5 3.2 6.5 7s-2.3 7-6.5 7H44"
-        fill="none" stroke="${p.stroke}" stroke-width="2" stroke-linecap="round"/>
-      <path d="M20 16v20" stroke="rgba(255,255,255,.35)" stroke-width="2" stroke-linecap="round"/>
+      <path d="M14 10h36" fill="none" stroke="${p.stroke}" stroke-width="2.2" stroke-linecap="round"/>
+      <path d="M23 15v21" stroke="rgba(255,255,255,.35)" stroke-width="2" stroke-linecap="round"/>
     </svg>`;
   }
 
@@ -7017,7 +7015,6 @@ function recipeIngredientHtml(line, recipe) {
 
   return `
     <span class="recipe-adult-ingredient">
-      ${recipeMeasureIconHtml(line, recipe)}
       <span class="recipe-ingredient-text">${escapeHtml(line)}</span>
     </span>
     ${childView ? `<span class="recipe-child-ingredient">${childView}</span>` : ""}
