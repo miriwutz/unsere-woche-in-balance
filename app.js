@@ -3114,7 +3114,7 @@ function renderWorkroomWeekOverview(weekOffset=0){
             <strong>${day.dayName}</strong>
             <span>${dateLabel}</span>
           </div>
-          ${day.isToday?`<em>Heute</em>`:""}
+          
         </header>
 
         <div class="workroom-week-items">
@@ -3288,7 +3288,7 @@ function renderChildWeekOverview(id,weekOffset=0){
             <strong>${day.dayName}</strong>
             <span>${dateLabel}</span>
           </div>
-          ${day.isToday?`<em>Heute</em>`:""}
+          
         </header>
         <div class="child-week-items">
           ${day.items.length ? day.items.map(item=>{
@@ -7851,6 +7851,7 @@ function showRecipeDetail(recipeOrTitle) {
 
       card.classList.toggle("recipe-lou-mode", louMode);
       body.classList.toggle("recipe-detail-lou-mode", louMode);
+      illustration.dataset.activeRecipeView = louMode ? "lou" : "kids";
 
       const toggle=body.querySelector(".recipe-detail-selfcook-toggle");
       if(toggle) toggle.textContent=louMode ? "✨ Lou-Ansicht aktiv" : "🌈 Kinderansicht aktiv";
@@ -8111,6 +8112,7 @@ function renderRecipes() {
       const rect=illustration.getBoundingClientRect();
       const louMode=(e.clientX-rect.left) < rect.width * 0.50;
       card.classList.toggle("recipe-lou-mode", louMode);
+      illustration.dataset.activeRecipeView = louMode ? "lou" : "kids";
 
       const toggle=card.querySelector(".recipe-selfcook-toggle");
       if(toggle) toggle.textContent=louMode ? "✨ Lou-Ansicht aktiv" : "🌈 Kinderansicht aktiv";
