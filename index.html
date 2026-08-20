@@ -1639,10 +1639,22 @@
         </div>
         <button id="closeManualTimetableDialog" class="icon-btn" type="button">×</button>
       </div>
-      <div class="timetable-switcher">
-  <button class="secondary-btn timetable-switch" data-person="1" type="button">Lou</button>
-  <button class="secondary-btn timetable-switch" data-person="2" type="button">Fina</button>
-  <button class="secondary-btn timetable-switch" data-person="mama" type="button">Mama</button>
+      <div class="timetable-switcher" aria-label="Stundenplan auswählen">
+  <button class="secondary-btn timetable-switch timetable-person-card timetable-person-mama" data-person="mama" type="button">
+    <img src="./workroom-meditation.png?v=53" alt="" aria-hidden="true">
+    <span class="timetable-person-name">Mama</span>
+    <span class="timetable-person-heart">♥</span>
+  </button>
+  <button class="secondary-btn timetable-switch timetable-person-card timetable-person-lou" data-person="1" type="button">
+    <img src="./lou-stundenplan.png?v=53" alt="" aria-hidden="true">
+    <span class="timetable-person-name">Lou</span>
+    <span class="timetable-person-heart">♥</span>
+  </button>
+  <button class="secondary-btn timetable-switch timetable-person-card timetable-person-fina" data-person="2" type="button">
+    <img src="./fina-stundenplan.png?v=53" alt="" aria-hidden="true">
+    <span class="timetable-person-name">Fina</span>
+    <span class="timetable-person-heart">♥</span>
+  </button>
 </div>
       <div id="manualTimetableDisplay" class="manual-timetable-display"></div>
       <div class="dialog-actions">
