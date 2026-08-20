@@ -6737,8 +6737,90 @@ function recipeMeasureIconHtml(line, recipe) {
   return `<span class="recipe-measure-icon measure-${measure.type}${colorClass}" title="${escapeHtml(measure.label)}" aria-label="${escapeHtml(measure.label)}"><i></i></span>`;
 }
 
+
+function normalizedBeakerMappings(recipe) {
+  return Array.isArray(recipe?.beakerMappings) ? recipe.beakerMappings : [];
+}
+
+function normalizeIngredientKey(value) {
+  return String(value || "")
+    .toLowerCase()
+    .replace(/[0-9]+([.,][0-9]+)?/g, " ")
+    .replace(/\b(g|kg|gramm|gram|ml|l|el|tl|esslöffel|teelöffel|becher|topfenbecher|joghurtbecher|prise|stück|stk)\b/g, " ")
+    .replace(/[^a-zäöüß]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function childMeasureLabel(mapping) {
+  const amount = String(mapping?.amount || "").trim();
+  const unit = mapping?.unit || "cup";
+  const color = mapping?.color || "blue";
+  const unitLabel = {
+    cup: ({
+      blue:"blauer Becher",
+      red:"roter Becher",
+      green:"grüner Becher",
+      yellow:"gelber Becher",
+      orange:"oranger Becher",
+      purple:"lila Becher"
+    })[color] || "Becher",
+    quark:"Topfenbecher",
+    yogurt:"Joghurtbecher",
+    tbsp:"EL",
+    tsp:"TL",
+    pinch:"Prise"
+  }[unit] || "Becher";
+  return `${amount ? amount + " " : ""}${unitLabel}`.trim();
+}
+
+function childMeasureIconHtml(mapping) {
+  const unit = mapping?.unit || "cup";
+  const color = mapping?.color || "blue";
+  const cls = {
+    cup:`measure-beaker measure-${color}`,
+    quark:"measure-topfen",
+    yogurt:"measure-yogurt",
+    tbsp:"measure-tbsp",
+    tsp:"measure-tsp",
+    pinch:"measure-salt"
+  }[unit] || "measure-beaker";
+  return `<span class="recipe-measure-icon ${cls}" aria-hidden="true"><i></i></span>`;
+}
+
+function childIngredientReplacementHtml(line, recipe) {
+  const mappings = normalizedBeakerMappings(recipe);
+  if (!mappings.length) return "";
+
+  const lineKey = normalizeIngredientKey(line);
+  if (!lineKey) return "";
+
+  const matches = mappings.filter(m => {
+    const mapKey = normalizeIngredientKey(m.ingredient);
+    return mapKey && (mapKey === lineKey || lineKey.includes(mapKey) || mapKey.includes(lineKey));
+  });
+
+  if (!matches.length) return "";
+
+  const ingredientName = lineKey;
+  return matches.map(m => `
+    <span class="recipe-child-measure-row">
+      ${childMeasureIconHtml(m)}
+      <span class="recipe-child-measure-label">${escapeHtml(childMeasureLabel(m))}</span>
+      <span class="recipe-child-measure-ingredient">${escapeHtml(ingredientName)}</span>
+    </span>
+  `).join("");
+}
+
 function recipeIngredientHtml(line, recipe) {
-  return `${recipeMeasureIconHtml(line, recipe)}<span class="recipe-ingredient-text">${escapeHtml(line)}</span>`;
+  const childReplacement = childIngredientReplacementHtml(line, recipe);
+  return `
+    <span class="recipe-adult-ingredient">
+      ${recipeMeasureIconHtml(line, recipe)}
+      <span class="recipe-ingredient-text">${escapeHtml(line)}</span>
+    </span>
+    ${childReplacement ? `<span class="recipe-child-ingredient">${childReplacement}</span>` : ""}
+  `;
 }
 
 function normalizedRecipeSource(recipe) {
@@ -6802,6 +6884,8 @@ function resetRecipeForm() {
 
   const beakerKitchen = document.querySelector("#recipeBeakerKitchen");
   if (beakerKitchen) beakerKitchen.checked = false;
+  setRecipeBeakerMappings([]);
+  updateBeakerMappingVisibility();
 
   const healthy = document.querySelector("#recipeHealthy");
   if (healthy) healthy.checked = false;
@@ -6834,6 +6918,8 @@ function startRecipeEdit(recipe) {
   document.querySelector("#recipeKids").checked = !!recipe.kids;
   document.querySelector("#recipeSelfCook").checked = recipeSelfCook(recipe);
   document.querySelector("#recipeBeakerKitchen").checked = recipeBeakerKitchen(recipe);
+  setRecipeBeakerMappings(recipe.beakerMappings || []);
+  updateBeakerMappingVisibility();
   document.querySelector("#recipeHealthy").checked = !!recipe.healthy;
   document.querySelector("#recipeFavorite").checked = !!recipe.favorite;
   document.querySelector("#recipeTime").value = recipe.time || "";
@@ -7109,8 +7195,11 @@ function showRecipeDetail(recipeOrTitle) {
             ${normalizedRecipeLines(recipe.ingredients).map(x => `
               <button type="button" class="recipe-cook-line recipe-ingredient-line">
                 <span class="recipe-cook-dot">○</span>
-                ${recipeMeasureIconHtml(x, recipe)}
-                <span class="recipe-ingredient-text">${escapeHtml(x)}</span>
+                <span class="recipe-adult-ingredient">
+                  ${recipeMeasureIconHtml(x, recipe)}
+                  <span class="recipe-ingredient-text">${escapeHtml(x)}</span>
+                </span>
+                ${childIngredientReplacementHtml(x, recipe) ? `<span class="recipe-child-ingredient">${childIngredientReplacementHtml(x, recipe)}</span>` : ""}
               </button>
             `).join("")}
           </div>
