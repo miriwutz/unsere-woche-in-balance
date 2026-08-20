@@ -1001,6 +1001,67 @@
   </div>
 </article>
 
+
+<!-- WERKRAUM-EINKAUF -->
+<article class="card workroom-main-card workroom-shopping-card workroom-fold-card" data-workroom-fold="shopping">
+  <div class="workroom-card-head workroom-fold-head">
+    <div>
+      <span class="workroom-fold-arrow">▾</span>
+      <h3>🛒 Einkauf Werkraum</h3>
+      <p>Materialien sammeln, nach Geschäft bündeln und später schnell wiederfinden.</p>
+    </div>
+  </div>
+
+  <div class="workroom-shopping-summary">
+    <div id="workroomShoppingTotal" class="workroom-shopping-total">Aktiv: 0 Artikel</div>
+    <div id="workroomShoppingStoreTotals" class="workroom-shopping-store-totals"></div>
+  </div>
+
+  <div id="workroomShoppingList" class="workroom-shopping-list">
+    <div class="workroom-empty">Noch nichts für den Werkraum einzukaufen.</div>
+  </div>
+
+  <div class="workroom-shopping-add">
+    <input id="workroomShoppingName" type="text" placeholder="Artikel, z. B. Holzleim …">
+    <input id="workroomShoppingQty" type="text" placeholder="Menge – optional">
+    <input id="workroomShoppingPrice" type="text" inputmode="decimal" placeholder="Preis € – optional">
+    <input id="workroomShoppingUrl" type="url" placeholder="Produktlink – optional">
+
+    <select id="workroomShoppingStore">
+      <option value="">Geschäft – optional</option>
+      <option value="action">Action</option>
+      <option value="tedi">TEDi</option>
+      <option value="hardware">Baumarkt</option>
+      <option value="paper">Papierhandlung</option>
+      <option value="other">Sonstiges</option>
+    </select>
+
+    <input id="workroomShoppingStoreOther" class="hidden" type="text" placeholder="Konkretes Geschäft …">
+
+    <button id="addWorkroomShoppingBtn" class="secondary-btn" type="button">+ Eintragen</button>
+  </div>
+
+  <details class="workroom-shopping-archive">
+    <summary>Archiv gekaufter Artikel</summary>
+
+    <div class="workroom-shopping-archive-tools">
+      <input id="workroomShoppingArchiveSearch" type="search" placeholder="Archiv durchsuchen …">
+      <select id="workroomShoppingArchiveStore">
+        <option value="all">Alle Geschäfte</option>
+        <option value="action">Action</option>
+        <option value="tedi">TEDi</option>
+        <option value="hardware">Baumarkt</option>
+        <option value="paper">Papierhandlung</option>
+        <option value="other">Sonstiges</option>
+      </select>
+    </div>
+
+    <div id="workroomShoppingArchive" class="workroom-shopping-archive-list">
+      <div class="workroom-empty">Noch keine gekauften Artikel im Archiv.</div>
+    </div>
+  </details>
+</article>
+
 <!-- LINKSAMMLUNG -->
 <article class="card workroom-main-card workroom-links-card workroom-fold-card" data-workroom-fold="links">
 
