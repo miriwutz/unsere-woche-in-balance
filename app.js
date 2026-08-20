@@ -1751,7 +1751,6 @@ const eventHtml = (normalEventsForHeader.length || multiDayEventLanes.length) ? 
         ${schoolTasksForDate.map(t => `
           <label class="school-week-item child-${t.childId} ${t.done ? "done" : ""}">
             <button class="school-week-check child-symbol-check ${t.done ? "done" : ""}" data-child="${t.childId}" data-id="${t.id}" type="button" aria-label="${t.done ? "Erledigt" : "Als erledigt markieren"}"><span class="child-symbol-glyph">${schoolTaskIcon(t,t.childId)}</span>${t.done ? `<span class="child-symbol-done">✓</span>` : ""}</button>
-            <span class="school-child-badge child-${t.childId}">${t.childId === "1" ? "L" : "F"}</span>
             <span class="school-week-copy">
               <strong>${escapeHtml(t.childName)}</strong> · ${escapeHtml(t.text)}
               ${t.subject ? ` <small>${escapeHtml(t.subject)}</small>` : ""}
@@ -10865,7 +10864,12 @@ function renderSchoolChildDashboard(id){
   const img=document.querySelector("#schoolBannerImage"); if(img) img.src=id==="1"?"./lou-stundenplan.png?v=53":"./fina-stundenplan.png?v=53";
   const hello=document.querySelector("#schoolBannerHello"); if(hello) hello.textContent=`Hey ${child?.name || (id==="1"?"Lou":"Fina")}!`;
   const quote=document.querySelector("#schoolBannerQuote"); if(quote){const a=schoolChildQuotes[id]; quote.textContent=a[Math.floor(Date.now()/86400000)%a.length];}
-  const bi=document.querySelector("#schoolBannerIcon"); if(bi) bi.textContent=icon;
+  const bi=document.querySelector("#schoolBannerIcon");
+  if(bi){
+    bi.textContent=icon;
+    bi.title=`${child?.name || (id==="1"?"Lou":"Fina")} – Stundenplan ansehen`;
+    bi.setAttribute("aria-label",`${child?.name || (id==="1"?"Lou":"Fina")} – Stundenplan ansehen`);
+  }
   const host=document.querySelector("#schoolIconChoices");
   if(host){
     host.innerHTML=schoolChildIcons.map(x=>
@@ -10889,6 +10893,12 @@ function closeSchoolChildDashboard(){
 }
 document.querySelectorAll("[data-open-school-child]").forEach(b=>b.addEventListener("click",()=>renderSchoolChildDashboard(b.dataset.openSchoolChild)));
 document.querySelector("#backToSchoolChooser")?.addEventListener("click",closeSchoolChildDashboard);
+
+document.querySelector("#schoolBannerIcon")?.addEventListener("click", () => {
+  if(!activeSchoolChild) return;
+  showManualTimetable(activeSchoolChild);
+});
+
 document.querySelector("#schoolIconChoices")?.addEventListener("click",e=>{
   const b=e.target.closest(".school-icon-choice"); if(!b||!activeSchoolChild)return;
   const key=schoolMemberKey(activeSchoolChild);
