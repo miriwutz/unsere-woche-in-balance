@@ -10172,3 +10172,269 @@ button.day-meal{cursor:pointer}
 .recipe-card:not(.recipe-child-mode) .recipe-delete:hover{
   background:#f4dddd !important;
 }
+
+
+/* =========================================================
+   V46 – Kinderrezept Feinschliff
+   ========================================================= */
+
+/* Wenn eine Kinder-Darstellung existiert, Erwachsenenmenge/-einheit komplett ausblenden. */
+.recipe-card.recipe-child-mode .recipe-adult-ingredient:has(+ .recipe-child-ingredient),
+#recipeDetailBody.recipe-detail-child-mode .recipe-adult-ingredient:has(+ .recipe-child-ingredient){
+  display:none !important;
+}
+
+/* Kinderzeile: exakt eine horizontale Linie */
+.recipe-card.recipe-child-mode .recipe-child-ingredient,
+#recipeDetailBody.recipe-detail-child-mode .recipe-child-ingredient{
+  display:block !important;
+}
+.recipe-card.recipe-child-mode .recipe-child-measure-row,
+#recipeDetailBody.recipe-detail-child-mode .recipe-child-measure-row{
+  display:flex !important;
+  align-items:center !important;
+  flex-wrap:nowrap !important;
+  gap:8px !important;
+  min-height:40px !important;
+  width:100% !important;
+}
+.recipe-card.recipe-child-mode .recipe-child-measures,
+#recipeDetailBody.recipe-detail-child-mode .recipe-child-measures{
+  display:inline-flex !important;
+  align-items:center !important;
+  flex:0 0 auto !important;
+  gap:6px !important;
+}
+.recipe-card.recipe-child-mode .recipe-child-measure-part,
+#recipeDetailBody.recipe-detail-child-mode .recipe-child-measure-part{
+  display:inline-flex !important;
+  align-items:center !important;
+  gap:5px !important;
+}
+.recipe-card.recipe-child-mode .recipe-child-measure-ingredient,
+#recipeDetailBody.recipe-detail-child-mode .recipe-child-measure-ingredient{
+  display:inline-flex !important;
+  align-items:center !important;
+  flex:0 1 auto !important;
+  min-width:0 !important;
+  line-height:1.2 !important;
+  margin:0 !important;
+  padding:0 !important;
+}
+.recipe-card.recipe-child-mode .recipe-child-amount,
+#recipeDetailBody.recipe-detail-child-mode .recipe-child-amount{
+  line-height:1 !important;
+  margin:0 !important;
+}
+
+/* Sanfte Regenbogenfläche nur für erledigte Zeilen */
+.recipe-card.recipe-child-mode .recipe-child-checkable.recipe-child-done{
+  background:linear-gradient(
+    90deg,
+    rgba(255,211,219,.58) 0%,
+    rgba(255,229,199,.58) 20%,
+    rgba(255,246,204,.60) 40%,
+    rgba(213,239,216,.60) 60%,
+    rgba(207,230,249,.60) 80%,
+    rgba(229,217,248,.60) 100%
+  ) !important;
+  opacity:.82 !important;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.55) !important;
+}
+
+.recipe-card.recipe-child-mode .recipe-card-head{
+  min-height:190px !important;
+  padding-left:300px !important;
+  padding-right:170px !important;
+}
+.recipe-card.recipe-child-mode > .recipe-child-illustration{
+  left:18px !important;
+  top:8px !important;
+  width:270px !important;
+  height:174px !important;
+}
+.recipe-card.recipe-child-mode > .recipe-child-illustration img{
+  width:270px !important;
+  height:174px !important;
+  object-fit:contain !important;
+}
+
+@media(max-width:760px){
+  .recipe-card.recipe-child-mode .recipe-card-head{
+    min-height:145px !important;
+    padding-left:140px !important;
+    padding-right:105px !important;
+  }
+  .recipe-card.recipe-child-mode > .recipe-child-illustration{
+    left:6px !important;
+    top:7px !important;
+    width:128px !important;
+    height:128px !important;
+  }
+  .recipe-card.recipe-child-mode > .recipe-child-illustration img{
+    width:128px !important;
+    height:128px !important;
+  }
+}
+
+
+/* Joghurtbecher: hoch, schmal, OHNE Henkel */
+.recipe-measure-icon.measure-yogurt,
+.unit-icon.yogurt{
+  position:relative !important;
+  width:20px !important;
+  min-width:20px !important;
+  height:34px !important;
+  border:1.5px solid #77817c !important;
+  border-radius:3px 3px 7px 7px !important;
+  background:linear-gradient(#ffffff 0 74%, #eef3ef 74% 100%) !important;
+  clip-path:polygon(8% 0,92% 0,80% 100%,20% 100%) !important;
+  box-shadow:none !important;
+}
+.recipe-measure-icon.measure-yogurt::before,
+.unit-icon.yogurt::before{
+  content:"" !important;
+  position:absolute !important;
+  left:-2px !important;
+  right:-2px !important;
+  top:-3px !important;
+  height:3px !important;
+  border-top:1.5px solid #77817c !important;
+  background:#fff !important;
+}
+.recipe-measure-icon.measure-yogurt::after,
+.unit-icon.yogurt::after{
+  content:none !important;
+}
+
+/* Topfenbecher: flach, breit, filigran */
+.recipe-measure-icon.measure-topfen,
+.unit-icon.quark{
+  position:relative !important;
+  width:31px !important;
+  min-width:31px !important;
+  height:17px !important;
+  border:1.35px solid #7a837f !important;
+  border-radius:2px 2px 4px 4px !important;
+  background:#fff !important;
+  box-shadow:inset 0 4px 0 #f1f3ef !important;
+}
+.recipe-measure-icon.measure-topfen::before,
+.unit-icon.quark::before{
+  content:"" !important;
+  position:absolute !important;
+  left:-2px !important;
+  right:-2px !important;
+  top:-4px !important;
+  height:4px !important;
+  border:1.35px solid #7a837f !important;
+  border-radius:2px !important;
+  background:#fff !important;
+}
+
+/* Salzstreuer: schmaler, filigraner, mehr Löcher/Körner */
+.recipe-measure-icon.measure-salt,
+.unit-icon.salt{
+  position:relative !important;
+  width:16px !important;
+  min-width:16px !important;
+  height:30px !important;
+  border:1.35px solid #69736e !important;
+  border-radius:4px 4px 6px 6px !important;
+  background:linear-gradient(#cdd5d1 0 6px,#fff 6px 100%) !important;
+  box-shadow:none !important;
+}
+.recipe-measure-icon.measure-salt::before,
+.unit-icon.salt::before{
+  content:"•••••" !important;
+  position:absolute !important;
+  top:-10px !important;
+  left:-3px !important;
+  width:22px !important;
+  text-align:center !important;
+  font-size:8px !important;
+  line-height:1 !important;
+  letter-spacing:-1px !important;
+  color:#46504b !important;
+}
+.recipe-measure-icon.measure-salt::after,
+.unit-icon.salt::after{
+  content:"" !important;
+  position:absolute !important;
+  left:3px !important;
+  right:3px !important;
+  top:5px !important;
+  height:1px !important;
+  background:#69736e !important;
+}
+
+/* EL: Löffelschale links, Griff exakt mittig an der kurzen Oval-Seite */
+.recipe-measure-icon.measure-tbsp{
+  position:relative !important;
+  width:50px !important;
+  min-width:50px !important;
+  height:28px !important;
+  background:transparent !important;
+}
+.recipe-measure-icon.measure-tbsp::before{
+  content:"" !important;
+  position:absolute !important;
+  left:1px !important;
+  top:6px !important;
+  width:20px !important;
+  height:13px !important;
+  border:1.7px solid #66706b !important;
+  border-radius:50% !important;
+  background:#fafaf7 !important;
+}
+.recipe-measure-icon.measure-tbsp::after{
+  content:"" !important;
+  position:absolute !important;
+  left:20px !important;
+  top:12px !important;
+  width:28px !important;
+  height:2px !important;
+  background:#66706b !important;
+  border-radius:2px !important;
+  transform:none !important;
+}
+
+/* TL: deutlich kleiner; Griff ebenfalls mittig */
+.recipe-measure-icon.measure-tsp{
+  position:relative !important;
+  width:30px !important;
+  min-width:30px !important;
+  height:20px !important;
+  background:transparent !important;
+}
+.recipe-measure-icon.measure-tsp::before{
+  content:"" !important;
+  position:absolute !important;
+  left:1px !important;
+  top:6px !important;
+  width:10px !important;
+  height:7px !important;
+  border:1.35px solid #66706b !important;
+  border-radius:50% !important;
+  background:#fafaf7 !important;
+}
+.recipe-measure-icon.measure-tsp::after{
+  content:"" !important;
+  position:absolute !important;
+  left:10px !important;
+  top:9px !important;
+  width:18px !important;
+  height:1.5px !important;
+  background:#66706b !important;
+  border-radius:2px !important;
+  transform:none !important;
+}
+
+/* Alte Linien/Handles der generischen Icons unterdrücken */
+.recipe-measure-icon.measure-yogurt i,
+.recipe-measure-icon.measure-topfen i,
+.recipe-measure-icon.measure-salt i,
+.recipe-measure-icon.measure-tbsp i,
+.recipe-measure-icon.measure-tsp i{
+  display:none !important;
+}
