@@ -11762,3 +11762,136 @@ button.day-meal{cursor:pointer}
     grid-row:4 !important;
   }
 }
+
+
+/* =========================================================
+   V54 – schöne SVG-Maßzeichen + klare Becherküchen-Anleitung
+   ========================================================= */
+
+.recipe-measure-svg-wrap{
+  display:inline-flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  flex:0 0 auto !important;
+  width:auto !important;
+  height:auto !important;
+  border:0 !important;
+  background:transparent !important;
+  transform:none !important;
+}
+
+.recipe-measure-svg-wrap::before,
+.recipe-measure-svg-wrap::after{
+  content:none !important;
+  display:none !important;
+}
+
+.measure-svg{
+  display:block;
+  overflow:visible;
+  flex:0 0 auto;
+}
+
+/* normale Größe */
+.measure-svg-cup{width:34px;height:29px}
+.measure-svg-yogurt{width:27px;height:34px}
+.measure-svg-topfen{width:37px;height:29px}
+.measure-svg-tbsp{width:44px;height:30px}
+.measure-svg-tsp{width:31px;height:24px}
+.measure-svg-salt{width:25px;height:35px}
+
+/* In der Kinderansicht etwas großzügiger und sauber vertikal ausgerichtet */
+.recipe-card.recipe-child-mode .measure-svg-cup{width:37px;height:31px}
+.recipe-card.recipe-child-mode .measure-svg-yogurt{width:28px;height:37px}
+.recipe-card.recipe-child-mode .measure-svg-topfen{width:40px;height:31px}
+.recipe-card.recipe-child-mode .measure-svg-tbsp{width:47px;height:31px}
+.recipe-card.recipe-child-mode .measure-svg-tsp{width:32px;height:24px}
+.recipe-card.recipe-child-mode .measure-svg-salt{width:27px;height:37px}
+
+.recipe-card.recipe-child-mode .recipe-child-measure-row,
+.recipe-card.recipe-child-mode .recipe-child-measure-part{
+  align-items:center !important;
+}
+
+/* alte CSS-Zeichnungen niemals zusätzlich zeigen */
+.recipe-measure-svg-wrap i{
+  display:none !important;
+}
+
+/* Kurzanleitung */
+.recipe-beaker-quickhelp{
+  display:flex !important;
+  align-items:flex-start !important;
+  gap:8px !important;
+  padding:9px 11px !important;
+  border-radius:10px !important;
+  background:#f4f7ef !important;
+  color:#6f7169 !important;
+  line-height:1.45 !important;
+}
+.recipe-beaker-quickhelp strong{
+  flex:0 0 auto;
+  color:#586256 !important;
+}
+
+/* 3-Schritt-Anleitung */
+.beaker-map-instructions{
+  display:grid !important;
+  gap:7px !important;
+  padding:11px 13px !important;
+  border-radius:12px !important;
+  background:linear-gradient(90deg,#fff8df,#f4f8ef) !important;
+  color:#6f665d !important;
+}
+.beaker-map-instructions > div{
+  line-height:1.45 !important;
+}
+.beaker-map-instructions > div b:first-child{
+  display:inline-grid;
+  place-items:center;
+  width:22px;
+  height:22px;
+  margin-right:6px;
+  border-radius:50%;
+  background:#e7f0e5;
+  color:#62715f;
+}
+.beaker-map-instructions small{
+  display:block;
+  margin-top:2px;
+  color:#8c8177 !important;
+}
+
+/* Legende mit denselben echten SVG-Symbolen */
+.beaker-unit-legend-v54{
+  display:flex !important;
+  flex-wrap:wrap !important;
+  align-items:center !important;
+  gap:10px 18px !important;
+  margin-top:12px !important;
+}
+.beaker-unit-legend-v54 > span{
+  display:inline-flex !important;
+  align-items:center !important;
+  gap:5px !important;
+  color:#756d67 !important;
+}
+.beaker-unit-legend-v54 svg{
+  width:30px !important;
+  height:25px !important;
+  overflow:visible !important;
+}
+.beaker-unit-legend-v54 span:nth-child(3) svg{
+  width:23px !important;
+  height:29px !important;
+}
+.beaker-unit-legend-v54 span:nth-child(4) svg{
+  width:39px !important;
+}
+.beaker-unit-legend-v54 span:nth-child(5) svg{
+  width:28px !important;
+}
+.beaker-unit-legend-v54 span:nth-child(6) svg{
+  width:22px !important;
+  height:30px !important;
+}
