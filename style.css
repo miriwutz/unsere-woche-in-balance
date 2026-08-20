@@ -10926,3 +10926,204 @@ button.day-meal{cursor:pointer}
     height:128px !important;
   }
 }
+
+
+/* =========================================================
+   V51 – Stundenplan: Personen links, aktives Bild groß rechts
+   Nur Darstellung des Stundenplan-Popups.
+   ========================================================= */
+
+#manualTimetableDialog .timetable-dialog-card{
+  position:relative !important;
+  overflow:hidden !important;
+  padding:24px 26px 22px !important;
+}
+
+/* Kopf bekommt bewusst Höhe für Namen links + großes Bild rechts. */
+#manualTimetableDialog .dialog-head{
+  position:relative !important;
+  min-height:190px !important;
+  padding:0 330px 0 0 !important;
+  margin-bottom:0 !important;
+}
+
+/* Schließen wirklich rechts oben, hübscher und klarer. */
+#manualTimetableDialog #closeManualTimetableDialog{
+  position:absolute !important;
+  right:0 !important;
+  top:0 !important;
+  z-index:20 !important;
+  width:38px !important;
+  height:38px !important;
+  min-width:38px !important;
+  padding:0 !important;
+  border:1px solid rgba(188,163,151,.42) !important;
+  border-radius:50% !important;
+  background:rgba(255,253,251,.94) !important;
+  color:#75645d !important;
+  font-size:21px !important;
+  line-height:1 !important;
+  display:grid !important;
+  place-items:center !important;
+  box-shadow:0 3px 12px rgba(84,67,59,.07) !important;
+}
+#manualTimetableDialog #closeManualTimetableDialog:hover{
+  background:#fff8f5 !important;
+  border-color:rgba(174,137,122,.62) !important;
+  transform:translateY(-1px) !important;
+}
+
+/* Mama / Lou / Fina links untereinander.
+   Keine Bilder für nicht aktive Personen – nur der Name. */
+#manualTimetableDialog .timetable-switcher{
+  position:absolute !important;
+  left:26px !important;
+  top:92px !important;
+  z-index:12 !important;
+  width:230px !important;
+  margin:0 !important;
+  display:flex !important;
+  flex-direction:column !important;
+  align-items:flex-start !important;
+  gap:4px !important;
+}
+
+#manualTimetableDialog .timetable-switch{
+  width:auto !important;
+  min-width:0 !important;
+  min-height:0 !important;
+  padding:3px 12px 4px 2px !important;
+  border:0 !important;
+  border-radius:0 !important;
+  background:transparent !important;
+  box-shadow:none !important;
+  color:#8a7c77 !important;
+  font-family:"Segoe Print","Bradley Hand","Comic Sans MS",cursive !important;
+  font-size:1.13rem !important;
+  font-weight:400 !important;
+  letter-spacing:.01em !important;
+  text-align:left !important;
+  opacity:.72 !important;
+}
+
+#manualTimetableDialog .timetable-switch:hover{
+  color:#5f5551 !important;
+  opacity:1 !important;
+  transform:translateX(2px) !important;
+}
+
+/* Aktive Person bleibt ebenfalls ein Name, aber sichtbar ausgewählt. */
+#manualTimetableDialog .timetable-switch.is-active{
+  color:#4f555c !important;
+  font-size:1.3rem !important;
+  font-weight:600 !important;
+  opacity:1 !important;
+}
+#manualTimetableDialog .timetable-switch.is-active::before{
+  content:"✦";
+  display:inline-block;
+  margin-right:7px;
+  color:#b99b72;
+  font-size:.72em;
+  vertical-align:middle;
+}
+
+/* Das EINZIGE Bild gehört zur gewählten Person und nutzt den rechten Kopfbereich. */
+#manualTimetableDisplay .tt-person-illustration{
+  position:absolute !important;
+  z-index:7 !important;
+  right:58px !important;
+  top:8px !important;
+  width:270px !important;
+  height:190px !important;
+  max-width:29% !important;
+  display:block !important;
+  object-fit:contain !important;
+  object-position:center center !important;
+  pointer-events:none !important;
+}
+
+/* Lou darf als eher kompakte Sitzfigur etwas größer skaliert werden. */
+#manualTimetableDisplay .tt-lou-illustration{
+  width:285px !important;
+  height:198px !important;
+  opacity:.82 !important;
+}
+
+/* Fina: hohe Tanzfigur – viel mehr Höhe geben. */
+#manualTimetableDisplay .tt-fina-illustration{
+  width:250px !important;
+  height:205px !important;
+  opacity:.86 !important;
+}
+
+/* Mama: ruhige Meditation – ebenfalls deutlich größer. */
+#manualTimetableDisplay .tt-mama-illustration{
+  width:265px !important;
+  height:195px !important;
+  opacity:.72 !important;
+}
+
+/* Tabelle beginnt erst unter dem neuen Kopfbereich. */
+#manualTimetableDisplay{
+  position:static !important;
+  margin-top:8px !important;
+}
+
+/* Unterer Schließen-Button bleibt als zweite, bequeme Möglichkeit. */
+#manualTimetableDialog .dialog-actions{
+  margin-top:18px !important;
+}
+
+/* Kleinere Fenster: Namen bleiben links, Bild wird kontrolliert kleiner. */
+@media(max-width:900px){
+  #manualTimetableDialog .dialog-head{
+    min-height:165px !important;
+    padding-right:245px !important;
+  }
+  #manualTimetableDialog .timetable-switcher{
+    top:86px !important;
+    width:180px !important;
+  }
+  #manualTimetableDisplay .tt-person-illustration{
+    right:42px !important;
+    width:205px !important;
+    height:165px !important;
+    max-width:32% !important;
+  }
+  #manualTimetableDisplay .tt-lou-illustration,
+  #manualTimetableDisplay .tt-fina-illustration,
+  #manualTimetableDisplay .tt-mama-illustration{
+    width:205px !important;
+    height:165px !important;
+  }
+}
+
+@media(max-width:650px){
+  #manualTimetableDialog .dialog-head{
+    min-height:145px !important;
+    padding-right:150px !important;
+  }
+  #manualTimetableDialog .timetable-switcher{
+    left:18px !important;
+    top:80px !important;
+    width:145px !important;
+    gap:1px !important;
+  }
+  #manualTimetableDialog .timetable-switch{
+    font-size:.96rem !important;
+  }
+  #manualTimetableDialog .timetable-switch.is-active{
+    font-size:1.08rem !important;
+  }
+  #manualTimetableDisplay .tt-person-illustration,
+  #manualTimetableDisplay .tt-lou-illustration,
+  #manualTimetableDisplay .tt-fina-illustration,
+  #manualTimetableDisplay .tt-mama-illustration{
+    right:42px !important;
+    top:18px !important;
+    width:125px !important;
+    height:125px !important;
+    max-width:34% !important;
+  }
+}
