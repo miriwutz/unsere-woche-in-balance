@@ -4102,6 +4102,7 @@ function renderAll() {
   renderSchool();
   renderSchoolWorkTodos();
   renderSchoolPrints();
+  renderWorkroomShopping();
   renderWorkroomLinks();
   renderShopping();
   renderRecipes();
@@ -4188,9 +4189,9 @@ function renderSchoolWorkTodos() {
       const localNorm = normalizeWorkroom(localWorkroom);
       const stateNorm = normalizeWorkroom(state.workroom);
       const localCount =
-        localNorm.todos.length + localNorm.prints.length + localNorm.links.length;
+        localNorm.todos.length + localNorm.prints.length + localNorm.links.length + localNorm.shopping.length;
       const stateCount =
-        stateNorm.todos.length + stateNorm.prints.length + stateNorm.links.length;
+        stateNorm.todos.length + stateNorm.prints.length + stateNorm.links.length + stateNorm.shopping.length;
       if (localCount > stateCount) state.workroom = localNorm;
     }
   } catch (err) {
@@ -4432,18 +4433,16 @@ document.querySelectorAll(".workroom-todo-edit").forEach(btn => {
 // Schul-To-dos per Maus oder Touch sortieren
 const todoList = document.querySelector("#schoolWorkTodoList");
 
-if (todoList && typeof Sortable !== "undefined") {
+if (todoList && typeof Sortable !== "undefined" && workroomDragEnabled()) {
   new Sortable(todoList, {
     animation: 180,
-    handle: ".workroom-drag-handle",
+    filter: ".workroom-todo-check,.workroom-todo-actions,.workroom-todo-actions *,input,button,a,select,textarea",
+    preventOnFilter: false,
     ghostClass: "workroom-sort-ghost",
     chosenClass: "workroom-sort-chosen",
     dragClass: "workroom-sort-drag",
-delay: 0,
-delayOnTouchOnly: false,
-touchStartThreshold: 5,
-
-forceFallback: false,
+    delay: 0,
+    forceFallback: false,
     
     onEnd: function () {
       const ids = [...todoList.querySelectorAll(".workroom-todo-row")]
@@ -4553,6 +4552,285 @@ document.querySelector("#addSchoolWorkTodoBtn")?.addEventListener("click", () =>
   renderSchoolWorkTodos();
 });
 
+
+// =============================
+// WERKRAUM – EINKAUF
+// =============================
+
+const WORKROOM_STORE_LABELS = {
+  action: "Action",
+  tedi: "TEDi",
+  hardware: "Baumarkt",
+  paper: "Papierhandlung",
+  other: "Sonstiges"
+};
+
+function workroomShoppingStoreLabel(item) {
+  if (!item) return "";
+  if (item.store === "other" && item.storeOther) return item.storeOther;
+  return WORKROOM_STORE_LABELS[item.store] || item.storeOther || "";
+}
+
+function parseWorkroomPrice(value) {
+  const raw = String(value ?? "").trim().replace(/\s/g, "").replace(",", ".");
+  if (!raw) return null;
+  const n = Number(raw);
+  return Number.isFinite(n) && n >= 0 ? Math.round(n * 100) / 100 : null;
+}
+
+function formatWorkroomPrice(value) {
+  const n = Number(value);
+  if (!Number.isFinite(n)) return "";
+  return n.toLocaleString("de-AT", {style:"currency", currency:"EUR"});
+}
+
+function renderWorkroomShopping() {
+  const list = document.querySelector("#workroomShoppingList");
+  const archive = document.querySelector("#workroomShoppingArchive");
+  if (!list || !archive) return;
+
+  state.workroom = normalizeWorkroom(state.workroom);
+  const items = [...state.workroom.shopping];
+
+  const active = items
+    .filter(x => !x.done)
+    .sort((a,b) =>
+      String(workroomShoppingStoreLabel(a)).localeCompare(String(workroomShoppingStoreLabel(b)), "de") ||
+      Number(a.order ?? 0) - Number(b.order ?? 0) ||
+      String(a.name || "").localeCompare(String(b.name || ""), "de")
+    );
+
+  if (!active.length) {
+    list.innerHTML = `<div class="workroom-empty">Noch nichts für den Werkraum einzukaufen.</div>`;
+  } else {
+    const grouped = new Map();
+    active.forEach(item => {
+      const label = workroomShoppingStoreLabel(item) || "Ohne Geschäft";
+      if (!grouped.has(label)) grouped.set(label, []);
+      grouped.get(label).push(item);
+    });
+
+    list.innerHTML = [...grouped.entries()].map(([store, rows]) => `
+      <section class="workroom-shopping-store-group">
+        <div class="workroom-shopping-store-head">
+          <strong>${escapeHtml(store)}</strong>
+          <span>${rows.length} ${rows.length === 1 ? "Artikel" : "Artikel"}</span>
+        </div>
+        <div class="workroom-shopping-store-items">
+          ${rows.map(item => `
+            <div class="workroom-shopping-row" data-id="${item.id}">
+              <input class="workroom-shopping-check" type="checkbox" data-id="${item.id}">
+              <div class="workroom-shopping-copy">
+                <strong>${escapeHtml(item.name || "")}</strong>
+                <div class="workroom-shopping-meta">
+                  ${item.qty ? `<span>${escapeHtml(item.qty)}</span>` : ""}
+                  ${Number.isFinite(Number(item.price)) ? `<span>${escapeHtml(formatWorkroomPrice(item.price))}</span>` : ""}
+                  ${item.url ? `<a href="${escapeHtml(item.url)}" target="_blank" rel="noopener">🔗 Produkt</a>` : ""}
+                </div>
+              </div>
+              <div class="workroom-shopping-actions">
+                <button type="button" class="workroom-shopping-edit" data-id="${item.id}" title="Bearbeiten">✎</button>
+                <button type="button" class="workroom-shopping-delete" data-id="${item.id}" title="Löschen">×</button>
+              </div>
+            </div>
+          `).join("")}
+        </div>
+      </section>
+    `).join("");
+  }
+
+  const priced = active.filter(x => Number.isFinite(Number(x.price)));
+  const total = priced.reduce((sum,x) => sum + Number(x.price || 0), 0);
+  const totalEl = document.querySelector("#workroomShoppingTotal");
+  if (totalEl) {
+    totalEl.textContent = `Aktiv: ${active.length} ${active.length === 1 ? "Artikel" : "Artikel"}${priced.length ? ` · ${formatWorkroomPrice(total)}` : ""}`;
+  }
+
+  const storeTotals = document.querySelector("#workroomShoppingStoreTotals");
+  if (storeTotals) {
+    const sums = new Map();
+    active.forEach(x => {
+      if (!Number.isFinite(Number(x.price))) return;
+      const store = workroomShoppingStoreLabel(x) || "Ohne Geschäft";
+      sums.set(store, (sums.get(store) || 0) + Number(x.price || 0));
+    });
+    storeTotals.innerHTML = [...sums.entries()]
+      .map(([store,sum]) => `<span>${escapeHtml(store)}: ${escapeHtml(formatWorkroomPrice(sum))}</span>`)
+      .join("");
+  }
+
+  const q = (document.querySelector("#workroomShoppingArchiveSearch")?.value || "").trim().toLowerCase();
+  const storeFilter = document.querySelector("#workroomShoppingArchiveStore")?.value || "all";
+  const archived = items
+    .filter(x => x.done)
+    .filter(x => !q || [x.name, x.qty, x.storeOther, workroomShoppingStoreLabel(x)]
+      .some(v => String(v || "").toLowerCase().includes(q)))
+    .filter(x => storeFilter === "all" || x.store === storeFilter)
+    .sort((a,b) => Number(b.completedAt || 0) - Number(a.completedAt || 0));
+
+  archive.innerHTML = archived.length ? archived.map(item => `
+    <div class="workroom-shopping-archive-item">
+      <div>
+        <strong>${escapeHtml(item.name || "")}</strong>
+        <span>
+          ${item.qty ? `${escapeHtml(item.qty)} · ` : ""}
+          ${escapeHtml(workroomShoppingStoreLabel(item) || "ohne Geschäft")}
+          ${Number.isFinite(Number(item.price)) ? ` · ${escapeHtml(formatWorkroomPrice(item.price))}` : ""}
+        </span>
+      </div>
+      <div class="workroom-shopping-archive-actions">
+        ${item.url ? `<a href="${escapeHtml(item.url)}" target="_blank" rel="noopener" title="Produkt öffnen">🔗</a>` : ""}
+        <button type="button" class="workroom-shopping-restore" data-id="${item.id}" title="Wieder auf Einkaufsliste">↩</button>
+        <button type="button" class="workroom-shopping-archive-delete" data-id="${item.id}" title="Endgültig löschen">×</button>
+      </div>
+    </div>
+  `).join("") : `<div class="workroom-empty">Keine passenden Archivartikel gefunden.</div>`;
+
+  document.querySelectorAll(".workroom-shopping-check").forEach(box => {
+    box.addEventListener("change", e => {
+      const item = state.workroom.shopping.find(x => x.id === e.currentTarget.dataset.id);
+      if (!item) return;
+      item.done = true;
+      item.completedAt = Date.now();
+      item.updatedAt = Date.now();
+      save();
+      renderWorkroomShopping();
+      showMotivation("Einkauf erledigt ✓");
+    });
+  });
+
+  document.querySelectorAll(".workroom-shopping-delete").forEach(btn => {
+    btn.addEventListener("click", e => {
+      state.workroom.shopping = state.workroom.shopping.filter(x => x.id !== e.currentTarget.dataset.id);
+      save();
+      renderWorkroomShopping();
+    });
+  });
+
+  document.querySelectorAll(".workroom-shopping-edit").forEach(btn => {
+    btn.addEventListener("click", e => {
+      const item = state.workroom.shopping.find(x => x.id === e.currentTarget.dataset.id);
+      if (!item) return;
+
+      document.querySelector("#workroomShoppingName").value = item.name || "";
+      document.querySelector("#workroomShoppingQty").value = item.qty || "";
+      document.querySelector("#workroomShoppingPrice").value =
+        Number.isFinite(Number(item.price)) ? String(item.price).replace(".", ",") : "";
+      document.querySelector("#workroomShoppingUrl").value = item.url || "";
+      document.querySelector("#workroomShoppingStore").value = item.store || "";
+      const other = document.querySelector("#workroomShoppingStoreOther");
+      if (other) {
+        other.value = item.storeOther || "";
+        other.classList.toggle("hidden", item.store !== "other");
+      }
+
+      const add = document.querySelector("#addWorkroomShoppingBtn");
+      if (add) {
+        add.dataset.editId = item.id;
+        add.textContent = "Änderung speichern";
+      }
+    });
+  });
+
+  document.querySelectorAll(".workroom-shopping-restore").forEach(btn => {
+    btn.addEventListener("click", e => {
+      const item = state.workroom.shopping.find(x => x.id === e.currentTarget.dataset.id);
+      if (!item) return;
+      item.done = false;
+      item.completedAt = null;
+      item.updatedAt = Date.now();
+      item.order = state.workroom.shopping.filter(x => !x.done).length;
+      save();
+      renderWorkroomShopping();
+      showMotivation("Wieder auf der Einkaufsliste ✓");
+    });
+  });
+
+  document.querySelectorAll(".workroom-shopping-archive-delete").forEach(btn => {
+    btn.addEventListener("click", e => {
+      state.workroom.shopping = state.workroom.shopping.filter(x => x.id !== e.currentTarget.dataset.id);
+      save();
+      renderWorkroomShopping();
+    });
+  });
+}
+
+document.querySelector("#workroomShoppingStore")?.addEventListener("change", e => {
+  const other = document.querySelector("#workroomShoppingStoreOther");
+  if (!other) return;
+  const show = e.currentTarget.value === "other";
+  other.classList.toggle("hidden", !show);
+  if (show) other.focus();
+});
+
+document.querySelector("#workroomShoppingArchiveSearch")?.addEventListener("input", renderWorkroomShopping);
+document.querySelector("#workroomShoppingArchiveStore")?.addEventListener("change", renderWorkroomShopping);
+
+document.querySelector("#addWorkroomShoppingBtn")?.addEventListener("click", () => {
+  state.workroom = normalizeWorkroom(state.workroom);
+
+  const nameInput = document.querySelector("#workroomShoppingName");
+  const qtyInput = document.querySelector("#workroomShoppingQty");
+  const priceInput = document.querySelector("#workroomShoppingPrice");
+  const urlInput = document.querySelector("#workroomShoppingUrl");
+  const storeInput = document.querySelector("#workroomShoppingStore");
+  const otherInput = document.querySelector("#workroomShoppingStoreOther");
+  const button = document.querySelector("#addWorkroomShoppingBtn");
+
+  const name = nameInput?.value.trim() || "";
+  if (!name) return;
+
+  const price = parseWorkroomPrice(priceInput?.value || "");
+  const store = storeInput?.value || "";
+  const storeOther = store === "other" ? (otherInput?.value.trim() || "") : "";
+  const editId = button?.dataset.editId;
+
+  if (editId) {
+    const item = state.workroom.shopping.find(x => x.id === editId);
+    if (item) {
+      item.name = name;
+      item.qty = qtyInput?.value.trim() || "";
+      item.price = price;
+      item.url = urlInput?.value.trim() || "";
+      item.store = store;
+      item.storeOther = storeOther;
+      item.updatedAt = Date.now();
+    }
+    delete button.dataset.editId;
+    button.textContent = "+ Eintragen";
+    showMotivation("Einkaufsartikel geändert ✓");
+  } else {
+    state.workroom.shopping.push({
+      id: uid(),
+      name,
+      qty: qtyInput?.value.trim() || "",
+      price,
+      url: urlInput?.value.trim() || "",
+      store,
+      storeOther,
+      done: false,
+      completedAt: null,
+      order: state.workroom.shopping.filter(x => !x.done).length,
+      createdAt: Date.now(),
+      updatedAt: Date.now()
+    });
+    showMotivation("Einkaufsartikel hinzugefügt ✓");
+  }
+
+  if (nameInput) nameInput.value = "";
+  if (qtyInput) qtyInput.value = "";
+  if (priceInput) priceInput.value = "";
+  if (urlInput) urlInput.value = "";
+  if (storeInput) storeInput.value = "";
+  if (otherInput) {
+    otherInput.value = "";
+    otherInput.classList.add("hidden");
+  }
+
+  save();
+  renderWorkroomShopping();
+});
+
 // =============================
 // WERKRAUM – DRUCKLISTE
 // =============================
@@ -4566,9 +4844,9 @@ function renderSchoolPrints() {
       const localNorm = normalizeWorkroom(localWorkroom);
       const stateNorm = normalizeWorkroom(state.workroom);
       const localCount =
-        localNorm.todos.length + localNorm.prints.length + localNorm.links.length;
+        localNorm.todos.length + localNorm.prints.length + localNorm.links.length + localNorm.shopping.length;
       const stateCount =
-        stateNorm.todos.length + stateNorm.prints.length + stateNorm.links.length;
+        stateNorm.todos.length + stateNorm.prints.length + stateNorm.links.length + stateNorm.shopping.length;
       if (localCount > stateCount) state.workroom = localNorm;
     }
   } catch (err) {
@@ -4839,9 +5117,9 @@ function renderWorkroomLinks() {
       const localNorm = normalizeWorkroom(localWorkroom);
       const stateNorm = normalizeWorkroom(state.workroom);
       const localCount =
-        localNorm.todos.length + localNorm.prints.length + localNorm.links.length;
+        localNorm.todos.length + localNorm.prints.length + localNorm.links.length + localNorm.shopping.length;
       const stateCount =
-        stateNorm.todos.length + stateNorm.prints.length + stateNorm.links.length;
+        stateNorm.todos.length + stateNorm.prints.length + stateNorm.links.length + stateNorm.shopping.length;
       if (localCount > stateCount) state.workroom = localNorm;
     }
   } catch (err) {
@@ -8211,6 +8489,7 @@ function normalizeWorkroom(w) {
     todos: Array.isArray(src.todos) ? src.todos : [],
     prints: Array.isArray(src.prints) ? src.prints : [],
     links: Array.isArray(src.links) ? src.links : [],
+    shopping: Array.isArray(src.shopping) ? src.shopping : [],
     substitutions: Array.isArray(src.substitutions) ? src.substitutions : [],
     plans: src.plans && typeof src.plans === "object"
       ? src.plans
@@ -8776,6 +9055,7 @@ function renderAll() {
   renderSchool();
   renderSchoolWorkTodos();
   renderSchoolPrints();
+  renderWorkroomShopping();
   renderWorkroomLinks();
   renderRecipes();
   renderMealPlan();
