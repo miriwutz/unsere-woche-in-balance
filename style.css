@@ -12093,3 +12093,140 @@ button.day-meal{cursor:pointer}
     font-size:1.35rem !important;
   }
 }
+
+
+/* =========================================================
+   Kinderansicht V3 – Header + Stundenplan-Zeichen
+   ========================================================= */
+
+/* Der alte L/F-Badge wird nicht mehr gebraucht. */
+.school-child-badge{display:none !important}
+
+/* Banner neu ausbalanciert:
+   links Motivation + Zeichen, rechts die vorhandene Illustration.
+   Die Figur darf groß sein, aber der Kopf wird nicht mehr unten abgeschnitten. */
+.school-motivation-banner{
+  position:relative !important;
+  min-height:220px !important;
+  height:220px !important;
+  overflow:hidden !important;
+  display:grid !important;
+  grid-template-columns:minmax(360px,58%) minmax(280px,42%) !important;
+  align-items:stretch !important;
+  background:
+    linear-gradient(100deg,#f4edf7 0%,#faf3e5 45%,#eef5ef 100%) !important;
+}
+.school-child-dashboard[data-child="2"] .school-motivation-banner{
+  background:
+    linear-gradient(100deg,#fff0f0 0%,#fff5df 47%,#eef6f0 100%) !important;
+}
+
+.school-motivation-banner>img{
+  grid-column:2 !important;
+  grid-row:1 !important;
+  width:100% !important;
+  height:100% !important;
+  object-fit:contain !important;
+  object-position:center center !important;
+  padding:8px 24px 0 6px !important;
+  opacity:.92 !important;
+  transform:none !important;
+}
+
+.school-banner-overlay{
+  grid-column:1 !important;
+  grid-row:1 !important;
+  position:relative !important;
+  z-index:3 !important;
+  display:flex !important;
+  align-items:center !important;
+  gap:18px !important;
+  padding:30px 38px !important;
+  color:#51484f !important;
+  background:transparent !important;
+}
+
+.school-banner-overlay>div{
+  min-width:0 !important;
+}
+.school-banner-overlay p{
+  display:block !important;
+  margin:0 0 5px !important;
+  color:#8d7d84 !important;
+  font-size:.9rem !important;
+  line-height:1.2 !important;
+}
+.school-banner-overlay strong{
+  display:block !important;
+  max-width:620px !important;
+  color:#4d454c !important;
+  font-family:Georgia,"Times New Roman",serif !important;
+  font-size:clamp(1.55rem,2.35vw,2.35rem) !important;
+  font-weight:500 !important;
+  line-height:1.15 !important;
+}
+
+/* Das selbst gewählte Zeichen sitzt wieder links oben/links im Header
+   und ist gleichzeitig der direkte Link zum schönen Stundenplan. */
+.school-banner-icon.school-banner-timetable-link{
+  appearance:none !important;
+  -webkit-appearance:none !important;
+  flex:0 0 58px !important;
+  width:58px !important;
+  height:58px !important;
+  display:grid !important;
+  place-items:center !important;
+  padding:0 !important;
+  border:1px solid rgba(125,105,115,.18) !important;
+  border-radius:50% !important;
+  background:rgba(255,255,255,.82) !important;
+  box-shadow:0 8px 24px rgba(78,64,72,.10) !important;
+  color:inherit !important;
+  font-size:1.65rem !important;
+  line-height:1 !important;
+  cursor:pointer !important;
+  transition:transform .16s ease, box-shadow .16s ease, background .16s ease !important;
+}
+.school-banner-icon.school-banner-timetable-link:hover{
+  transform:translateY(-2px) scale(1.035) !important;
+  background:#fff !important;
+  box-shadow:0 10px 28px rgba(78,64,72,.15) !important;
+}
+.school-banner-icon.school-banner-timetable-link:focus-visible{
+  outline:2px solid rgba(168,139,194,.55) !important;
+  outline-offset:3px !important;
+}
+
+/* Auf kleineren Bildschirmen bleibt der Text sichtbar; das Bild schrumpft,
+   statt den gesamten Header zu übernehmen. */
+@media(max-width:850px){
+  .school-motivation-banner{
+    grid-template-columns:minmax(0,62%) minmax(190px,38%) !important;
+  }
+  .school-banner-overlay{
+    padding:24px !important;
+  }
+  .school-motivation-banner>img{
+    padding-right:8px !important;
+  }
+}
+@media(max-width:620px){
+  .school-motivation-banner{
+    min-height:205px !important;
+    height:205px !important;
+    grid-template-columns:minmax(0,68%) minmax(130px,32%) !important;
+  }
+  .school-banner-overlay{
+    gap:12px !important;
+    padding:18px !important;
+  }
+  .school-banner-icon.school-banner-timetable-link{
+    flex-basis:48px !important;
+    width:48px !important;
+    height:48px !important;
+    font-size:1.35rem !important;
+  }
+  .school-banner-overlay strong{
+    font-size:1.35rem !important;
+  }
+}
