@@ -7352,7 +7352,7 @@ function showRecipeDetail(recipeOrTitle) {
       </header>
 
       ${recipeSelfCook(recipe)
-        ? `<div class="recipe-child-illustration" aria-hidden="true"><img src="./cooking-kids.png?v=49" alt=""></div>`
+        ? `<div class="recipe-child-illustration" aria-hidden="true"><img src="./cooking-kids-tight.png?v=50" alt=""></div>`
         : ""}
 
       ${external ? `
@@ -7571,7 +7571,7 @@ function renderRecipes() {
         </div>
         <div class="recipe-tools">${escapeHtml(recipeCardMark(r))}</div>
       </header>
-      ${recipeSelfCook(r) ? `<div class="recipe-child-illustration" aria-hidden="true"><img src="./cooking-kids.png?v=49" alt=""></div>` : ""}
+      ${recipeSelfCook(r) ? `<div class="recipe-child-illustration" aria-hidden="true"><img src="./cooking-kids-tight.png?v=50" alt=""></div>` : ""}
       ${normalizedRecipeSource(r) === "external" ? `
         <div class="recipe-card-body recipe-external-body">
           <div class="recipe-external-copy">
