@@ -11127,3 +11127,307 @@ button.day-meal{cursor:pointer}
     max-width:34% !important;
   }
 }
+
+
+/* =========================================================
+   V52 – Stundenplan-Popup: ruhige Kartenoptik wie der Entwurf
+   ========================================================= */
+
+#manualTimetableDialog{
+  padding:14px !important;
+}
+
+#manualTimetableDialog .timetable-dialog-card{
+  width:min(1120px,calc(100vw - 28px)) !important;
+  max-width:1120px !important;
+  min-height:690px !important;
+  padding:26px 28px 24px !important;
+  border-radius:26px !important;
+  background:
+    linear-gradient(145deg,
+      rgba(255,253,251,.985),
+      rgba(252,250,252,.985)
+    ) !important;
+  border:1px solid rgba(199,183,176,.34) !important;
+  box-shadow:0 22px 55px rgba(67,55,50,.16) !important;
+  overflow:hidden !important;
+}
+
+/* Kopfbereich */
+#manualTimetableDialog .dialog-head{
+  position:relative !important;
+  min-height:205px !important;
+  padding:0 360px 0 255px !important;
+  margin:0 0 12px !important;
+  display:block !important;
+}
+
+#manualTimetableDialog .dialog-head > div:first-child{
+  position:relative !important;
+  z-index:8 !important;
+}
+
+#manualTimetableDialog #manualTimetableTitle{
+  margin:0 !important;
+  color:#3f444c !important;
+  font-size:1.75rem !important;
+  line-height:1.15 !important;
+  font-weight:650 !important;
+}
+
+#manualTimetableDialog .tt-person-subtitle{
+  position:relative !important;
+  z-index:8 !important;
+  margin-top:10px !important;
+  color:#817a86 !important;
+  font-size:.98rem !important;
+  line-height:1.35 !important;
+}
+#manualTimetableDialog .tt-person-subtitle::before{
+  content:"♥";
+  margin-right:7px;
+  color:#9a7cb3;
+  font-size:.9em;
+}
+
+/* Personenwahl als schmale linke Navigationsspalte */
+#manualTimetableDialog .timetable-switcher{
+  position:absolute !important;
+  left:0 !important;
+  top:72px !important;
+  width:205px !important;
+  display:flex !important;
+  flex-direction:column !important;
+  gap:8px !important;
+  margin:0 !important;
+  z-index:12 !important;
+}
+
+#manualTimetableDialog .timetable-switch{
+  width:100% !important;
+  min-height:42px !important;
+  padding:7px 14px !important;
+  border:1px solid transparent !important;
+  border-radius:15px !important;
+  background:transparent !important;
+  color:#a2949b !important;
+  font-family:"Segoe Print","Bradley Hand","Comic Sans MS",cursive !important;
+  font-size:1.08rem !important;
+  font-weight:400 !important;
+  text-align:left !important;
+  opacity:.82 !important;
+  box-shadow:none !important;
+}
+
+#manualTimetableDialog .timetable-switch:hover{
+  background:rgba(247,242,245,.68) !important;
+  color:#675d64 !important;
+  opacity:1 !important;
+  transform:none !important;
+}
+
+#manualTimetableDialog .timetable-switch.is-active{
+  background:linear-gradient(90deg,rgba(242,237,248,.92),rgba(242,246,238,.82)) !important;
+  border-color:rgba(181,166,193,.28) !important;
+  color:#4f4b57 !important;
+  font-size:1.21rem !important;
+  font-weight:650 !important;
+  opacity:1 !important;
+  box-shadow:0 4px 13px rgba(110,92,118,.06) !important;
+}
+#manualTimetableDialog .timetable-switch.is-active::before{
+  content:"✦";
+  display:inline-block;
+  margin-right:8px;
+  color:#b19162 !important;
+  font-size:.72em;
+}
+
+/* Ausgewählte Illustration: richtig groß, aber nur eine */
+#manualTimetableDisplay .tt-person-illustration{
+  position:absolute !important;
+  right:58px !important;
+  top:18px !important;
+  z-index:7 !important;
+  display:block !important;
+  width:300px !important;
+  height:190px !important;
+  max-width:none !important;
+  opacity:.88 !important;
+  object-fit:contain !important;
+  object-position:center center !important;
+  pointer-events:none !important;
+  filter:none !important;
+}
+
+/* Fina ist hochformatiger, daher mehr Höhe */
+#manualTimetableDisplay .tt-fina-illustration{
+  width:255px !important;
+  height:198px !important;
+  right:78px !important;
+  opacity:.92 !important;
+}
+
+/* Lou sitzt kompakter */
+#manualTimetableDisplay .tt-lou-illustration{
+  width:300px !important;
+  height:190px !important;
+  opacity:.88 !important;
+}
+
+/* Mama etwas ruhiger */
+#manualTimetableDisplay .tt-mama-illustration{
+  width:285px !important;
+  height:188px !important;
+  opacity:.80 !important;
+}
+
+/* Tabelle wie eine ruhige Kartenfläche */
+#manualTimetableDisplay{
+  position:static !important;
+  margin-top:0 !important;
+}
+
+#manualTimetableDisplay .tt-table-wrap{
+  padding:0 !important;
+  border-radius:18px !important;
+  overflow:hidden !important;
+  background:rgba(255,255,255,.72) !important;
+}
+
+#manualTimetableDisplay .tt-view-table{
+  border-collapse:separate !important;
+  border-spacing:5px 6px !important;
+  width:100% !important;
+}
+
+#manualTimetableDisplay .tt-view-table th,
+#manualTimetableDisplay .tt-view-table td{
+  border:0 !important;
+  border-radius:11px !important;
+  text-align:center !important;
+  vertical-align:middle !important;
+}
+
+#manualTimetableDisplay .tt-view-table th{
+  background:#ece8f3 !important;
+  color:#5e5866 !important;
+  font-weight:650 !important;
+}
+
+#manualTimetableDisplay .tt-view-table td{
+  background:rgba(251,250,252,.94) !important;
+}
+
+#manualTimetableDisplay .tt-view-table tr:nth-child(2) td{
+  background:#e7eff1 !important;
+}
+
+/* Mama etwas oliv, Fina etwas bunter, Lou lavendel */
+#manualTimetableDisplay .tt-mama th{
+  background:#e7eee2 !important;
+  color:#596653 !important;
+}
+
+#manualTimetableDisplay .tt-fina th:nth-child(2){background:#e4f1ee !important;}
+#manualTimetableDisplay .tt-fina th:nth-child(3){background:#f2e8ef !important;}
+#manualTimetableDisplay .tt-fina th:nth-child(4){background:#f6edda !important;}
+#manualTimetableDisplay .tt-fina th:nth-child(5){background:#e4ebf5 !important;}
+#manualTimetableDisplay .tt-fina th:nth-child(6){background:#ebe6f4 !important;}
+
+/* X hübscher und ganz rechts oben */
+#manualTimetableDialog #closeManualTimetableDialog{
+  position:absolute !important;
+  right:0 !important;
+  top:0 !important;
+  z-index:30 !important;
+  width:42px !important;
+  height:42px !important;
+  min-width:42px !important;
+  padding:0 !important;
+  border:1px solid rgba(194,169,154,.38) !important;
+  border-radius:50% !important;
+  background:rgba(255,253,251,.96) !important;
+  color:#675d58 !important;
+  font-size:0 !important;
+  display:grid !important;
+  place-items:center !important;
+  box-shadow:0 5px 16px rgba(80,63,55,.08) !important;
+}
+#manualTimetableDialog #closeManualTimetableDialog::before{
+  content:"×";
+  font-family:Arial,sans-serif !important;
+  font-size:23px !important;
+  font-weight:300 !important;
+  line-height:1 !important;
+}
+#manualTimetableDialog #closeManualTimetableDialog:hover{
+  background:#fff7f3 !important;
+  border-color:rgba(186,143,124,.58) !important;
+}
+
+/* Unterer Schließenknopf dezenter */
+#manualTimetableDialog .dialog-actions button{
+  border-radius:999px !important;
+  background:#fffdfb !important;
+  border:1px solid rgba(202,181,170,.44) !important;
+}
+
+/* Responsiv */
+@media(max-width:900px){
+  #manualTimetableDialog .timetable-dialog-card{
+    min-height:620px !important;
+    padding:22px 20px !important;
+  }
+  #manualTimetableDialog .dialog-head{
+    min-height:180px !important;
+    padding:0 270px 0 190px !important;
+  }
+  #manualTimetableDialog .timetable-switcher{
+    width:155px !important;
+    top:68px !important;
+  }
+  #manualTimetableDisplay .tt-person-illustration{
+    right:45px !important;
+    width:225px !important;
+    height:165px !important;
+  }
+  #manualTimetableDisplay .tt-fina-illustration{
+    width:190px !important;
+    height:170px !important;
+  }
+}
+
+@media(max-width:650px){
+  #manualTimetableDialog .dialog-head{
+    min-height:165px !important;
+    padding:0 135px 0 128px !important;
+  }
+  #manualTimetableDialog .timetable-switcher{
+    width:108px !important;
+    top:66px !important;
+  }
+  #manualTimetableDialog .timetable-switch{
+    min-height:34px !important;
+    padding:5px 8px !important;
+    font-size:.9rem !important;
+  }
+  #manualTimetableDialog .timetable-switch.is-active{
+    font-size:.98rem !important;
+  }
+  #manualTimetableDisplay .tt-person-illustration,
+  #manualTimetableDisplay .tt-lou-illustration,
+  #manualTimetableDisplay .tt-fina-illustration,
+  #manualTimetableDisplay .tt-mama-illustration{
+    right:38px !important;
+    top:22px !important;
+    width:118px !important;
+    height:125px !important;
+  }
+  #manualTimetableDialog #manualTimetableTitle{
+    font-size:1.3rem !important;
+  }
+  #manualTimetableDialog .tt-person-subtitle{
+    display:none !important;
+  }
+}
