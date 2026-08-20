@@ -6775,11 +6775,97 @@ function recipeMeasureType(line, allowBeakers = false) {
   return null;
 }
 
+
+function measureSvgHtml(type, color = "neutral", title = "") {
+  const palette = {
+    blue:   { fill:"#2e95d7", stroke:"#176a9e" },
+    red:    { fill:"#ef4c52", stroke:"#b9272d" },
+    green:  { fill:"#56b85c", stroke:"#2e7d33" },
+    yellow: { fill:"#f5cf3e", stroke:"#b78e12" },
+    orange: { fill:"#f29a42", stroke:"#b8641e" },
+    purple: { fill:"#a76bd8", stroke:"#7243a0" },
+    neutral:{ fill:"#f8f7f2", stroke:"#68736e" }
+  };
+  const p = palette[color] || palette.neutral;
+  const label = escapeHtml(title || "Maß");
+
+  const common = `viewBox="0 0 64 48" role="img" aria-label="${label}" focusable="false"`;
+
+  if (type === "beaker") {
+    return `<svg class="measure-svg measure-svg-cup" ${common}>
+      <path d="M12 11h34l-3 27c-.4 3.6-3.1 6-6.4 6H21.4c-3.3 0-6-2.4-6.4-6L12 11Z"
+        fill="${p.fill}" stroke="${p.stroke}" stroke-width="2"/>
+      <path d="M11 11h36" fill="none" stroke="${p.stroke}" stroke-width="2.2" stroke-linecap="round"/>
+      <path d="M46 18h5.5c4.2 0 6.5 3.2 6.5 7s-2.3 7-6.5 7H44"
+        fill="none" stroke="${p.stroke}" stroke-width="2" stroke-linecap="round"/>
+      <path d="M20 16v20" stroke="rgba(255,255,255,.35)" stroke-width="2" stroke-linecap="round"/>
+    </svg>`;
+  }
+
+  if (type === "yogurt") {
+    return `<svg class="measure-svg measure-svg-yogurt" ${common}>
+      <path d="M19 8h26l-3 32c-.3 3-2.5 5-5.3 5H27.3c-2.8 0-5-2-5.3-5L19 8Z"
+        fill="#fbfbf8" stroke="#68736e" stroke-width="1.8"/>
+      <path d="M17 8h30" stroke="#68736e" stroke-width="2" stroke-linecap="round"/>
+      <path d="M22 13h20" stroke="#d8dfda" stroke-width="2"/>
+      <path d="M25 18v19" stroke="#eef1ed" stroke-width="3" stroke-linecap="round"/>
+    </svg>`;
+  }
+
+  if (type === "topfen") {
+    return `<svg class="measure-svg measure-svg-topfen" ${common}>
+      <path d="M12 17h40l-3.8 22c-.5 2.7-2.8 4.7-5.6 4.7H21.4c-2.8 0-5.1-2-5.6-4.7L12 17Z"
+        fill="#fbfbf8" stroke="#68736e" stroke-width="1.7"/>
+      <rect x="9" y="11" width="46" height="8" rx="2.5"
+        fill="#ffffff" stroke="#68736e" stroke-width="1.7"/>
+      <path d="M15 15h34" stroke="#d7ded9" stroke-width="1.4"/>
+    </svg>`;
+  }
+
+  if (type === "tbsp") {
+    return `<svg class="measure-svg measure-svg-tbsp" ${common}>
+      <ellipse cx="15" cy="24" rx="11" ry="8"
+        fill="#f5f6f3" stroke="#68736e" stroke-width="1.9"/>
+      <path d="M26 24H59" stroke="#68736e" stroke-width="2.3" stroke-linecap="round"/>
+      <path d="M8 20c3-2 8-2 12 0" stroke="#fff" stroke-width="1.6" stroke-linecap="round" opacity=".8"/>
+    </svg>`;
+  }
+
+  if (type === "tsp") {
+    return `<svg class="measure-svg measure-svg-tsp" ${common}>
+      <ellipse cx="13" cy="24" rx="7.5" ry="5.3"
+        fill="#f5f6f3" stroke="#68736e" stroke-width="1.7"/>
+      <path d="M20.5 24H49" stroke="#68736e" stroke-width="1.9" stroke-linecap="round"/>
+      <path d="M9 21.5c2-1 5-1 7 0" stroke="#fff" stroke-width="1.2" stroke-linecap="round" opacity=".8"/>
+    </svg>`;
+  }
+
+  if (type === "salt") {
+    return `<svg class="measure-svg measure-svg-salt" ${common}>
+      <path d="M22 15h20l2.5 24c.3 3-1.7 5-4.6 5H24.1c-2.9 0-4.9-2-4.6-5L22 15Z"
+        fill="#fbfbf8" stroke="#68736e" stroke-width="1.7"/>
+      <rect x="21" y="9" width="22" height="8" rx="2.8"
+        fill="#dce2de" stroke="#68736e" stroke-width="1.6"/>
+      <circle cx="26" cy="13" r="1.2" fill="#68736e"/>
+      <circle cx="32" cy="12" r="1.2" fill="#68736e"/>
+      <circle cx="38" cy="13" r="1.2" fill="#68736e"/>
+      <circle cx="29" cy="8" r="1.15" fill="#8b938f"/>
+      <circle cx="35" cy="6.5" r="1.15" fill="#8b938f"/>
+      <circle cx="41" cy="8.5" r="1.15" fill="#8b938f"/>
+      <circle cx="24" cy="6" r="1.05" fill="#8b938f"/>
+    </svg>`;
+  }
+
+  return "";
+}
+
 function recipeMeasureIconHtml(line, recipe) {
   const measure = recipeMeasureType(line, recipeBeakerKitchen(recipe));
   if (!measure) return "";
-  const colorClass = measure.color ? ` measure-${measure.color}` : "";
-  return `<span class="recipe-measure-icon measure-${measure.type}${colorClass}" title="${escapeHtml(measure.label)}" aria-label="${escapeHtml(measure.label)}"><i></i></span>`;
+  if (measure.type === "egg" || measure.type === "liquid") return "";
+  return `<span class="recipe-measure-icon recipe-measure-svg-wrap" title="${escapeHtml(measure.label)}">
+    ${measureSvgHtml(measure.type, measure.color || "neutral", measure.label)}
+  </span>`;
 }
 
 
@@ -6817,19 +6903,21 @@ function ingredientDisplayName(line) {
 function childMeasureIconHtml(mapping) {
   const unit = mapping?.unit || "cup";
   const color = mapping?.color || "blue";
-  const cls = {
-    cup:`measure-beaker measure-${color}`,
-    quark:"measure-topfen",
-    yogurt:"measure-yogurt",
-    tbsp:"measure-tbsp",
-    tsp:"measure-tsp",
-    pinch:"measure-salt"
-  }[unit] || "measure-beaker";
+  const type = {
+    cup:"beaker",
+    quark:"topfen",
+    yogurt:"yogurt",
+    tbsp:"tbsp",
+    tsp:"tsp",
+    pinch:"salt"
+  }[unit] || "beaker";
   const title = {
     cup:"Becher", quark:"Topfenbecher", yogurt:"Joghurtbecher",
     tbsp:"Esslöffel", tsp:"Teelöffel", pinch:"Prise"
   }[unit] || "Maß";
-  return `<span class="recipe-measure-icon ${cls}" title="${title}" aria-label="${title}"><i></i></span>`;
+  return `<span class="recipe-measure-icon recipe-measure-svg-wrap" title="${title}">
+    ${measureSvgHtml(type, color, title)}
+  </span>`;
 }
 
 function childMeasureCompactHtml(mapping) {
