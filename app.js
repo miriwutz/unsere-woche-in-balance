@@ -1750,7 +1750,7 @@ const eventHtml = (normalEventsForHeader.length || multiDayEventLanes.length) ? 
         <div class="day-todos-title">Schule</div>
         ${schoolTasksForDate.map(t => `
           <label class="school-week-item child-${t.childId} ${t.done ? "done" : ""}">
-            <button class="school-week-check child-symbol-check ${t.done ? "done" : ""}" data-child="${t.childId}" data-id="${t.id}" type="button" aria-label="${t.done ? "Erledigt" : "Als erledigt markieren"}">${t.childId === "1" ? (state.familySettings.c?.icon || "⭐") : (state.familySettings.d?.icon || "🌙")}${t.done ? "✓" : ""}</button>
+            <button class="school-week-check child-symbol-check ${t.done ? "done" : ""}" data-child="${t.childId}" data-id="${t.id}" type="button" aria-label="${t.done ? "Erledigt" : "Als erledigt markieren"}"><span class="child-symbol-glyph">${schoolTaskIcon(t,t.childId)}</span>${t.done ? `<span class="child-symbol-done">✓</span>` : ""}</button>
             <span class="school-child-badge child-${t.childId}">${t.childId === "1" ? "L" : "F"}</span>
             <span class="school-week-copy">
               <strong>${escapeHtml(t.childName)}</strong> · ${escapeHtml(t.text)}
@@ -2885,7 +2885,7 @@ function renderSchool(){
     if (manualViewBtn) manualViewBtn.classList.toggle("hidden", !hasManualTimetable(c));
     const tasks=[...c.tasks].sort((a,b)=>(a.done-b.done)||((a.due||"9999").localeCompare(b.due||"9999")));
     te.innerHTML=tasks.length?tasks.map(t=>`<div class="school-task ${t.done?"done":""}">
-      <button class="school-check child-symbol-check ${t.done?"done":""}" data-child="${id}" data-id="${t.id}" type="button">${id === "1" ? (state.familySettings.c?.icon || "⭐") : (state.familySettings.d?.icon || "🌙")}${t.done ? "✓" : ""}</button>
+      <button class="school-check child-symbol-check ${t.done?"done":""}" data-child="${id}" data-id="${t.id}" type="button" aria-label="${t.done ? "Erledigt" : "Als erledigt markieren"}"><span class="child-symbol-glyph">${schoolTaskIcon(t,id)}</span>${t.done ? `<span class="child-symbol-done">✓</span>` : ""}</button>
       <div><div class="school-task-text">${escapeHtml(t.text)}</div><div class="school-meta"><span>${{homework:"☀ Hausübung",test:"✎ Test",bring:"♥ Mitbringen",appointment:"○ Termin",other:"✦ Schule"}[t.type] || "✦ Schule"}</span>${t.subject?`<span>${escapeHtml(t.subject)}</span>`:""}${t.due?`<span>bis ${parseLocalDate(t.due).toLocaleDateString("de-AT",{day:"2-digit",month:"2-digit"})}</span>`:""}</div></div>
       <button class="school-del" data-kind="task" data-child="${id}" data-id="${t.id}">×</button></div>`).join(""):'<div class="school-empty">Gerade ist hier nichts offen. 🌿</div>';
     le.innerHTML=c.links.length?c.links.map(x=>`<div class="school-link"><a href="${escapeHtml(x.url)}" target="_blank" rel="noopener">${escapeHtml(x.name)}</a><button class="school-del" data-kind="link" data-child="${id}" data-id="${x.id}">×</button></div>`).join(""):'<span class="school-empty-inline">Noch keine Lernlinks hinterlegt.</span>';
@@ -2916,9 +2916,11 @@ function addSchoolTask(id){
   const so=document.querySelector(`#schoolSubjectOther${id}`);
   const d=document.querySelector(`#schoolDue${id}`);
   const y=document.querySelector(`#schoolType${id}`);
+  const iconSelect=document.querySelector(`#schoolTaskIcon${id}`);
   if(!t.value.trim())return;
 
   const subject = s.value === "other" ? so.value.trim() : s.value;
+  const taskIcon = iconSelect?.value || schoolChildDefaultIcon(id);
 
   state.school.children[id].tasks.push({
     id:uid(),
@@ -2926,6 +2928,7 @@ function addSchoolTask(id){
     subject,
     due:d.value,
     type:y.value,
+    icon:taskIcon,
     done:false
   });
 
@@ -2935,6 +2938,12 @@ function addSchoolTask(id){
   so.classList.add("hidden");
   d.value="";
   y.value="homework";
+  if(iconSelect){
+    const defaultIcon=schoolChildDefaultIcon(id);
+    iconSelect.innerHTML=schoolTaskIconOptions(defaultIcon);
+    iconSelect.value=defaultIcon;
+    delete iconSelect.dataset.userChanged;
+  }
   save();
   renderSchool();
 }
@@ -10799,9 +10808,48 @@ document.addEventListener("click", () => {
 
 // ===== Persönliche Kinderansicht Schule =====
 const schoolChildQuotes = {
-  "1": ["Du musst nicht alles auf einmal können.","Kleine Schritte bringen dich richtig weit.","Du kannst mehr, als du gerade denkst.","Dein Tempo ist völlig okay.","Heute ist ein guter Tag, um etwas zu schaffen.","Nicht perfekt. Einfach anfangen."],
-  "2": ["Du kannst das! 🌟","Jeder kleine Schritt zählt.","Probieren macht dich stärker.","Heute wartet etwas Cooles auf dich.","Fehler? Egal. Weiter geht’s!","Du wächst mit jeder Aufgabe ein Stück."]
+  "1": [
+    "Du musst nicht alles auf einmal können.",
+    "Kleine Schritte bringen dich richtig weit.",
+    "Du kannst mehr, als du gerade denkst.",
+    "Dein Tempo ist völlig okay.",
+    "Heute ist ein guter Tag, um etwas zu schaffen.",
+    "Nicht perfekt. Einfach anfangen.",
+    "Du musst niemandem etwas beweisen – nur dir selbst treu bleiben.",
+    "Was heute schwer ist, kann morgen schon leichter sein."
+  ],
+  "2": [
+    "Du kannst das! 🌟",
+    "Jeder kleine Schritt zählt.",
+    "Probieren macht dich stärker.",
+    "Heute wartet etwas Cooles auf dich.",
+    "Fehler? Egal. Weiter geht’s!",
+    "Du wächst mit jeder Aufgabe ein Stück.",
+    "Mut heißt auch: einfach einmal anfangen.",
+    "Du hast schon so viel geschafft – das hier schaffst du auch."
+  ]
 };
+
+const schoolChildIcons = [
+  "🌙","⭐","✨","💫","☀️","🌈","🌸","🌼","🌻","🍄","🌿","🍀","🌱","🐚",
+  "🦋","🐞","🐝","🐾","🐈","🐕","🐇","🦊","🐼","🐨","🦄","🐴","🐎","🐬",
+  "🐳","🦜","🦉","🐢","🐸","🐙","🐧","🦦","🦥","🦔","🐿️","💩"
+];
+
+function schoolChildDefaultIcon(id){
+  return id === "1" ? (state.familySettings.c?.icon || "⭐") : (state.familySettings.d?.icon || "🌙");
+}
+
+function schoolTaskIcon(task, childId){
+  return task?.icon || schoolChildDefaultIcon(childId);
+}
+
+function schoolTaskIconOptions(selected){
+  const value = selected || "⭐";
+  return schoolChildIcons.map(icon =>
+    `<option value="${icon}" ${icon === value ? "selected" : ""}>${icon}</option>`
+  ).join("");
+}
 let activeSchoolChild = null;
 function schoolMemberKey(id){ return id === "1" ? "c" : "d"; }
 function renderSchoolChildDashboard(id){
@@ -10819,7 +10867,20 @@ function renderSchoolChildDashboard(id){
   const quote=document.querySelector("#schoolBannerQuote"); if(quote){const a=schoolChildQuotes[id]; quote.textContent=a[Math.floor(Date.now()/86400000)%a.length];}
   const bi=document.querySelector("#schoolBannerIcon"); if(bi) bi.textContent=icon;
   const host=document.querySelector("#schoolIconChoices");
-  if(host){host.innerHTML=["🌙","⭐","🐾","🌸","🍄","🦋","🐚","☀️","🌿","💫","💩"].map(x=>`<button type="button" class="school-icon-choice ${x===icon?"active":""}" data-icon="${x}">${x}</button>`).join("");}
+  if(host){
+    host.innerHTML=schoolChildIcons.map(x=>
+      `<button type="button" class="school-icon-choice ${x===icon?"active":""}" data-icon="${x}" aria-label="Zeichen ${x}">${x}</button>`
+    ).join("");
+  }
+
+  // Beim Öffnen der Kinderansicht wird das persönliche Zeichen zugleich
+  // als Standard für NEUE Aufgaben vorausgewählt. Bereits vorhandene
+  // Aufgaben behalten ihr eigenes gespeichertes Zeichen.
+  const taskIconSelect=document.querySelector(`#schoolTaskIcon${id}`);
+  if(taskIconSelect && !taskIconSelect.dataset.userChanged){
+    taskIconSelect.innerHTML=schoolTaskIconOptions(icon);
+    taskIconSelect.value=icon;
+  }
 }
 function closeSchoolChildDashboard(){
   activeSchoolChild=null;
@@ -10830,5 +10891,34 @@ document.querySelectorAll("[data-open-school-child]").forEach(b=>b.addEventListe
 document.querySelector("#backToSchoolChooser")?.addEventListener("click",closeSchoolChildDashboard);
 document.querySelector("#schoolIconChoices")?.addEventListener("click",e=>{
   const b=e.target.closest(".school-icon-choice"); if(!b||!activeSchoolChild)return;
-  const key=schoolMemberKey(activeSchoolChild); state.familySettings[key].icon=b.dataset.icon; save(); renderAll(); renderSchoolChildDashboard(activeSchoolChild);
+  const key=schoolMemberKey(activeSchoolChild);
+  state.familySettings[key].icon=b.dataset.icon;
+  const taskIconSelect=document.querySelector(`#schoolTaskIcon${activeSchoolChild}`);
+  if(taskIconSelect){
+    taskIconSelect.innerHTML=schoolTaskIconOptions(b.dataset.icon);
+    taskIconSelect.value=b.dataset.icon;
+    delete taskIconSelect.dataset.userChanged;
+  }
+  save();
+  renderAll();
+  renderSchoolChildDashboard(activeSchoolChild);
 });
+
+// Wenn "Schule" in der Hauptnavigation angeklickt wird, immer auf die
+// Kinder-Auswahlseite zurückkehren. So ist die Navigation jederzeit klar.
+document.querySelector('.tab[data-view="school"]')?.addEventListener("click", () => {
+  closeSchoolChildDashboard();
+});
+
+// Aufgaben-Zeichen-Auswahl: bewusst pro Aufgabe möglich.
+// Standard bleibt das persönliche Zeichen des Kindes.
+["1","2"].forEach(id => {
+  const select=document.querySelector(`#schoolTaskIcon${id}`);
+  if(!select) return;
+  select.innerHTML=schoolTaskIconOptions(schoolChildDefaultIcon(id));
+  select.value=schoolChildDefaultIcon(id);
+  select.addEventListener("change", () => {
+    select.dataset.userChanged="1";
+  });
+});
+
