@@ -1607,7 +1607,6 @@ function renderWeek() {
 
     const todoHtml = todos.length ? `
       <div class="day-todos">
-        <div class="day-todos-title">To-dos</div>
         ${groupTodosByPerson(visibleTodos).map(([groupKey, groupItems]) => `
           <div class="person-todo-group grouped-family-block ${groupAccentClass(groupKey)}"
                style="${groupKey === "shared"
@@ -1697,17 +1696,13 @@ const singleDayEvents = events
   .filter(t => !quietBottomCategories.has(t.eventCategory || "normal"))
   .sort((a,b) => (a.time || "").localeCompare(b.time || ""));
 
-const normalEventsForHeader = events.filter(t => !quietBottomCategories.has(t.eventCategory || "normal"));
-const hasVisibleEventToday = normalEventsForHeader.length > 0;
-const eventHtml = (normalEventsForHeader.length || multiDayEventLanes.length) ? `
-  <div class="day-events ${hasVisibleEventToday ? "" : "day-events-placeholder-only"}">
-    ${hasVisibleEventToday ? `<div class="day-todos-title">Termine</div>` : ""}
-    <div class="multiday-event-lanes">
-      ${multiDayEventLanes.map(t => occursOnDate(t, date)
-        ? `<div class="multiday-event-lane">${renderEventCard(t)}</div>`
-        : `<div class="multiday-event-lane multiday-event-placeholder" aria-hidden="true"></div>`
-      ).join("")}
-    </div>
+const multiDayEventsToday = multiDayEventLanes
+  .filter(t => occursOnDate(t, date))
+  .sort((a,b) => (a.time || "").localeCompare(b.time || "") || String(a.id).localeCompare(String(b.id)));
+
+const eventHtml = (multiDayEventsToday.length || singleDayEvents.length) ? `
+  <div class="day-events">
+    ${multiDayEventsToday.map(t => `<div class="multiday-event-lane">${renderEventCard(t)}</div>`).join("")}
     ${singleDayEvents.map(t => renderEventCard(t)).join("")}
   </div>
 ` : "";
@@ -1731,7 +1726,6 @@ const eventHtml = (normalEventsForHeader.length || multiDayEventLanes.length) ? 
     const mealRecipe = resolveMealRecipe(mealRecipeId, mealLabel);
     const mealHtml = mealLabel || mealUrl ? `
       <div class="day-meal-section">
-        <div class="day-meal-kicker">Essen</div>
         ${mealRecipe ? `
           <button type="button" class="day-meal day-meal-recipe" data-recipe-id="${mealRecipe.id}">
             <span>${normalizedRecipeSource(mealRecipe) === "external" ? "🔗" : "📖"}</span>
@@ -6944,6 +6938,162 @@ document.querySelectorAll(".shopping-delete").forEach(button => {
 });
 }
 
+
+// ===== EINKAUF – app-eigene Vorschläge =====
+const SHOPPING_SUGGESTION_KEY = "balanceProd.shoppingSuggestionHistory";
+
+function loadShoppingSuggestionHistory(){
+  try{
+    const raw=JSON.parse(localStorage.getItem(SHOPPING_SUGGESTION_KEY) || "[]");
+    return Array.isArray(raw) ? raw : [];
+  }catch(e){
+    return [];
+  }
+}
+
+function saveShoppingSuggestionHistory(list){
+  localStorage.setItem(SHOPPING_SUGGESTION_KEY, JSON.stringify(list.slice(0,250)));
+}
+
+function rememberShoppingSuggestion(item){
+  const name=String(item?.name || "").trim();
+  if(!name) return;
+
+  const history=loadShoppingSuggestionHistory();
+  const key=name.toLocaleLowerCase("de-AT");
+  const existing=history.find(x => String(x.name || "").toLocaleLowerCase("de-AT") === key);
+
+  if(existing){
+    existing.name=name;
+    existing.category=item.category || existing.category || "other";
+    existing.when=item.when || existing.when || "now";
+    existing.store=item.store || existing.store || "";
+    existing.count=Number(existing.count || 0)+1;
+    existing.lastUsed=Date.now();
+  }else{
+    history.push({
+      name,
+      category:item.category || "other",
+      when:item.when || "now",
+      store:item.store || "",
+      count:1,
+      lastUsed:Date.now()
+    });
+  }
+
+  history.sort((a,b) =>
+    Number(b.count || 0)-Number(a.count || 0) ||
+    Number(b.lastUsed || 0)-Number(a.lastUsed || 0)
+  );
+  saveShoppingSuggestionHistory(history);
+}
+
+function shoppingSuggestionPool(){
+  const history=loadShoppingSuggestionHistory();
+
+  // Noch aktive Einträge dürfen ebenfalls vorgeschlagen werden.
+  (shoppingItems || []).forEach(item => {
+    const key=String(item?.name || "").trim().toLocaleLowerCase("de-AT");
+    if(!key) return;
+    if(!history.some(x => String(x.name || "").trim().toLocaleLowerCase("de-AT") === key)){
+      history.push({
+        name:item.name,
+        category:item.category || "other",
+        when:item.when || "now",
+        store:item.store || "",
+        count:1,
+        lastUsed:Number(item.createdAt || Date.now())
+      });
+    }
+  });
+
+  return history;
+}
+
+function hideShoppingSuggestions(){
+  document.querySelector("#shoppingSuggestions")?.classList.add("hidden");
+}
+
+function renderShoppingSuggestions(query=""){
+  const popup=document.querySelector("#shoppingSuggestions");
+  const input=document.querySelector("#shoppingItemInput");
+  if(!popup || !input) return;
+
+  const q=String(query || "").trim().toLocaleLowerCase("de-AT");
+  if(q.length < 1){
+    hideShoppingSuggestions();
+    return;
+  }
+
+  const matches=shoppingSuggestionPool()
+    .filter(x => String(x.name || "").toLocaleLowerCase("de-AT").includes(q))
+    .sort((a,b) => {
+      const an=String(a.name || "").toLocaleLowerCase("de-AT");
+      const bn=String(b.name || "").toLocaleLowerCase("de-AT");
+      const aStarts=an.startsWith(q) ? 0 : 1;
+      const bStarts=bn.startsWith(q) ? 0 : 1;
+      return aStarts-bStarts ||
+        Number(b.count || 0)-Number(a.count || 0) ||
+        Number(b.lastUsed || 0)-Number(a.lastUsed || 0);
+    })
+    .slice(0,6);
+
+  if(!matches.length){
+    hideShoppingSuggestions();
+    return;
+  }
+
+  popup.innerHTML=matches.map((x,i)=>`
+    <button type="button"
+            class="shopping-suggestion-item"
+            data-suggestion-index="${i}"
+            role="option">
+      <span class="shopping-suggestion-name">${escapeHtml(x.name)}</span>
+      <span class="shopping-suggestion-meta">
+        ${shoppingCategories[x.category]?.icon || "📦"}
+        ${escapeHtml(shoppingCategories[x.category]?.label || "Sonstiges")}
+        ${x.store ? ` · ${escapeHtml(x.store)}` : ""}
+      </span>
+    </button>
+  `).join("");
+  popup.classList.remove("hidden");
+
+  popup.querySelectorAll(".shopping-suggestion-item").forEach(btn=>{
+    btn.addEventListener("mousedown", e => e.preventDefault());
+    btn.addEventListener("click", ()=>{
+      const suggestion=matches[Number(btn.dataset.suggestionIndex)];
+      if(!suggestion) return;
+
+      input.value=suggestion.name || "";
+
+      const category=document.querySelector("#shoppingCategory");
+      const when=document.querySelector("#shoppingWhen");
+      const store=document.querySelector("#shoppingSaleStore");
+
+      if(category && suggestion.category) category.value=suggestion.category;
+      if(when && suggestion.when) when.value=suggestion.when;
+      if(store) store.value=suggestion.store || "";
+
+      hideShoppingSuggestions();
+      input.focus();
+    });
+  });
+}
+
+const shoppingSuggestInput=document.querySelector("#shoppingItemInput");
+shoppingSuggestInput?.addEventListener("input", e => {
+  renderShoppingSuggestions(e.currentTarget.value);
+});
+shoppingSuggestInput?.addEventListener("focus", e => {
+  if(e.currentTarget.value.trim()) renderShoppingSuggestions(e.currentTarget.value);
+});
+shoppingSuggestInput?.addEventListener("keydown", e => {
+  if(e.key === "Escape") hideShoppingSuggestions();
+});
+document.addEventListener("click", e => {
+  if(!e.target.closest?.(".shopping-suggest-wrap")) hideShoppingSuggestions();
+});
+
 document.querySelector("#addShoppingItemBtn")
   ?.addEventListener("click", () => {
 
@@ -6973,6 +7123,7 @@ const newItem = {
 };
 
 shoppingItems.push(newItem);
+rememberShoppingSuggestion(newItem);
 state.shopping = shoppingItems;
 saveLocal();
 
