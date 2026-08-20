@@ -12480,3 +12480,151 @@ button.day-meal{cursor:pointer}
 #recipeDetailBody.recipe-detail-child-mode .recipe-child-checkable:has(.recipe-child-ingredient) > .recipe-adult-ingredient{
   display:none !important;
 }
+
+
+/* =========================================================
+   V6 – Eltern-Rezept abhaken + Kinder-Dashboard-Kacheln
+   ========================================================= */
+
+/* Elternansicht: schlichtes Abhaken/Durchstreichen.
+   Kinderansicht bekommt weiterhin den vorhandenen Regenbogenstil. */
+.recipe-card:not(.recipe-child-mode) .recipe-child-checkable{
+  cursor:pointer !important;
+  border-radius:7px !important;
+  transition:opacity .16s ease,background .16s ease !important;
+}
+.recipe-card:not(.recipe-child-mode) .recipe-child-checkable:hover{
+  background:rgba(235,239,235,.50) !important;
+}
+.recipe-card:not(.recipe-child-mode) .recipe-child-checkable.recipe-child-done{
+  opacity:.48 !important;
+  background:rgba(231,236,231,.42) !important;
+}
+.recipe-card:not(.recipe-child-mode) .recipe-child-checkable.recipe-child-done .recipe-ingredient-text,
+.recipe-card:not(.recipe-child-mode) .recipe-prep-line.recipe-child-done > span:last-child{
+  text-decoration:line-through !important;
+  text-decoration-thickness:1.5px !important;
+  text-decoration-color:#7d7773 !important;
+}
+.recipe-card:not(.recipe-child-mode) .recipe-prep-line.recipe-child-done{
+  text-decoration:line-through !important;
+}
+
+/* Dashboard-Kacheln */
+.school-dashboard-tiles{
+  display:grid !important;
+  grid-template-columns:repeat(3,minmax(0,1fr)) !important;
+  gap:12px !important;
+  margin:18px 0 4px !important;
+  padding-top:16px !important;
+  border-top:1px dashed rgba(173,157,149,.28) !important;
+}
+.school-dashboard-tile{
+  min-height:92px !important;
+  display:grid !important;
+  grid-template-columns:48px minmax(0,1fr) 18px !important;
+  align-items:center !important;
+  gap:10px !important;
+  padding:15px !important;
+  border:1px solid rgba(175,160,154,.24) !important;
+  border-radius:19px !important;
+  background:#fffdfb !important;
+  color:#504a48 !important;
+  text-align:left !important;
+  box-shadow:0 5px 18px rgba(79,65,61,.04) !important;
+}
+.school-dashboard-tile:hover{
+  transform:translateY(-2px) !important;
+  box-shadow:0 9px 22px rgba(79,65,61,.08) !important;
+}
+.school-tile-links{background:linear-gradient(145deg,#f5f1fa,#fbf8fd) !important}
+.school-tile-timetable{background:linear-gradient(145deg,#eef6ef,#f7faf5) !important}
+.school-tile-week{background:linear-gradient(145deg,#fff1ed,#fff8f3) !important}
+
+.school-tile-icon{
+  width:44px !important;
+  height:44px !important;
+  display:grid !important;
+  place-items:center !important;
+  border-radius:14px !important;
+  background:rgba(255,255,255,.76) !important;
+  font-size:1.35rem !important;
+}
+.school-dashboard-tile strong{
+  display:block !important;
+  font-family:"Playfair Display",Georgia,serif !important;
+  font-size:1.05rem !important;
+  font-weight:500 !important;
+}
+.school-dashboard-tile small{
+  display:block !important;
+  margin-top:4px !important;
+  color:#958984 !important;
+  font-size:.74rem !important;
+}
+.school-tile-arrow{
+  color:#a69b96 !important;
+  font-size:1.5rem !important;
+}
+
+/* Lernseiten-Panel: erscheint nur auf Wunsch */
+.school-dashboard-panel{
+  margin-top:12px !important;
+  padding:15px !important;
+  border:1px solid rgba(175,160,154,.24) !important;
+  border-radius:18px !important;
+  background:rgba(255,253,251,.95) !important;
+}
+.school-panel-head{
+  display:flex !important;
+  justify-content:space-between !important;
+  align-items:flex-start !important;
+  gap:12px !important;
+  margin-bottom:12px !important;
+}
+.school-panel-head strong{
+  display:block !important;
+  font-family:"Playfair Display",Georgia,serif !important;
+  font-size:1.05rem !important;
+}
+.school-panel-head span{
+  display:block !important;
+  margin-top:3px !important;
+  color:#998e88 !important;
+  font-size:.74rem !important;
+}
+.school-panel-close{
+  width:30px !important;
+  height:30px !important;
+  border-radius:50% !important;
+  border:1px solid var(--line) !important;
+  background:#fff !important;
+}
+
+/* Stundenplan-Verwaltung bleibt vorhanden, aber unsichtbar,
+   bis sie wirklich gebraucht wird. */
+.school-timetable-manage-hidden{
+  display:none !important;
+  margin-top:12px !important;
+}
+.school-timetable-manage-hidden.is-open{
+  display:block !important;
+  padding:14px !important;
+  border:1px solid rgba(175,160,154,.24) !important;
+  border-radius:18px !important;
+  background:#fafbf8 !important;
+}
+
+/* persönliche Ansicht: alte Überschrift-Teile nicht mehr wie Verwaltung wirken lassen */
+.school-child-dashboard .school-links-title{
+  display:none !important;
+}
+
+@media(max-width:820px){
+  .school-dashboard-tiles{
+    grid-template-columns:1fr !important;
+  }
+  .school-dashboard-tile{
+    min-height:76px !important;
+  }
+}
