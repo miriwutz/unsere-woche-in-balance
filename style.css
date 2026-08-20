@@ -13193,3 +13193,95 @@ body:has(.school-child-dashboard:not(.hidden)) #editTimetablesBtn{
 .school-child-dashboard .school-dashboard-tile:hover{
   transform:translateY(-2px) !important;
 }
+
+
+/* =========================================================
+   V10 – kleine Kinderansicht-Korrekturen + Lou-Rezeptansicht
+   ========================================================= */
+
+/* "Meine Woche": Illustration etwas höher setzen. */
+.child-week-hero>img{
+  transform:translateY(-10px) !important;
+}
+
+/* Der globale Bearbeiten-Button soll in Kinderansichten wirklich nie auftauchen. */
+#openSchoolTimetableEditorBtn{
+  display:none !important;
+}
+
+/* Rezeptbild ist jetzt bewusst interaktiv:
+   linke Hälfte = Lou, rechte Hälfte = Kinderansicht. */
+.recipe-card.recipe-child-mode .recipe-view-switch,
+#recipeDetailBody.recipe-detail-child-mode .recipe-view-switch{
+  cursor:pointer !important;
+  position:relative !important;
+  outline:none !important;
+}
+.recipe-card.recipe-child-mode .recipe-view-switch:hover,
+#recipeDetailBody.recipe-detail-child-mode .recipe-view-switch:hover{
+  filter:brightness(1.015) !important;
+}
+
+/* Kleine, unaufdringliche Rückmeldung nur in Lou-Ansicht. */
+.recipe-card.recipe-child-mode.recipe-lou-mode .recipe-view-switch::after,
+#recipeDetailBody.recipe-detail-child-mode.recipe-detail-lou-mode .recipe-view-switch::after{
+  content:"✨ Lou-Ansicht · normale Mengen";
+  position:absolute !important;
+  left:18px !important;
+  bottom:10px !important;
+  z-index:4 !important;
+  padding:6px 10px !important;
+  border-radius:999px !important;
+  background:rgba(255,255,255,.88) !important;
+  border:1px solid rgba(159,141,171,.22) !important;
+  color:#665c69 !important;
+  font-family:"Aptos","Trebuchet MS","Segoe UI",sans-serif !important;
+  font-size:.68rem !important;
+  box-shadow:0 4px 14px rgba(72,60,68,.07) !important;
+}
+
+/* Lou behält die schöne Kinderkarte, bekommt aber exakt den Erwachsenen-Text:
+   keine Becherumrechnung, keine Kinder-Maßzeichen. */
+.recipe-card.recipe-child-mode.recipe-lou-mode .recipe-child-ingredient,
+#recipeDetailBody.recipe-detail-child-mode.recipe-detail-lou-mode .recipe-child-ingredient{
+  display:none !important;
+}
+
+.recipe-card.recipe-child-mode.recipe-lou-mode .recipe-child-checkable > .recipe-adult-ingredient,
+.recipe-card.recipe-child-mode.recipe-lou-mode .recipe-adult-ingredient:has(+ .recipe-child-ingredient),
+#recipeDetailBody.recipe-detail-child-mode.recipe-detail-lou-mode .recipe-child-checkable > .recipe-adult-ingredient,
+#recipeDetailBody.recipe-detail-child-mode.recipe-detail-lou-mode .recipe-adult-ingredient:has(+ .recipe-child-ingredient){
+  display:inline-flex !important;
+  align-items:center !important;
+}
+
+/* In Lou-Ansicht keine Becherküchen-Auszeichnung, da die normale Rezeptmenge zählt. */
+.recipe-card.recipe-child-mode.recipe-lou-mode .recipe-beaker-badge,
+#recipeDetailBody.recipe-detail-child-mode.recipe-detail-lou-mode .recipe-beaker-badge{
+  display:none !important;
+}
+
+/* Lou-Schrift etwas weniger kindlich als die reine Kinderansicht,
+   trotzdem freundlich und gut lesbar. */
+.recipe-card.recipe-child-mode.recipe-lou-mode .recipe-card-body,
+.recipe-card.recipe-child-mode.recipe-lou-mode .recipe-card-body *,
+#recipeDetailBody.recipe-detail-child-mode.recipe-detail-lou-mode,
+#recipeDetailBody.recipe-detail-child-mode.recipe-detail-lou-mode *{
+  font-family:"Aptos","Trebuchet MS","Segoe UI",sans-serif !important;
+  letter-spacing:.005em !important;
+  word-spacing:normal !important;
+}
+
+/* Erwachsenen-Mengen in Lou-Ansicht kompakt und sauber. */
+.recipe-card.recipe-child-mode.recipe-lou-mode .recipe-column li,
+#recipeDetailBody.recipe-detail-child-mode.recipe-detail-lou-mode .recipe-column li{
+  min-height:32px !important;
+  padding-top:4px !important;
+  padding-bottom:4px !important;
+}
+
+/* Zubereitung bleibt vollständig und weiterhin abhakbar. */
+.recipe-card.recipe-child-mode.recipe-lou-mode .recipe-prep-line,
+#recipeDetailBody.recipe-detail-child-mode.recipe-detail-lou-mode .recipe-prep-line{
+  font-family:"Aptos","Trebuchet MS","Segoe UI",sans-serif !important;
+}
