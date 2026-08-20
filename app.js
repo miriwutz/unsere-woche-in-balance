@@ -11399,27 +11399,3 @@ document.querySelector('.tab[data-view="school"]')?.addEventListener("click", ()
 
 
 
-/* V13: Papa-Overlay niemals über einer Kinderansicht stehen lassen */
-(function(){
-  function closePapaIfChildArea(){
-    const childActive =
-      document.body.classList.contains("child-school-mode") ||
-      document.body.classList.contains("child-view-active") ||
-      document.querySelector(".child-school-view:not([hidden])") ||
-      document.querySelector(".school-child-view:not([hidden])");
-    if(!childActive) return;
-    const modal = document.getElementById("papaOverviewModal");
-    if(modal){
-      modal.classList.remove("open","show","is-open");
-      modal.setAttribute("aria-hidden","true");
-      if(modal.tagName === "DIALOG" && modal.open){
-        try{ modal.close(); }catch(e){}
-      }
-    }
-  }
-  document.addEventListener("click", function(){
-    requestAnimationFrame(closePapaIfChildArea);
-  }, true);
-  window.addEventListener("hashchange", closePapaIfChildArea);
-  setTimeout(closePapaIfChildArea, 0);
-})();
