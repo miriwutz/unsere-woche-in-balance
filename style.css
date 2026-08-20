@@ -11431,3 +11431,334 @@ button.day-meal{cursor:pointer}
     display:none !important;
   }
 }
+
+
+/* =========================================================
+   V53 – Stundenplan exakt als eine durchgehende schöne Ansicht
+   ========================================================= */
+
+/* Chooser wird im Wochenplan nicht mehr benötigt. */
+#familyTimetableDialog{
+  display:none !important;
+}
+
+/* Modal */
+#manualTimetableDialog{
+  padding:16px !important;
+}
+
+#manualTimetableDialog .timetable-dialog-card{
+  width:min(1180px,calc(100vw - 32px)) !important;
+  max-width:1180px !important;
+  min-height:720px !important;
+  padding:28px 30px 24px !important;
+  border-radius:26px !important;
+  background:
+    linear-gradient(145deg,#fffdfc 0%,#fdfbfd 62%,#fbfafc 100%) !important;
+  border:1px solid rgba(198,181,175,.32) !important;
+  box-shadow:0 24px 64px rgba(69,55,50,.18) !important;
+  overflow:hidden !important;
+
+  display:grid !important;
+  grid-template-columns:220px minmax(0,1fr) !important;
+  grid-template-rows:auto 1fr auto !important;
+  column-gap:26px !important;
+}
+
+/* Kopf rechts oben */
+#manualTimetableDialog .dialog-head{
+  grid-column:1 / -1 !important;
+  grid-row:1 !important;
+  min-height:116px !important;
+  padding:0 76px 0 250px !important;
+  margin:0 0 8px !important;
+  display:block !important;
+  position:relative !important;
+}
+
+#manualTimetableDialog .small-label{
+  margin:0 0 8px !important;
+  letter-spacing:.18em !important;
+  font-size:.72rem !important;
+  color:#8d786f !important;
+}
+
+#manualTimetableDialog #manualTimetableTitle{
+  margin:0 !important;
+  color:#433d41 !important;
+  font-family:"Segoe Script","Lucida Handwriting","Bradley Hand",cursive !important;
+  font-size:2.15rem !important;
+  font-weight:500 !important;
+  line-height:1.18 !important;
+}
+
+#manualTimetableDialog .tt-person-subtitle{
+  margin-top:10px !important;
+  color:#716b78 !important;
+  font-size:.99rem !important;
+  line-height:1.4 !important;
+}
+#manualTimetableDialog .tt-person-subtitle::before{
+  content:"♥" !important;
+  color:#9a76b6 !important;
+  margin-right:7px !important;
+}
+
+/* Drei echte Bildkarten links – genau eine feste Spalte. */
+#manualTimetableDialog .timetable-switcher{
+  grid-column:1 !important;
+  grid-row:2 !important;
+  position:static !important;
+  width:100% !important;
+  margin:0 !important;
+  display:flex !important;
+  flex-direction:column !important;
+  gap:12px !important;
+  align-self:start !important;
+  z-index:4 !important;
+}
+
+#manualTimetableDialog .timetable-person-card{
+  position:relative !important;
+  width:100% !important;
+  height:166px !important;
+  min-height:166px !important;
+  padding:8px 10px 10px !important;
+  border-radius:18px !important;
+  border:1px solid rgba(175,163,172,.22) !important;
+  box-shadow:0 4px 14px rgba(75,65,73,.05) !important;
+  display:flex !important;
+  flex-direction:column !important;
+  align-items:center !important;
+  justify-content:flex-end !important;
+  overflow:hidden !important;
+  opacity:.82 !important;
+  transition:transform .15s ease, box-shadow .15s ease, opacity .15s ease !important;
+}
+
+#manualTimetableDialog .timetable-person-card img{
+  position:absolute !important;
+  inset:7px 8px 34px !important;
+  width:calc(100% - 16px) !important;
+  height:calc(100% - 41px) !important;
+  object-fit:contain !important;
+  object-position:center bottom !important;
+  pointer-events:none !important;
+}
+
+#manualTimetableDialog .timetable-person-name{
+  position:relative !important;
+  z-index:2 !important;
+  font-family:"Segoe Script","Lucida Handwriting","Bradley Hand",cursive !important;
+  font-size:1.34rem !important;
+  font-weight:600 !important;
+  line-height:1 !important;
+}
+
+#manualTimetableDialog .timetable-person-heart{
+  position:absolute !important;
+  right:48px !important;
+  bottom:10px !important;
+  font-size:.9rem !important;
+  z-index:2 !important;
+}
+
+/* eigene sanfte Farben */
+#manualTimetableDialog .timetable-person-mama{
+  background:linear-gradient(145deg,#f0edf8,#f7f4fb) !important;
+  color:#716785 !important;
+}
+#manualTimetableDialog .timetable-person-mama .timetable-person-heart{color:#9e82ba !important;}
+
+#manualTimetableDialog .timetable-person-lou{
+  background:linear-gradient(145deg,#eef5ec,#f4f8f2) !important;
+  color:#596b59 !important;
+}
+#manualTimetableDialog .timetable-person-lou .timetable-person-heart{color:#7da17c !important;}
+
+#manualTimetableDialog .timetable-person-fina{
+  background:linear-gradient(145deg,#fbece8,#fff3ef) !important;
+  color:#8b6665 !important;
+}
+#manualTimetableDialog .timetable-person-fina .timetable-person-heart{color:#d97982 !important;}
+
+#manualTimetableDialog .timetable-person-card:hover{
+  transform:translateY(-1px) !important;
+  opacity:1 !important;
+  box-shadow:0 7px 18px rgba(75,65,73,.08) !important;
+}
+
+#manualTimetableDialog .timetable-person-card.is-active{
+  opacity:1 !important;
+  border-width:2px !important;
+  box-shadow:0 7px 20px rgba(75,65,73,.10) !important;
+}
+#manualTimetableDialog .timetable-person-card.is-active::before{
+  content:"" !important;
+  display:none !important;
+}
+
+#manualTimetableDialog .timetable-person-mama.is-active{border-color:#c6b7d7 !important;}
+#manualTimetableDialog .timetable-person-lou.is-active{border-color:#b8ceb7 !important;}
+#manualTimetableDialog .timetable-person-fina.is-active{border-color:#efc0b8 !important;}
+
+/* Tabelle rechts neben den Bildkarten */
+#manualTimetableDisplay{
+  grid-column:2 !important;
+  grid-row:2 !important;
+  position:static !important;
+  margin:0 !important;
+  min-width:0 !important;
+  align-self:start !important;
+}
+
+#manualTimetableDisplay .tt-table-wrap{
+  width:100% !important;
+  overflow-x:auto !important;
+  padding:0 !important;
+  background:transparent !important;
+}
+
+#manualTimetableDisplay .tt-view-table{
+  width:100% !important;
+  border-collapse:separate !important;
+  border-spacing:5px 7px !important;
+  table-layout:fixed !important;
+}
+
+#manualTimetableDisplay .tt-view-table th,
+#manualTimetableDisplay .tt-view-table td{
+  height:43px !important;
+  padding:7px 8px !important;
+  border:0 !important;
+  border-radius:11px !important;
+  text-align:center !important;
+  vertical-align:middle !important;
+  font-size:.88rem !important;
+}
+
+#manualTimetableDisplay .tt-view-table thead th{
+  background:#ece7f3 !important;
+  color:#554f5d !important;
+  font-weight:650 !important;
+}
+
+#manualTimetableDisplay .tt-view-table tbody th{
+  background:#f2eef3 !important;
+  color:#625c64 !important;
+  font-weight:500 !important;
+}
+
+#manualTimetableDisplay .tt-view-table td{
+  background:#fdfcfd !important;
+}
+
+#manualTimetableDisplay .tt-home-row th,
+#manualTimetableDisplay .tt-home-row td{
+  background:#e8eff1 !important;
+  color:#56656c !important;
+}
+
+/* Fina darf etwas bunter sein */
+#manualTimetableDisplay .tt-fina thead th:nth-child(2){background:#e4f1ee !important;}
+#manualTimetableDisplay .tt-fina thead th:nth-child(3){background:#f3e8ef !important;}
+#manualTimetableDisplay .tt-fina thead th:nth-child(4){background:#f7eedc !important;}
+#manualTimetableDisplay .tt-fina thead th:nth-child(5){background:#e8edf6 !important;}
+#manualTimetableDisplay .tt-fina thead th:nth-child(6){background:#ece9f5 !important;}
+
+/* Mama etwas oliv */
+#manualTimetableDisplay .tt-mama thead th{
+  background:#e8eee3 !important;
+  color:#596553 !important;
+}
+
+/* Schließen */
+#manualTimetableDialog #closeManualTimetableDialog{
+  position:absolute !important;
+  right:0 !important;
+  top:0 !important;
+  width:44px !important;
+  height:44px !important;
+  min-width:44px !important;
+  border-radius:50% !important;
+  border:1px solid rgba(194,167,151,.38) !important;
+  background:#fffdfb !important;
+  color:#665c58 !important;
+  box-shadow:0 5px 15px rgba(80,63,55,.08) !important;
+  font-size:0 !important;
+  z-index:20 !important;
+}
+#manualTimetableDialog #closeManualTimetableDialog::before{
+  content:"×" !important;
+  font-family:Arial,sans-serif !important;
+  font-size:24px !important;
+  font-weight:300 !important;
+}
+
+#manualTimetableDialog .dialog-actions{
+  grid-column:2 !important;
+  grid-row:3 !important;
+  margin-top:16px !important;
+  display:flex !important;
+  justify-content:flex-end !important;
+}
+
+#manualTimetableDialog .dialog-actions button{
+  padding:10px 20px !important;
+  border-radius:999px !important;
+  background:#fffdfb !important;
+  border:1px solid rgba(202,181,170,.46) !important;
+}
+
+/* Kein altes separates Personenbild mehr irgendwo im Popup. */
+#manualTimetableDisplay .tt-person-illustration{
+  display:none !important;
+}
+
+/* Responsive */
+@media(max-width:820px){
+  #manualTimetableDialog .timetable-dialog-card{
+    min-height:0 !important;
+    grid-template-columns:1fr !important;
+    grid-template-rows:auto auto auto auto !important;
+    padding:20px !important;
+  }
+
+  #manualTimetableDialog .dialog-head{
+    grid-column:1 !important;
+    padding:0 55px 0 0 !important;
+    min-height:0 !important;
+  }
+
+  #manualTimetableDialog .timetable-switcher{
+    grid-column:1 !important;
+    grid-row:2 !important;
+    flex-direction:row !important;
+    gap:8px !important;
+    margin:12px 0 !important;
+  }
+
+  #manualTimetableDialog .timetable-person-card{
+    height:120px !important;
+    min-height:120px !important;
+  }
+
+  #manualTimetableDialog .timetable-person-name{
+    font-size:1rem !important;
+  }
+
+  #manualTimetableDialog .timetable-person-heart{
+    right:20px !important;
+    bottom:9px !important;
+  }
+
+  #manualTimetableDisplay{
+    grid-column:1 !important;
+    grid-row:3 !important;
+  }
+
+  #manualTimetableDialog .dialog-actions{
+    grid-column:1 !important;
+    grid-row:4 !important;
+  }
+}
