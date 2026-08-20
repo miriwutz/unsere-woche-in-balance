@@ -9727,3 +9727,156 @@ button.day-meal{cursor:pointer}
   .recipe-card.recipe-child-mode .recipe-child-illustration{height:145px}
   .recipe-card.recipe-child-mode .recipe-child-illustration img{height:160px}
 }
+
+
+/* =========================================================
+   V40 – Kinderrezept kompakter + Bedienung oben + Regenbogen-Abhaken
+   ========================================================= */
+
+.recipe-card-footer{display:none !important}
+
+.recipe-card-head{position:relative !important}
+.recipe-card-top-controls{
+  position:absolute;
+  right:14px;
+  top:12px;
+  z-index:9;
+  display:flex;
+  align-items:center;
+  gap:4px;
+  padding:4px 6px;
+  border-radius:999px;
+  background:rgba(255,255,255,.78);
+  border:1px solid rgba(120,108,99,.12);
+}
+.recipe-card-top-controls button{
+  min-width:28px;
+  height:28px;
+  padding:0 5px;
+  display:grid;
+  place-items:center;
+  border:0;
+  border-radius:999px;
+  background:transparent;
+  color:#6f665f;
+  cursor:pointer;
+}
+.recipe-card-top-controls .recipe-rating-buttons{
+  display:flex;
+  align-items:center;
+  gap:1px;
+}
+.recipe-card-top-controls button:hover{background:rgba(232,239,233,.9)}
+
+/* Kinderansicht: Bild nach oben in den Kopfbereich */
+.recipe-card.recipe-child-mode .recipe-card-head{
+  min-height:145px !important;
+  padding-right:170px !important;
+}
+.recipe-card.recipe-child-mode > .recipe-child-illustration{
+  display:flex !important;
+  position:absolute !important;
+  top:18px !important;
+  right:18px !important;
+  width:140px !important;
+  height:120px !important;
+  margin:0 !important;
+  overflow:visible !important;
+  background:transparent !important;
+  border-radius:0 !important;
+  pointer-events:none !important;
+  z-index:4 !important;
+}
+.recipe-card.recipe-child-mode > .recipe-child-illustration img{
+  width:140px !important;
+  height:120px !important;
+  max-width:none !important;
+  object-fit:contain !important;
+  object-position:center !important;
+}
+
+/* Bedienung in Kinderansicht links oben, Bild rechts */
+.recipe-card.recipe-child-mode .recipe-card-top-controls{
+  left:14px !important;
+  right:auto !important;
+  top:12px !important;
+}
+.recipe-card.recipe-child-mode .recipe-time-mark,
+.recipe-card.recipe-child-mode .recipe-tools{
+  display:none !important;
+}
+
+/* Fingerfreundlich */
+.recipe-card.recipe-child-mode .recipe-child-checkable{
+  position:relative;
+  cursor:pointer;
+  border-radius:10px;
+  transition:background .18s ease, opacity .18s ease, transform .18s ease;
+}
+.recipe-card.recipe-child-mode li.recipe-child-checkable{
+  padding:7px 9px !important;
+  margin:3px 0 !important;
+}
+.recipe-card.recipe-child-mode .recipe-prep-line.recipe-child-checkable{
+  padding:9px 11px !important;
+  margin:4px 0 !important;
+}
+.recipe-card.recipe-child-mode .recipe-child-checkable:hover{
+  background:rgba(244,240,224,.78);
+}
+
+/* Erledigt = Regenbogen + Durchstreichen */
+.recipe-card.recipe-child-mode .recipe-child-checkable.recipe-child-done{
+  background:linear-gradient(
+    90deg,
+    rgba(255,190,190,.30),
+    rgba(255,221,166,.30),
+    rgba(255,242,174,.30),
+    rgba(194,230,190,.30),
+    rgba(184,216,242,.30),
+    rgba(215,196,239,.30)
+  ) !important;
+  opacity:.70;
+}
+.recipe-card.recipe-child-mode .recipe-child-checkable.recipe-child-done::after{
+  content:"🌈 ✓";
+  position:absolute;
+  right:8px;
+  top:50%;
+  transform:translateY(-50%);
+  font-family:"Trebuchet MS",Arial,sans-serif !important;
+  font-size:.82rem;
+}
+.recipe-card.recipe-child-mode .recipe-child-checkable.recipe-child-done .recipe-ingredient-text,
+.recipe-card.recipe-child-mode .recipe-child-checkable.recipe-child-done .recipe-child-measure-ingredient,
+.recipe-card.recipe-child-mode .recipe-prep-line.recipe-child-done > span:last-child{
+  text-decoration:line-through !important;
+  text-decoration-thickness:2px !important;
+  text-decoration-color:#967456 !important;
+}
+
+/* Platz sparen */
+.recipe-card.recipe-child-mode .recipe-card-body{
+  margin-bottom:0 !important;
+  padding-bottom:8px !important;
+}
+
+@media(max-width:760px){
+  .recipe-card-top-controls{
+    top:7px; right:7px; gap:1px; padding:3px;
+  }
+  .recipe-card.recipe-child-mode .recipe-card-head{
+    min-height:126px !important;
+    padding-right:122px !important;
+  }
+  .recipe-card.recipe-child-mode > .recipe-child-illustration{
+    top:12px !important;
+    right:7px !important;
+    width:108px !important;
+    height:102px !important;
+  }
+  .recipe-card.recipe-child-mode > .recipe-child-illustration img{
+    width:108px !important;
+    height:102px !important;
+  }
+}
