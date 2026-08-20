@@ -1726,7 +1726,7 @@ const eventHtml = (normalEventsForHeader.length || multiDayEventLanes.length) ? 
     const mealLabel = typeof mealStored === "string" ? mealStored : (mealStored?.label || "");
     const mealRecipeId = typeof mealStored === "object" ? (mealStored?.recipeId || "") : "";
     const mealUrl = typeof mealStored === "object" ? (mealStored?.url || "") : "";
-    const mealRecipe = mealRecipeId ? state.recipes.find(r => r.id === mealRecipeId) : recipeByTitle(mealLabel);
+    const mealRecipe = resolveMealRecipe(mealRecipeId, mealLabel);
     const mealHtml = mealLabel || mealUrl ? `
       <div class="day-meal-section">
         <div class="day-meal-kicker">Essen</div>
@@ -1815,7 +1815,8 @@ const eventHtml = (normalEventsForHeader.length || multiDayEventLanes.length) ? 
   });
 
   document.querySelectorAll(".day-meal-recipe").forEach(btn => btn.addEventListener("click", () => {
-    const recipe = state.recipes.find(r => r.id === btn.dataset.recipeId);
+    const byId = state.recipes.find(r => r.id === btn.dataset.recipeId);
+    const recipe = resolveMealRecipe(btn.dataset.recipeId, byId?.title || "");
     if (!recipe) return;
     if (normalizedRecipeSource(recipe) === "external") {
       const url = recipe.webUrl || recipe.youtubeUrl;
@@ -7066,12 +7067,51 @@ function normalizedRecipeLines(value) {
 }
 
 
+function recipeContentScore(recipe) {
+  if (!recipe) return -1;
+  const ingredients = normalizedRecipeLines(recipe.ingredients).length;
+  const steps = normalizedRecipeLines(recipe.steps).length;
+  const mappings = Array.isArray(recipe.beakerMappings) ? recipe.beakerMappings.length : 0;
+  const extras =
+    (recipe.webUrl ? 1 : 0) +
+    (recipe.youtubeUrl ? 1 : 0) +
+    (recipe.time ? 1 : 0) +
+    (recipe.bakeTime ? 1 : 0) +
+    (recipe.temperature ? 1 : 0);
+  return ingredients * 10 + steps * 12 + mappings * 4 + extras;
+}
+
 function recipeByTitle(title) {
   const q = String(title || "").trim().toLowerCase();
   if (!q) return null;
-  return (state.recipes || []).find(r =>
+
+  const matches = (state.recipes || []).filter(r =>
     String(r.title || "").trim().toLowerCase() === q
-  ) || null;
+  );
+
+  if (!matches.length) return null;
+
+  return matches.sort((a,b) => {
+    const scoreDiff = recipeContentScore(b) - recipeContentScore(a);
+    if (scoreDiff) return scoreDiff;
+    return Number(b.updatedAt || b.createdAt || 0) - Number(a.updatedAt || a.createdAt || 0);
+  })[0];
+}
+
+function resolveMealRecipe(recipeId, label) {
+  const byId = recipeId
+    ? (state.recipes || []).find(r => r.id === recipeId)
+    : null;
+
+  const title = String(label || byId?.title || "").trim();
+  const richestByTitle = title ? recipeByTitle(title) : null;
+
+  if (!byId) return richestByTitle;
+  if (!richestByTitle) return byId;
+
+  return recipeContentScore(richestByTitle) > recipeContentScore(byId)
+    ? richestByTitle
+    : byId;
 }
 
 function recipeLinkTarget(recipe) {
@@ -7232,6 +7272,8 @@ function printRecipe(recipe) {
   printWindow.document.close();
 }
 
+// Wochenplan/Essensplan öffnen immer die vollständigste aktuelle Rezeptversion,
+ // falls ältere Dubletten mit demselben Titel noch im Datenbestand vorhanden sind.
 function showRecipeDetail(recipeOrTitle) {
   const recipe = typeof recipeOrTitle === "string"
     ? recipeByTitle(recipeOrTitle)
@@ -7776,9 +7818,7 @@ function renderMealPlan() {
     const customUrl = typeof stored === "object" ? (stored?.url || "") : "";
     const recipeId = typeof stored === "object" ? (stored?.recipeId || "") : "";
 
-    const matched = recipeId
-      ? recipes.find(r => r.id === recipeId)
-      : recipeByTitle(value);
+    const matched = resolveMealRecipe(recipeId, value);
 
     return `
       <div class="meal-plan-day">
