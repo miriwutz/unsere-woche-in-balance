@@ -1901,6 +1901,8 @@ const eventHtml = (normalEventsForHeader.length || multiDayEventLanes.length) ? 
   }));
 
   document.querySelectorAll(".school-week-check").forEach(el => el.addEventListener("click", e => {
+    if (e.__schoolWeekHandled) return;
+    e.__schoolWeekHandled = true;
     e.preventDefault();
     e.stopPropagation();
 
@@ -11403,3 +11405,33 @@ document.querySelector('.tab[data-view="school"]')?.addEventListener("click", ()
 
 
 
+
+
+// V18 delegated school-week-check:
+// Sicherheitsnetz für neu gerenderte Wochenplan-Aufgaben.
+document.addEventListener("click", e => {
+  const el = e.target.closest?.(".school-week-check");
+  if (!el) return;
+
+  // Wenn bereits ein direkter Handler reagiert hat, nicht doppelt toggeln.
+  if (e.__schoolWeekHandled) return;
+  e.__schoolWeekHandled = true;
+
+  const childId = el.dataset.child;
+  const taskId = el.dataset.id;
+  const child = state.school?.children?.[childId];
+  const task = child?.tasks?.find?.(t => t.id === taskId);
+  if (!task) return;
+
+  e.preventDefault();
+  e.stopPropagation();
+
+  const wasDone = !!task.done;
+  task.done = !task.done;
+  save();
+  renderAll();
+
+  if (!wasDone && task.done) {
+    showMotivation(schoolMotivationalMessage(childHasNoOpenHomework(child)));
+  }
+}, true);
