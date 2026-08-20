@@ -218,3 +218,4 @@ FIREBASE VERSION:
 - Änderungen werden zusätzlich lokal gespeichert und automatisch in Firestore geschrieben.
 - Live-Synchronisierung: Änderungen auf einem Gerät erscheinen auf den anderen Geräten.
 - GitHub Pages bleibt das Hosting; Firebase Hosting wird nicht benötigt.
+deployed retry
