@@ -2797,6 +2797,13 @@ function showManualTimetable(id){
 
   title.textContent=`${c.name||id} – Stundenplan`;
 
+  /* V51: In der linken Personenleiste nur die aktuell gewählte Person markieren. */
+  d.querySelectorAll(".timetable-switch").forEach(btn => {
+    const active = btn.dataset.person === String(id);
+    btn.classList.toggle("is-active", active);
+    btn.setAttribute("aria-pressed", active ? "true" : "false");
+  });
+
   const dialogCard = d.querySelector(".timetable-dialog-card") || d.querySelector(".dialog-card");
   if (dialogCard) {
     dialogCard.classList.remove("tt-person-lou","tt-person-fina","tt-person-mama");
@@ -2804,10 +2811,10 @@ function showManualTimetable(id){
   }
 
 const ttIllustration = id === "1"
-    ? `<img class="tt-person-illustration tt-lou-illustration" src="./lou-stundenplan.png?v=47" alt="">`
+    ? `<img class="tt-person-illustration tt-lou-illustration" src="./lou-stundenplan.png?v=51" alt="">`
     : id === "2"
-      ? `<img class="tt-person-illustration tt-fina-illustration" src="./fina-stundenplan.png?v=47" alt="">`
-      : `<img class="tt-person-illustration tt-mama-illustration" src="./workroom-meditation.png?v=47" alt="">`;
+      ? `<img class="tt-person-illustration tt-fina-illustration" src="./fina-stundenplan.png?v=51" alt="">`
+      : `<img class="tt-person-illustration tt-mama-illustration" src="./workroom-meditation.png?v=51" alt="">`;
 
 out.innerHTML=`${ttIllustration}<div class="tt-table-wrap"><table class="tt-table tt-view-table ${id === "mama" ? "tt-mama" : id === "1" ? "tt-lou" : "tt-fina"}">
     <thead><tr><th>Zeit</th>${manualTimetableDayNames.map(x=>`<th>${x}</th>`).join("")}</tr></thead>
