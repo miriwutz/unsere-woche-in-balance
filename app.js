@@ -7131,8 +7131,8 @@ function renderWorkroomLinks() {
     .sort((a,b)=>Number(a.order??999999)-Number(b.order??999999));
 
   // Sortierung ist nur eine Ansicht. Die manuelle Reihenfolge in state bleibt unverändert.
-  // Immer gruppenweise: ALLE Treffer zuerst, danach ALLE übrigen.
-  // Innerhalb beider Gruppen bleibt die eigene manuelle Reihenfolge exakt erhalten.
+  // Gruppenweise: ALLE Treffer zuerst, danach ALLE übrigen.
+  // Innerhalb beider Gruppen bleibt die eigene Reihenfolge erhalten.
   if(activeWorkroomLinkSort !== "manual"){
     const matchingGroup = [];
     const remainingGroup = [];
@@ -7145,7 +7145,7 @@ function renderWorkroomLinks() {
       }
     });
 
-    links = [...matchingGroup, ...remainingGroup];
+    links = matchingGroup.concat(remainingGroup);
   }
 
   const totalPages=Math.max(1,Math.ceil(links.length/WORKROOM_LINKS_PER_PAGE));
@@ -7450,8 +7450,6 @@ document.querySelector("#workroomLinkSortSelect")?.addEventListener("change", e 
 });
 
 document.querySelector("#resetWorkroomLinkSort")?.addEventListener("click", () => {
-  // Nur die Ansichtssortierung zurücksetzen.
-  // Die gespeicherte manuelle Reihenfolge wurde nie verändert und erscheint wieder exakt.
   activeWorkroomLinkSort = "manual";
   workroomLinkPage = 1;
 
@@ -12892,7 +12890,7 @@ document.addEventListener("click", e => {
   const head = e.target.closest(".workroom-fold-head");
   if (!head) return;
 
-  // Buttons/links/selects inside a heading have their own function and must not fold the card.
+  // Bedienelemente im Kopf behalten ihre eigene Funktion.
   if (e.target.closest("button,a,input,select,textarea")) return;
 
   const card = head.closest(".workroom-fold-card");
@@ -12900,7 +12898,9 @@ document.addEventListener("click", e => {
 
   const wasOpen = card.classList.contains("open");
 
-  document.querySelectorAll(".workroom-fold-card").forEach(otherCard => {
+  // Immer nur EIN Werkraum-Bereich offen.
+  // Klick auf Drucken schließt z.B. die komplette Linksammlung.
+  document.querySelectorAll(".workroom-fold-card.open").forEach(otherCard => {
     otherCard.classList.remove("open");
   });
 
@@ -13316,15 +13316,18 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 
-// Werkraum-Faltkarten: nach dem Öffnen mit den echten HTML-IDs erneut rendern.
+// Werkraum-Faltkarten: Inhalte nach dem Öffnen aktualisieren,
+// ohne den Auf-/Zu-Zustand nochmals anzufassen.
 document.addEventListener("click", (e) => {
   const head = e.target.closest(".workroom-fold-head");
   if (!head) return;
   setTimeout(() => {
+    const card = head.closest(".workroom-fold-card");
+    if (!card?.classList.contains("open")) return;
     renderSchoolWorkTodos();
     renderSchoolPrints();
     renderWorkroomLinks();
-  renderRoutines();
+    renderRoutines();
   }, 0);
 });
 /* V36: Becherküche => Selbst-kochen automatisch */
