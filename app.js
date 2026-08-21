@@ -6667,6 +6667,38 @@ document.querySelector("#addWorkroomShoppingBtn")?.addEventListener("click", () 
 // WERKRAUM – DRUCKLISTE
 // =============================
 
+const SCHOOL_PRINT_EMAIL_KEY = "balanceProd.schoolPrintEmail";
+
+function getSchoolPrintEmail(){
+  return String(localStorage.getItem(SCHOOL_PRINT_EMAIL_KEY) || "").trim();
+}
+
+function syncSchoolPrintEmailUI(){
+  const input=document.querySelector("#schoolPrintEmail");
+  if(input && document.activeElement!==input) input.value=getSchoolPrintEmail();
+}
+
+function openSchoolPrintMail(item){
+  const email=getSchoolPrintEmail();
+  if(!email){
+    const input=document.querySelector("#schoolPrintEmail");
+    input?.focus();
+    showMotivation("Bitte zuerst die E-Mail-Adresse für Druckbestellungen hinterlegen.");
+    return;
+  }
+  const subject=`Druckbestellung – ${item?.text || "Druckauftrag"}`;
+  const lines=[
+    `Hallo,`,
+    ``,
+    `bitte folgenden Druckauftrag ausdrucken:`,
+    `${item?.text || ""}`,
+    item?.url ? `Link: ${item.url}` : "",
+    ``,
+    `Danke!`
+  ].filter((line,index,arr)=>line!=="" || (index>0 && arr[index-1]!==""));
+  window.location.href=`mailto:${encodeURIComponent(email)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(lines.join("\n"))}`;
+}
+
 function renderSchoolPrints() {
   // Datensicherheits-Hydration: vorhandene lokale Werkraumdaten haben Vorrang,
   // falls der In-Memory-State durch einen unvollständigen Cloudstand leerer ist.
@@ -6688,6 +6720,7 @@ function renderSchoolPrints() {
   const list = document.querySelector("#schoolPrintList");
 
   if (!list) return;
+  syncSchoolPrintEmailUI();
 
 const now = Date.now();
 
@@ -6728,6 +6761,13 @@ const prints = [...state.workroom.prints]
                   rel="noopener"
                   title="Link öffnen">🔗</a>`
             : ""}
+
+          <button
+            class="workroom-print-mail"
+            type="button"
+            data-id="${p.id}"
+            title="Druckbestellung per E-Mail öffnen"
+            aria-label="Druckbestellung per E-Mail öffnen">✉</button>
 
           <button
             class="workroom-print-edit"
@@ -6800,6 +6840,14 @@ const prints = [...state.workroom.prints]
     }
   });
 });
+
+  document.querySelectorAll(".workroom-print-mail").forEach(btn => {
+    btn.addEventListener("click", e => {
+      const id=e.currentTarget.dataset.id;
+      const item=state.workroom.prints.find(p=>p.id===id);
+      if(item) openSchoolPrintMail(item);
+    });
+  });
 
   document.querySelectorAll(".workroom-print-delete").forEach(btn => {
     btn.addEventListener("click", e => {
@@ -6932,6 +6980,20 @@ document.querySelector("#addSchoolPrintBtn")?.addEventListener("click", () => {
 
   save();
   renderSchoolPrints();
+});
+
+document.querySelector("#saveSchoolPrintEmailBtn")?.addEventListener("click",()=>{
+  const input=document.querySelector("#schoolPrintEmail");
+  const value=String(input?.value || "").trim();
+  if(value && !/^\S+@\S+\.\S+$/.test(value)){
+    showMotivation("Bitte eine gültige E-Mail-Adresse eintragen.");
+    input?.focus();
+    return;
+  }
+  if(value) localStorage.setItem(SCHOOL_PRINT_EMAIL_KEY,value);
+  else localStorage.removeItem(SCHOOL_PRINT_EMAIL_KEY);
+  syncSchoolPrintEmailUI();
+  showMotivation(value ? "Druck-E-Mail gespeichert." : "Druck-E-Mail entfernt.");
 });
 
 // =============================
@@ -9264,28 +9326,7 @@ function recipeRatingLabel(value) {
 }
 
 function updateRecipeSourceForm() {
-  const source=document.querySelector("#recipeSourceType")?.value || "internal";
-  const external=source==="external";
-
-  document.querySelectorAll(".recipe-internal-only").forEach(el=>{
-    el.classList.toggle("recipe-section-hidden",external);
-  });
-  document.querySelectorAll(".recipe-external-only").forEach(el=>{
-    el.classList.toggle("recipe-section-hidden",!external);
-  });
-
-  const web=document.querySelector("#recipeWebUrl");
-  const webLabel=document.querySelector("#recipeWebLabel");
-  const title=document.querySelector("#recipeLinkSectionTitle");
-  const hint=document.querySelector("#recipeLinkSectionHint");
-
-  if(web){
-    web.placeholder=external?"Link zum Originalrezept …":"";
-    web.classList.toggle("recipe-external-required",external);
-  }
-  if(webLabel) webLabel.textContent="Rezept-Link";
-  if(title) title.textContent="Internetquelle";
-  if(hint) hint.textContent="Hier öffnest du später direkt das Originalrezept oder Rezeptvideo.";
+  // Es werden nur eigene Rezepte erfasst. Alte Daten bleiben kompatibel.
 }
 
 function resetRecipeForm() {
@@ -9304,9 +9345,6 @@ function resetRecipeForm() {
 
   const difficulty = document.querySelector("#recipeDifficulty");
   if (difficulty) difficulty.value = "medium";
-
-  const sourceType = document.querySelector("#recipeSourceType");
-  if (sourceType) sourceType.value = "internal";
 
   const rating = document.querySelector("#recipeRating");
   if (rating) rating.value = "";
@@ -9348,7 +9386,6 @@ function startRecipeEdit(recipe) {
   const cardMark = document.querySelector("#recipeCardMark");
   if (cardMark) cardMark.value = recipeCardMark(recipe);
   document.querySelector("#recipeDifficulty").value = recipe.difficulty || "medium";
-  document.querySelector("#recipeSourceType").value = normalizedRecipeSource(recipe);
   document.querySelector("#recipeRating").value = recipe.rating || "";
   document.querySelector("#recipeKids").checked = !!recipe.kids;
   document.querySelector("#recipeSelfCook").checked = recipeSelfCook(recipe);
@@ -9363,8 +9400,6 @@ function startRecipeEdit(recipe) {
   document.querySelector("#recipeServings").value = recipe.servings || "";
   document.querySelector("#recipeIngredients").value = normalizedRecipeLines(recipe.ingredients).join("\n");
   document.querySelector("#recipeSteps").value = normalizedRecipeLines(recipe.steps).join("\n");
-  document.querySelector("#recipeWebUrl").value = recipe.webUrl || "";
-  document.querySelector("#recipeYoutubeUrl").value = recipe.youtubeUrl || "";
   updateRecipeSourceForm();
 
   document.querySelector("#recipeForm")?.classList.remove("hidden");
@@ -9907,7 +9942,6 @@ function renderRecipes() {
       const matchesSelfCook = !recipeSelfCookOnly || recipeSelfCook(r);
       const matchesHealthy = !recipeHealthyOnly || !!r.healthy;
       const matchesFavorite = !recipeFavoriteOnly || !!r.favorite;
-      const matchesSource = activeRecipeSource === "all" || normalizedRecipeSource(r) === activeRecipeSource;
       const haystack = [
         r.title,
         ...(Array.isArray(r.ingredients) ? r.ingredients : [])
@@ -9916,7 +9950,7 @@ function renderRecipes() {
       const firstLetter = String(r.title || "").trim().charAt(0).toLocaleUpperCase("de-DE");
       const matchesLetter = activeRecipeLetter === "all" || firstLetter === activeRecipeLetter;
       return matchesCategory && matchesDifficulty && matchesKids && matchesSelfCook && matchesHealthy &&
-        matchesFavorite && matchesSource && matchesSearch && matchesLetter;
+        matchesFavorite && matchesSearch && matchesLetter;
     })
     .sort((a,b) => String(a.title || "").localeCompare(String(b.title || ""), "de", {sensitivity:"base"}));
 
@@ -9949,7 +9983,6 @@ function renderRecipes() {
           <div class="recipe-badges">
             <span>${escapeHtml(recipeCategoryLabel(r.category || "main"))}</span>
             <span>${escapeHtml(recipeDifficultyLabel(r.difficulty))}</span>
-            <span class="recipe-source-display">${normalizedRecipeSource(r) === "external" ? "🔗 Internet" : "📖 Intern"}</span>
             ${r.favorite ? `<span class="recipe-favorite-badge">★ Lieblingsrezept</span>` : ""}
             ${r.kids ? `<span class="recipe-kids-badge">🧒 Kindergericht</span>` : ""}
             ${recipeSelfCook(r) ? `<button type="button" class="recipe-selfcook-toggle" data-id="${r.id}" aria-pressed="false">👧 Das kannst du selbst kochen!</button>` : ""}
@@ -10205,11 +10238,10 @@ function renderRecipeToc() {
       const matchesSelfCook = !recipeSelfCookOnly || recipeSelfCook(r);
       const matchesHealthy = !recipeHealthyOnly || !!r.healthy;
       const matchesFavorite = !recipeFavoriteOnly || !!r.favorite;
-      const matchesSource = activeRecipeSource === "all" || normalizedRecipeSource(r) === activeRecipeSource;
       const haystack = [r.title, ...(Array.isArray(r.ingredients) ? r.ingredients : [])].join(" ").toLowerCase();
       const matchesSearch = !query || haystack.includes(query);
       return matchesCategory && matchesDifficulty && matchesKids && matchesSelfCook && matchesHealthy &&
-        matchesFavorite && matchesSource && matchesSearch;
+        matchesFavorite && matchesSearch;
     })
     .sort((a,b) => String(a.title || "").localeCompare(String(b.title || ""), "de", {sensitivity:"base"}));
 
@@ -10578,12 +10610,6 @@ document.querySelector("#recipeSearch")?.addEventListener("input", e => {
   renderRecipeSearchSuggestions();
 });
 
-document.querySelector("#recipeSourceFilter")?.addEventListener("change", e => {
-  activeRecipeSource = e.currentTarget.value || "all";
-  activeRecipeLetter = "all";
-  recipePage = 0;
-  renderRecipes();
-});
 
 document.querySelector("#recipeCategoryFilter")?.addEventListener("change", e => {
   recipeCategoryTouched = true;
@@ -10627,7 +10653,6 @@ document.querySelector("#recipeFavoriteOnlyFilter")?.addEventListener("change", 
   renderRecipes();
 });
 
-document.querySelector("#recipeSourceType")?.addEventListener("change", updateRecipeSourceForm);
 
 document.querySelector("#mealPlanThisWeekBtn")?.addEventListener("click", () => {
   mealPlanWeekOffset = 0;
@@ -10642,12 +10667,10 @@ document.querySelector("#saveRecipeBtn")?.addEventListener("click", () => {
   const title = document.querySelector("#recipeTitle")?.value.trim() || "";
   if (!title) return showMotivation("Bitte zuerst einen Rezeptnamen eintragen.");
 
-  const sourceType = document.querySelector("#recipeSourceType")?.value || "internal";
-  const webUrl = document.querySelector("#recipeWebUrl")?.value.trim() || "";
-  const youtubeUrl = document.querySelector("#recipeYoutubeUrl")?.value.trim() || "";
-  if (sourceType === "external" && !webUrl && !youtubeUrl) {
-    return showMotivation("Bitte beim Internetrezept einen Link eintragen.");
-  }
+  const existingRecipe = editingRecipeId ? state.recipes.find(r => r.id === editingRecipeId) : null;
+  const sourceType = "internal";
+  const webUrl = existingRecipe?.webUrl || "";
+  const youtubeUrl = existingRecipe?.youtubeUrl || "";
 
   const recipeData = {
     title,
@@ -10662,12 +10685,12 @@ document.querySelector("#saveRecipeBtn")?.addEventListener("click", () => {
     beakerKitchen: !!document.querySelector("#recipeBeakerKitchen")?.checked,
       beakerMappings: readRecipeBeakerMappings(),
     healthy: !!document.querySelector("#recipeHealthy")?.checked,
-    time: sourceType === "external" ? "" : (document.querySelector("#recipeTime")?.value.trim() || ""),
-    bakeTime: sourceType === "external" ? "" : (document.querySelector("#recipeBakeTime")?.value.trim() || ""),
-    temperature: sourceType === "external" ? "" : (document.querySelector("#recipeTemperature")?.value.trim() || ""),
-    servings: sourceType === "external" ? "" : (document.querySelector("#recipeServings")?.value.trim() || ""),
-    ingredients: sourceType === "external" ? [] : recipeLines(document.querySelector("#recipeIngredients")?.value),
-    steps: sourceType === "external" ? [] : recipeLines(document.querySelector("#recipeSteps")?.value),
+    time: document.querySelector("#recipeTime")?.value.trim() || "",
+    bakeTime: document.querySelector("#recipeBakeTime")?.value.trim() || "",
+    temperature: document.querySelector("#recipeTemperature")?.value.trim() || "",
+    servings: document.querySelector("#recipeServings")?.value.trim() || "",
+    ingredients: recipeLines(document.querySelector("#recipeIngredients")?.value),
+    steps: recipeLines(document.querySelector("#recipeSteps")?.value),
     webUrl,
     youtubeUrl
   };
