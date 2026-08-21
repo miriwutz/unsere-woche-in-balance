@@ -16,6 +16,7 @@ const state = {
   recipes: JSON.parse(localStorage.getItem("balanceProd.recipes") || "[]"),
   meals: JSON.parse(localStorage.getItem("balanceProd.meals") || "{}"),
   pinboard: JSON.parse(localStorage.getItem("balanceProd.pinboard") || "[]"),
+  familyQuestions: JSON.parse(localStorage.getItem("balanceProd.familyQuestions") || "[]"),
   recipeLinkFeedback: JSON.parse(localStorage.getItem("balanceProd.recipeLinkFeedback") || "{}"),
   timeTracking: JSON.parse(localStorage.getItem("balanceProd.timeTracking") || '{"entries":[],"active":[],"stopped":{},"deletedEntries":{}}'),
   trash: JSON.parse(localStorage.getItem("balanceProd.trash") || "[]"),
@@ -50,6 +51,7 @@ state.timeTracking.deletedEntries =
 state.recipes = Array.isArray(state.recipes) ? state.recipes : [];
 state.meals = state.meals && typeof state.meals === "object" ? state.meals : {};
 state.pinboard = Array.isArray(state.pinboard) ? state.pinboard : [];
+state.familyQuestions = Array.isArray(state.familyQuestions) ? state.familyQuestions : [];
 state.recipeLinkFeedback = state.recipeLinkFeedback && typeof state.recipeLinkFeedback === "object"
   ? state.recipeLinkFeedback : {};
 
@@ -72,6 +74,7 @@ function saveLocal() {
   localStorage.setItem("balanceProd.recipes", JSON.stringify(state.recipes));
   localStorage.setItem("balanceProd.meals", JSON.stringify(state.meals));
   localStorage.setItem("balanceProd.pinboard", JSON.stringify(state.pinboard));
+  localStorage.setItem("balanceProd.familyQuestions", JSON.stringify(state.familyQuestions || []));
   localStorage.setItem("balanceProd.recipeLinkFeedback", JSON.stringify(state.recipeLinkFeedback));
   localStorage.setItem("balanceProd.timeTracking", JSON.stringify(state.timeTracking));
   localStorage.setItem("balanceProd.trash", JSON.stringify(state.trash || []));
@@ -95,6 +98,7 @@ function cloudPayload() {
     recipes: state.recipes,
     meals: state.meals,
     pinboard: state.pinboard,
+    familyQuestions: state.familyQuestions || [],
     recipeLinkFeedback: state.recipeLinkFeedback,
     workroom: state.workroom,
     school: state.school,
@@ -4587,6 +4591,139 @@ function renderTrash(){
   const empty=document.querySelector("#emptyTrashBtn"); if(empty)empty.disabled=!rows.length;
 }
 
+
+// =========================================================
+// FAMILIENFRAGEN – kleine offene Fragen oben im Wochenplan
+// =========================================================
+function familyQuestionRecipientLabel(key){
+  if(key === "shared") return "Alle";
+  return familyName(key) || "";
+}
+
+function familyQuestionRecipientColor(key){
+  if(key === "shared") return "#b89a77";
+  return familyColor(key);
+}
+
+function renderFamilyQuestions(){
+  const open = (state.familyQuestions || [])
+    .filter(q => !q.done && !q.deleted)
+    .sort((a,b) => Number(a.createdAt || 0) - Number(b.createdAt || 0));
+
+  const select = document.querySelector("#familyQuestionTo");
+  if(select){
+    const current = select.value || "shared";
+    select.innerHTML = `
+      <option value="shared">Alle</option>
+      <option value="a">${escapeHtml(familyName("a") || "Mama")}</option>
+      <option value="b">${escapeHtml(familyName("b") || "Papa")}</option>
+      <option value="c">${escapeHtml(familyName("c") || "Lou")}</option>
+      <option value="d">${escapeHtml(familyName("d") || "Fina")}</option>
+    `;
+    select.value = [...select.options].some(o => o.value === current) ? current : "shared";
+  }
+
+  const strip = document.querySelector("#weekFamilyQuestions");
+  if(strip){
+    if(!open.length){
+      strip.classList.add("hidden");
+      strip.innerHTML = "";
+    }else{
+      const visible = open.slice(0,3);
+      strip.classList.remove("hidden");
+      strip.innerHTML = `
+        <div class="week-family-question-title">Fragen</div>
+        <div class="week-family-question-items">
+          ${visible.map(q => `
+            <div class="week-family-question" style="--question-color:${familyQuestionRecipientColor(q.to)}">
+              <span class="week-family-question-mark">?</span>
+              <span class="week-family-question-copy">
+                <strong>${escapeHtml(q.text)}</strong>
+                <small>${escapeHtml(familyQuestionRecipientLabel(q.to))}</small>
+              </span>
+              <button type="button" class="family-question-done"
+                      data-question-id="${q.id}"
+                      title="Erledigt"
+                      aria-label="Frage erledigt">✓</button>
+            </div>
+          `).join("")}
+          ${open.length > 3 ? `<span class="week-family-question-more">+${open.length-3}</span>` : ""}
+        </div>
+      `;
+    }
+  }
+
+  const list = document.querySelector("#familyQuestionList");
+  if(list){
+    list.innerHTML = open.length ? open.map(q => `
+      <div class="family-question-list-item" style="--question-color:${familyQuestionRecipientColor(q.to)}">
+        <span class="family-question-list-dot"></span>
+        <span class="family-question-list-copy">
+          <strong>${escapeHtml(q.text)}</strong>
+          <small>an ${escapeHtml(familyQuestionRecipientLabel(q.to))}</small>
+        </span>
+        <button type="button" class="family-question-done"
+                data-question-id="${q.id}">✓ Fertig</button>
+        <button type="button" class="family-question-delete"
+                data-question-id="${q.id}"
+                aria-label="Frage löschen">×</button>
+      </div>
+    `).join("") : "";
+  }
+
+  document.querySelectorAll(".family-question-done").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const q = state.familyQuestions.find(x => x.id === btn.dataset.questionId);
+      if(!q) return;
+      q.done = true;
+      q.updatedAt = Date.now();
+      save();
+      renderFamilyQuestions();
+    });
+  });
+
+  document.querySelectorAll(".family-question-delete").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const q = state.familyQuestions.find(x => x.id === btn.dataset.questionId);
+      if(!q) return;
+      q.deleted = true;
+      q.updatedAt = Date.now();
+      save();
+      renderFamilyQuestions();
+    });
+  });
+}
+
+function addFamilyQuestion(){
+  const input = document.querySelector("#familyQuestionText");
+  const to = document.querySelector("#familyQuestionTo");
+  const text = input?.value.trim();
+  if(!text) return;
+
+  state.familyQuestions.push({
+    id: uid(),
+    text,
+    to: to?.value || "shared",
+    done:false,
+    deleted:false,
+    createdAt:Date.now(),
+    updatedAt:Date.now()
+  });
+
+  input.value = "";
+  save();
+  renderFamilyQuestions();
+  input.focus();
+}
+
+document.querySelector("#addFamilyQuestionBtn")?.addEventListener("click", addFamilyQuestion);
+document.querySelector("#familyQuestionText")?.addEventListener("keydown", e => {
+  if(e.key === "Enter"){
+    e.preventDefault();
+    addFamilyQuestion();
+  }
+});
+
 function renderAll() {
   pruneTrash();
   bindManualTimetableControls();
@@ -4606,6 +4743,7 @@ function renderAll() {
   renderRecipes();
   renderMealPlan();
   renderPinboard();
+  renderFamilyQuestions();
 }
 
 async function updateVideoPreview() {
@@ -6593,6 +6731,14 @@ function applyCloudData(data) {
     if (Array.isArray(data.pinboard)) {
       handleIncomingPinboard(data.pinboard);
       state.pinboard = guardedMergeById(state.pinboard, data.pinboard, "Pinnwand");
+    }
+
+    if (Array.isArray(data.familyQuestions)) {
+      state.familyQuestions = guardedMergeById(
+        state.familyQuestions,
+        data.familyQuestions,
+        "Familienfragen"
+      );
     }
 
     if (data.recipeLinkFeedback && typeof data.recipeLinkFeedback === "object") {
