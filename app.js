@@ -3241,7 +3241,24 @@ function renderSchool(){
                         <span class="school-find-play">▶</span>
                       </span>` : ""}
                     </a>
-                    <button class="school-del" data-kind="find" data-child="${id}" data-id="${x.id}" aria-label="Fundstück löschen">×</button>
+                    <div class="school-find-actions">
+                      <button class="school-find-edit" data-child="${id}" data-id="${x.id}" type="button" aria-label="Fundstück bearbeiten">✎</button>
+                      <button class="school-del" data-kind="find" data-child="${id}" data-id="${x.id}" aria-label="Fundstück löschen">×</button>
+                    </div>
+                  </div>
+                  <div class="school-find-editor hidden" data-child="${id}" data-id="${x.id}">
+                    <input class="school-find-edit-name" value="${escapeHtml(x.name||"")}" placeholder="Titel – optional">
+                    <input class="school-find-edit-url" value="${escapeHtml(x.url||"")}" placeholder="Link">
+                    <select class="school-find-edit-category">
+                      ${Object.entries(categoryMeta).map(([key,val])=>`<option value="${key}" ${key===(x.category||"sonstiges")?"selected":""}>${val[0]} ${val[1]}</option>`).join("")}
+                    </select>
+                    <select class="school-find-edit-rating">
+                      <option value="gut" ${x.rating==="gut"?"selected":""}>♡ Gut</option>
+                      <option value="mittel" ${(x.rating||"mittel")==="mittel"?"selected":""}>○ Mittel</option>
+                      <option value="schlecht" ${x.rating==="schlecht"?"selected":""}>– Schlecht</option>
+                    </select>
+                    <button class="secondary-btn school-find-save-edit" data-child="${id}" data-id="${x.id}" type="button">Speichern</button>
+                    <button class="school-find-cancel-edit" data-child="${id}" data-id="${x.id}" type="button">×</button>
                   </div>`;
                 }).join("")}
               </div>
@@ -3379,6 +3396,43 @@ document.querySelectorAll(".school-find-search").forEach(input=>input.addEventLi
   const restored=document.querySelector(`#schoolFindSearch${id}`);
   if(restored){restored.focus();restored.setSelectionRange(restored.value.length,restored.value.length);}
 }));
+
+document.addEventListener("click",e=>{
+  const edit=e.target.closest(".school-find-edit");
+  if(edit){
+    const editor=document.querySelector(`.school-find-editor[data-child="${edit.dataset.child}"][data-id="${edit.dataset.id}"]`);
+    document.querySelectorAll(".school-find-editor").forEach(x=>{ if(x!==editor) x.classList.add("hidden"); });
+    editor?.classList.toggle("hidden");
+    return;
+  }
+
+  const cancel=e.target.closest(".school-find-cancel-edit");
+  if(cancel){
+    document.querySelector(`.school-find-editor[data-child="${cancel.dataset.child}"][data-id="${cancel.dataset.id}"]`)?.classList.add("hidden");
+    return;
+  }
+
+  const saveBtn=e.target.closest(".school-find-save-edit");
+  if(saveBtn){
+    const id=saveBtn.dataset.child;
+    const findId=saveBtn.dataset.id;
+    const editor=document.querySelector(`.school-find-editor[data-child="${id}"][data-id="${findId}"]`);
+    const item=state.school.children[id]?.interestLinks?.find(x=>x.id===findId);
+    if(!editor || !item) return;
+
+    let url=(editor.querySelector(".school-find-edit-url")?.value||"").trim();
+    if(!url) return;
+    if(!/^https?:\/\//i.test(url)) url="https://"+url;
+
+    item.name=(editor.querySelector(".school-find-edit-name")?.value||"").trim();
+    item.url=url;
+    item.category=editor.querySelector(".school-find-edit-category")?.value || "sonstiges";
+    item.rating=editor.querySelector(".school-find-edit-rating")?.value || "mittel";
+    item.updatedAt=Date.now();
+    save();
+    renderSchool();
+  }
+});
 
 document.querySelectorAll(".school-spotify-edit").forEach(b=>b.addEventListener("click",e=>{
   const id=e.currentTarget.id.replace("schoolSpotifyEdit","");
