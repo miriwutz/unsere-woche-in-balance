@@ -16074,3 +16074,69 @@ body.child-view-active #papaOverviewModal{
 .shopping-promo-panel{width:100%!important;border:1px solid rgba(145,119,87,.22)!important;border-radius:13px!important;padding:11px 12px 9px!important;background:linear-gradient(145deg,rgba(255,252,243,.96),rgba(248,244,232,.91))!important;box-shadow:0 3px 12px rgba(91,70,48,.035)!important}.shopping-promo-head{gap:7px!important;padding-bottom:7px!important;border-bottom:1px dashed rgba(128,103,77,.17)!important}.shopping-promo-icon{font-size:.85rem!important;opacity:.72!important}.shopping-promo-head strong{font-size:.96rem!important;line-height:1!important}.shopping-promo-head small{margin-top:2px!important;font-size:.55rem!important}
 .shopping-promo-row{display:grid!important;grid-template-columns:35px minmax(0,1fr)!important;gap:3px 7px!important;padding:9px 1px!important;border-bottom:1px solid rgba(130,110,90,.10)!important}.shopping-promo-row:last-child{border-bottom:0!important}.shopping-promo-shop{grid-row:1/3!important;font-size:.54rem!important;letter-spacing:.08em!important}.shopping-promo-copy strong{font-size:.73rem!important;line-height:1.12!important}.shopping-promo-copy small{margin-top:2px!important;font-size:.56rem!important;line-height:1.25!important}.shopping-promo-dates{grid-column:2!important;display:flex!important;align-items:center!important;gap:4px!important;margin-top:4px!important;color:#6e695d!important;font-size:.58rem!important}.shopping-promo-dates b{padding:2px 5px!important;border-radius:999px!important;background:#edf2e7!important;color:#61705c!important;font-weight:650!important}.shopping-promo-dates span{color:#a59b91!important;font-size:.52rem!important}.shopping-promo-note{padding-top:6px!important;border-top:1px dashed rgba(128,103,77,.14)!important;color:#aaa096!important;font-size:.48rem!important;line-height:1.25!important}
 @media(max-width:1050px){.shopping-main-grid{grid-template-columns:1fr!important}.shopping-promo-panel{max-width:430px!important}}
+
+
+/* =========================================================
+   V29 – Kinder-Dashboard: Panelzustände eindeutig
+   ========================================================= */
+.school-timetable-manage-hidden.hidden{
+  display:none !important;
+}
+.school-timetable-manage-hidden.is-open:not(.hidden){
+  display:block !important;
+}
+
+/* =========================================================
+   V29 – Fragenschild: näher zusammen
+   ========================================================= */
+.week-family-questions{
+  padding:4px 10px 5px !important;
+}
+.week-family-question-items{
+  column-gap:5px !important;
+  row-gap:0 !important;
+}
+.week-family-question{
+  min-height:19px !important;
+  grid-template-columns:21px minmax(0,1fr) !important;
+  gap:3px !important;
+}
+.week-family-question-mark{
+  width:20px !important;
+  height:20px !important;
+  min-width:20px !important;
+}
+.week-family-question-copy strong{
+  font-size:.69rem !important;
+}
+.week-family-question-copy small{
+  font-size:.42rem !important;
+}
+
+/* =========================================================
+   V29 – Einkauf ohne Rabattkasten
+   ========================================================= */
+.shopping-main-grid{
+  display:block !important;
+}
+.shopping-workarea{
+  width:100% !important;
+}
+.shopping-promo-panel,
+.shopping-promo-info{
+  display:none !important;
+}
+
+/* Liste optisch stärker nutzen, aber nicht künstlich riesig */
+#shopping .shopping-card{
+  min-height:0 !important;
+}
+.shopping-list{
+  min-height:0 !important;
+}
+.shopping-item{
+  min-height:31px !important;
+}
+.shopping-item-name{
+  font-size:.98rem !important;
+}
