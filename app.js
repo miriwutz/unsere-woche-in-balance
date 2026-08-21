@@ -4668,25 +4668,23 @@ function renderFamilyQuestions(){
       strip.classList.add("hidden");
       strip.innerHTML = "";
     }else{
-      const visible = open.slice(0,3);
+      const visible = open.slice(0,6);
       strip.classList.remove("hidden");
       strip.innerHTML = `
-        <div class="week-family-question-title">Fragen</div>
         <div class="week-family-question-items">
           ${visible.map(q => `
-            <div class="week-family-question" style="--question-color:${familyQuestionRecipientColor(q.to)}">
-              <span class="week-family-question-mark">?</span>
+            <div class="week-family-question">
+              <button type="button" class="week-family-question-mark family-question-done"
+                      data-question-id="${q.id}"
+                      title="Frage erledigt"
+                      aria-label="Frage erledigt">?</button>
               <span class="week-family-question-copy">
                 <strong>${escapeHtml(q.text)}</strong>
                 <small>${escapeHtml(familyQuestionRecipientLabel(q.to))}</small>
               </span>
-              <button type="button" class="family-question-done"
-                      data-question-id="${q.id}"
-                      title="Erledigt"
-                      aria-label="Frage erledigt">✓</button>
             </div>
           `).join("")}
-          ${open.length > 3 ? `<span class="week-family-question-more">+${open.length-3}</span>` : ""}
+          ${open.length > 6 ? `<span class="week-family-question-more">+${open.length-6}</span>` : ""}
         </div>
       `;
     }
