@@ -21047,3 +21047,361 @@ body.child-view-active #papaOverviewModal{
   #recipeForm .recipe-v19-meta-grid{grid-template-columns:1fr 1fr !important}
   .recipe-filters{grid-template-columns:1fr 1fr !important}
 }
+
+
+/* =========================================================
+   V39 – ABC kompakt im Filter + einheitliche Line-Filter
+   ========================================================= */
+
+/* Filterzeile: Suche + zwei Selects + ABC + Merkmalsfilter in einer ruhigen Leiste. */
+.recipe-filters{
+  position:relative !important;
+  display:flex !important;
+  align-items:center !important;
+  gap:7px !important;
+  flex-wrap:wrap !important;
+  padding:8px 10px !important;
+  overflow:visible !important;
+}
+.recipe-filters .recipe-search-wrap{
+  flex:1 1 260px !important;
+  min-width:220px !important;
+}
+#recipeCategoryFilter{
+  flex:0 1 180px !important;
+  width:auto !important;
+  min-width:160px !important;
+}
+#recipeDifficultyFilter{
+  flex:0 1 190px !important;
+  width:auto !important;
+  min-width:170px !important;
+}
+
+/* Das alphabetische Register ist jetzt nur noch ein kleiner ausklappbarer ABC-Chip. */
+.recipe-alpha-details{
+  position:relative !important;
+  flex:0 0 auto !important;
+  margin:0 !important;
+  padding:0 !important;
+}
+.recipe-alpha-details > summary{
+  list-style:none !important;
+  box-sizing:border-box !important;
+  display:inline-flex !important;
+  align-items:center !important;
+  gap:6px !important;
+  height:36px !important;
+  min-height:36px !important;
+  padding:0 8px 0 10px !important;
+  border:1px solid rgba(117,105,91,.14) !important;
+  border-radius:10px !important;
+  background:#fffdfa !important;
+  color:#6d6258 !important;
+  cursor:pointer !important;
+  user-select:none !important;
+}
+.recipe-alpha-details > summary::-webkit-details-marker{display:none !important}
+.recipe-alpha-details > summary::after{
+  content:"⌄";
+  margin-left:1px;
+  color:#a08f80;
+  font-size:.72rem;
+  transform:translateY(-1px);
+}
+.recipe-alpha-details[open] > summary{
+  background:#eef2e4 !important;
+  border-color:rgba(111,128,75,.24) !important;
+  color:#596344 !important;
+}
+.recipe-alpha-summary-label{
+  font-family:"Playfair Display",Georgia,serif;
+  font-size:.72rem;
+  font-weight:700;
+  letter-spacing:.05em;
+}
+.recipe-alpha-details .recipe-library-count{
+  display:grid !important;
+  place-items:center !important;
+  min-width:19px !important;
+  height:19px !important;
+  padding:0 5px !important;
+  border-radius:999px !important;
+  background:#edf1df !important;
+  color:#758056 !important;
+  font-size:.58rem !important;
+  line-height:1 !important;
+}
+.recipe-alpha-popover{
+  position:absolute !important;
+  z-index:80 !important;
+  top:calc(100% + 6px) !important;
+  right:0 !important;
+  width:max-content !important;
+  min-width:250px !important;
+  max-width:min(620px,80vw) !important;
+  padding:9px !important;
+  border:1px solid rgba(118,105,90,.14) !important;
+  border-radius:12px !important;
+  background:rgba(255,253,249,.985) !important;
+  box-shadow:0 10px 28px rgba(67,54,43,.12) !important;
+}
+.recipe-alpha-popover-head{
+  display:flex !important;
+  align-items:baseline !important;
+  justify-content:space-between !important;
+  gap:12px !important;
+  padding:0 2px 7px !important;
+  color:#6c5f55 !important;
+}
+.recipe-alpha-popover-head > span{
+  font-family:"Playfair Display",Georgia,serif;
+  font-size:.76rem !important;
+  font-weight:700 !important;
+}
+.recipe-alpha-popover-head > small{
+  font-size:.55rem !important;
+  color:#a09183 !important;
+}
+.recipe-alpha-popover .recipe-toc-list{
+  display:flex !important;
+  flex-wrap:wrap !important;
+  gap:5px !important;
+  margin:0 !important;
+}
+.recipe-alpha-popover .recipe-alpha-chip{
+  min-width:31px !important;
+  height:30px !important;
+  padding:3px 6px !important;
+  gap:4px !important;
+  font-size:.67rem !important;
+}
+.recipe-alpha-popover .recipe-alpha-chip b{
+  min-width:16px !important;
+  height:16px !important;
+  padding:0 4px !important;
+  font-size:.54rem !important;
+}
+
+/* Separater alter Bibliothekskasten wird nicht mehr gebraucht. */
+.recipe-library-nav{display:none !important}
+
+/* Vier schnelle Merkmalsfilter: einheitliche Line-Icons, kein Emoji-Mix. */
+.recipe-quick-filter{
+  position:relative !important;
+  display:inline-flex !important;
+  align-items:center !important;
+  gap:5px !important;
+  flex:0 0 auto !important;
+  width:auto !important;
+  min-width:0 !important;
+  max-width:none !important;
+  height:34px !important;
+  min-height:34px !important;
+  margin:0 !important;
+  padding:4px 8px !important;
+  border:1px solid transparent !important;
+  border-radius:999px !important;
+  background:transparent !important;
+  color:#76695f !important;
+  cursor:pointer !important;
+  white-space:nowrap !important;
+}
+.recipe-quick-filter:hover{
+  background:rgba(246,245,238,.88) !important;
+  border-color:rgba(121,108,91,.10) !important;
+}
+.recipe-quick-filter:has(input:checked){
+  background:#edf2df !important;
+  border-color:rgba(106,124,69,.22) !important;
+  color:#596343 !important;
+}
+.recipe-quick-filter > input{
+  position:absolute !important;
+  opacity:0 !important;
+  pointer-events:none !important;
+  width:1px !important;
+  height:1px !important;
+}
+.recipe-filter-check{
+  box-sizing:border-box !important;
+  width:15px !important;
+  height:15px !important;
+  flex:0 0 15px !important;
+  display:grid !important;
+  place-items:center !important;
+  border:1px solid rgba(111,120,91,.36) !important;
+  border-radius:50% !important;
+  background:#fffef9 !important;
+}
+.recipe-filter-check::after{
+  content:"";
+  width:6px;
+  height:6px;
+  border-radius:50%;
+  background:transparent;
+}
+.recipe-quick-filter:has(input:checked) .recipe-filter-check::after{
+  background:#8e9d62;
+}
+.recipe-filter-icon{
+  width:16px !important;
+  height:16px !important;
+  flex:0 0 16px !important;
+  fill:none !important;
+  stroke:currentColor !important;
+  stroke-width:1.35 !important;
+  stroke-linecap:round !important;
+  stroke-linejoin:round !important;
+  color:#8a806f !important;
+}
+.recipe-kids-filter .recipe-filter-icon{color:#927f6c !important}
+.recipe-selfcook-filter .recipe-filter-icon{color:#967864 !important}
+.recipe-healthy-filter .recipe-filter-icon{color:#718a62 !important}
+.recipe-favorite-filter .recipe-filter-icon{color:#a47369 !important}
+.recipe-quick-filter > span:last-child{
+  font-size:.64rem !important;
+  line-height:1 !important;
+}
+
+@media(max-width:900px){
+  .recipe-alpha-popover{right:auto !important;left:0 !important}
+}
+
+
+/* =========================================================
+   V40 – Drucken: E-Mail dezent ausklappbar
+   ========================================================= */
+.school-print-head{
+  align-items:center !important;
+}
+.school-print-email-toggle{
+  flex:0 0 34px;
+  width:34px;
+  height:34px;
+  display:grid;
+  place-items:center;
+  margin-left:auto;
+  padding:0;
+  border:1px solid rgba(123,109,91,.16);
+  border-radius:50%;
+  background:rgba(255,253,250,.82);
+  color:#8c7a69;
+  font:inherit;
+  cursor:pointer;
+}
+.school-print-email-toggle:hover,
+.school-print-email-toggle[aria-expanded="true"]{
+  background:#f0f3e5;
+  border-color:rgba(112,125,78,.24);
+  color:#66704e;
+}
+.school-print-email-panel{
+  display:grid;
+  grid-template-columns:auto minmax(220px,1fr) auto;
+  gap:8px;
+  align-items:center;
+  margin:-4px 0 10px;
+  padding:8px 10px;
+  border:1px solid rgba(111,124,82,.14);
+  border-radius:11px;
+  background:linear-gradient(145deg,rgba(241,245,229,.72),rgba(250,249,243,.72));
+}
+.school-print-email-panel.hidden{
+  display:none !important;
+}
+.school-print-email-label{
+  color:#7f765f;
+  font-size:.68rem;
+  white-space:nowrap;
+}
+.school-print-email-panel input{
+  min-width:0;
+  height:34px !important;
+  min-height:34px !important;
+  background:rgba(255,254,251,.92) !important;
+}
+.school-print-email-panel button{
+  height:34px;
+  min-height:34px;
+  padding:5px 11px;
+}
+.workroom-print-mail{
+  color:#8b806c !important;
+}
+
+/* =========================================================
+   V40 – Linksammlung: Eingabefelder bleiben an ihrem Platz
+   ========================================================= */
+.workroom-link-add{
+  display:grid !important;
+  grid-template-columns:minmax(170px,.85fr) minmax(240px,1.55fr) minmax(190px,1fr) 176px !important;
+  grid-template-areas:
+    "title note url category"
+    "use important save save" !important;
+  gap:8px !important;
+  align-items:center !important;
+}
+#workroomLinkTitle{grid-area:title !important}
+#workroomLinkNote{grid-area:note !important}
+#workroomLinkUrl{grid-area:url !important}
+#workroomLinkCategory{grid-area:category !important}
+#workroomLinkUse{grid-area:use !important;width:100% !important}
+.workroom-link-important-toggle{
+  grid-area:important !important;
+  justify-self:start !important;
+  width:auto !important;
+  min-width:0 !important;
+  margin:0 !important;
+}
+#addWorkroomLinkBtn{
+  grid-area:save !important;
+  justify-self:stretch !important;
+  width:100% !important;
+  margin:0 !important;
+}
+
+/* Privat: wirklich nur ein sehr sanfter Olivhauch. */
+.workroom-link-item-private{
+  background:linear-gradient(145deg,rgba(241,245,229,.72),rgba(249,249,242,.66)) !important;
+  border-color:rgba(118,132,83,.13) !important;
+}
+.workroom-link-item-private:hover{
+  background:linear-gradient(145deg,rgba(237,243,221,.82),rgba(248,248,239,.76)) !important;
+}
+.workroom-link-item-private .workroom-link-title{
+  color:#60674d !important;
+}
+.workroom-link-category[data-category="private"],
+.workroom-link-item-private .workroom-link-category{
+  background:#eef2e2 !important;
+  color:#6e7954 !important;
+  border-color:rgba(117,132,82,.12) !important;
+}
+
+@media(max-width:950px){
+  .workroom-link-add{
+    grid-template-columns:1fr 1fr !important;
+    grid-template-areas:
+      "title note"
+      "url category"
+      "use important"
+      "save save" !important;
+  }
+}
+@media(max-width:620px){
+  .school-print-email-panel{
+    grid-template-columns:1fr !important;
+  }
+  .workroom-link-add{
+    grid-template-columns:1fr !important;
+    grid-template-areas:
+      "title"
+      "note"
+      "url"
+      "category"
+      "use"
+      "important"
+      "save" !important;
+  }
+}
