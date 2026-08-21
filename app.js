@@ -8159,7 +8159,8 @@ let activeRecipeSource = "all";
 let activeRecipeSearch = "";
 let mealPlanWeekOffset = 0;
 let recipePage = 0;
-const RECIPE_PAGE_SIZE = 10;
+const RECIPE_PAGE_SIZE = 20;
+let activeRecipeLetter = "all";
 let editingRecipeId = null;
 
 // Wochentage müssen vor dem ersten möglichen renderAll-Aufruf initialisiert sein.
@@ -9912,10 +9913,12 @@ function renderRecipes() {
         ...(Array.isArray(r.ingredients) ? r.ingredients : [])
       ].join(" ").toLowerCase();
       const matchesSearch = !query || haystack.includes(query);
+      const firstLetter = String(r.title || "").trim().charAt(0).toLocaleUpperCase("de-DE");
+      const matchesLetter = activeRecipeLetter === "all" || firstLetter === activeRecipeLetter;
       return matchesCategory && matchesDifficulty && matchesKids && matchesSelfCook && matchesHealthy &&
-        matchesFavorite && matchesSource && matchesSearch;
+        matchesFavorite && matchesSource && matchesSearch && matchesLetter;
     })
-    .sort((a,b) => (b.createdAt || 0) - (a.createdAt || 0));
+    .sort((a,b) => String(a.title || "").localeCompare(String(b.title || ""), "de", {sensitivity:"base"}));
 
   recipePage = Math.min(
     recipePage,
@@ -10190,45 +10193,60 @@ function renderRecipeSearchSuggestions() {
 }
 
 function renderRecipeToc() {
-  const host=document.querySelector("#recipeTocList");
-  if(!host) return;
+  const host = document.querySelector("#recipeTocList");
+  if (!host) return;
 
-  const recipes=Array.isArray(state.recipes)?state.recipes:[];
-  const countEl=document.querySelector("#recipeLibraryCount");
-  if(countEl) countEl.textContent=`${recipes.length} ${recipes.length===1?"Rezept":"Rezepte"}`;
+  const query = activeRecipeSearch.trim().toLowerCase();
+  const filtered = (Array.isArray(state.recipes) ? state.recipes : [])
+    .filter(r => {
+      const matchesCategory = activeRecipeCategory === "all" || (r.category || "main") === activeRecipeCategory;
+      const matchesDifficulty = activeRecipeDifficulty === "all" || r.difficulty === activeRecipeDifficulty;
+      const matchesKids = !recipeKidsOnly || !!r.kids;
+      const matchesSelfCook = !recipeSelfCookOnly || recipeSelfCook(r);
+      const matchesHealthy = !recipeHealthyOnly || !!r.healthy;
+      const matchesFavorite = !recipeFavoriteOnly || !!r.favorite;
+      const matchesSource = activeRecipeSource === "all" || normalizedRecipeSource(r) === activeRecipeSource;
+      const haystack = [r.title, ...(Array.isArray(r.ingredients) ? r.ingredients : [])].join(" ").toLowerCase();
+      const matchesSearch = !query || haystack.includes(query);
+      return matchesCategory && matchesDifficulty && matchesKids && matchesSelfCook && matchesHealthy &&
+        matchesFavorite && matchesSource && matchesSearch;
+    })
+    .sort((a,b) => String(a.title || "").localeCompare(String(b.title || ""), "de", {sensitivity:"base"}));
 
-  if(!recipes.length){
-    host.innerHTML='<span class="recipe-toc-empty">Noch keine Rezepte.</span>';
+  const countEl = document.querySelector("#recipeLibraryCount");
+  if (countEl) countEl.textContent = `${filtered.length} ${filtered.length === 1 ? "Rezept" : "Rezepte"}`;
+
+  if (!filtered.length) {
+    activeRecipeLetter = "all";
+    host.innerHTML = '<span class="recipe-toc-empty">Keine passenden Rezepte.</span>';
     return;
   }
 
-  const order=["breakfast","spread","soup","main","small","salad","sweet","drink","other"];
-  const groups=order.map(category=>({
-    category,
-    label:recipeCategoryLabel(category),
-    count:recipes.filter(r=>(r.category||"main")===category).length
-  })).filter(g=>g.count);
+  const counts = new Map();
+  filtered.forEach(r => {
+    const letter = String(r.title || "").trim().charAt(0).toLocaleUpperCase("de-DE") || "#";
+    counts.set(letter, (counts.get(letter) || 0) + 1);
+  });
+  const letters = [...counts.keys()].sort((a,b) => a.localeCompare(b, "de", {sensitivity:"base"}));
+  if (activeRecipeLetter !== "all" && !counts.has(activeRecipeLetter)) activeRecipeLetter = "all";
 
-  host.innerHTML=`
-    <button type="button" class="recipe-library-chip ${activeRecipeCategory==="all"?"active":""}" data-category="all">
-      <span>Alle</span><b>${recipes.length}</b>
+  host.innerHTML = `
+    <button type="button" class="recipe-alpha-chip ${activeRecipeLetter === "all" ? "active" : ""}" data-letter="all">
+      <span>Alle</span><b>${filtered.length}</b>
     </button>
-    ${groups.map(g=>`
-      <button type="button" class="recipe-library-chip ${activeRecipeCategory===g.category?"active":""}" data-category="${g.category}">
-        <span>${escapeHtml(g.label)}</span><b>${g.count}</b>
+    ${letters.map(letter => `
+      <button type="button" class="recipe-alpha-chip ${activeRecipeLetter === letter ? "active" : ""}" data-letter="${escapeHtml(letter)}">
+        <span>${escapeHtml(letter)}</span><b>${counts.get(letter)}</b>
       </button>`).join("")}
   `;
 
-  host.querySelectorAll(".recipe-library-chip").forEach(btn=>btn.addEventListener("click",()=>{
-    activeRecipeCategory=btn.dataset.category||"all";
-    recipePage=0;
-    const select=document.querySelector("#recipeCategoryFilter");
-    if(select) select.value=activeRecipeCategory;
+  host.querySelectorAll(".recipe-alpha-chip").forEach(btn => btn.addEventListener("click", () => {
+    activeRecipeLetter = btn.dataset.letter || "all";
+    recipePage = 0;
     renderRecipes();
-    requestAnimationFrame(()=>document.querySelector("#recipeList")?.scrollIntoView({behavior:"smooth",block:"start"}));
+    requestAnimationFrame(() => document.querySelector("#recipeList")?.scrollIntoView({behavior:"smooth", block:"start"}));
   }));
 }
-
 function mealPlanMonday(offset = 0) {
   const monday = new Date(currentWeekMonday);
   monday.setDate(monday.getDate() + offset * 7);
@@ -10554,6 +10572,7 @@ document.querySelector("#toggleRecipeFormBtn")?.addEventListener("click", () => 
 });
 document.querySelector("#recipeSearch")?.addEventListener("input", e => {
   activeRecipeSearch = e.currentTarget.value || "";
+  activeRecipeLetter = "all";
   recipePage = 0;
   renderRecipes();
   renderRecipeSearchSuggestions();
@@ -10561,6 +10580,7 @@ document.querySelector("#recipeSearch")?.addEventListener("input", e => {
 
 document.querySelector("#recipeSourceFilter")?.addEventListener("change", e => {
   activeRecipeSource = e.currentTarget.value || "all";
+  activeRecipeLetter = "all";
   recipePage = 0;
   renderRecipes();
 });
@@ -10568,35 +10588,41 @@ document.querySelector("#recipeSourceFilter")?.addEventListener("change", e => {
 document.querySelector("#recipeCategoryFilter")?.addEventListener("change", e => {
   recipeCategoryTouched = true;
   activeRecipeCategory = e.currentTarget.value || "all";
+  activeRecipeLetter = "all";
   recipePage = 0;
   renderRecipes();
 });
 
 document.querySelector("#recipeDifficultyFilter")?.addEventListener("change", e => {
   activeRecipeDifficulty = e.currentTarget.value || "all";
+  activeRecipeLetter = "all";
   recipePage = 0;
   renderRecipes();
 });
 document.querySelector("#recipeKidsOnlyFilter")?.addEventListener("change", e => {
   recipeKidsOnly = !!e.currentTarget.checked;
+  activeRecipeLetter = "all";
   recipePage = 0;
   renderRecipes();
 });
 
 document.querySelector("#recipeSelfCookOnlyFilter")?.addEventListener("change", e => {
   recipeSelfCookOnly = !!e.currentTarget.checked;
+  activeRecipeLetter = "all";
   recipePage = 0;
   renderRecipes();
 });
 
 document.querySelector("#recipeHealthyOnlyFilter")?.addEventListener("change", e => {
   recipeHealthyOnly = !!e.currentTarget.checked;
+  activeRecipeLetter = "all";
   recipePage = 0;
   renderRecipes();
 });
 
 document.querySelector("#recipeFavoriteOnlyFilter")?.addEventListener("change", e => {
   recipeFavoriteOnly = !!e.currentTarget.checked;
+  activeRecipeLetter = "all";
   recipePage = 0;
   renderRecipes();
 });
