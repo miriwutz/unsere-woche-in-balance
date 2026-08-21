@@ -3538,6 +3538,18 @@ document.querySelector("#closeFamilyTimetableDialog")?.addEventListener("click",
 
 // ===== WERKRAUM – ROUTINEN =====
 
+// Routinen standardmäßig geschlossen – analog zu den anderen Klappbereichen.
+document.querySelector("#toggleRoutinePanelBtn")?.addEventListener("click",()=>{
+  const btn=document.querySelector("#toggleRoutinePanelBtn");
+  const body=document.querySelector("#workroomRoutineBody");
+  if(!btn || !body) return;
+  const open=body.classList.toggle("hidden")===false;
+  btn.setAttribute("aria-expanded",String(open));
+  btn.classList.toggle("open",open);
+  if(open) renderRoutines();
+});
+
+
 let activeRoutineWeekOffset = 0;
 let editingRoutineId = null;
 
@@ -3650,7 +3662,7 @@ function renderRoutines(){
   const items=routines.items
     .filter(item=>routineAppliesToWeek(item,weekKey))
     .sort((a,b)=>{
-      const partOrder={morning:0,evening:1,other:2};
+      const partOrder={morning:0,school:1,afterschool:2,evening:3,other:4};
       return (partOrder[a.part]??9)-(partOrder[b.part]??9) ||
         String(a.day||"daily").localeCompare(String(b.day||"daily"),"de") ||
         Number(a.order||0)-Number(b.order||0);
@@ -3661,7 +3673,7 @@ function renderRoutines(){
     return;
   }
 
-  const partLabel={morning:"Morgen",evening:"Abend",other:"Sonstiges"};
+  const partLabel={morning:"Morgen",school:"Schulalltag",afterschool:"Nach der Schule",evening:"Abend",other:"Sonstiges"};
   list.innerHTML=items.map(item=>{
     const cat=routineCategoryMeta[item.category||"none"] || routineCategoryMeta.other;
     return `<div class="routine-row" data-id="${item.id}">
@@ -3860,10 +3872,16 @@ function renderWorkroomWeekOverview(weekOffset=0){
 
           ${day.routineItems?.length ? `
             <div class="workroom-week-routine-block">
-              ${["morning","evening","other"].map(part=>{
+              ${["morning","school","afterschool","evening","other"].map(part=>{
                 const group=day.routineItems.filter(x=>(x.part||"morning")===part);
                 if(!group.length) return "";
-                const label={morning:"Morgenroutine",evening:"Abendroutine",other:"Routine"}[part];
+                const label={
+                  morning:"🌿 Morgenroutine",
+                  school:"☀️ Schulalltag",
+                  afterschool:"🍃 Nach der Schule",
+                  evening:"🌙 Abendroutine",
+                  other:"Routine"
+                }[part];
                 return `<section class="workroom-week-routine-group">
                   <span class="workroom-week-routine-label">${label}</span>
                   ${group.map(item=>{
@@ -3872,7 +3890,7 @@ function renderWorkroomWeekOverview(weekOffset=0){
                     const category=routineCategoryMeta[item.category||"none"]||routineCategoryMeta.other;
                     const routineThumb=item.url ? thumbnailFor(item.url) : "";
                     return `<div class="workroom-week-routine-item ${done?"done":""} ${routineThumb?"has-thumb":""}" data-routine-id="${item.id}" data-date="${dateKey(day.date)}">
-                      <button class="routine-week-check" type="button" data-id="${item.id}" data-date="${dateKey(day.date)}" aria-label="Routinepunkt abhaken">${done?"✓":""}</button>
+                      <button class="routine-week-check" type="button" data-id="${item.id}" data-date="${dateKey(day.date)}" data-done="${done?"1":"0"}" aria-pressed="${done?"true":"false"}" aria-label="${done?"Routinepunkt wieder öffnen":"Routinepunkt abhaken"}"><span aria-hidden="true">${done?"✓":""}</span></button>
                       ${routineThumb?`<a class="routine-week-thumb" href="${escapeHtml(item.url)}" target="_blank" rel="noopener" aria-label="Video öffnen">
                         <img src="${escapeHtml(routineThumb)}" alt="" loading="lazy" referrerpolicy="no-referrer">
                         <span>▶</span>
@@ -3899,10 +3917,15 @@ function renderWorkroomWeekOverview(weekOffset=0){
       </section>`;
   }).join("");
 
-  document.querySelectorAll(".routine-week-check").forEach(btn=>btn.addEventListener("click",()=>{
+  document.querySelectorAll(".routine-week-check").forEach(btn=>btn.addEventListener("click",e=>{
+    e.preventDefault();
+    e.stopPropagation();
+    if(btn.dataset.busy==="1") return;
+    btn.dataset.busy="1";
+
     const item=ensureWorkroomRoutines().items.find(x=>x.id===btn.dataset.id);
     const date=parseLocalDate(btn.dataset.date);
-    if(!item || !date) return;
+    if(!item || !date){ btn.dataset.busy="0"; return; }
 
     const current=routineCompletion(item.id,date);
     const willBeDone=!current?.done;
