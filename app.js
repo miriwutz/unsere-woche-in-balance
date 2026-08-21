@@ -6715,142 +6715,131 @@ function renderSchoolPrints() {
   }
 
   const list = document.querySelector("#schoolPrintList");
-
   if (!list) return;
+
+  state.workroom = normalizeWorkroom(state.workroom);
   syncSchoolPrintEmailUI();
 
-const now = Date.now();
+  const now = Date.now();
 
-state.workroom.prints = state.workroom.prints.filter(p => {
-  if (!p.done || !p.completedAt) return true;
+  state.workroom.prints = state.workroom.prints.filter(p => {
+    if (!p.done || !p.completedAt) return true;
+    return now - p.completedAt < 60000;
+  });
 
-  return now - p.completedAt < 60000;
-});
-  
-const prints = [...state.workroom.prints]
-  .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
-  
+  const prints = [...state.workroom.prints]
+    .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+
   if (!prints.length) {
     list.innerHTML =
       `<div class="workroom-empty">Im Moment steht nichts auf der Druckliste.</div>`;
   } else {
     list.innerHTML = prints.map(p => `
       <div
-        class="workroom-todo-row ${p.done ? "done" : ""}"
+        class="workroom-todo-row school-print-row ${p.done ? "done" : ""} ${p.mailOrder ? "school-print-row-mail" : ""}"
         data-print-id="${p.id}">
 
         <input
           class="workroom-print-check"
           type="checkbox"
           data-id="${p.id}"
+          title="Erledigt"
+          aria-label="${escapeHtml(p.text)} als erledigt markieren"
           ${p.done ? "checked" : ""}>
 
         <div class="workroom-todo-content">
           <span class="workroom-todo-text">${escapeHtml(p.text)}</span>
+          ${p.mailOrder
+            ? `<span class="school-print-mail-badge">✉ per E-Mail bestellen</span>`
+            : ""}
         </div>
 
         <div class="workroom-todo-actions">
-
           ${p.url
-            ? `<a class="workroom-todo-link"
+            ? `<a class="workroom-todo-link school-print-action"
                   href="${escapeHtml(p.url)}"
                   target="_blank"
                   rel="noopener"
-                  title="Link öffnen">🔗</a>`
+                  title="Datei oder Link öffnen"
+                  aria-label="Datei oder Link öffnen">↗</a>`
             : ""}
 
           <button
-            class="workroom-print-mail"
+            class="workroom-print-mail-order school-print-action ${p.mailOrder ? "active" : ""}"
             type="button"
             data-id="${p.id}"
-            title="Druck-E-Mail anzeigen"
-            aria-label="Druck-E-Mail anzeigen">✉</button>
+            title="${p.mailOrder ? "Nicht per E-Mail bestellen" : "Per E-Mail bestellen"}"
+            aria-label="${p.mailOrder ? "Nicht per E-Mail bestellen" : "Per E-Mail bestellen"}"
+            aria-pressed="${p.mailOrder ? "true" : "false"}">✉</button>
 
           <button
-            class="workroom-print-edit"
+            class="workroom-print-edit school-print-action"
             type="button"
             data-id="${p.id}"
-            title="Bearbeiten">✎</button>
+            title="Bearbeiten"
+            aria-label="Bearbeiten">✎</button>
 
           <button
-            class="workroom-print-delete"
+            class="workroom-print-delete school-print-action"
             type="button"
             data-id="${p.id}"
-            title="Löschen">×</button>
+            title="Löschen"
+            aria-label="Löschen">×</button>
 
-          <div class="workroom-move-controls">
-
-            <button
-              class="workroom-print-move-btn workroom-print-move-top"
-              type="button"
-              data-id="${p.id}"
-              title="Ganz nach oben">⇈</button>
-
-            <button
-              class="workroom-print-move-btn workroom-print-move-up"
-              type="button"
-              data-id="${p.id}"
-              title="Eine Position nach oben">↑</button>
-
-            <button
-              class="workroom-print-move-btn workroom-print-move-down"
-              type="button"
-              data-id="${p.id}"
-              title="Eine Position nach unten">↓</button>
-
-                  <span
-              class="workroom-drag-handle"
-              title="Ziehen"
-              aria-label="Ziehen">⋮⋮</span>
-
-          </div>
+          <span
+            class="workroom-drag-handle school-print-drag"
+            title="Ziehen zum Verschieben"
+            aria-label="Ziehen zum Verschieben">⠿</span>
         </div>
       </div>
     `).join("");
   }
 
- document.querySelectorAll(".workroom-print-check").forEach(box => {
-  box.addEventListener("change", e => {
-    const id = e.currentTarget.dataset.id;
-    const item = state.workroom.prints.find(p => p.id === id);
+  document.querySelectorAll(".workroom-print-check").forEach(box => {
+    box.addEventListener("change", e => {
+      const id = e.currentTarget.dataset.id;
+      const item = state.workroom.prints.find(p => p.id === id);
+      if (!item) return;
 
-    if (!item) return;
+      item.done = e.currentTarget.checked;
+      item.completedAt = item.done ? Date.now() : null;
 
-    item.done = e.currentTarget.checked;
-    item.completedAt = item.done ? Date.now() : null;
+      save();
+      renderSchoolPrints();
 
-    save();
-    renderSchoolPrints();
+      if (item.done) {
+        setTimeout(() => {
+          const currentItem = state.workroom.prints.find(p => p.id === id);
+          if (!currentItem || !currentItem.done) return;
 
-    if (item.done) {
-      setTimeout(() => {
-        const currentItem = state.workroom.prints.find(p => p.id === id);
+          state.workroom.prints =
+            state.workroom.prints.filter(p => p.id !== id);
 
-        if (!currentItem || !currentItem.done) return;
-
-        state.workroom.prints =
-          state.workroom.prints.filter(p => p.id !== id);
-
-        save();
-        renderSchoolPrints();
-      }, 60000);
-    }
+          save();
+          renderSchoolPrints();
+        }, 60000);
+      }
+    });
   });
-});
 
-  document.querySelectorAll(".workroom-print-mail").forEach(btn => {
-    btn.addEventListener("click", () => {
-      showSchoolPrintEmail();
+  // The envelope in each row means ONE thing only:
+  // include/exclude this print job in the e-mail order.
+  document.querySelectorAll(".workroom-print-mail-order").forEach(btn => {
+    btn.addEventListener("click", e => {
+      const id = e.currentTarget.dataset.id;
+      const item = state.workroom.prints.find(p => p.id === id);
+      if (!item) return;
+
+      item.mailOrder = !item.mailOrder;
+      save();
+      renderSchoolPrints();
     });
   });
 
   document.querySelectorAll(".workroom-print-delete").forEach(btn => {
     btn.addEventListener("click", e => {
       const id = e.currentTarget.dataset.id;
-
-      state.workroom.prints =
-        state.workroom.prints.filter(p => p.id !== id);
-
+      state.workroom.prints = state.workroom.prints.filter(p => p.id !== id);
       save();
       renderSchoolPrints();
     });
@@ -6860,7 +6849,6 @@ const prints = [...state.workroom.prints]
     btn.addEventListener("click", e => {
       const id = e.currentTarget.dataset.id;
       const item = state.workroom.prints.find(p => p.id === id);
-
       if (!item) return;
 
       document.querySelector("#schoolPrintInput").value = item.text || "";
@@ -6872,42 +6860,7 @@ const prints = [...state.workroom.prints]
     });
   });
 
-  document.querySelectorAll(".workroom-print-move-btn").forEach(btn => {
-    btn.addEventListener("click", e => {
-      const id = e.currentTarget.dataset.id;
-
-      const sorted = [...state.workroom.prints]
-        .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
-
-      const index = sorted.findIndex(p => p.id === id);
-      if (index === -1) return;
-
-      let newIndex = index;
-
-      if (e.currentTarget.classList.contains("workroom-print-move-top")) {
-        newIndex = 0;
-      } else if (e.currentTarget.classList.contains("workroom-print-move-up")) {
-        newIndex = Math.max(0, index - 1);
-      } else if (e.currentTarget.classList.contains("workroom-print-move-down")) {
-        newIndex = Math.min(sorted.length - 1, index + 1);
-      } else if (e.currentTarget.classList.contains("workroom-print-move-bottom")) {
-        newIndex = sorted.length - 1;
-      }
-
-      const [moved] = sorted.splice(index, 1);
-      sorted.splice(newIndex, 0, moved);
-
-      sorted.forEach((p, i) => {
-        p.order = i;
-      });
-
-      state.workroom.prints = sorted;
-
-      save();
-      renderSchoolPrints();
-    });
-  });
-
+  // As with the school to-dos: move only by the hand/drag handle.
   if (typeof Sortable !== "undefined") {
     const printList = document.querySelector("#schoolPrintList");
 
@@ -6916,6 +6869,11 @@ const prints = [...state.workroom.prints]
         animation: 150,
         handle: ".workroom-drag-handle",
         draggable: ".workroom-todo-row",
+        filter: ".workroom-print-check,.workroom-todo-actions button,.workroom-todo-actions a",
+        preventOnFilter: false,
+        ghostClass: "workroom-sort-ghost",
+        chosenClass: "workroom-sort-chosen",
+        dragClass: "workroom-sort-drag",
 
         onEnd: () => {
           const ids = [...printList.querySelectorAll(".workroom-todo-row")]
@@ -6965,6 +6923,7 @@ document.querySelector("#addSchoolPrintBtn")?.addEventListener("click", () => {
       url,
       done: false,
       completedAt: null,
+      mailOrder: false,
       order: state.workroom.prints.length,
       createdAt: Date.now()
     });
@@ -7005,6 +6964,10 @@ document.querySelector("#saveSchoolPrintEmailBtn")?.addEventListener("click",()=
 let activeWorkroomLinkCategory = "all";
 let activeWorkroomLinkUse = "all";
 let activeWorkroomLinkImportant = false;
+let activeWorkroomLinkSort = "manual";
+let workroomLinkPage = 1;
+const WORKROOM_LINKS_PER_PAGE = 20; // 2 Spalten × höchstens 10 Zeilen
+
 
 function normalizedWorkroomLinkUrl(url){
   try{
@@ -7056,6 +7019,33 @@ function ensureWorkroomLinkOrder(){
   save();
 }
 
+function workroomLinkEffectiveCategory(link){
+  // Alte Daten werden weiterhin sinnvoll einsortiert.
+  if(link.category==="current" || link.category==="private") return "other";
+  if(link.use==="bureaucracy" && (link.category==="other" || !link.category)) return "bureaucracy";
+  return link.category || "other";
+}
+
+function workroomLinkEffectiveUse(link){
+  // Frühere doppelte Kategorien "Aktuell/Privat" werden als Zeitraum verstanden.
+  if(link.category==="current") return "current";
+  if(link.category==="private") return "private";
+  // Bürokratie gehört jetzt zu MABÜ, nicht mehr zum Zeitraum.
+  if(link.use==="bureaucracy") return "soon";
+  return link.use || "soon";
+}
+
+function workroomLinkMatchesSort(link, sortKey){
+  if(sortKey==="year") return workroomLinkEffectiveUse(link)==="year";
+  if(sortKey==="current") return workroomLinkEffectiveUse(link)==="current";
+  if(sortKey==="later") return workroomLinkEffectiveUse(link)==="later";
+  if(sortKey==="private") return workroomLinkEffectiveUse(link)==="private";
+  if(sortKey==="bureaucracy"){
+    return workroomLinkEffectiveCategory(link)==="bureaucracy" || link.use==="bureaucracy";
+  }
+  return false;
+}
+
 function renderWorkroomLinks() {
   try {
     const localWorkroom = JSON.parse(localStorage.getItem("balanceProd.workroom") || "null");
@@ -7073,6 +7063,10 @@ function renderWorkroomLinks() {
   }
 
   const list = document.querySelector("#workroomLinkList");
+  const pager = document.querySelector("#workroomLinkPager");
+  const pageLabel = document.querySelector("#workroomLinkPageLabel");
+  const prevBtn = document.querySelector("#workroomLinkPrevPage");
+  const nextBtn = document.querySelector("#workroomLinkNextPage");
   if (!list) return;
 
   state.workroom = normalizeWorkroom(state.workroom);
@@ -7082,34 +7076,50 @@ function renderWorkroomLinks() {
   const useLabels = {
     soon: "Demnächst",
     current: "📌 Aktuell",
-    bureaucracy: "🗂 Bürokratie",
     year: "🗓 Jahresplanung",
-    later: "🌙 Später vorgemerkt"
+    later: "🌙 Später vorgemerkt",
+    private: "♡ Privat"
   };
 
-  const links = [...state.workroom.links]
+  let links = [...state.workroom.links]
     .filter(link =>
       activeWorkroomLinkCategory === "all" ||
-      (link.category || "other") === activeWorkroomLinkCategory
+      workroomLinkEffectiveCategory(link) === activeWorkroomLinkCategory
     )
     .filter(link =>
       activeWorkroomLinkUse === "all" ||
-      (link.use || "soon") === activeWorkroomLinkUse
+      workroomLinkEffectiveUse(link) === activeWorkroomLinkUse
     )
     .filter(link =>
       !activeWorkroomLinkImportant || !!link.important
     )
     .sort((a,b)=>Number(a.order??999999)-Number(b.order??999999));
 
+  // Sortierung ist nur eine Ansicht. Die manuelle Reihenfolge in state bleibt unverändert.
+  if(activeWorkroomLinkSort !== "manual"){
+    links = links
+      .map((link,index)=>({link,index,hit:workroomLinkMatchesSort(link,activeWorkroomLinkSort)}))
+      .sort((a,b)=>Number(b.hit)-Number(a.hit) || a.index-b.index)
+      .map(x=>x.link);
+  }
+
+  const totalPages=Math.max(1,Math.ceil(links.length/WORKROOM_LINKS_PER_PAGE));
+  workroomLinkPage=Math.min(Math.max(1,workroomLinkPage),totalPages);
+  const start=(workroomLinkPage-1)*WORKROOM_LINKS_PER_PAGE;
+  const pageLinks=links.slice(start,start+WORKROOM_LINKS_PER_PAGE);
+
   if (!links.length) {
     list.innerHTML =
       `<div class="workroom-empty">Keine Links passen zu diesem Filter.</div>`;
+    pager?.classList.add("hidden");
     return;
   }
 
-  list.innerHTML = links.map(link => `
-    <div class="workroom-link-item ${link.important ? "workroom-link-item-important" : ""} ${link.category === "private" ? "workroom-link-item-private" : ""}"
-         data-category="${escapeHtml(link.category || "other")}"
+  list.innerHTML = pageLinks.map(link => {
+    const effectiveUse=workroomLinkEffectiveUse(link);
+    return `
+    <div class="workroom-link-item ${link.important ? "workroom-link-item-important" : ""} ${effectiveUse === "private" ? "workroom-link-item-private" : ""}"
+         data-category="${escapeHtml(workroomLinkEffectiveCategory(link))}"
          data-id="${link.id}">
       <span class="workroom-link-drag-handle"
             title="Ziehen zum Verschieben"
@@ -7130,7 +7140,7 @@ function renderWorkroomLinks() {
             ? `<span class="workroom-link-note">${escapeHtml(link.note)}</span>`
             : ""}
 
-          <span class="workroom-link-use">${useLabels[link.use || "soon"] || "Demnächst"}</span>
+          <span class="workroom-link-use">${useLabels[effectiveUse] || "Demnächst"}</span>
         </div>
       </div>
 
@@ -7147,14 +7157,20 @@ function renderWorkroomLinks() {
           data-id="${link.id}"
           title="Löschen">×</button>
       </div>
-    </div>
-  `).join("");
+    </div>`;
+  }).join("");
+
+  if(pager){
+    pager.classList.toggle("hidden",totalPages<=1);
+    if(pageLabel) pageLabel.textContent=`Seite ${workroomLinkPage} / ${totalPages}`;
+    if(prevBtn) prevBtn.disabled=workroomLinkPage<=1;
+    if(nextBtn) nextBtn.disabled=workroomLinkPage>=totalPages;
+  }
 
   list.querySelectorAll(".workroom-link-delete").forEach(btn => {
     btn.addEventListener("click", e => {
       const id = e.currentTarget.dataset.id;
       state.workroom.links = state.workroom.links.filter(link => link.id !== id);
-      // Keep order dense after deletion.
       [...state.workroom.links]
         .sort((a,b)=>Number(a.order??999999)-Number(b.order??999999))
         .forEach((link,index)=>link.order=index);
@@ -7173,8 +7189,11 @@ function renderWorkroomLinks() {
       document.querySelector("#workroomLinkTitle").value = link.title || "";
       document.querySelector("#workroomLinkNote").value = link.note || "";
       document.querySelector("#workroomLinkUrl").value = link.url || "";
-      document.querySelector("#workroomLinkCategory").value = link.category || "other";
-      document.querySelector("#workroomLinkUse").value = link.use || "soon";
+
+      const cat=document.querySelector("#workroomLinkCategory");
+      const use=document.querySelector("#workroomLinkUse");
+      if(cat) cat.value=workroomLinkEffectiveCategory(link);
+      if(use) use.value=workroomLinkEffectiveUse(link);
       document.querySelector("#workroomLinkImportant").checked = !!link.important;
 
       const addBtn = document.querySelector("#addWorkroomLinkBtn");
@@ -7183,7 +7202,8 @@ function renderWorkroomLinks() {
     });
   });
 
-  if(typeof Sortable!=="undefined"){
+  // Manuelles Ziehen ist nur in der eigenen Reihenfolge sinnvoll.
+  if(typeof Sortable!=="undefined" && activeWorkroomLinkSort==="manual"){
     new Sortable(list,{
       animation:160,
       handle:".workroom-link-drag-handle",
@@ -7196,12 +7216,10 @@ function renderWorkroomLinks() {
 
       onEnd:()=>{
         const visibleIds=[...list.querySelectorAll(".workroom-link-item")].map(row=>row.dataset.id);
-
-        // Reorder only the positions occupied by currently visible items.
-        // Hidden/filter-excluded items keep their relative positions.
         const all=[...state.workroom.links]
           .sort((a,b)=>Number(a.order??999999)-Number(b.order??999999));
 
+        // Nur die Slots dieser Seite werden verschoben; alle anderen Seiten bleiben stabil.
         const visibleSet=new Set(visibleIds);
         const slots=[];
         all.forEach((item,index)=>{
@@ -7299,6 +7317,7 @@ document.querySelector("#addWorkroomLinkBtn")?.addEventListener("click", () => {
   if (importantInput) importantInput.checked = false;
 
   save();
+  workroomLinkPage = 1;
   renderWorkroomLinks();
   renderRoutines();
 });
@@ -7306,6 +7325,7 @@ document.querySelector("#addWorkroomLinkBtn")?.addEventListener("click", () => {
 // Kategorie-Filter
 document.querySelector("#workroomLinkCategoryFilter")?.addEventListener("change", e => {
   activeWorkroomLinkCategory = e.currentTarget.value || "all";
+  workroomLinkPage = 1;
   renderWorkroomLinks();
   renderRoutines();
 });
@@ -7313,6 +7333,7 @@ document.querySelector("#workroomLinkCategoryFilter")?.addEventListener("change"
 // Zeitraum-Filter
 document.querySelector("#workroomLinkUseFilterSelect")?.addEventListener("change", e => {
   activeWorkroomLinkUse = e.currentTarget.value || "all";
+  workroomLinkPage = 1;
   renderWorkroomLinks();
   renderRoutines();
 });
@@ -7320,10 +7341,44 @@ document.querySelector("#workroomLinkUseFilterSelect")?.addEventListener("change
 // Wichtig-Filter
 document.querySelector("#workroomLinkImportantFilter")?.addEventListener("click", e => {
   activeWorkroomLinkImportant = !activeWorkroomLinkImportant;
+  workroomLinkPage = 1;
   e.currentTarget.classList.toggle("active", activeWorkroomLinkImportant);
   e.currentTarget.setAttribute("aria-pressed", activeWorkroomLinkImportant ? "true" : "false");
   renderWorkroomLinks();
   renderRoutines();
+});
+
+document.querySelector("#workroomLinkSortSelect")?.addEventListener("change", e => {
+  activeWorkroomLinkSort = e.currentTarget.value || "manual";
+  workroomLinkPage = 1;
+
+  const reset=document.querySelector("#resetWorkroomLinkSort");
+  reset?.classList.toggle("hidden",activeWorkroomLinkSort==="manual");
+
+  renderWorkroomLinks();
+});
+
+document.querySelector("#resetWorkroomLinkSort")?.addEventListener("click", () => {
+  activeWorkroomLinkSort = "manual";
+  workroomLinkPage = 1;
+
+  const select=document.querySelector("#workroomLinkSortSelect");
+  if(select) select.value="manual";
+
+  document.querySelector("#resetWorkroomLinkSort")?.classList.add("hidden");
+  renderWorkroomLinks();
+});
+
+document.querySelector("#workroomLinkPrevPage")?.addEventListener("click", () => {
+  if(workroomLinkPage>1){
+    workroomLinkPage--;
+    renderWorkroomLinks();
+  }
+});
+
+document.querySelector("#workroomLinkNextPage")?.addEventListener("click", () => {
+  workroomLinkPage++;
+  renderWorkroomLinks();
 });
 
 // Der frühere Startseiten-Button "#addVideoBtn" wurde bewusst entfernt.
