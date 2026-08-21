@@ -21405,3 +21405,138 @@ body.child-view-active #papaOverviewModal{
       "save" !important;
   }
 }
+
+
+/* =========================================================
+   V41 – Linksammlung: zwei Spalten, kompakt, frei ziehbar
+   ========================================================= */
+
+#workroomLinkList{
+  display:grid !important;
+  grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+  gap:8px !important;
+  align-items:start !important;
+}
+
+#workroomLinkList > .workroom-empty{
+  grid-column:1/-1;
+}
+
+.workroom-link-item{
+  display:grid !important;
+  grid-template-columns:24px minmax(0,1fr) auto !important;
+  align-items:center !important;
+  gap:7px !important;
+  min-height:43px !important;
+  padding:6px 8px !important;
+  margin:0 !important;
+  border-radius:11px !important;
+}
+
+.workroom-link-drag-handle{
+  width:24px;
+  height:28px;
+  display:grid;
+  place-items:center;
+  color:#b0a397;
+  font-size:.86rem;
+  line-height:1;
+  cursor:grab;
+  user-select:none;
+  touch-action:none;
+  border-radius:7px;
+}
+.workroom-link-drag-handle:hover{
+  color:#7d7468;
+  background:rgba(239,238,230,.72);
+}
+.workroom-link-drag-handle:active{
+  cursor:grabbing;
+}
+
+.workroom-link-main,
+.workroom-link-texts{
+  min-width:0 !important;
+}
+
+.workroom-link-texts{
+  display:flex !important;
+  align-items:center !important;
+  gap:7px !important;
+  flex-wrap:nowrap !important;
+}
+
+.workroom-link-title{
+  min-width:0 !important;
+  max-width:42% !important;
+  overflow:hidden !important;
+  text-overflow:ellipsis !important;
+  white-space:nowrap !important;
+  flex:0 1 auto !important;
+}
+
+.workroom-link-note{
+  min-width:0 !important;
+  flex:1 1 auto !important;
+  overflow:hidden !important;
+  text-overflow:ellipsis !important;
+  white-space:nowrap !important;
+  color:#92857a !important;
+  font-size:.68rem !important;
+}
+
+.workroom-link-use{
+  flex:0 0 auto !important;
+  padding:3px 7px !important;
+  border-radius:999px !important;
+  background:#f2f0eb !important;
+  color:#8d8277 !important;
+  font-size:.59rem !important;
+  white-space:nowrap !important;
+}
+
+.workroom-link-actions{
+  display:flex !important;
+  align-items:center !important;
+  gap:2px !important;
+  flex:0 0 auto !important;
+}
+
+.workroom-link-actions button{
+  width:27px !important;
+  height:27px !important;
+  min-width:27px !important;
+  min-height:27px !important;
+  padding:0 !important;
+}
+
+/* Kategorie steht nur im Filter / Eingabeformular, nicht mehr in jeder Zeile. */
+.workroom-link-category{
+  display:none !important;
+}
+
+/* Private Links: supersofter Olivton bleibt erhalten. */
+.workroom-link-item-private{
+  background:linear-gradient(145deg,rgba(241,245,229,.74),rgba(249,249,242,.70)) !important;
+  border-color:rgba(118,132,83,.14) !important;
+}
+
+/* Drag feedback passend zu den Schul-To-dos. */
+#workroomLinkList .workroom-sort-ghost{
+  opacity:.34 !important;
+}
+#workroomLinkList .workroom-sort-chosen{
+  box-shadow:0 7px 18px rgba(76,65,54,.10) !important;
+}
+#workroomLinkList .workroom-sort-drag{
+  transform:rotate(.3deg);
+}
+
+@media(max-width:900px){
+  #workroomLinkList{
+    grid-template-columns:1fr !important;
+  }
+  .workroom-link-title{
+    max-width:46% !important;
+  }
+}
