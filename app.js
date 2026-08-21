@@ -2702,15 +2702,24 @@ let archiveCategoryFilter = "all";
 
 function renderArchive() {
   const list = document.querySelector("#archiveList");
+  if(!list) return;
+
   let items = [...state.archive];
 
+  // Zuerst den Hauptfilter anwenden.
+  if (archiveFilter === "favorite") {
+    items = items.filter(x => x.favorite);
+  } else if (archiveFilter === "wanted") {
+    items = getMostWantedEntries();
+  } else if (["super","okay","nope"].includes(archiveFilter)) {
+    items = items.filter(x => x.rating === archiveFilter);
+  }
+
+  // Kategorie IMMER zuletzt anwenden.
+  // Vorher wurde sie bei "Most wanted" versehentlich wieder verworfen.
   if(archiveCategoryFilter!=="all"){
     items=items.filter(x=>(x.category||"other")===archiveCategoryFilter);
   }
-
-  if (archiveFilter === "favorite") items = items.filter(x => x.favorite);
-  if (archiveFilter === "wanted") items = getMostWantedEntries();
-  if (["super","okay","nope"].includes(archiveFilter)) items = items.filter(x => x.rating === archiveFilter);
 
   const byNewest = arr => arr.sort((a,b) => new Date(b.lastDone || 0) - new Date(a.lastDone || 0));
 
@@ -7661,9 +7670,23 @@ if (deleteAllExercisesBtn) {
 
     state.archive = [];
     state.videos = [];
+
+    // Auch eingeplante VIDEOS aus den Routinen entfernen.
+    // Reine Routinepunkte wie "Wasser trinken" bleiben selbstverständlich bestehen.
+    const routines=ensureWorkroomRoutines();
+    const removedIds=new Set(
+      routines.items.filter(item=>!!item.url).map(item=>item.id)
+    );
+    routines.items=routines.items.filter(item=>!item.url);
+
+    Object.keys(routines.completions||{}).forEach(key=>{
+      const itemId=String(key).split("__")[0];
+      if(removedIds.has(itemId)) delete routines.completions[key];
+    });
+
     save();
     renderAll();
-    showMotivation("Alle Übungen wurden gelöscht.");
+    showMotivation("Alle Übungen und eingeplanten Videos wurden gelöscht.");
   });
 }
 
@@ -11572,7 +11595,7 @@ function renderRecipeLinkTracker() {
 
       state.recipeLinkFeedback[url] = {
         ...current,
-        hidden:false,
+        hidden:true,
         hiddenAt:now,
         updatedAt:now
       };
