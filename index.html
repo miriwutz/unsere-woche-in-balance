@@ -722,8 +722,8 @@
           </label>
         </div>
 
-        <div class="recipe-v18-meta-grid">
-          <label class="recipe-field">
+        <div class="recipe-v19-meta-grid">
+          <label class="recipe-field recipe-meta-kind">
             <span>Rezeptart</span>
             <select id="recipeSourceType" title="Rezeptart">
               <option value="internal" selected>📖 Eigenes Rezept</option>
@@ -731,7 +731,7 @@
             </select>
           </label>
 
-          <label class="recipe-field">
+          <label class="recipe-field recipe-meta-difficulty">
             <span>Schwierigkeit</span>
             <select id="recipeDifficulty">
               <option value="easy">Einfach</option>
@@ -740,9 +740,24 @@
             </select>
           </label>
 
-          <label class="recipe-field recipe-time-field recipe-internal-only">
+          <label class="recipe-field recipe-meta-servings recipe-internal-only">
+            <span>Für wie viele?</span>
+            <input id="recipeServings" type="number" inputmode="numeric" min="1" max="30" step="1" placeholder="4">
+          </label>
+
+          <label class="recipe-field recipe-meta-time recipe-internal-only">
             <span>Zeit</span>
-            <input id="recipeTime" type="text" placeholder="z. B. 20 Min.">
+            <input id="recipeTime" type="text" placeholder="20 Min.">
+          </label>
+
+          <label class="recipe-field recipe-meta-bake recipe-internal-only">
+            <span>Backzeit</span>
+            <input id="recipeBakeTime" type="text" inputmode="numeric" placeholder="35 Min.">
+          </label>
+
+          <label class="recipe-field recipe-meta-temp recipe-internal-only">
+            <span>Grad</span>
+            <input id="recipeTemperature" type="text" inputmode="numeric" placeholder="180 °C">
           </label>
         </div>
       </section>
@@ -810,7 +825,7 @@
         </div>
       </section>
 
-      <section class="recipe-v18-links">
+      <section class="recipe-v18-links recipe-external-only recipe-section-hidden">
         <div class="recipe-v17-section-head compact">
           <div>
             <strong id="recipeLinkSectionTitle">Links</strong>
@@ -819,11 +834,11 @@
         </div>
         <div class="recipe-v18-link-grid">
           <label class="recipe-field recipe-v17-link">
-            <span id="recipeWebLabel">Quellen-Link – optional</span>
+            <span id="recipeWebLabel">Rezept-Link</span>
             <input id="recipeWebUrl" type="url" autocomplete="url" placeholder="https://…">
           </label>
           <label class="recipe-field recipe-v17-link">
-            <span>YouTube – optional</span>
+            <span>YouTube – falls das Rezept ein Video ist</span>
             <input id="recipeYoutubeUrl" type="url" autocomplete="url" placeholder="https://…">
           </label>
         </div>
@@ -835,21 +850,20 @@
             <span>🥣</span>
             <div>
               <strong>Becherküche für die Kinderansicht</strong>
-              <small>Zutat links – Kindermaß rechts. Groß-/Kleinschreibung und Grammangaben sind für die Zuordnung egal.</small>
+              <small>Die Zutaten werden automatisch aus deinem Rezept übernommen. Du wählst nur noch das passende Kindermaß.</small>
             </div>
           </div>
         </div>
 
         <div class="beaker-map-help beaker-map-instructions">
-          <div><b>1.</b> Links die normale Zutat, z. B. <b>200 g Mehl</b>.</div>
-          <div><b>2.</b> Rechts das passende Kindermaß wählen.</div>
-          <div><b>3.</b> Für mehrere Becher einfach ein weiteres Kindermaß hinzufügen.</div>
-          <small>„200 g Mehl“ und „Mehl“ werden automatisch derselben Zutat zugeordnet.</small>
+          <div><b>1.</b> Zutaten kommen automatisch von oben.</div>
+          <div><b>2.</b> Nur Kindermaß und Menge wählen.</div>
+          <div><b>3.</b> Bei Bedarf mehrere Maße kombinieren.</div>
         </div>
 
         <div id="recipeBeakerRows" class="beaker-map-rows"></div>
 
-        <button id="addRecipeBeakerRow" type="button" class="secondary-btn">+ Kindermaß hinzufügen</button>
+        <button id="syncRecipeBeakerRows" type="button" class="secondary-btn beaker-sync-btn">↻ Zutaten neu übernehmen</button>
 
 
         <div class="beaker-unit-legend beaker-unit-legend-v54">
@@ -867,21 +881,11 @@
       <!-- SELTEN BENÖTIGT -->
       <details class="recipe-entry-more recipe-v17-more">
         <summary>
-          <span>Weitere Angaben</span>
-          <small>Backdaten, Kartenzeichen und Bewertung</small>
+          <span>Feineinstellungen</span>
+          <small>Bewertung und Kartenzeichen</small>
         </summary>
 
-        <div class="recipe-v17-more-grid">
-          <label class="recipe-field recipe-bake-field recipe-internal-only">
-            <span>Backzeit</span>
-            <input id="recipeBakeTime" type="text" inputmode="numeric" placeholder="z. B. 35 Min.">
-          </label>
-
-          <label class="recipe-field recipe-temp-field recipe-internal-only">
-            <span>Grad</span>
-            <input id="recipeTemperature" type="text" inputmode="numeric" placeholder="z. B. 180 °C">
-          </label>
-
+        <div class="recipe-v19-more-grid">
           <label class="recipe-field">
             <span>Bewertung</span>
             <select id="recipeRating" title="Wie war es?">
