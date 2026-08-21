@@ -3550,6 +3550,36 @@ document.querySelector("#toggleRoutinePanelBtn")?.addEventListener("click",()=>{
 });
 
 
+document.querySelectorAll(".routine-idea-check").forEach(btn=>btn.addEventListener("click",e=>{
+  e.preventDefault();
+  e.stopPropagation();
+
+  const ideaKey=btn.dataset.routineIdeaCheck;
+  if(!ideaKey) return;
+
+  const routines=ensureWorkroomRoutines();
+  const storageKey=routineIdeaCheckKey(ideaKey);
+  routines.inspirationChecks[storageKey]=!routines.inspirationChecks[storageKey];
+
+  save();
+  renderRoutineIdeaChecks();
+}));
+
+(function scheduleRoutineIdeaDailyReset(){
+  const now=new Date();
+  const next=new Date(now);
+  next.setHours(3,0,0,0);
+  if(next<=now) next.setDate(next.getDate()+1);
+  window.setTimeout(()=>{
+    cleanupRoutineIdeaChecks();
+    save();
+    renderRoutineIdeaChecks();
+    scheduleRoutineIdeaDailyReset();
+  },Math.max(1000,next-now));
+})();
+
+
+
 let activeRoutineWeekOffset = 0;
 let editingRoutineId = null;
 
@@ -3569,6 +3599,9 @@ function ensureWorkroomRoutines(){
   state.workroom.routines.completions = state.workroom.routines.completions && typeof state.workroom.routines.completions==="object"
     ? state.workroom.routines.completions
     : {};
+  state.workroom.routines.inspirationChecks = state.workroom.routines.inspirationChecks && typeof state.workroom.routines.inspirationChecks==="object"
+    ? state.workroom.routines.inspirationChecks
+    : {};
   return state.workroom.routines;
 }
 
@@ -3576,6 +3609,42 @@ function routineWeekKey(offset=0){
   const monday=getMonday(new Date());
   monday.setDate(monday.getDate()+Number(offset||0)*7);
   return dateKey(monday);
+}
+
+function routineDayKey(now=new Date()){
+  const shifted=new Date(now);
+  shifted.setHours(shifted.getHours()-3);
+  return dateKey(shifted);
+}
+function routineIdeaCheckKey(ideaKey,offset=activeRoutineWeekOffset){
+  if(Number(offset||0)!==0) return `${routineWeekKey(offset)}__${ideaKey}`;
+  return `${routineDayKey()}__${ideaKey}`;
+}
+function cleanupRoutineIdeaChecks(){
+  const routines=ensureWorkroomRoutines();
+  const keepPrefix=`${routineDayKey()}__`;
+  Object.keys(routines.inspirationChecks||{}).forEach(key=>{
+    if(/^\d{4}-\d{2}-\d{2}__/.test(key) && !key.startsWith(keepPrefix)){
+      delete routines.inspirationChecks[key];
+    }
+  });
+}
+
+function renderRoutineIdeaChecks(){
+  const routines=ensureWorkroomRoutines();
+  cleanupRoutineIdeaChecks();
+  document.querySelectorAll(".routine-idea-card").forEach(card=>{
+    const key=card.dataset.routineIdea;
+    if(!key) return;
+    const checked=!!routines.inspirationChecks[routineIdeaCheckKey(key)];
+    card.classList.toggle("is-checked",checked);
+    const btn=card.querySelector(".routine-idea-check");
+    if(btn){
+      btn.dataset.checked=checked?"1":"0";
+      btn.setAttribute("aria-pressed",String(checked));
+      btn.title=checked?"Für diese Woche erledigt":"Für diese Woche abhaken";
+    }
+  });
 }
 
 function routineAppliesToWeek(item,weekKey){
@@ -3658,6 +3727,7 @@ function renderRoutines(){
   document.querySelectorAll(".routine-week-btn").forEach(btn=>{
     btn.classList.toggle("active",Number(btn.dataset.routineWeek||0)===activeRoutineWeekOffset);
   });
+  renderRoutineIdeaChecks();
 
   const items=routines.items
     .filter(item=>routineAppliesToWeek(item,weekKey))
@@ -10890,9 +10960,12 @@ function normalizeWorkroom(w) {
           items: Array.isArray(src.routines.items) ? src.routines.items : [],
           completions: src.routines.completions && typeof src.routines.completions === "object"
             ? src.routines.completions
+            : {},
+          inspirationChecks: src.routines.inspirationChecks && typeof src.routines.inspirationChecks === "object"
+            ? src.routines.inspirationChecks
             : {}
         }
-      : {items:[], completions:{}},
+      : {items:[], completions:{}, inspirationChecks:{}},
     plans: src.plans && typeof src.plans === "object"
       ? src.plans
       : {week:[], year:[]}
