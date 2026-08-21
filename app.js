@@ -2702,7 +2702,7 @@ let archiveCategoryFilter = "all";
 
 function renderArchive() {
   const list = document.querySelector("#archiveList");
-  let items = [...state.archive].filter(x=>!x.planned);
+  let items = [...state.archive];
 
   if(archiveCategoryFilter!=="all"){
     items=items.filter(x=>(x.category||"other")===archiveCategoryFilter);
@@ -2746,6 +2746,26 @@ function renderArchive() {
   bindArchiveButtons();
 }
 
+function archivePlannedLabels(a){
+  const routines=ensureWorkroomRoutines();
+  const matches=routines.items.filter(item=>{
+    if(item.sourceArchiveId===a.id) return true;
+    if(!item.url || !a.url) return false;
+    try{return normalizeUrl(item.url)===normalizeUrl(a.url);}
+    catch{return String(item.url).trim()===String(a.url).trim();}
+  });
+  if(!matches.length) return "";
+
+  const currentMonday=getMonday(new Date());
+  const labels=matches.slice(0,3).map(item=>{
+    const mon=parseLocalDate(item.weekKey);
+    const diff=Math.round((mon-currentMonday)/(7*24*60*60*1000));
+    const w=diff===0?"diese Woche":diff===1?"nächste Woche":diff>1?`+${diff} Wochen`:"früher";
+    return `${item.day==="daily"?"täglich":item.day} · ${w}`;
+  });
+  return ` · <span class="archive-planned-badge">geplant: ${labels.map(escapeHtml).join(", ")}</span>`;
+}
+
 function archiveCardHtml(a) {
   const ratingLabel = {super:"✦ Gut", okay:"○ Mittel", nope:"— Schlecht"};
   return `
@@ -2753,7 +2773,7 @@ function archiveCardHtml(a) {
       ${a.thumbnail ? `<img class="archive-thumb" src="${escapeHtml(a.thumbnail)}" alt="">` : ""}
       <div class="archive-content">
         <h3>${escapeHtml(a.title)}</h3>
-        <p>${ratingLabel[a.rating] || "Noch nicht bewertet"} · <span>${({yoga:"Yoga",meditation:"Meditation",pain:"Schmerz",sport:"Sport",other:"Sonstiges"})[a.category||"other"]}</span> · <strong>${a.timesDone || 0}× gemacht</strong>${isMostWanted(a.url) ? ' <span class="most-wanted-badge" title="Dynamisch Most wanted">✦ Most wanted</span>' : ''}</p>
+        <p>${ratingLabel[a.rating] || "Noch nicht bewertet"} · <span>${({yoga:"Yoga",meditation:"Meditation",pain:"Schmerz",sport:"Sport",other:"Sonstiges"})[a.category||"other"]}</span> · <strong>${a.timesDone || 0}× gemacht</strong>${isMostWanted(a.url) ? ' <span class="most-wanted-badge" title="Dynamisch Most wanted">✦ Most wanted</span>' : ''}${archivePlannedLabels(a)}</p>
         <div class="archive-actions">
           <button type="button" class="text-btn favorite-btn" data-id="${a.id}">${a.favorite ? "♥ Favorit" : "♡ Favorit"}</button>
           <button type="button" class="text-btn replan-btn" data-id="${a.id}">+ Einplanen</button>
@@ -3803,10 +3823,15 @@ function renderRoutineAreaTasks(){
 
   document.querySelectorAll("[data-routine-area-tasks]").forEach(host=>{
     const part=host.dataset.routineAreaTasks;
+    const today=new Date();
+    const todayWeekKey=dateKey(getMonday(today));
     const items=routines.items
       .filter(item=>(item.part||"morning")===part)
-      .filter(item=>routineAppliesToWeek(item,weekKey))
-      .sort((a,b)=>String(a.day||"daily").localeCompare(String(b.day||"daily"),"de") || Number(a.order||0)-Number(b.order||0));
+      // Oben wird ausgeführt, nicht geplant: nur HEUTE fällige Punkte.
+      .filter(item=>activeRoutineWeekOffset===0)
+      .filter(item=>routineAppliesToWeek(item,todayWeekKey))
+      .filter(item=>routineAppliesToDate(item,today))
+      .sort((a,b)=>Number(a.order||0)-Number(b.order||0));
 
     if(!items.length){
       host.innerHTML="";
@@ -3817,13 +3842,13 @@ function renderRoutineAreaTasks(){
     host.classList.remove("hidden");
     host.innerHTML=`
       <div class="routine-area-task-head">
-        <span>Für ${activeRoutineWeekOffset===0?"diese Woche":activeRoutineWeekOffset===1?"nächste Woche":`+${activeRoutineWeekOffset} Wochen`}</span>
+        <span>Heute</span>
       </div>
       <div class="routine-area-task-list">
         ${items.map(item=>{
           const thumb=item.url ? thumbnailFor(item.url) : "";
           const category=routineCategoryMeta[item.category||"none"]||routineCategoryMeta.other;
-          const completionDate=routineAreaDate(item,activeRoutineWeekOffset);
+          const completionDate=new Date();
           const completion=routineCompletion(item.id,completionDate);
           const awaiting=!!(item.url && completion?.done && !completion?.rating);
 
@@ -3857,7 +3882,7 @@ function renderRoutineAreaTasks(){
     const item=ensureWorkroomRoutines().items.find(x=>x.id===btn.dataset.id);
     if(!item) return;
 
-    const date=routineAreaDate(item,activeRoutineWeekOffset);
+    const date=new Date();
     const current=routineCompletion(item.id,date);
 
     if(item.url){
@@ -3964,15 +3989,9 @@ function renderRoutines(){
   renderRoutineIdeaChecks();
   renderRoutineAreaTasks();
 
-  const partOrder={morning:0,school:1,afterschool:2,evening:3,other:4};
-  const dayOrder={daily:-1,Montag:0,Dienstag:1,Mittwoch:2,Donnerstag:3,Freitag:4,Samstag:5,Sonntag:6};
   const items=routines.items
     .filter(item=>routineAppliesToWeek(item,weekKey))
-    .sort((a,b)=>
-      (dayOrder[a.day||"daily"]??9)-(dayOrder[b.day||"daily"]??9) ||
-      (partOrder[a.part||"morning"]??9)-(partOrder[b.part||"morning"]??9) ||
-      Number(a.order||0)-Number(b.order||0)
-    );
+    .sort((a,b)=>Number(a.order||0)-Number(b.order||0));
 
   const count=document.querySelector("#routinePlanningCount");
   if(count) count.textContent=`${items.length} ${items.length===1?"Punkt":"Punkte"}`;
@@ -3982,27 +4001,51 @@ function renderRoutines(){
     return;
   }
 
+  const monday=getMonday(new Date());
+  monday.setDate(monday.getDate()+activeRoutineWeekOffset*7);
+  const dayNames=["Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag","Sonntag"];
   const partLabel={morning:"Morgens",school:"Schulalltag",afterschool:"Nach der Schule",evening:"Abends",other:"Sonstiges"};
-  list.innerHTML=items.map(item=>{
+
+  const cardHtml=item=>{
     const cat=routineCategoryMeta[item.category||"none"] || routineCategoryMeta.other;
     const thumb=item.url ? thumbnailFor(item.url) : "";
-    return `<div class="routine-plan-row" data-id="${item.id}">
-      <div class="routine-plan-when">
-        <strong>${item.day==="daily"||!item.day?"Täglich":escapeHtml(item.day)}</strong>
-        <span>${partLabel[item.part||"morning"]}</span>
-      </div>
-      ${thumb?`<a class="routine-plan-thumb" href="${escapeHtml(item.url)}" target="_blank" rel="noopener"><img src="${escapeHtml(thumb)}" alt="" loading="lazy"><span>▶</span></a>`:""}
-      <div class="routine-plan-copy">
+    return `<div class="routine-week-plan-card" data-id="${item.id}">
+      ${thumb?`<a class="routine-week-plan-thumb" href="${escapeHtml(item.url)}" target="_blank" rel="noopener"><img src="${escapeHtml(thumb)}" alt="" loading="lazy"><span>▶</span></a>`:""}
+      <div class="routine-week-plan-copy">
         <strong>${escapeHtml(item.title||"Routinepunkt")}</strong>
-        <small>${item.url?`${cat[0]} ${cat[1]}`:"Routinepunkt"}${item.sticky?" · bleibt jede Woche":""}</small>
+        <small>${partLabel[item.part||"morning"]}${item.url?` · ${cat[1]}`:""}${item.sticky?" · jede Woche":""}</small>
       </div>
-      <div class="routine-plan-actions">
-        ${item.url?`<a href="${escapeHtml(item.url)}" target="_blank" rel="noopener">Video</a>`:""}
+      <div class="routine-week-plan-actions">
         <button class="routine-edit-btn" data-id="${item.id}" type="button" title="Bearbeiten" aria-label="Bearbeiten">✎</button>
-        <button class="routine-delete-btn" data-id="${item.id}" type="button" title="Aus dieser Planung entfernen" aria-label="Entfernen">×</button>
+        <button class="routine-delete-btn" data-id="${item.id}" type="button" title="Aus Planung entfernen" aria-label="Entfernen">×</button>
       </div>
     </div>`;
-  }).join("");
+  };
+
+  const dailyItems=items.filter(item=>item.day==="daily" || !item.day);
+
+  list.innerHTML=`
+    ${dailyItems.length?`
+      <div class="routine-week-daily">
+        <span class="routine-week-daily-label">Täglich</span>
+        <div class="routine-week-daily-items">${dailyItems.map(cardHtml).join("")}</div>
+      </div>`:""}
+    <div class="routine-week-grid">
+      ${dayNames.map((day,i)=>{
+        const d=new Date(monday);
+        d.setDate(monday.getDate()+i);
+        const dayItems=items.filter(item=>item.day===day);
+        return `<section class="routine-week-day ${dateKey(d)===dateKey(new Date())?"is-today":""}">
+          <header>
+            <strong>${day}</strong>
+            <span>${d.toLocaleDateString("de-AT",{day:"2-digit",month:"2-digit"})}</span>
+          </header>
+          <div class="routine-week-day-items">
+            ${dayItems.length?dayItems.map(cardHtml).join(""):'<span class="routine-week-day-empty">–</span>'}
+          </div>
+        </section>`;
+      }).join("")}
+    </div>`;
 
   document.querySelectorAll("#routineList .routine-edit-btn").forEach(btn=>btn.addEventListener("click",()=>{
     const item=routines.items.find(x=>x.id===btn.dataset.id);
@@ -4025,17 +4068,7 @@ function renderRoutines(){
     const doomed=routines.items.find(x=>x.id===btn.dataset.id);
     if(!doomed) return;
 
-    if(doomed.sourceArchiveId){
-      const archived=state.archive.find(x=>x.id===doomed.sourceArchiveId);
-      if(archived){ archived.planned=false; archived.updatedAt=Date.now(); }
-    }else if(doomed.url){
-      const archived=state.archive.find(x=>{
-        try{return normalizeUrl(x.url)===normalizeUrl(doomed.url);}
-        catch{return String(x.url||"").trim()===String(doomed.url||"").trim();}
-      });
-      if(archived){ archived.planned=false; archived.updatedAt=Date.now(); }
-    }
-
+    // Nur die Planung entfernen. Ein Archivvideo bleibt im Überblick erhalten.
     routines.items=routines.items.filter(x=>x.id!==btn.dataset.id);
     Object.keys(routines.completions||{}).forEach(key=>{
       if(key.startsWith(`${btn.dataset.id}__`)) delete routines.completions[key];
@@ -7576,9 +7609,8 @@ if (confirmReplanBtn) confirmReplanBtn.addEventListener("click", () => {
     order:routines.items.length
   });
 
-  // Während die Übung eingeplant ist, verschwindet sie aus "Unser Überblick".
-  // Nach dem Erledigen + Bewerten setzt routineArchiveFromItem planned wieder auf false.
-  item.planned=true;
+  // Wiederverwenden ist eine Planung, kein Verschieben:
+  // Das Video bleibt in "Unser Überblick" sichtbar und kann mehrfach geplant werden.
   item.updatedAt=Date.now();
 
   save();
