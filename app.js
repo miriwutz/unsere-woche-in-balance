@@ -8328,13 +8328,62 @@ function formatPromoDate(value){
   return new Intl.DateTimeFormat("de-AT",{day:"2-digit",month:"2-digit",year:"numeric"}).format(d);
 }
 
+function promoEndDate(promo){
+  const candidates=[promo?.validTo,promo?.collectTo]
+    .filter(Boolean)
+    .map(v=>new Date(v+"T23:59:59"))
+    .filter(d=>!Number.isNaN(d.getTime()));
+  if(!candidates.length) return null;
+  return new Date(Math.max(...candidates.map(d=>d.getTime())));
+}
+
+function cleanupExpiredShoppingPromos(){
+  const now=new Date();
+  let changed=false;
+  (state.shoppingPromos||[]).forEach(promo=>{
+    if(promo?.deleted) return;
+    const end=promoEndDate(promo);
+    if(end && end < now){
+      promo.deleted=true;
+      promo.expiredAt=Date.now();
+      promo.updatedAt=Date.now();
+      changed=true;
+    }
+  });
+  if(changed) save();
+  return changed;
+}
+
+function shoppingStoreMark(shop){
+  const key=String(shop||"").trim().toLowerCase();
+  const map={
+    "billa":["BI","billa"],
+    "spar":["SP","spar"],
+    "bipa":["BP","bipa"],
+    "dm":["dm","dm"],
+    "lidl":["Li","lidl"],
+    "hofer":["H","hofer"],
+    "penny":["P","penny"],
+    "müller":["M","mueller"],
+    "mueller":["M","mueller"]
+  };
+  const [label,cls]=map[key]||["✦","other"];
+  return `<span class="promo-store-mark promo-store-${cls}" aria-hidden="true">${escapeHtml(label)}</span>`;
+}
+
 function renderManualShoppingPromos(){
   const box = document.querySelector("#manualPromoDisplay");
   if(!box) return;
 
+  cleanupExpiredShoppingPromos();
+
   const promos = (state.shoppingPromos || [])
     .filter(x => !x.deleted)
-    .sort((a,b) => Number(b.updatedAt || b.createdAt || 0) - Number(a.updatedAt || a.createdAt || 0));
+    .sort((a,b) => {
+      const aEnd=promoEndDate(a)?.getTime() || Number.MAX_SAFE_INTEGER;
+      const bEnd=promoEndDate(b)?.getTime() || Number.MAX_SAFE_INTEGER;
+      return aEnd-bEnd || Number(b.updatedAt || b.createdAt || 0)-Number(a.updatedAt || a.createdAt || 0);
+    });
 
   if(!promos.length){
     box.classList.add("hidden");
@@ -8359,15 +8408,18 @@ function renderManualShoppingPromos(){
         return `
           <div class="manual-promo-card">
             <div class="manual-promo-card-top">
-              <span class="manual-promo-shop">${escapeHtml(p.shop || "")}</span>
-              <strong>${escapeHtml(p.title || "Rabatt")}</strong>
+              ${shoppingStoreMark(p.shop)}
+              <div class="manual-promo-card-title">
+                <span class="manual-promo-shop">${escapeHtml(p.shop || "")}</span>
+                <strong>${escapeHtml(p.title || "Rabatt")}</strong>
+              </div>
               <div class="manual-promo-actions">
                 <button type="button" class="manual-promo-edit" data-promo-id="${p.id}" aria-label="Rabatt bearbeiten">✎</button>
                 <button type="button" class="manual-promo-delete" data-promo-id="${p.id}" aria-label="Rabatt löschen">×</button>
               </div>
             </div>
             ${valid ? `<div class="manual-promo-line manual-promo-valid">${escapeHtml(valid)}</div>` : ""}
-            ${collect ? `<div class="manual-promo-line">${escapeHtml(collect)}</div>` : ""}
+            ${collect ? `<div class="manual-promo-line manual-promo-collect">${escapeHtml(collect)}</div>` : ""}
             ${p.note ? `<div class="manual-promo-note">${escapeHtml(p.note)}</div>` : ""}
           </div>`;
       }).join("")}
@@ -8460,6 +8512,14 @@ document.querySelector("#cancelManualPromoEditBtn")?.addEventListener("click", (
   resetManualPromoEditor();
   document.querySelector("#manualPromoDetails")?.removeAttribute("open");
 });
+
+(function scheduleShoppingPromoCleanup(){
+  window.setInterval(()=>{
+    const changed=cleanupExpiredShoppingPromos();
+    if(changed) renderManualShoppingPromos();
+  },60*60*1000);
+})();
+
 function renderShopping() {
   renderManualShoppingPromos();
   const list = document.querySelector("#shoppingList");
