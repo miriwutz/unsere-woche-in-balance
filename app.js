@@ -1585,24 +1585,11 @@ function renderWeek() {
     return !!String(raw.label || raw.url || raw.recipeId || "").trim();
   };
 
-  // Feste, aber kompakte Lanes nur für echte Mehrtagestermine.
-  // So bleibt derselbe Termin Do/Fr/Sa auf derselben Höhe.
-  const weekMultiDayEvents = state.todos
-    .filter(t => !t.archived && t.type === "event")
-    .filter(t => (t.recurrence || "none") === "none")
-    .filter(t => {
-      const start = t.date || "";
-      const end = t.endDate || start;
-      return start && end && end > start &&
-             start <= weekDateKeys[6] &&
-             end >= weekDateKeys[0];
-    })
-    .filter(t => !["birthday","nameday","anniversary"].includes(t.eventCategory || "normal"))
-    .sort((a,b) =>
-      (a.date || "").localeCompare(b.date || "") ||
-      (a.time || "").localeCompare(b.time || "") ||
-      String(a.id).localeCompare(String(b.id))
-    );
+  // V32: Keine globalen Mehrtagestermin-Lanes mehr.
+  // Jeder Tag zeigt nur die Einträge, die an diesem Datum wirklich vorkommen.
+  // Dadurch verschwinden keine Personen-/Termin-Karten wegen einer Lane-Berechnung
+  // und es entstehen keine künstlichen Höhenunterschiede zwischen den Tagen.
+
 
   days.forEach((day, index) => {
     const dayEl = document.createElement("article");
@@ -1758,41 +1745,24 @@ const quietBottomEvents = events
 const visibleEvents = events
   .filter(t => !quietBottomCategories.has(t.eventCategory || "normal"));
 
-const activeMultiIds = new Set(
-  visibleEvents
-    .filter(t => t.endDate && t.endDate !== t.date)
-    .map(t => t.id)
-);
+const orderedEvents = [...visibleEvents].sort((a,b) => {
+  const aStart = a.date || "";
+  const bStart = b.date || "";
+  const aEnd = a.endDate || aStart;
+  const bEnd = b.endDate || bStart;
+  const aMulti = aEnd > aStart ? 0 : 1;
+  const bMulti = bEnd > bStart ? 0 : 1;
+  return aMulti - bMulti ||
+    String(a.time || "99:99").localeCompare(String(b.time || "99:99")) ||
+    String(a.id).localeCompare(String(b.id));
+});
 
-const singleDayEvents = visibleEvents
-  .filter(t => !activeMultiIds.has(t.id))
-  .sort((a,b) =>
-    (a.time || "").localeCompare(b.time || "") ||
-    String(a.id).localeCompare(String(b.id))
-  );
-
-// Nur die Mehrtagestermin-Lanes rendern, die in dieser Woche überhaupt
-// relevant sind. Nicht aktive Lanes bleiben als KOMPAKTER Platzhalter,
-// damit parallele Mehrtagestermine über alle Tage exakt ausgerichtet sind.
-const activeMultiDayEvents = weekMultiDayEvents.filter(t => occursOnDate(t, date));
-
-const multiLaneHtml = activeMultiDayEvents.length
-  ? `<div class="multiday-event-lanes">
-      ${activeMultiDayEvents.map(t =>
-        `<div class="multiday-event-lane">${renderEventCard(t)}</div>`
-      ).join("")}
-    </div>`
-  : "";
-
-// V31: keine unsichtbaren Essens-/Termin-Platzhalter mehr.
-// Sie machten einzelne Tage optisch künstlich leer bzw. schoben Termine
-// weit nach unten. Mehrtages- und Einzeltermine folgen nun kompakt aufeinander.
+// Keine unsichtbaren Platzhalter: leere Bereiche beanspruchen exakt 0 Höhe.
 const mealAlignmentHtml = "";
 
-const eventHtml = (weekMultiDayEvents.length || singleDayEvents.length) ? `
+const eventHtml = orderedEvents.length ? `
   <div class="day-events">
-    ${multiLaneHtml}
-    ${singleDayEvents.map(t => `<div class="single-event-lane">${renderEventCard(t)}</div>`).join("")}
+    ${orderedEvents.map(t => `<div class="event-lane">${renderEventCard(t)}</div>`).join("")}
   </div>
 ` : "";
 
@@ -3274,7 +3244,7 @@ function renderWorkroomWeekOverview(weekOffset=0){
     btn.classList.toggle("active",Number(btn.dataset.weekOffset||0)===weekOffset);
   });
 
-  const monday=new Date(currentWeekMonday);
+  const monday=getMonday(new Date());
   monday.setDate(monday.getDate()+weekOffset*7);
 
   const today=new Date();
@@ -3439,7 +3409,7 @@ function renderChildWeekOverview(id,weekOffset=0){
     btn.classList.toggle("active",Number(btn.dataset.weekOffset||0)===weekOffset);
   });
 
-  const monday=new Date(currentWeekMonday);
+  const monday=getMonday(new Date());
   monday.setDate(monday.getDate()+weekOffset*7);
 
   const today=new Date();
@@ -4867,10 +4837,23 @@ async function updateVideoPreview() {
 }
 
 document.querySelectorAll(".tab").forEach(btn => btn.addEventListener("click", () => {
+  const targetView = btn.dataset.view;
+
+  // V32: Eine im Wochenplan gewählte alte/zukünftige Woche ist nur dort gültig.
+  // Beim Wechsel auf Schule, Einkauf, To-dos, Werkraum oder Überblick wird
+  // sofort wieder die echte aktuelle Kalenderwoche zur gemeinsamen Basis.
+  if (targetView !== "week") {
+    currentWeekMonday = getMonday(new Date());
+  }
+
   document.querySelectorAll(".tab").forEach(x => x.classList.remove("active"));
   document.querySelectorAll(".view").forEach(x => x.classList.remove("active"));
   btn.classList.add("active");
-  document.querySelector(`#${btn.dataset.view}`).classList.add("active");
+  document.querySelector(`#${targetView}`)?.classList.add("active");
+
+  // Auch beim Zurückkehren in den Wochenplan nach einem Tabwechsel
+  // wird deshalb die aktuelle Woche dargestellt.
+  if (targetView === "week") renderWeek();
 }));
 
 document.querySelector("#prevWeekBtn").addEventListener("click", () => {
