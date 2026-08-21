@@ -3041,13 +3041,7 @@ function saveTTMatrix(id) {
 function timetableSubjectDisplay(subject,id){
   const s=String(subject||"").trim();
   if(id!=="2" || !s) return escapeHtml(s);
-  const key=s.toLowerCase();
-  let icon="";
-  if(key==="rel" || key.includes("relig")) icon="✝";
-  else if(key.includes("bewegung") || key.includes("sport") || key==="turnen") icon="👟";
-  else if(key==="gu" || key.includes("gesamtunterricht")) icon="📚";
-  else if(key.includes("werken") || key==="tw") icon="🛠";
-  return `${icon ? `<span class="tt-subject-icon" aria-hidden="true">${icon}</span>` : ""}<span>${escapeHtml(s)}</span>`;
+  return `${schoolTimetableSubjectIcon(s)}<span>${escapeHtml(s)}</span>`;
 }
 
 function showManualTimetable(id){
@@ -3190,9 +3184,12 @@ function renderSchool(){
         schlecht:["–","Schlecht",2]
       };
       const searchEl=document.querySelector(`#schoolFindSearch${id}`);
+      const filterEl=document.querySelector(`#schoolFindFilter${id}`);
       const q=(searchEl?.value||"").trim().toLowerCase();
+      const categoryFilter=filterEl?.value || "all";
       const allFinds=Array.isArray(c.interestLinks)?c.interestLinks:[];
       const finds=allFinds.filter(x=>{
+        if(categoryFilter!=="all" && (x.category||"sonstiges")!==categoryFilter) return false;
         if(!q) return true;
         let domain="";
         try{ domain=new URL(x.url).hostname.replace(/^www\./,""); }catch{}
@@ -3395,6 +3392,13 @@ document.querySelectorAll(".school-find-search").forEach(input=>input.addEventLi
   renderSchool();
   const restored=document.querySelector(`#schoolFindSearch${id}`);
   if(restored){restored.focus();restored.setSelectionRange(restored.value.length,restored.value.length);}
+}));
+document.querySelectorAll(".school-find-filter").forEach(select=>select.addEventListener("change",e=>{
+  const id=e.currentTarget.dataset.child;
+  const value=e.currentTarget.value;
+  renderSchool();
+  const restored=document.querySelector(`#schoolFindFilter${id}`);
+  if(restored) restored.value=value;
 }));
 
 document.addEventListener("click",e=>{
@@ -12297,6 +12301,17 @@ const schoolChildIcons = [
 
 function schoolChildDefaultIcon(id){
   return id === "1" ? (state.familySettings.c?.icon || "⭐") : (state.familySettings.d?.icon || "🌙");
+}
+
+
+function schoolTimetableSubjectIcon(subject){
+  const s=String(subject||"").trim().toLowerCase();
+  if(!s) return "";
+  if(s==="rel" || s.includes("relig")) return `<span class="tt-subject-symbol tt-symbol-rel" aria-hidden="true">✝</span>`;
+  if(s.includes("turn") || s.includes("sport") || s==="bu" || s==="bsp") return `<span class="tt-subject-symbol tt-symbol-sport" aria-hidden="true">♟</span>`;
+  if(s.includes("werk") || s==="tec" || s==="tex") return `<span class="tt-subject-symbol tt-symbol-werken" aria-hidden="true">⌁</span>`;
+  if(s==="gu" || s.includes("grund")) return `<span class="tt-subject-symbol tt-symbol-gu" aria-hidden="true"><i></i><i></i></span>`;
+  return `<span class="tt-subject-symbol tt-symbol-default" aria-hidden="true">·</span>`;
 }
 
 function schoolTaskDefaultIcon(id){
