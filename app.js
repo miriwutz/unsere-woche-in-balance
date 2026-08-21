@@ -954,9 +954,11 @@ function renderQuickLinks(){
    {id:"default-schoolfox2",label:"SchoolFox 2",url:"https://schoolfox.app/"},
    {id:"default-teams",label:"Teams",url:"https://teams.microsoft.com/"}
  ];
- const links=(state.familySettings.quickLinks && state.familySettings.quickLinks.length)
-   ? state.familySettings.quickLinks
-   : defaultQuickLinks;
+ if (!Array.isArray(state.familySettings.quickLinks) || state.familySettings.quickLinks.length === 0) {
+   state.familySettings.quickLinks = defaultQuickLinks.map(x => ({...x}));
+   save();
+ }
+ const links=state.familySettings.quickLinks;
  const row=document.querySelector("#quickLinksRow");
  if(row)row.innerHTML=links.map(x=>`<a href="${escapeHtml(normalizeExternalUrl(x.url))}" target="_blank" rel="noopener" class="quick-link">${escapeHtml(x.label||"Link")}</a>`).join("");
  const list=document.querySelector("#quickLinksManageList");
@@ -2015,8 +2017,12 @@ const eventHtml = orderedEvents.length ? `
           : ""}
       </div>
 
-      ${weekplanHtml ? `<div class="weekplan-bottom-slot">${weekplanHtml}</div>` : ""}
-      ${quietBottomHtml}
+      ${(weekplanHtml || quietBottomHtml) ? `
+        <div class="day-bottom-stack">
+          ${weekplanHtml ? `<div class="weekplan-bottom-slot">${weekplanHtml}</div>` : ""}
+          ${quietBottomHtml}
+        </div>
+      ` : ""}
     `;
     grid.appendChild(dayEl);
   });
