@@ -15981,3 +15981,84 @@ body.child-view-active #papaOverviewModal{
 .shopping-promo-shop{grid-row:1/3!important;font-size:.58rem!important;font-weight:750!important;letter-spacing:.07em!important;color:#88735f!important}.shopping-promo-copy strong{display:block!important;font-size:.76rem!important}.shopping-promo-copy small{display:block!important;margin-top:2px!important;font-size:.59rem!important;line-height:1.25!important;color:#8d8176!important}
 .shopping-promo-status{grid-column:2!important;justify-self:start!important;margin-top:2px!important;padding:2px 6px!important;border-radius:999px!important;background:#f1eee4!important;color:#776b5e!important;font-size:.53rem!important}.shopping-promo-note{padding-top:7px!important;color:#aaa096!important;font-size:.51rem!important}
 @media(max-width:980px){.shopping-main-grid{grid-template-columns:1fr!important}}
+
+
+/* =========================================================
+   V27 – Fragenschild: kompakter, klareres ?, keine Punkte/Nägel
+   ========================================================= */
+
+/* Die beiden Punkte links/rechts aus V25 komplett entfernen. */
+.week-family-questions::after{
+  display:none !important;
+  content:none !important;
+}
+
+/* Schild insgesamt etwas flacher und die Einträge näher zusammen. */
+.week-family-questions{
+  padding:5px 12px 6px !important;
+}
+
+.week-family-question-items{
+  column-gap:8px !important;
+  row-gap:0 !important;
+}
+
+.week-family-question{
+  min-height:21px !important;
+  grid-template-columns:23px minmax(0,1fr) !important;
+  gap:4px !important;
+  padding:0 !important;
+}
+
+/* Das ? soll eindeutig als klickbarer Abhakknopf erkennbar sein. */
+.week-family-question-mark{
+  width:22px !important;
+  height:22px !important;
+  min-width:22px !important;
+  border:2px solid #8f7354 !important;
+  background:#fffaf0 !important;
+  color:#72583e !important;
+  font-size:.78rem !important;
+  font-weight:800 !important;
+  box-shadow:
+    inset 0 0 0 1px rgba(255,255,255,.8),
+    0 1px 3px rgba(82,62,42,.10) !important;
+}
+
+.week-family-question-mark:hover{
+  background:#f2e4c8 !important;
+  border-color:#715638 !important;
+}
+
+.week-family-question-copy strong{
+  font-size:.71rem !important;
+  line-height:1 !important;
+}
+
+.week-family-question-copy small{
+  margin-top:0 !important;
+  font-size:.44rem !important;
+  line-height:1 !important;
+}
+
+/* =========================================================
+   V27 – Rabattkalender: nur verifizierte, klar gekennzeichnete Angaben
+   ========================================================= */
+.shopping-promo-row{
+  padding-top:7px !important;
+  padding-bottom:7px !important;
+}
+.shopping-promo-status.verified{
+  background:#eef3e8 !important;
+  color:#65725d !important;
+}
+.shopping-promo-status.evergreen{
+  background:#f1edf6 !important;
+  color:#746683 !important;
+}
+.shopping-promo-source-note{
+  display:block !important;
+  margin-top:3px !important;
+  color:#b0a49b !important;
+  font-size:.49rem !important;
+}
