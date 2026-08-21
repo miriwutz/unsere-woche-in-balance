@@ -305,6 +305,28 @@
             <input id="superImportant" type="checkbox">
             <span>⭐ Superwichtig</span>
           </label>
+
+          <div class="family-picker family-picker-top">
+            <span class="family-picker-label">Für wen?</span>
+            <div class="family-options" id="familyOptions">
+              <label class="family-chip family-a">
+                <input type="checkbox" value="a">
+                <span>Mama</span>
+              </label>
+              <label class="family-chip family-b">
+                <input type="checkbox" value="b">
+                <span>Papa</span>
+              </label>
+              <label class="family-chip family-c">
+                <input type="checkbox" value="c">
+                <span>Lou</span>
+              </label>
+              <label class="family-chip family-d">
+                <input type="checkbox" value="d">
+                <span>Fina</span>
+              </label>
+            </div>
+          </div>
         </div>
 
         <div class="todo-primary-row">
@@ -335,27 +357,6 @@
               <option>Sonntag</option>
             </select>
           </label>
-        </div>
-        <div class="family-picker">
-          <span class="family-picker-label">Für wen?</span>
-          <div class="family-options" id="familyOptions">
-            <label class="family-chip family-a">
-              <input type="checkbox" value="a">
-              <span>Mama</span>
-            </label>
-            <label class="family-chip family-b">
-              <input type="checkbox" value="b">
-              <span>Papa</span>
-            </label>
-            <label class="family-chip family-c">
-              <input type="checkbox" value="c">
-              <span>Lou</span>
-            </label>
-            <label class="family-chip family-d">
-              <input type="checkbox" value="d">
-              <span>Fina</span>
-            </label>
-          </div>
         </div>
 
       <div id="eventFields" class="event-fields hidden">
@@ -519,6 +520,7 @@
         <button class="filter" data-filter="event">Termine</button>
         <button class="filter" data-filter="work">Arbeit</button>
         <button class="filter" data-filter="private">Privat</button>
+        <button class="filter weekplan-filter" data-filter="weekplan">🌿 Wochenplan</button>
         <button class="filter" data-filter="latest">Neueste</button>
         <button class="filter" data-filter="done">✓ Fertige To-dos</button>
       </div>
