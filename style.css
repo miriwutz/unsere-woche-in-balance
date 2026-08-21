@@ -15517,3 +15517,147 @@ body.child-view-active #papaOverviewModal{
     grid-template-columns:1fr !important;
   }
 }
+
+
+/* =========================================================
+   V23 – Kinder-Dashboard unten ruhiger + Fundstücke mit Vorschau
+   ========================================================= */
+
+/* Die vier Bereiche sollen wie ein zusammengehöriges kleines Dashboard wirken,
+   nicht wie vier voneinander unabhängige große Buttons. */
+.school-dashboard-tiles{
+  gap:10px !important;
+  padding-top:2px !important;
+}
+
+.school-dashboard-tile{
+  position:relative !important;
+  min-height:76px !important;
+  padding:12px 14px !important;
+  border:1px solid rgba(166,153,147,.18) !important;
+  border-radius:18px !important;
+  box-shadow:0 5px 15px rgba(74,62,57,.035) !important;
+  transition:transform .14s ease, box-shadow .14s ease, border-color .14s ease !important;
+  overflow:hidden !important;
+}
+
+.school-dashboard-tile:hover{
+  transform:translateY(-1px) !important;
+  box-shadow:0 8px 20px rgba(74,62,57,.055) !important;
+  border-color:rgba(166,153,147,.28) !important;
+}
+
+.school-dashboard-tile::after{
+  content:"" !important;
+  position:absolute !important;
+  inset:auto -20px -28px auto !important;
+  width:78px !important;
+  height:78px !important;
+  border-radius:50% !important;
+  background:rgba(255,255,255,.34) !important;
+  pointer-events:none !important;
+}
+
+.school-dashboard-tile > span:nth-child(2){
+  min-width:0 !important;
+}
+
+.school-dashboard-tile strong{
+  font-family:"Cormorant Garamond","Georgia",serif !important;
+  font-size:1.02rem !important;
+  font-weight:650 !important;
+  letter-spacing:.005em !important;
+}
+
+.school-dashboard-tile small{
+  margin-top:2px !important;
+  color:#948780 !important;
+  font-size:.65rem !important;
+}
+
+.school-tile-arrow{
+  color:#b3a59c !important;
+  font-size:1rem !important;
+}
+
+/* sanfte, weniger bonbonartige Flächen */
+.school-tile-links{
+  background:linear-gradient(135deg,#fbf8ff,#f7f5fb) !important;
+}
+.school-tile-timetable{
+  background:linear-gradient(135deg,#f5faf5,#f4f8f4) !important;
+}
+.school-tile-week{
+  background:linear-gradient(135deg,#fff8f2,#fcf6f1) !important;
+}
+.school-tile-finds{
+  background:linear-gradient(135deg,#fffaf3,#faf5f8) !important;
+}
+
+/* ---------------------------------------------------------
+   Fundstücke: Video-Vorschaubild rechts
+   --------------------------------------------------------- */
+.school-find{
+  grid-template-columns:minmax(0,1fr) 28px !important;
+  min-height:56px !important;
+}
+
+.school-find-main{
+  min-width:0 !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:space-between !important;
+  gap:10px !important;
+}
+
+.school-find-copy{
+  min-width:0 !important;
+  display:block !important;
+}
+
+.school-find-thumb-wrap{
+  position:relative !important;
+  flex:0 0 84px !important;
+  width:84px !important;
+  height:48px !important;
+  overflow:hidden !important;
+  border-radius:9px !important;
+  background:#eee8e4 !important;
+  box-shadow:inset 0 0 0 1px rgba(124,108,99,.08) !important;
+}
+
+.school-find-thumb{
+  width:100% !important;
+  height:100% !important;
+  display:block !important;
+  object-fit:cover !important;
+}
+
+.school-find-play{
+  position:absolute !important;
+  left:50% !important;
+  top:50% !important;
+  transform:translate(-50%,-50%) !important;
+  width:25px !important;
+  height:25px !important;
+  display:grid !important;
+  place-items:center !important;
+  padding-left:2px !important;
+  border-radius:50% !important;
+  background:rgba(255,255,255,.88) !important;
+  color:#776a64 !important;
+  font-size:.64rem !important;
+  box-shadow:0 2px 8px rgba(60,49,44,.12) !important;
+}
+
+.school-find-youtube{
+  background:linear-gradient(135deg,#faf8f6,#fffaf7) !important;
+}
+
+@media(max-width:650px){
+  .school-find-thumb-wrap{
+    flex-basis:72px !important;
+    width:72px !important;
+    height:42px !important;
+  }
+}
