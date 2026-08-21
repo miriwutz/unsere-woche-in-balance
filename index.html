@@ -528,7 +528,7 @@
         <button class="filter" data-filter="event">Termine</button>
         <button class="filter" data-filter="work">Arbeit</button>
         <button class="filter" data-filter="private">Privat</button>
-        <button class="filter weekplan-filter" data-filter="weekplan">🌿 Wochenplan</button>
+        <button class="filter weekplan-filter" data-filter="weekplan">❧ Wochenplan</button>
         <button class="filter" data-filter="latest">Neueste</button>
         <button class="filter" data-filter="done">✓ Fertige To-dos</button>
       </div>
@@ -571,7 +571,7 @@
         <option value="frozen">🧊 Tiefgekühltes</option>
         <option value="pantry">🍝 Vorrat & Beilagen</option>
         <option value="seasoning">🫙 Öle, Essig & Würzen</option>
-        <option value="breakfast">🥣 Frühstück & Aufstriche</option>
+        <option value="breakfast">◡ Frühstück & Aufstriche</option>
         <option value="baking">🧁 Backen</option>
         <option value="snacks">🍫 Süßes & Snacks</option>
         <option value="drinks">🥤 Getränke</option>
@@ -710,7 +710,7 @@
             <span>Kategorie</span>
             <select id="recipeCategory">
               <option value="main" selected>🍝 Hauptgericht</option>
-              <option value="breakfast">🥣 Frühstück & Morgenideen</option>
+              <option value="breakfast">◡ Frühstück & Morgenideen</option>
               <option value="spread">🥖 Aufstriche & Dips</option>
               <option value="soup">🍲 Suppen & Eintöpfe</option>
               <option value="small">🥙 Kleine Sachen & Jause</option>
@@ -763,6 +763,43 @@
       </section>
 
       <!-- 2: DAS EIGENTLICHE REZEPT -->
+      <section class="recipe-v17-tags">
+        <div class="recipe-v17-section-head compact">
+          <div>
+            <strong>Was passt dazu?</strong>
+            <small>Nur anklicken, was wirklich zutrifft.</small>
+          </div>
+        </div>
+
+        <div class="recipe-feature-row recipe-feature-row-v17">
+          <label class="recipe-kids-toggle recipe-feature-kids">
+            <input id="recipeKids" type="checkbox">
+            <span><i class="recipe-feature-symbol" aria-hidden="true">♙</i>Kindergericht</span>
+          </label>
+
+          <label class="recipe-healthy-toggle recipe-feature-healthy">
+            <input id="recipeHealthy" type="checkbox">
+            <span><i class="recipe-feature-symbol" aria-hidden="true">❧</i>Gesund & bunt</span>
+          </label>
+
+          <label class="recipe-selfcook-toggle-form recipe-feature-selfcook" title="Eigene größere Kinderansicht aktivieren">
+            <input id="recipeSelfCook" type="checkbox">
+            <span><i class="recipe-feature-symbol" aria-hidden="true">⌂</i>Selbst kochen</span>
+          </label>
+
+          <label class="recipe-beaker-toggle recipe-feature-beaker" title="Becher/Löffel werden in der Kinderansicht automatisch erkannt">
+            <input id="recipeBeakerKitchen" type="checkbox">
+            <span><i class="recipe-feature-symbol" aria-hidden="true">◡</i>Becherküche</span>
+          </label>
+
+          <label class="recipe-favorite-toggle recipe-feature-favorite" title="Als Lieblingsrezept markieren">
+            <input id="recipeFavorite" type="checkbox">
+            <span><i class="recipe-feature-symbol" aria-hidden="true">♡</i>Favorit</span>
+          </label>
+        </div>
+
+      </section>
+
       <section class="recipe-v17-content recipe-internal-only">
         <div class="recipe-v17-section-head">
           <div>
@@ -787,7 +824,7 @@
       <div id="recipeBeakerMapping" class="recipe-entry-section recipe-beaker-mapping hidden">
         <div class="recipe-entry-section-head">
           <div>
-            <span>🥣</span>
+            <span>◡</span>
             <div>
               <strong>Becherküche für die Kinderansicht</strong>
               <small>Die Zutaten werden automatisch aus deinem Rezept übernommen. Du wählst nur noch das passende Kindermaß.</small>
@@ -810,42 +847,7 @@
       </div>
 
       <!-- 3: MERKMALE – schnell anklicken -->
-      <section class="recipe-v17-tags">
-        <div class="recipe-v17-section-head compact">
-          <div>
-            <strong>Was passt dazu?</strong>
-            <small>Nur anklicken, was wirklich zutrifft.</small>
-          </div>
-        </div>
-
-        <div class="recipe-feature-row recipe-feature-row-v17">
-          <label class="recipe-kids-toggle">
-            <input id="recipeKids" type="checkbox">
-            <span><i class="recipe-feature-symbol" aria-hidden="true">🧒</i>Kindergericht</span>
-          </label>
-
-          <label class="recipe-healthy-toggle">
-            <input id="recipeHealthy" type="checkbox">
-            <span><i class="recipe-feature-symbol" aria-hidden="true">🌿</i>Gesund & bunt</span>
-          </label>
-
-          <label class="recipe-selfcook-toggle-form" title="Eigene größere Kinderansicht aktivieren">
-            <input id="recipeSelfCook" type="checkbox">
-            <span><i class="recipe-feature-symbol" aria-hidden="true">👩‍🍳</i>Selbst kochen</span>
-          </label>
-
-          <label class="recipe-beaker-toggle" title="Becher/Löffel werden in der Kinderansicht automatisch erkannt">
-            <input id="recipeBeakerKitchen" type="checkbox">
-            <span><i class="recipe-feature-symbol" aria-hidden="true">🥣</i>Becherküche</span>
-          </label>
-
-          <label class="recipe-favorite-toggle" title="Als Lieblingsrezept markieren">
-            <input id="recipeFavorite" type="checkbox">
-            <span><i class="recipe-feature-symbol" aria-hidden="true">♡</i>Favorit</span>
-          </label>
-        </div>
-
-      </section>
+      
 
       <section class="recipe-v18-links recipe-external-only recipe-section-hidden">
         <div class="recipe-v17-section-head compact">
@@ -936,7 +938,7 @@
 
       <select id="recipeCategoryFilter">
         <option value="all">Alle Rezeptideen</option>
-        <option value="breakfast">🥣 Frühstück & Morgenideen</option>
+        <option value="breakfast">◡ Frühstück & Morgenideen</option>
         <option value="spread">🥖 Aufstriche & Dips</option>
         <option value="soup">🍲 Suppen & Eintöpfe</option>
         <option value="main">🍝 Hauptgerichte</option>
@@ -956,7 +958,7 @@
 
       <label class="recipe-kids-filter">
         <input id="recipeKidsOnlyFilter" type="checkbox">
-        <span>🧒 Kindergerichte</span>
+        <span>♙ Kindergerichte</span>
       </label>
 
       <label class="recipe-selfcook-filter">
@@ -966,7 +968,7 @@
 
       <label class="recipe-healthy-filter">
         <input id="recipeHealthyOnlyFilter" type="checkbox">
-        <span>🌿 Gesund & bunt</span>
+        <span>❧ Gesund & bunt</span>
       </label>
 
       <label class="recipe-favorite-filter">
@@ -1142,7 +1144,7 @@
             <option value="musik">🎧 Musik & Video</option>
             <option value="hobby">♡ Hobby</option>
             <option value="sport">🩰 Sport</option>
-            <option value="sonstiges">🌿 Sonstiges</option>
+            <option value="sonstiges">❧ Sonstiges</option>
           </select>
           <select id="schoolFindRating1" aria-label="Bewertung">
             <option value="gut">♡ Gut</option>
@@ -1165,7 +1167,7 @@
             <option value="musik">🎧 Musik & Video</option>
             <option value="hobby">♡ Hobby</option>
             <option value="sport">🩰 Sport</option>
-            <option value="sonstiges">🌿 Sonstiges</option>
+            <option value="sonstiges">❧ Sonstiges</option>
           </select>
         </div>
 
@@ -1287,7 +1289,7 @@
             <option value="musik">🎧 Musik & Video</option>
             <option value="hobby">♡ Hobby</option>
             <option value="sport">🩰 Sport</option>
-            <option value="sonstiges">🌿 Sonstiges</option>
+            <option value="sonstiges">❧ Sonstiges</option>
           </select>
           <select id="schoolFindRating2" aria-label="Bewertung">
             <option value="gut">♡ Gut</option>
@@ -1310,7 +1312,7 @@
             <option value="musik">🎧 Musik & Video</option>
             <option value="hobby">♡ Hobby</option>
             <option value="sport">🩰 Sport</option>
-            <option value="sonstiges">🌿 Sonstiges</option>
+            <option value="sonstiges">❧ Sonstiges</option>
           </select>
         </div>
 
@@ -1386,7 +1388,7 @@
 
   <article class="card workroom-routine-card">
     <button id="toggleRoutinePanelBtn" class="workroom-routine-toggle" type="button" aria-expanded="false" aria-controls="workroomRoutineBody">
-      <span class="workroom-routine-toggle-icon">🌿</span>
+      <span class="workroom-routine-toggle-icon">❧</span>
       <span class="workroom-routine-toggle-copy">
         <span class="small-label">MEINE ROUTINEN</span>
         <strong>Ruhig durch die Woche</strong>
@@ -1865,7 +1867,7 @@
               <option value="cook">🍳 Kochen</option>
               <option value="shopping">🛒 Einkaufen</option>
               <option value="repair">🔧 Reparaturen</option>
-              <option value="garden">🌿 Garten & draußen</option>
+              <option value="garden">❧ Garten & draußen</option>
               <option value="sport">🏃 Sport & Bewegung</option>
               <option value="help">🤝 Helfen & Unterstützen</option>
               <option value="school">✏ Lernen & Schule</option>
