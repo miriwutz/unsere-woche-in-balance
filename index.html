@@ -135,8 +135,15 @@
           type="button"
           title="Papas Woche"
           aria-label="Papas Woche">
-    <span class="papa-week-heart">♡</span>
-    <span>Papa</span>
+    <span class="papa-week-bow" aria-hidden="true">
+      <svg viewBox="0 0 30 20" focusable="false">
+        <path class="papa-bow-curve" d="M8 2 C18 4 20 16 8 18"/>
+        <path class="papa-bow-string" d="M8 2 L13 10 L8 18"/>
+        <path class="papa-bow-arrow" d="M3 10 H25"/>
+        <path class="papa-bow-arrowhead" d="M22 7 L26 10 L22 13"/>
+      </svg>
+    </span>
+    <span class="papa-week-label">Papa</span>
   </button>
 
   <button id="openPinboardBtn" class="secondary-btn pinboard-open-btn" type="button">
@@ -1123,9 +1130,11 @@
         </div>
 
         <div class="school-find-tools">
-          <span class="school-find-search-icon">⌕</span>
-          <input id="schoolFindSearch1" class="school-find-search" data-child="1" type="search"
-                 placeholder="Fundstücke durchsuchen …" autocomplete="off">
+          <label class="school-find-search-wrap" for="schoolFindSearch1">
+            <span class="school-find-search-icon" aria-hidden="true">⌕</span>
+            <input id="schoolFindSearch1" class="school-find-search" data-child="1" type="search"
+                   placeholder="Fundstücke durchsuchen …" autocomplete="off">
+          </label>
           <select id="schoolFindFilter1" class="school-find-filter" data-child="1" aria-label="Fundstücke nach Kategorie filtern">
             <option value="all" selected>Alle Kategorien</option>
             <option value="ideen">✨ Ideen</option>
@@ -1266,9 +1275,11 @@
         </div>
 
         <div class="school-find-tools">
-          <span class="school-find-search-icon">⌕</span>
-          <input id="schoolFindSearch2" class="school-find-search" data-child="2" type="search"
-                 placeholder="Fundstücke durchsuchen …" autocomplete="off">
+          <label class="school-find-search-wrap" for="schoolFindSearch2">
+            <span class="school-find-search-icon" aria-hidden="true">⌕</span>
+            <input id="schoolFindSearch2" class="school-find-search" data-child="2" type="search"
+                   placeholder="Fundstücke durchsuchen …" autocomplete="off">
+          </label>
           <select id="schoolFindFilter2" class="school-find-filter" data-child="2" aria-label="Fundstücke nach Kategorie filtern">
             <option value="all" selected>Alle Kategorien</option>
             <option value="ideen">✨ Ideen</option>
@@ -2132,9 +2143,9 @@
   <div class="papa-quote-panel">
     <div class="papa-triquetra-wrap">
       <div class="papa-triquetra-ring">
-        <img src="triquetra.png.png"
-             class="papa-triquetra-image"
-             alt="Das Leben fließt – wir fließen mit">
+        <img src="papa-bogenschuetze.png"
+             class="papa-triquetra-image papa-archer-image"
+             alt="Papa als Bogenschütze">
       </div>
     </div>
     <p id="papaQuote" class="papa-quote"></p>
