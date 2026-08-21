@@ -185,29 +185,29 @@
 </div>
       
       
-      <div class="family-question-card card">
-        <div class="family-question-card-head">
-          <div>
-            <strong>💬 Frage an die Familie</strong>
-            <span>Bleibt oben im Wochenplan, bis sie erledigt ist.</span>
+      <details class="family-question-card card">
+        <summary class="family-question-summary">
+          <span><strong>💬 Frage an die Familie</strong><small>Bleibt oben im Wochenplan, bis sie erledigt ist.</small></span>
+        </summary>
+
+        <div class="family-question-body">
+          <div class="family-question-entry">
+            <input id="familyQuestionText" type="text" autocomplete="on"
+                   placeholder="z. B. Wer kann Fina am Freitag abholen?">
+            <select id="familyQuestionTo" aria-label="An wen?">
+              <option value="shared">Alle</option>
+              <option value="a">Mama</option>
+              <option value="b">Papa</option>
+              <option value="c">Lou</option>
+              <option value="d">Fina</option>
+            </select>
+            <button id="cancelFamilyQuestionEditBtn" class="secondary-btn hidden" type="button">Abbrechen</button>
+            <button id="addFamilyQuestionBtn" class="secondary-btn" type="button">+ Frage</button>
           </div>
-        </div>
 
-        <div class="family-question-entry">
-          <input id="familyQuestionText" type="text" autocomplete="on"
-                 placeholder="z. B. Wer kann Fina am Freitag abholen?">
-          <select id="familyQuestionTo" aria-label="An wen?">
-            <option value="shared">Alle</option>
-            <option value="a">Mama</option>
-            <option value="b">Papa</option>
-            <option value="c">Lou</option>
-            <option value="d">Fina</option>
-          </select>
-          <button id="addFamilyQuestionBtn" class="secondary-btn" type="button">+ Frage</button>
+          <div id="familyQuestionList" class="family-question-list"></div>
         </div>
-
-        <div id="familyQuestionList" class="family-question-list"></div>
-      </div>
+      </details>
 
       <details class="family-settings card">
         <summary>🎨 Unsere Farben</summary>
@@ -433,6 +433,9 @@
         
 </div>
   
+        <details class="todo-more-settings">
+          <summary>Weitere Angaben</summary>
+          <div class="todo-more-settings-body">
         <div class="recurrence-row">
           <label>
             Wiederholung
@@ -490,6 +493,8 @@
           </label>
 
         </div>
+          </div>
+        </details>
         <div class="todo-form-actions">
           <button id="cancelTodoEditBtn" class="secondary-btn hidden" type="button">Bearbeiten abbrechen</button>
           <button id="addTodoBtn" class="primary-btn" type="button">To-do hinzufügen</button>
