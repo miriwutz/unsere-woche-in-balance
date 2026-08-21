@@ -17093,3 +17093,104 @@ body.child-view-active #papaOverviewModal{
 .quick-links-editor-body{padding-top:7px}.quick-link-entry{display:grid;grid-template-columns:220px minmax(260px,1fr) auto auto;gap:7px;align-items:center}.quick-link-entry input{min-height:35px;border:1px solid var(--line);border-radius:10px;padding:8px 10px;font:inherit;background:#fffdfa}
 .quick-links-manage-list{display:grid;gap:4px;margin-top:7px}.quick-link-manage-row{display:grid;grid-template-columns:minmax(0,1fr) 28px 24px;align-items:center;gap:5px;padding:4px 7px;border-radius:9px;background:rgba(248,248,239,.72)}.quick-link-manage-row span{min-width:0}.quick-link-manage-row strong,.quick-link-manage-row small{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.quick-link-manage-row strong{font-size:.7rem;color:#625f52}.quick-link-manage-row small{font-size:.57rem;color:#a09a8d}.quick-link-edit,.quick-link-remove{border:0;background:transparent;cursor:pointer;color:#8d877b;height:26px}
 @media(max-width:760px){.entry-top-row{grid-template-columns:1fr 1fr!important}.super-important-control{grid-column:1/-1}.family-question-entry{grid-template-columns:1fr 105px!important}.quick-links-main{align-items:flex-start;flex-direction:column}.quick-link-entry{grid-template-columns:1fr!important}}
+
+
+/* =========================================================
+   PUNKT 2c – Feinschliff
+   ========================================================= */
+
+/* Für wen? gehört zu den schnellen Angaben nach oben */
+.entry-top-row{
+  grid-template-columns:155px 220px auto minmax(310px,1fr) !important;
+  align-items:end !important;
+}
+.family-picker-top{
+  margin:0 !important;
+  padding:0 0 1px !important;
+  align-self:end;
+}
+.family-picker-top .family-picker-label{
+  display:block;
+  margin:0 0 5px !important;
+  font-size:.67rem;
+  color:#7f766f;
+}
+.family-picker-top .family-options{
+  display:flex;
+  flex-wrap:wrap;
+  gap:5px;
+}
+.family-picker-top .family-chip{
+  min-height:30px;
+}
+
+/* Wochenplan-Routinen: ganz unten und direkt über den Geburtstagen.
+   Kein Rahmen, kein Haker – nur ruhiger, hell-oliver Text. */
+.weekplan-bottom-slot{
+  margin-top:auto;
+  padding:0 9px 5px;
+}
+.weekplan-bottom-slot + .day-quiet-events{
+  margin-top:2px !important;
+}
+.weekplan-quiet-list{
+  margin:0 !important;
+  gap:1px !important;
+}
+.weekplan-quiet-item{
+  color:#989b70 !important;
+  font-size:.69rem !important;
+  padding:2px 0 !important;
+  letter-spacing:.005em;
+}
+.weekplan-quiet-item::before{
+  content:"·";
+  color:#aeb086 !important;
+  margin-right:5px;
+}
+
+/* Schnellzugriff-Filter für Wochenplan ebenfalls ruhig oliv */
+.filter.weekplan-filter{
+  color:#777a57;
+}
+.filter.weekplan-filter.active{
+  background:linear-gradient(135deg,#f7f8ec,#e8ecd4) !important;
+  border-color:#cdd1aa !important;
+  color:#5f6348 !important;
+}
+
+/* Familienfragen: das Danke darf bewusst groß sein */
+.motivation-toast.family-thanks{
+  width:min(720px,calc(100% - 36px)) !important;
+  max-width:720px !important;
+  padding:24px 28px !important;
+  border-color:#e2d39f !important;
+  background:linear-gradient(135deg,rgba(255,252,240,.99),rgba(248,250,235,.99)) !important;
+  box-shadow:0 20px 54px rgba(94,79,55,.17) !important;
+}
+.motivation-toast.family-thanks #motivationText{
+  font-family:Georgia,"Times New Roman",serif;
+  font-size:1.22rem !important;
+  line-height:1.45 !important;
+  color:#5a4c3f !important;
+}
+.motivation-toast.family-thanks #motivationIcon{
+  font-size:2rem !important;
+}
+
+/* Linkverwaltung klein halten – Schnellzugriff selbst bleibt im Vordergrund */
+.quick-links-editor > summary{
+  opacity:.78;
+}
+.quick-links-editor[open] > summary{
+  opacity:1;
+}
+
+@media(max-width:980px){
+  .entry-top-row{
+    grid-template-columns:1fr 1fr !important;
+  }
+  .family-picker-top{
+    grid-column:1 / -1;
+  }
+}
