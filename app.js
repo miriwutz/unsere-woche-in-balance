@@ -2997,7 +2997,7 @@ function renderSchool(){
         lesen:["📖","Lesen"],
         musik:["🎧","Musik & Video"],
         hobby:["♡","Hobby"],
-        sport:["⚽","Sport"],
+        sport:["🩰","Sport"],
         sonstiges:["🌿","Sonstiges"]
       };
       const finds=Array.isArray(c.interestLinks)?c.interestLinks:[];
@@ -7170,16 +7170,24 @@ return `
   </section>
 `;
 }
+const shoppingPromoInfo=[
+{shop:"SPAR",kind:"Rabattmarkerl",status:"Bald wieder da",detail:"Letzte Runde: Sammeln 28.05.–17.06.2026 · Einlösen 18.06.–01.07.2026",source:"https://www.spar.at/aktionen/rabattmarkerl"},
+{shop:"BILLA",kind:"jö Rabattsammler",status:"laufend",detail:"Ös sammeln · 1× pro Monat einlösbar · bis zu 20 %",source:"https://www.billa.at/unsere-aktionen/aktionen"},
+{shop:"BILLA",kind:"-25 % Pickerl",status:"Zeitraum wechselt",detail:"Aktuelle Gültigkeit im BILLA-Aktionsbereich prüfen",source:"https://www.billa.at/unsere-aktionen/aktionen/richtigvielsparen"},
+{shop:"BIPA",kind:"Rabattsticker",status:"Derzeit keine",detail:"Nächste Sticker werden auf der offiziellen Aktionsseite veröffentlicht",source:"https://www.bipa.at/cp/aktionssticker"}
+];
+function renderShoppingPromoInfo(){
+ const box=document.querySelector("#shoppingPromoInfo"); if(!box)return;
+ box.innerHTML=shoppingPromoInfo.map(x=>`<a class="shopping-promo-row" href="${escapeHtml(x.source)}" target="_blank" rel="noopener"><span class="shopping-promo-shop">${escapeHtml(x.shop)}</span><span class="shopping-promo-copy"><strong>${escapeHtml(x.kind)}</strong><small>${escapeHtml(x.detail)}</small></span><span class="shopping-promo-status">${escapeHtml(x.status)}</span></a>`).join("");
+}
+
 function renderShopping() {
   const list = document.querySelector("#shoppingList");
   if (!list) return;
 
   if (!shoppingItems.length) {
-    list.innerHTML = `
-      <div class="workroom-empty">
-        Noch nichts auf der Einkaufsliste.
-      </div>
-    `;
+    list.innerHTML = `<div class="workroom-empty">Noch nichts auf der Einkaufsliste.</div>`;
+    renderShoppingPromoInfo();
     return;
   }
 
@@ -7197,6 +7205,7 @@ function renderShopping() {
     ${renderShoppingGroup("Später kaufen", laterItems, true)}
     ${renderShoppingGroup("Erst in Aktion kaufen", saleItems, true)}
   `;
+  renderShoppingPromoInfo();
 
   // Artikel abhaken
   document.querySelectorAll(".shopping-check").forEach(check => {
