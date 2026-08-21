@@ -16140,3 +16140,196 @@ body.child-view-active #papaOverviewModal{
 .shopping-item-name{
   font-size:.98rem !important;
 }
+
+
+/* =========================================================
+   V30 – Familienfragen beim Laden + kompakter
+   ========================================================= */
+.week-family-questions{
+  padding:3px 9px 4px !important;
+}
+.week-family-question-items{
+  column-gap:4px !important;
+  row-gap:0 !important;
+}
+.week-family-question{
+  min-height:18px !important;
+  grid-template-columns:20px minmax(0,1fr) !important;
+  gap:3px !important;
+}
+.week-family-question-mark{
+  width:19px !important;
+  height:19px !important;
+  min-width:19px !important;
+  border-width:1.5px !important;
+}
+.week-family-question-copy strong{
+  font-size:.67rem !important;
+}
+.week-family-question-copy small{
+  font-size:.40rem !important;
+}
+
+/* =========================================================
+   V30 – Manuell gepflegte Rabatte / Pickerl
+   ========================================================= */
+.manual-promo-details{
+  margin-top:9px !important;
+  border:1px solid rgba(145,121,91,.18) !important;
+  border-radius:13px !important;
+  background:rgba(255,253,248,.70) !important;
+  overflow:hidden !important;
+}
+
+.manual-promo-details summary{
+  list-style:none !important;
+  cursor:pointer !important;
+  padding:9px 12px !important;
+  color:#796959 !important;
+  font-size:.72rem !important;
+  font-weight:650 !important;
+}
+
+.manual-promo-details summary::-webkit-details-marker{
+  display:none !important;
+}
+
+.manual-promo-details summary::after{
+  content:"▾" !important;
+  float:right !important;
+  color:#a59688 !important;
+}
+
+.manual-promo-details[open] summary::after{
+  content:"▴" !important;
+}
+
+.manual-promo-form{
+  display:grid !important;
+  grid-template-columns:140px minmax(180px,1.2fr) repeat(4,minmax(125px,.72fr)) !important;
+  gap:8px !important;
+  padding:0 12px 12px !important;
+  align-items:end !important;
+}
+
+.manual-promo-form label{
+  display:grid !important;
+  gap:4px !important;
+}
+
+.manual-promo-form label span{
+  color:#9a8b7c !important;
+  font-size:.56rem !important;
+}
+
+.manual-promo-form input,
+.manual-promo-form select{
+  min-height:38px !important;
+  border-radius:10px !important;
+}
+
+.manual-promo-note-field{
+  grid-column:1 / span 5 !important;
+}
+
+.manual-promo-form .secondary-btn{
+  min-height:38px !important;
+}
+
+.manual-promo-display{
+  margin-top:10px !important;
+  padding:10px 11px !important;
+  border:1px solid rgba(148,124,94,.20) !important;
+  border-radius:14px !important;
+  background:linear-gradient(145deg,#fffaf0,#faf6ec) !important;
+}
+
+.manual-promo-display-head{
+  display:flex !important;
+  align-items:center !important;
+  gap:7px !important;
+  margin-bottom:7px !important;
+  color:#756453 !important;
+}
+
+.manual-promo-display-head strong{
+  font-family:"Cormorant Garamond",Georgia,serif !important;
+  font-size:.98rem !important;
+}
+
+.manual-promo-cards{
+  display:grid !important;
+  grid-template-columns:repeat(auto-fit,minmax(220px,1fr)) !important;
+  gap:7px !important;
+}
+
+.manual-promo-card{
+  position:relative !important;
+  padding:8px 9px !important;
+  border:1px solid rgba(145,121,91,.16) !important;
+  border-radius:11px !important;
+  background:rgba(255,255,255,.62) !important;
+}
+
+.manual-promo-card-top{
+  display:grid !important;
+  grid-template-columns:auto minmax(0,1fr) 20px !important;
+  gap:6px !important;
+  align-items:center !important;
+}
+
+.manual-promo-shop{
+  padding:2px 5px !important;
+  border-radius:999px !important;
+  background:#edf2e7 !important;
+  color:#687261 !important;
+  font-size:.50rem !important;
+  font-weight:750 !important;
+  letter-spacing:.05em !important;
+}
+
+.manual-promo-card strong{
+  font-size:.72rem !important;
+}
+
+.manual-promo-delete{
+  border:0 !important;
+  background:transparent !important;
+  color:#b4a79b !important;
+  cursor:pointer !important;
+}
+
+.manual-promo-line{
+  margin-top:4px !important;
+  color:#8d8074 !important;
+  font-size:.57rem !important;
+}
+
+.manual-promo-valid{
+  color:#667361 !important;
+  font-weight:650 !important;
+}
+
+.manual-promo-note{
+  margin-top:4px !important;
+  color:#a19489 !important;
+  font-size:.54rem !important;
+}
+
+@media(max-width:1250px){
+  .manual-promo-form{
+    grid-template-columns:repeat(3,minmax(150px,1fr)) !important;
+  }
+  .manual-promo-note-field{
+    grid-column:1 / -1 !important;
+  }
+}
+
+@media(max-width:700px){
+  .manual-promo-form{
+    grid-template-columns:1fr !important;
+  }
+  .manual-promo-note-field{
+    grid-column:auto !important;
+  }
+}
