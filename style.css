@@ -16333,3 +16333,140 @@ body.child-view-active #papaOverviewModal{
     grid-column:auto !important;
   }
 }
+
+
+/* =========================================================
+   V31 – Fragenschild: wieder etwas mehr Höhe, aber Fragen enger
+   ========================================================= */
+.week-family-questions{
+  min-height:40px !important;
+  padding:6px 10px !important;
+  display:flex !important;
+  align-items:center !important;
+}
+
+.week-family-question-items{
+  width:100% !important;
+  column-gap:1px !important;
+  row-gap:1px !important;
+  align-items:center !important;
+}
+
+.week-family-question{
+  min-height:27px !important;
+  grid-template-columns:26px minmax(0,1fr) !important;
+  gap:4px !important;
+  padding:1px 3px !important;
+}
+
+/* deutlicher Vintage-Ring – nicht bunt, sondern Messing/Patina */
+.week-family-question-mark{
+  width:24px !important;
+  height:24px !important;
+  min-width:24px !important;
+  border:2px solid #a08355 !important;
+  outline:1px solid rgba(117,91,53,.20) !important;
+  outline-offset:2px !important;
+  background:
+    radial-gradient(circle at 35% 30%,#fffaf0 0 35%,#f0e2bf 72%,#e0c997 100%) !important;
+  color:#705638 !important;
+  font-family:"Cormorant Garamond",Georgia,serif !important;
+  font-size:.88rem !important;
+  font-weight:800 !important;
+  box-shadow:
+    inset 0 0 0 1px rgba(255,255,255,.70),
+    0 1px 3px rgba(82,62,42,.12) !important;
+}
+
+.week-family-question-mark:hover{
+  background:linear-gradient(#f8efd9,#ead5aa) !important;
+  border-color:#81613a !important;
+}
+
+.week-family-question-copy strong{
+  font-size:.69rem !important;
+  line-height:1.02 !important;
+}
+.week-family-question-copy small{
+  font-size:.42rem !important;
+  line-height:1 !important;
+}
+
+/* =========================================================
+   V31 – Wochenplan: kompakte Termine ohne unsichtbare Lücken
+   ========================================================= */
+.day .multiday-event-placeholder,
+.day .day-meal-align-spacer{
+  display:none !important;
+}
+
+.day .multiday-event-lanes,
+.day .day-events{
+  gap:8px !important;
+}
+
+.day .multiday-event-lane .event-person-block{
+  min-height:0 !important;
+}
+
+.day .single-event-lane + .single-event-lane,
+.day .multiday-event-lanes + .single-event-lane{
+  margin-top:0 !important;
+}
+
+/* =========================================================
+   V31 – Rabattkarten wie früher kompakt; Gültigkeit zuerst
+   ========================================================= */
+.manual-promo-card-top{
+  grid-template-columns:auto minmax(0,1fr) auto !important;
+}
+
+.manual-promo-actions{
+  display:flex !important;
+  align-items:center !important;
+  gap:2px !important;
+}
+
+.manual-promo-edit,
+.manual-promo-delete{
+  width:23px !important;
+  height:23px !important;
+  display:grid !important;
+  place-items:center !important;
+  padding:0 !important;
+  border:0 !important;
+  border-radius:50% !important;
+  background:transparent !important;
+  color:#9e8d7b !important;
+  cursor:pointer !important;
+}
+
+.manual-promo-edit:hover{
+  background:#f1eadc !important;
+  color:#6f5b45 !important;
+}
+
+.manual-promo-valid{
+  margin-top:5px !important;
+  color:#5f705c !important;
+  font-weight:700 !important;
+}
+
+.manual-promo-line + .manual-promo-line{
+  margin-top:2px !important;
+}
+
+.manual-promo-cancel{
+  min-height:38px !important;
+  white-space:nowrap !important;
+}
+
+/* Gültigkeit steht im Formular direkt nach Geschäft/Aktion; Sammlung danach */
+@media(min-width:1251px){
+  .manual-promo-form{
+    grid-template-columns:140px minmax(210px,1.25fr) repeat(4,minmax(130px,.72fr)) !important;
+  }
+  .manual-promo-note-field{
+    grid-column:1 / span 5 !important;
+  }
+}
