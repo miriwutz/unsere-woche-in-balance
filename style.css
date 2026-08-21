@@ -16808,3 +16808,48 @@ body.child-view-active #papaOverviewModal{
   line-height:1 !important;
   color:#9b8065 !important;
 }
+
+
+/* =========================================================
+   V34 – Papa + Stundenplan: auffällig, aber ruhig/vintage
+   ========================================================= */
+
+#openPapaOverviewBtn.papa-week-btn,
+#openFamilyTimetableBtn{
+  border:1.5px solid #a86f62 !important;
+  background:linear-gradient(145deg,#fffaf7 0%,#f4e5df 100%) !important;
+  color:#79534c !important;
+  box-shadow:
+    inset 0 0 0 1px rgba(255,255,255,.72),
+    0 2px 7px rgba(103,72,62,.08) !important;
+}
+
+#openPapaOverviewBtn.papa-week-btn{
+  min-width:76px !important;
+  height:40px !important;
+  padding:0 13px !important;
+}
+
+#openFamilyTimetableBtn{
+  border-radius:999px !important;
+  color:#79534c !important;
+}
+
+#openPapaOverviewBtn.papa-week-btn:hover,
+#openFamilyTimetableBtn:hover{
+  border-color:#925d52 !important;
+  background:linear-gradient(145deg,#fff8f4 0%,#ecd7cf 100%) !important;
+  box-shadow:
+    inset 0 0 0 1px rgba(255,255,255,.78),
+    0 3px 9px rgba(103,72,62,.11) !important;
+}
+
+#openPapaOverviewBtn .papa-week-heart{
+  color:#986257 !important;
+  font-weight:700 !important;
+}
+
+/* verhindert, dass ältere rote Stundenplan-Regeln V34 wieder überstimmen */
+.week-head-actions #openFamilyTimetableBtn{
+  outline:none !important;
+}
