@@ -16576,3 +16576,235 @@ body.child-view-active #papaOverviewModal{
   margin:0 !important;
   padding:0 !important;
 }
+
+
+/* =========================================================
+   V33 – ROADMAP PUNKT 1 / ursprüngliche Wochenband-Logik
+   ========================================================= */
+
+.week-grid .day{
+  display:block !important;
+}
+
+/* Jede Woche teilt sich dieselben vertikalen Zonen.
+   Die Höhe wird in JS anhand des größten Inhalts derselben Zone bestimmt. */
+.week-day-topband,
+.week-band{
+  width:100% !important;
+  min-width:0 !important;
+  box-sizing:border-box !important;
+}
+
+.week-band-unused{
+  display:none !important;
+  min-height:0 !important;
+  height:0 !important;
+  margin:0 !important;
+  padding:0 !important;
+}
+
+.week-band{
+  display:block !important;
+}
+
+/* Abstand gehört zum Band, nicht zu zufälligen Einzelkarten. */
+.week-band-meal:not(.week-band-unused),
+.week-band-events:not(.week-band-unused),
+.week-band-school:not(.week-band-unused),
+.week-band-todos:not(.week-band-unused){
+  padding-bottom:9px !important;
+}
+
+.week-band-videos:not(.week-band-unused){
+  padding-bottom:2px !important;
+}
+
+/* Alte Eigenabstände der Inhalte neutralisieren:
+   sonst wird die Bandhöhe abhängig davon, welcher Tag Inhalt hat. */
+.week-band .day-meal-section,
+.week-band .day-events,
+.week-band .day-school,
+.week-band .day-todos,
+.week-band .day-bottom-slot{
+  margin-top:0 !important;
+  margin-bottom:0 !important;
+  padding-top:0 !important;
+  padding-bottom:0 !important;
+  border-top:0 !important;
+}
+
+/* Termine innerhalb ihres Bandes immer oben beginnen.
+   Mehrtagestermine zuerst, danach Einzeltage – Sortierung kommt aus JS. */
+.week-band-events .day-events{
+  display:grid !important;
+  grid-template-columns:minmax(0,1fr) !important;
+  align-content:start !important;
+  gap:8px !important;
+  width:100% !important;
+}
+
+.week-band-events .event-lane,
+.week-band-events .event-person-block{
+  width:100% !important;
+  max-width:none !important;
+  min-width:0 !important;
+  box-sizing:border-box !important;
+  margin:0 !important;
+}
+
+/* Gleiches Prinzip für Schule und To-dos. */
+.week-band-school .day-school,
+.week-band-todos .day-todos,
+.week-band-todos .person-todo-group{
+  width:100% !important;
+  max-width:none !important;
+  min-width:0 !important;
+  box-sizing:border-box !important;
+}
+
+/* To-dos nicht mehr per margin:auto irgendwohin ziehen. */
+.week-band-todos .day-todos,
+.week-band-videos .day-bottom-slot{
+  margin-top:0 !important;
+}
+
+/* Alte V32-Flex-Regeln ausdrücklich neutralisieren. */
+.week-grid .day > .day-meal-section,
+.week-grid .day > .day-events,
+.week-grid .day > .day-school,
+.week-grid .day > .day-todos,
+.week-grid .day > .day-bottom-slot{
+  flex:none !important;
+}
+
+/* =========================================================
+   V33 – Papa ruhiger / vintage statt Signalrot
+   ========================================================= */
+:root{
+  --family-b-color:#ad7468;
+}
+
+#openPapaOverviewBtn.papa-week-btn{
+  box-sizing:border-box !important;
+  flex:0 0 auto !important;
+  width:auto !important;
+  min-width:74px !important;
+  max-width:none !important;
+  height:40px !important;
+  min-height:40px !important;
+  max-height:40px !important;
+  aspect-ratio:auto !important;
+  padding:0 13px !important;
+  border-radius:999px !important;
+  border:1px solid rgba(173,116,104,.32) !important;
+  background:linear-gradient(145deg,#fffaf7,#f5e8e3) !important;
+  color:#805b53 !important;
+  font-size:.78rem !important;
+  display:inline-flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  gap:6px !important;
+  box-shadow:0 2px 8px rgba(112,78,67,.05) !important;
+}
+
+#openPapaOverviewBtn.papa-week-btn::before{
+  content:none !important;
+  display:none !important;
+}
+
+#openPapaOverviewBtn.papa-week-btn:hover{
+  background:linear-gradient(145deg,#fff8f4,#eedbd4) !important;
+  border-color:rgba(150,93,81,.42) !important;
+}
+
+.papa-week-heart{
+  font-size:1rem !important;
+  line-height:1 !important;
+  color:#9b665b !important;
+}
+
+/* Papa-Stundenplan / Papa-Karten greifen auf dieselbe gedämpfte Variable zurück. */
+.person-group-b,
+.family-b,
+.ring-papa{
+  --member-color:var(--family-b-color,#ad7468) !important;
+}
+
+/* =========================================================
+   V33 – Fragenschild: kleiner Zwischenraum, bessere Gliederung
+   ========================================================= */
+.week-family-questions{
+  box-sizing:border-box !important;
+  min-height:43px !important;
+  padding:5px 7px !important;
+  border:1px solid rgba(151,121,76,.34) !important;
+  border-radius:9px !important;
+  background:
+    linear-gradient(rgba(255,252,235,.92),rgba(248,239,205,.78)) padding-box !important;
+  box-shadow:
+    inset 0 0 0 3px rgba(255,255,255,.38),
+    0 2px 5px rgba(91,72,42,.10) !important;
+}
+
+.week-family-question-items{
+  display:grid !important;
+  grid-template-columns:repeat(var(--question-cols,1),minmax(0,1fr)) !important;
+  gap:3px !important;
+  width:100% !important;
+  align-items:stretch !important;
+}
+
+.week-family-question{
+  position:relative !important;
+  display:grid !important;
+  grid-template-columns:28px minmax(0,1fr) !important;
+  align-items:center !important;
+  gap:5px !important;
+  min-height:31px !important;
+  padding:3px 7px 3px 4px !important;
+  border-radius:6px !important;
+  background:rgba(255,252,240,.44) !important;
+}
+
+/* feine Trennung statt großer leerer Zwischenräume */
+.week-family-question + .week-family-question{
+  border-left:1px solid rgba(136,106,67,.18) !important;
+}
+
+.week-family-question-mark{
+  width:25px !important;
+  height:25px !important;
+  min-width:25px !important;
+  border:2px solid #9b7643 !important;
+  outline:1px solid rgba(117,86,48,.28) !important;
+  outline-offset:1px !important;
+  background:
+    radial-gradient(circle at 35% 28%,#fffdf4 0 34%,#ecd8a8 72%,#d8bc7e 100%) !important;
+  color:#684d2d !important;
+  font-family:"Cormorant Garamond",Georgia,serif !important;
+  font-size:.92rem !important;
+  font-weight:800 !important;
+  box-shadow:
+    inset 0 0 0 1px rgba(255,255,255,.72),
+    0 1px 3px rgba(78,56,31,.14) !important;
+}
+
+.week-family-question-copy{
+  min-width:0 !important;
+}
+
+.week-family-question-copy strong{
+  display:block !important;
+  font-family:"Cormorant Garamond",Georgia,serif !important;
+  font-size:.75rem !important;
+  line-height:1.02 !important;
+  white-space:normal !important;
+}
+
+.week-family-question-copy small{
+  display:block !important;
+  margin-top:1px !important;
+  font-size:.43rem !important;
+  line-height:1 !important;
+  color:#9b8065 !important;
+}
