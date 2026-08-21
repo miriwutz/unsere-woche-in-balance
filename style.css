@@ -22075,3 +22075,30 @@ body:has(#workroomLinkSortSelect option:checked:not([value="manual"])) .workroom
   margin:0 !important;
 }
 
+/* =========================================================
+   V50 – Rezepte: ABC bleibt exakt an seiner Stelle
+   =========================================================
+   Nur Darstellung des ABC-Auswahlfeldes:
+   geschlossen unverändert an derselben Position;
+   geöffnet normale Dropdown-Liste A, B, C ... untereinander.
+   ========================================================= */
+
+/* ABC-Select selbst NICHT verschieben oder verbreitern. */
+#recipeAlphaFilter,
+#recipeAlphabetFilter,
+.recipe-alpha-filter select,
+.recipe-alphabet-filter select{
+  position:relative !important;
+  writing-mode:horizontal-tb !important;
+}
+
+/* Browser-Select: Optionen beim Öffnen normal untereinander. */
+#recipeAlphaFilter option,
+#recipeAlphabetFilter option,
+.recipe-alpha-filter select option,
+.recipe-alphabet-filter select option{
+  display:block !important;
+  writing-mode:horizontal-tb !important;
+  white-space:nowrap !important;
+}
+
