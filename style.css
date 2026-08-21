@@ -16470,3 +16470,109 @@ body.child-view-active #papaOverviewModal{
     grid-column:1 / span 5 !important;
   }
 }
+
+
+/* =========================================================
+   V32 – ROADMAP PUNKT 1: stabile Wochenstruktur
+   Reihenfolge: Essen → Termine → Schule → To-dos → Übungen.
+   Leere Bereiche reservieren KEINEN Platz.
+   ========================================================= */
+
+.week-grid .day{
+  display:flex !important;
+  flex-direction:column !important;
+  align-items:stretch !important;
+}
+
+/* Alle Inhaltsbereiche folgen direkt aufeinander. */
+.week-grid .day > .day-meal-section,
+.week-grid .day > .day-events,
+.week-grid .day > .day-school,
+.week-grid .day > .day-todos,
+.week-grid .day > .day-bottom-slot{
+  flex:0 0 auto !important;
+  height:auto !important;
+  min-height:0 !important;
+  width:100% !important;
+}
+
+/* Wichtig: To-dos nicht mehr künstlich an den unteren Rand drücken.
+   Sonst entstehen je nach Tagesinhalt unterschiedliche Leerflächen. */
+.week-grid .day > .day-todos,
+.week-grid .day:has(> .day-todos) > .day-bottom-slot,
+.week-grid .day:not(:has(> .day-todos)) > .day-bottom-slot{
+  margin-top:0 !important;
+}
+
+/* Kompakte Abstände nur zwischen tatsächlich vorhandenen Bereichen. */
+.week-grid .day > .day-meal-section{ margin-bottom:8px !important; }
+.week-grid .day > .day-events{ margin-bottom:10px !important; }
+.week-grid .day > .day-school{ margin-bottom:10px !important; }
+.week-grid .day > .day-todos{ margin-bottom:8px !important; }
+.week-grid .day > .day-bottom-slot{ margin-bottom:0 !important; }
+
+/* Der erste vorhandene Inhaltsbereich beginnt immer an derselben oberen Basis.
+   Es gibt keine unsichtbaren Essens-/Termin-Platzhalter. */
+.day-meal-align-spacer,
+.multiday-event-placeholder{
+  display:none !important;
+}
+
+/* Termine – egal ob ein- oder mehrtägig – sind pro Tag normale,
+   gleich breite Karten. Textlänge verändert niemals die Kartenbreite. */
+.day .day-events,
+.day .event-lane{
+  display:block !important;
+  width:100% !important;
+  min-width:0 !important;
+}
+.day .day-events{
+  display:grid !important;
+  grid-template-columns:minmax(0,1fr) !important;
+  gap:8px !important;
+}
+.day .event-lane,
+.day .event-person-block,
+.day .grouped-family-block.event-person-block{
+  width:100% !important;
+  max-width:none !important;
+  min-width:0 !important;
+  box-sizing:border-box !important;
+  margin:0 !important;
+  height:auto !important;
+  min-height:0 !important;
+}
+.day .event-copy,
+.day .event-mini{
+  min-width:0 !important;
+  max-width:100% !important;
+  overflow-wrap:anywhere !important;
+}
+
+/* Auch Personengruppen bei To-dos nutzen innerhalb eines Tages dieselbe Breite. */
+.day .day-todos,
+.day .day-todos .person-todo-group{
+  width:100% !important;
+  max-width:none !important;
+  min-width:0 !important;
+  box-sizing:border-box !important;
+}
+
+/* Wochenende funktional identisch; nur die vorhandene Hintergrundgestaltung bleibt. */
+.day.is-weekend > .day-events,
+.day.is-weekend > .day-school,
+.day.is-weekend > .day-todos{
+  align-self:stretch !important;
+  width:100% !important;
+}
+
+/* Alte Lane-Regeln vollständig neutralisieren. */
+.day .multiday-event-lanes,
+.day .multiday-event-lane,
+.day .single-event-lane{
+  display:contents !important;
+  min-height:0 !important;
+  height:auto !important;
+  margin:0 !important;
+  padding:0 !important;
+}
