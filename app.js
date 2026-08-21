@@ -1419,6 +1419,7 @@ state.school = (() => {
   state.school.children[id].interestLinks=Array.isArray(state.school.children[id].interestLinks)?state.school.children[id].interestLinks:[];
   state.school.children[id].spotifyUrl=typeof state.school.children[id].spotifyUrl==="string"?state.school.children[id].spotifyUrl:"";
   state.school.children[id].interestLinks.forEach(link=>{
+    if(!["gut","mittel","schlecht"].includes(link.rating)) link.rating="mittel";
     if(link && link.category==="lernen") link.category="lesen";
   });
 });
@@ -3183,7 +3184,22 @@ function renderSchool(){
         sport:["🩰","Sport"],
         sonstiges:["🌿","Sonstiges"]
       };
-      const finds=Array.isArray(c.interestLinks)?c.interestLinks:[];
+      const ratingMeta={
+        gut:["♡","Gut",0],
+        mittel:["○","Mittel",1],
+        schlecht:["–","Schlecht",2]
+      };
+      const searchEl=document.querySelector(`#schoolFindSearch${id}`);
+      const q=(searchEl?.value||"").trim().toLowerCase();
+      const allFinds=Array.isArray(c.interestLinks)?c.interestLinks:[];
+      const finds=allFinds.filter(x=>{
+        if(!q) return true;
+        let domain="";
+        try{ domain=new URL(x.url).hostname.replace(/^www\./,""); }catch{}
+        const category=(categoryMeta[x.category||"sonstiges"]||categoryMeta.sonstiges)[1];
+        const rating=(ratingMeta[x.rating||"mittel"]||ratingMeta.mittel)[1];
+        return [x.name,domain,category,rating].join(" ").toLowerCase().includes(q);
+      });
       fe.innerHTML=finds.length
         ? Object.entries(
             finds.reduce((groups,x)=>{
@@ -3193,16 +3209,28 @@ function renderSchool(){
             },{})
           ).map(([category,items])=>{
             const meta=categoryMeta[category] || categoryMeta.sonstiges;
+            items=[...items].sort((a,b)=>{
+              const ar=(ratingMeta[a.rating||"mittel"]||ratingMeta.mittel)[2];
+              const br=(ratingMeta[b.rating||"mittel"]||ratingMeta.mittel)[2];
+              return ar-br || (b.createdAt||0)-(a.createdAt||0);
+            });
             return `<section class="school-find-group">
               <div class="school-find-group-title"><span>${meta[0]}</span><strong>${meta[1]}</strong></div>
               <div class="school-find-group-items">
                 ${items.map(x=>{
                   const thumb=youtubeThumbUrl(x.url);
-                  return `<div class="school-find ${thumb ? "school-find-youtube" : ""}">
+                  let domain="";
+                  try{domain=new URL(x.url).hostname.replace(/^www\./,"")}catch{}
+                  const rm=ratingMeta[x.rating||"mittel"]||ratingMeta.mittel;
+                  const displayName=(x.name||"").trim() || domain || "Fundstück";
+                  return `<div class="school-find ${thumb ? "school-find-youtube" : ""}" data-rating="${escapeHtml(x.rating||"mittel")}">
                     <a href="${escapeHtml(x.url)}" target="_blank" rel="noopener" class="school-find-main">
                       <span class="school-find-copy">
-                        <span class="school-find-name">${escapeHtml(x.name)}</span>
-                        <span class="school-find-domain">${escapeHtml((()=>{try{return new URL(x.url).hostname.replace(/^www\\./,"")}catch{return ""}})())}</span>
+                        <span class="school-find-name">${escapeHtml(displayName)}</span>
+                        <span class="school-find-subline">
+                          <span class="school-find-rating rating-${escapeHtml(x.rating||"mittel")}">${rm[0]} ${rm[1]}</span>
+                          ${domain ? `<span class="school-find-domain">${escapeHtml(domain)}</span>` : ""}
+                        </span>
                       </span>
                       ${thumb ? `<span class="school-find-thumb-wrap">
                         <img class="school-find-thumb"
@@ -3219,7 +3247,7 @@ function renderSchool(){
               </div>
             </section>`;
           }).join("")
-        : '<div class="school-finds-empty">Noch nichts gesammelt. Wenn dir etwas gefällt, kannst du es hier für später merken. ✨</div>';
+        : `<div class="school-finds-empty">${q ? "Dazu wurde nichts gefunden." : "Noch nichts gesammelt. Wenn dir etwas gefällt, kannst du es hier für später merken. ✨"}</div>`;
     }
     const spotifyInput=document.querySelector(`#schoolSpotifyUrl${id}`);
     const spotifyOpen=document.querySelector(`#schoolSpotifyOpen${id}`);
@@ -3306,11 +3334,12 @@ function addSchoolFind(id){
   const n=document.querySelector(`#schoolFindName${id}`);
   const u=document.querySelector(`#schoolFindUrl${id}`);
   const c=document.querySelector(`#schoolFindCategory${id}`);
+  const r=document.querySelector(`#schoolFindRating${id}`);
   if(!n || !u) return;
 
   let url=u.value.trim();
   const name=n.value.trim();
-  if(!name || !url) return;
+  if(!url) return;
   if(!/^https?:\/\//i.test(url)) url="https://"+url;
 
   const child=state.school.children[id];
@@ -3320,12 +3349,14 @@ function addSchoolFind(id){
     name,
     url,
     category:c?.value || "sonstiges",
+    rating:r?.value || "mittel",
     createdAt:Date.now()
   });
 
   n.value="";
   u.value="";
   if(c) c.value="ideen";
+  if(r) r.value="mittel";
   save();
   renderSchool();
 }
@@ -3342,6 +3373,12 @@ function addSchoolFind(id){
 document.querySelectorAll(".add-school-task").forEach(b=>b.addEventListener("click",e=>addSchoolTask(e.currentTarget.dataset.child)));
 document.querySelectorAll(".add-school-link").forEach(b=>b.addEventListener("click",e=>addSchoolLink(e.currentTarget.dataset.child)));
 document.querySelectorAll(".add-school-find").forEach(b=>b.addEventListener("click",e=>addSchoolFind(e.currentTarget.dataset.child)));
+document.querySelectorAll(".school-find-search").forEach(input=>input.addEventListener("input",e=>{
+  const id=e.currentTarget.dataset.child;
+  renderSchool();
+  const restored=document.querySelector(`#schoolFindSearch${id}`);
+  if(restored){restored.focus();restored.setSelectionRange(restored.value.length,restored.value.length);}
+}));
 
 document.querySelectorAll(".school-spotify-edit").forEach(b=>b.addEventListener("click",e=>{
   const id=e.currentTarget.id.replace("schoolSpotifyEdit","");
