@@ -7172,77 +7172,24 @@ return `
 `;
 }
 const shoppingPromoInfo = [
-  {
-    shop:"SPAR",
-    kind:"Rabattmarkerl",
-    status:"24.08.–19.09.",
-    statusClass:"verified",
-    detail:"Sammeln 24.08.–09.09.2026 · Einlösen 10.09.–19.09.2026 · bis zu 20 %",
-    source:"https://www.spar.at/aktionen/rabattmarkerl",
-    note:"am 21.08.2026 auf der offiziellen SPAR-Seite geprüft"
-  },
-  {
-    shop:"SPAR",
-    kind:"-20/-25 % Wochenaktionen",
-    status:"wöchentlich",
-    statusClass:"verified",
-    detail:"Zusätzliche wechselnde Prozent-Aktionen stehen im aktuellen SPAR-Flugblatt.",
-    source:"https://www.spar.at/aktionen",
-    note:"Zeiträume und Warengruppen wechseln – deshalb Link statt geratenem Datum"
-  },
-  {
-    shop:"BILLA",
-    kind:"jö Rabattsammler",
-    status:"1× monatlich",
-    statusClass:"evergreen",
-    detail:"Ös sammeln und einmal pro Monat bis zu 20 % auf einen Einkauf einlösen.",
-    source:"https://www.billa.at/unsere-aktionen/jo-bonus-club-vorteile-billa",
-    note:"dauerhafter jö-Vorteil; Voraussetzungen laut BILLA"
-  },
-  {
-    shop:"BILLA",
-    kind:"-25 % Aktionen / Pickerl",
-    status:"aktuell prüfen",
-    statusClass:"verified",
-    detail:"Wechselnde -25 %-Aktionen und Lieblingsprodukt-Pickerl; genaue Gültigkeit im Aktionsbereich.",
-    source:"https://www.billa.at/unsere-aktionen/aktionen/richtigvielsparen",
-    note:"BILLA veröffentlicht die jeweiligen aktuellen Zeiträume"
-  },
-  {
-    shop:"BIPA",
-    kind:"-25 % Lieblingsprodukt",
-    status:"20.08.–28.08.",
-    statusClass:"verified",
-    detail:"2 Rabattsticker für je -25 % auf ein Lieblingsprodukt.",
-    source:"https://www.bipa.at/cp/aktionssticker",
-    note:"am 21.08.2026 auf der offiziellen BIPA-Seite geprüft"
-  },
-  {
-    shop:"BIPA",
-    kind:"Markensticker",
-    status:"20.08.–02.09.",
-    statusClass:"verified",
-    detail:"Zusätzliche -25 %-Sticker auf ausgewählte Marken, z. B. Gillette/Abtei.",
-    source:"https://www.bipa.at/cp/aktionssticker",
-    note:"am 21.08.2026 auf der offiziellen BIPA-Seite geprüft"
-  }
+  {shop:"BIPA",kind:"-25 % Lieblingsprodukt",from:"20.08.2026",to:"28.08.2026",detail:"2 Sticker · je -25 % auf ein Lieblingsprodukt",source:"https://www.bipa.at/cp/aktionssticker"},
+  {shop:"BIPA",kind:"-25 % Markensticker",from:"20.08.2026",to:"02.09.2026",detail:"auf aktuell gekennzeichnete Marken",source:"https://www.bipa.at/cp/aktionssticker"}
 ];
 
 function renderShoppingPromoInfo(){
   const box=document.querySelector("#shoppingPromoInfo");
-  if(!box) return;
-
-  box.innerHTML=shoppingPromoInfo.map(x=>`
+  const panel=document.querySelector(".shopping-promo-panel");
+  const grid=document.querySelector(".shopping-main-grid");
+  if(!box || !panel) return;
+  const verified=shoppingPromoInfo.filter(x=>x.from && x.to && x.source);
+  panel.classList.toggle("hidden",verified.length===0);
+  grid?.classList.toggle("shopping-no-promos",verified.length===0);
+  box.innerHTML=verified.map(x=>`
     <a class="shopping-promo-row" href="${escapeHtml(x.source)}" target="_blank" rel="noopener">
       <span class="shopping-promo-shop">${escapeHtml(x.shop)}</span>
-      <span class="shopping-promo-copy">
-        <strong>${escapeHtml(x.kind)}</strong>
-        <small>${escapeHtml(x.detail)}</small>
-        <span class="shopping-promo-source-note">${escapeHtml(x.note || "")}</span>
-      </span>
-      <span class="shopping-promo-status ${escapeHtml(x.statusClass || "")}">${escapeHtml(x.status)}</span>
-    </a>
-  `).join("");
+      <span class="shopping-promo-copy"><strong>${escapeHtml(x.kind)}</strong><small>${escapeHtml(x.detail)}</small></span>
+      <span class="shopping-promo-dates"><b>${escapeHtml(x.from)}</b><span>bis</span><b>${escapeHtml(x.to)}</b></span>
+    </a>`).join("");
 }
 
 function renderShopping() {
