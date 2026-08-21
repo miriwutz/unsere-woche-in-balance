@@ -52,6 +52,38 @@ state.recipes = Array.isArray(state.recipes) ? state.recipes : [];
 state.meals = state.meals && typeof state.meals === "object" ? state.meals : {};
 state.pinboard = Array.isArray(state.pinboard) ? state.pinboard : [];
 state.familyQuestions = Array.isArray(state.familyQuestions) ? state.familyQuestions : [];
+
+/* V29 – Familienfragen robust lokal sichern.
+   Der zweite Key verhindert, dass ein älterer Cloud-/App-Stand die Fragen
+   beim Versionswechsel versehentlich auf [] zurücksetzt. */
+try {
+  const backupQuestions = JSON.parse(
+    localStorage.getItem("balanceProd.familyQuestions.backup") || "[]"
+  );
+  if (Array.isArray(backupQuestions) && backupQuestions.length) {
+    const byId = new Map();
+    [...backupQuestions, ...state.familyQuestions].forEach(q => {
+      if (!q || !q.id) return;
+      const old = byId.get(q.id);
+      const oldTs = Number(old?.updatedAt || old?.createdAt || 0);
+      const newTs = Number(q.updatedAt || q.createdAt || 0);
+      if (!old || newTs >= oldTs) byId.set(q.id, q);
+    });
+    state.familyQuestions = [...byId.values()];
+  }
+} catch (err) {
+  console.warn("Familienfragen-Backup konnte nicht gelesen werden:", err);
+}
+
+function persistFamilyQuestionsNow(){
+  try {
+    const json = JSON.stringify(state.familyQuestions || []);
+    localStorage.setItem("balanceProd.familyQuestions", json);
+    localStorage.setItem("balanceProd.familyQuestions.backup", json);
+  } catch (err) {
+    console.warn("Familienfragen konnten lokal nicht gespeichert werden:", err);
+  }
+}
 state.recipeLinkFeedback = state.recipeLinkFeedback && typeof state.recipeLinkFeedback === "object"
   ? state.recipeLinkFeedback : {};
 
@@ -74,8 +106,8 @@ function saveLocal() {
   localStorage.setItem("balanceProd.recipes", JSON.stringify(state.recipes));
   localStorage.setItem("balanceProd.meals", JSON.stringify(state.meals));
   localStorage.setItem("balanceProd.pinboard", JSON.stringify(state.pinboard));
-  localStorage.setItem("balanceProd.familyQuestions", JSON.stringify(state.familyQuestions || []));
-  localStorage.setItem("balanceProd.familyQuestions", JSON.stringify(state.familyQuestions || []));
+  persistFamilyQuestionsNow();
+  persistFamilyQuestionsNow();
   localStorage.setItem("balanceProd.recipeLinkFeedback", JSON.stringify(state.recipeLinkFeedback));
   localStorage.setItem("balanceProd.timeTracking", JSON.stringify(state.timeTracking));
   localStorage.setItem("balanceProd.trash", JSON.stringify(state.trash || []));
@@ -4733,6 +4765,7 @@ function renderFamilyQuestions(){
       if(!q) return;
       q.done = true;
       q.updatedAt = Date.now();
+      persistFamilyQuestionsNow();
       save();
       renderFamilyQuestions();
     });
@@ -4744,6 +4777,7 @@ function renderFamilyQuestions(){
       if(!q) return;
       q.deleted = true;
       q.updatedAt = Date.now();
+      persistFamilyQuestionsNow();
       save();
       renderFamilyQuestions();
     });
@@ -4767,6 +4801,7 @@ function addFamilyQuestion(){
   });
 
   input.value = "";
+  persistFamilyQuestionsNow();
   save();
   renderFamilyQuestions();
   input.focus();
@@ -6804,6 +6839,7 @@ function applyCloudData(data) {
         data.familyQuestions,
         "Familienfragen"
       );
+      persistFamilyQuestionsNow();
     }
 
     if (data.recipeLinkFeedback && typeof data.recipeLinkFeedback === "object") {
@@ -7171,26 +7207,6 @@ return `
   </section>
 `;
 }
-const shoppingPromoInfo = [
-  {shop:"BIPA",kind:"-25 % Lieblingsprodukt",from:"20.08.2026",to:"28.08.2026",detail:"2 Sticker · je -25 % auf ein Lieblingsprodukt",source:"https://www.bipa.at/cp/aktionssticker"},
-  {shop:"BIPA",kind:"-25 % Markensticker",from:"20.08.2026",to:"02.09.2026",detail:"auf aktuell gekennzeichnete Marken",source:"https://www.bipa.at/cp/aktionssticker"}
-];
-
-function renderShoppingPromoInfo(){
-  const box=document.querySelector("#shoppingPromoInfo");
-  const panel=document.querySelector(".shopping-promo-panel");
-  const grid=document.querySelector(".shopping-main-grid");
-  if(!box || !panel) return;
-  const verified=shoppingPromoInfo.filter(x=>x.from && x.to && x.source);
-  panel.classList.toggle("hidden",verified.length===0);
-  grid?.classList.toggle("shopping-no-promos",verified.length===0);
-  box.innerHTML=verified.map(x=>`
-    <a class="shopping-promo-row" href="${escapeHtml(x.source)}" target="_blank" rel="noopener">
-      <span class="shopping-promo-shop">${escapeHtml(x.shop)}</span>
-      <span class="shopping-promo-copy"><strong>${escapeHtml(x.kind)}</strong><small>${escapeHtml(x.detail)}</small></span>
-      <span class="shopping-promo-dates"><b>${escapeHtml(x.from)}</b><span>bis</span><b>${escapeHtml(x.to)}</b></span>
-    </a>`).join("");
-}
 
 function renderShopping() {
   const list = document.querySelector("#shoppingList");
@@ -7198,8 +7214,7 @@ function renderShopping() {
 
   if (!shoppingItems.length) {
     list.innerHTML = `<div class="workroom-empty">Noch nichts auf der Einkaufsliste.</div>`;
-    renderShoppingPromoInfo();
-    return;
+      return;
   }
 
   const nowItems =
@@ -7216,7 +7231,6 @@ function renderShopping() {
     ${renderShoppingGroup("Später kaufen", laterItems, true)}
     ${renderShoppingGroup("Erst in Aktion kaufen", saleItems, true)}
   `;
-  renderShoppingPromoInfo();
 
   // Artikel abhaken
   document.querySelectorAll(".shopping-check").forEach(check => {
@@ -10442,7 +10456,7 @@ function saveLocal() {
   localStorage.setItem("balanceProd.recipes", JSON.stringify(state.recipes));
   localStorage.setItem("balanceProd.meals", JSON.stringify(state.meals));
   localStorage.setItem("balanceProd.pinboard", JSON.stringify(state.pinboard));
-  localStorage.setItem("balanceProd.familyQuestions", JSON.stringify(state.familyQuestions || []));
+  persistFamilyQuestionsNow();
   localStorage.setItem("balanceProd.recipeLinkFeedback", JSON.stringify(state.recipeLinkFeedback));
   localStorage.setItem("balanceProd.timeTracking", JSON.stringify(state.timeTracking));
   localStorage.setItem("balanceProd.trash", JSON.stringify(state.trash || []));
@@ -10510,6 +10524,7 @@ function applyCloudData(data) {
         data.familyQuestions,
         "Familienfragen"
       );
+      persistFamilyQuestionsNow();
     }
 
     if (data.recipeLinkFeedback && typeof data.recipeLinkFeedback === "object") {
@@ -11789,6 +11804,8 @@ let activeSchoolChild = null;
 function schoolMemberKey(id){ return id === "1" ? "c" : "d"; }
 function renderSchoolChildDashboard(id){
   activeSchoolChild = id;
+  closeAllSchoolDashboardPanels("1");
+  closeAllSchoolDashboardPanels("2");
   const chooser=document.querySelector("#schoolChildChooser"), dash=document.querySelector("#schoolChildDashboard");
   if(!chooser||!dash)return;
   chooser.classList.add("hidden"); dash.classList.remove("hidden");
@@ -11857,11 +11874,14 @@ document.querySelector("#schoolMotivationBanner")?.addEventListener("click", e =
 // Kinder-Dashboard-Kacheln
 
 function closeAllSchoolDashboardPanels(id){
-  [
-    `#schoolLinksPanel${id}`,
-    `#schoolFindsPanel${id}`,
-    `#schoolTimetableManage${id}`
-  ].forEach(sel => document.querySelector(sel)?.classList.add("hidden"));
+  document.querySelector(`#schoolLinksPanel${id}`)?.classList.add("hidden");
+  document.querySelector(`#schoolFindsPanel${id}`)?.classList.add("hidden");
+
+  const timetable = document.querySelector(`#schoolTimetableManage${id}`);
+  timetable?.classList.remove("is-open");
+  timetable?.classList.add("hidden");
+
+  document.querySelector(`#manualTimetableWrap${id}`)?.classList.add("hidden");
 }
 
 document.querySelectorAll("[data-school-panel='links']").forEach(btn => {
@@ -11898,7 +11918,9 @@ document.querySelectorAll("[data-close-school-panel='finds']").forEach(btn => {
 document.querySelectorAll("[data-close-school-timetable]").forEach(btn => {
   btn.addEventListener("click", () => {
     const id=btn.dataset.closeSchoolTimetable;
-    document.querySelector(`#schoolTimetableManage${id}`)?.classList.remove("is-open");
+    const manage=document.querySelector(`#schoolTimetableManage${id}`);
+    manage?.classList.remove("is-open");
+    manage?.classList.add("hidden");
     document.querySelector(`#manualTimetableWrap${id}`)?.classList.add("hidden");
   });
 });
@@ -11906,7 +11928,9 @@ document.querySelectorAll("[data-close-school-timetable]").forEach(btn => {
 document.querySelectorAll("[data-school-open-timetable]").forEach(btn => {
   btn.addEventListener("click", () => {
     const id=btn.dataset.schoolOpenTimetable;
+    closeAllSchoolDashboardPanels(id);
     const manage=document.querySelector(`#schoolTimetableManage${id}`);
+    manage?.classList.remove("hidden");
     manage?.classList.add("is-open");
     openManualTimetableEditor(id);
     requestAnimationFrame(() => {
@@ -11983,3 +12007,6 @@ document.addEventListener("click", e => {
     showMotivation(schoolMotivationalMessage(childHasNoOpenHomework(child)));
   }
 }, true);
+
+window.addEventListener("pagehide", persistFamilyQuestionsNow);
+window.addEventListener("beforeunload", persistFamilyQuestionsNow);
