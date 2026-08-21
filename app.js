@@ -947,7 +947,16 @@ function resetQuickLinkEditor(){
  document.querySelector("#cancelQuickLinkEditBtn")?.classList.add("hidden");
 }
 function renderQuickLinks(){
- const links=state.familySettings.quickLinks||[];
+ const defaultQuickLinks = [
+   {id:"default-webuntis",label:"WebUntis",url:"https://webuntis.com/"},
+   {id:"default-eduflow",label:"EduFlow",url:"https://eduflow.com/"},
+   {id:"default-schoolfox1",label:"SchoolFox 1",url:"https://schoolfox.app/"},
+   {id:"default-schoolfox2",label:"SchoolFox 2",url:"https://schoolfox.app/"},
+   {id:"default-teams",label:"Teams",url:"https://teams.microsoft.com/"}
+ ];
+ const links=(state.familySettings.quickLinks && state.familySettings.quickLinks.length)
+   ? state.familySettings.quickLinks
+   : defaultQuickLinks;
  const row=document.querySelector("#quickLinksRow");
  if(row)row.innerHTML=links.map(x=>`<a href="${escapeHtml(normalizeExternalUrl(x.url))}" target="_blank" rel="noopener" class="quick-link">${escapeHtml(x.label||"Link")}</a>`).join("");
  const list=document.querySelector("#quickLinksManageList");
