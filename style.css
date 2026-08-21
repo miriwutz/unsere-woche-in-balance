@@ -17194,3 +17194,45 @@ body.child-view-active #papaOverviewModal{
     grid-column:1 / -1;
   }
 }
+
+
+/* =========================================================
+   PUNKT 2d – nur die drei vereinbarten Korrekturen
+   ========================================================= */
+
+/* 1. Nur das große Danke der Familienfragen höher.
+      Normale Motivationsmeldungen bleiben unverändert. */
+.motivation-toast.family-thanks{
+  position:fixed !important;
+  left:50% !important;
+  top:34vh !important;
+  bottom:auto !important;
+  transform:translate(-50%,-50%) !important;
+  z-index:10020 !important;
+}
+
+/* 2. Wochenplan-Routinen: ruhiger fixer unterer Bereich,
+      mit Luft zum Kartenrand bzw. direkt über Geburtstag/Namenstag. */
+.weekplan-bottom-slot{
+  margin-top:auto !important;
+  margin-bottom:10px !important;
+  padding:0 10px !important;
+  min-height:20px;
+  display:flex;
+  align-items:flex-end;
+}
+.weekplan-bottom-slot + .day-quiet-events{
+  margin-top:0 !important;
+}
+.day-column:not(:has(.day-quiet-events)) .weekplan-bottom-slot{
+  margin-bottom:26px !important;
+}
+
+/* 3. Bereits angelegte Schnellzugriffsbuttons sichtbar lassen */
+.quick-links-list,
+#quickLinksRow{
+  display:flex !important;
+  flex-wrap:wrap;
+  align-items:center;
+  gap:7px;
+}
