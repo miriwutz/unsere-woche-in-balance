@@ -3780,16 +3780,26 @@ document.addEventListener("click", (event) => {
   const papaBtn = event.target.closest("#openPapaOverviewBtn");
   if (!papaBtn) return;
 
+  event.preventDefault();
   setRandomPapaQuote();
   document.querySelectorAll(".papa-tab").forEach(btn =>
     btn.classList.toggle("active", Number(btn.dataset.weekOffset || 0) === 0)
   );
   renderPapaOverview(0);
-  papaOverviewDialog?.showModal();
+
+  if (papaOverviewDialog && !papaOverviewDialog.open) {
+    papaOverviewDialog.showModal();
+  }
 });
 
 document.querySelector("#closePapaOverviewBtn")?.addEventListener("click", () => {
   papaOverviewDialog?.close();
+});
+
+papaOverviewDialog?.addEventListener("click", (event) => {
+  if (event.target === papaOverviewDialog) {
+    papaOverviewDialog.close();
+  }
 });
 
 document.querySelectorAll(".papa-tab").forEach(btn => {
