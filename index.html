@@ -579,6 +579,7 @@
     <details id="manualPromoDetails" class="manual-promo-details">
       <summary>✂ Rabatt / Pickerl eintragen</summary>
       <div class="manual-promo-form">
+        <input id="manualPromoEditId" type="hidden" value="">
         <label>
           <span>Geschäft</span>
           <select id="manualPromoShop">
@@ -602,16 +603,6 @@
         </label>
 
         <label>
-          <span>Sammeln von</span>
-          <input id="manualPromoCollectFrom" type="date">
-        </label>
-
-        <label>
-          <span>Sammeln bis</span>
-          <input id="manualPromoCollectTo" type="date">
-        </label>
-
-        <label>
           <span>Gültig / Einlösen von</span>
           <input id="manualPromoValidFrom" type="date">
         </label>
@@ -619,6 +610,16 @@
         <label>
           <span>Gültig / Einlösen bis</span>
           <input id="manualPromoValidTo" type="date">
+        </label>
+
+        <label>
+          <span>Sammeln von</span>
+          <input id="manualPromoCollectFrom" type="date">
+        </label>
+
+        <label>
+          <span>Sammeln bis</span>
+          <input id="manualPromoCollectTo" type="date">
         </label>
 
         <label class="manual-promo-note-field">
@@ -630,6 +631,7 @@
         <button id="addManualPromoBtn" type="button" class="secondary-btn">
           + Rabatt merken
         </button>
+        <button id="cancelManualPromoEditBtn" type="button" class="ghost-btn manual-promo-cancel hidden">Abbrechen</button>
       </div>
     </details>
 
