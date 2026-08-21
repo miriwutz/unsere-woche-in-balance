@@ -21978,3 +21978,35 @@ body:has(#workroomLinkSortSelect option:checked:not([value="manual"])) .workroom
 .workroom-link-actions{
   margin-left:auto !important;
 }
+
+
+/* =========================================================
+   V48 – Werkraum-Faltlogik wirklich erzwingen
+   ========================================================= */
+.workroom-fold-card:not(.open) > *:not(.workroom-fold-head){
+  display:none !important;
+}
+.workroom-fold-card:not(.open) .workroom-fold-arrow{
+  transform:rotate(-90deg) !important;
+}
+
+
+/* =========================================================
+   V48 – Drucken: Pfeile immer sichtbar
+   ========================================================= */
+.school-print-touch-move{
+  display:inline-flex !important;
+  align-items:center !important;
+  gap:1px !important;
+}
+.school-print-drag{
+  display:grid !important;
+}
+@media (hover:none), (pointer:coarse){
+  .school-print-touch-move{
+    display:inline-flex !important;
+  }
+  .school-print-drag{
+    display:none !important;
+  }
+}
