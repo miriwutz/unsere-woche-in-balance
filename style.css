@@ -17424,3 +17424,18 @@ body.child-view-active #papaOverviewModal{
   margin-top:auto !important;
   flex:0 0 auto !important;
 }
+
+
+/* =========================================================
+   PUNKT 2j – Wochenplanthema: nur optischer Feinschliff
+   =========================================================
+   Struktur/Logik aus 2i bleibt unverändert.
+   Der dezente Wochenplantext bekommt etwas mehr Luft
+   vom linken und unteren Kartenrand.
+*/
+.week-grid .day > .day-bottom-stack .week-theme,
+.week-grid .day > .day-bottom-stack .week-plan-theme,
+.week-grid .day > .day-bottom-stack [data-week-theme]{
+  margin-left: 8px !important;
+  margin-bottom: 12px !important;
+}
