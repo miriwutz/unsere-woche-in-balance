@@ -19270,3 +19270,220 @@ body.child-view-active #papaOverviewModal{
     grid-template-columns:repeat(2,minmax(0,1fr));
   }
 }
+
+
+/* =========================================================
+   PUNKT 5A – Einkauf: elegante Rabattspalte rechts
+   ========================================================= */
+
+#shopping .shopping-card{
+  padding:18px !important;
+}
+
+.shopping-main-grid{
+  display:grid !important;
+  grid-template-columns:minmax(0,1fr) 310px !important;
+  gap:20px !important;
+  align-items:start !important;
+}
+.shopping-workarea{
+  min-width:0 !important;
+  width:auto !important;
+}
+.shopping-promo-panel{
+  display:block !important;
+  position:sticky;
+  top:18px;
+  border:1px solid rgba(145,119,87,.18) !important;
+  border-radius:16px !important;
+  padding:13px 13px 12px !important;
+  background:
+    linear-gradient(145deg,rgba(255,252,244,.98),rgba(247,245,234,.94)) !important;
+  box-shadow:0 8px 24px rgba(88,68,48,.04) !important;
+}
+
+.shopping-promo-head{
+  display:flex !important;
+  align-items:center !important;
+  gap:9px !important;
+  padding:2px 2px 10px !important;
+  border-bottom:1px solid rgba(134,112,87,.10) !important;
+}
+.shopping-promo-icon{
+  width:31px;
+  height:31px;
+  display:grid;
+  place-items:center;
+  border-radius:50%;
+  background:linear-gradient(145deg,#f3efd9,#e8edd7);
+  color:#8a825d;
+  font-size:.82rem;
+}
+.shopping-promo-head strong{
+  display:block !important;
+  font-family:"Playfair Display",Georgia,serif !important;
+  color:#57483c !important;
+  font-size:.96rem !important;
+}
+.shopping-promo-head small{
+  display:block !important;
+  margin-top:2px;
+  color:#9b8978 !important;
+  font-size:.57rem !important;
+  line-height:1.25;
+}
+
+.manual-promo-display{
+  display:block !important;
+  margin:8px 0 0 !important;
+  padding:0 !important;
+  border:0 !important;
+  border-radius:0 !important;
+  background:transparent !important;
+}
+.manual-promo-display.hidden{display:none !important}
+.manual-promo-display-head{
+  display:none !important;
+}
+.manual-promo-cards{
+  display:grid !important;
+  grid-template-columns:1fr !important;
+  gap:7px !important;
+}
+.manual-promo-card{
+  padding:9px 9px 8px !important;
+  border:1px solid rgba(132,111,86,.12) !important;
+  border-radius:12px !important;
+  background:rgba(255,255,255,.60) !important;
+  box-shadow:0 2px 7px rgba(91,71,50,.025);
+}
+.manual-promo-card-top{
+  display:grid !important;
+  grid-template-columns:34px minmax(0,1fr) auto !important;
+  gap:8px !important;
+  align-items:center !important;
+}
+.manual-promo-card-title{
+  min-width:0;
+  display:grid;
+  gap:1px;
+}
+.manual-promo-card-title strong{
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  font-family:"Playfair Display",Georgia,serif;
+  color:#594a3d;
+  font-size:.79rem !important;
+}
+.manual-promo-shop{
+  padding:0 !important;
+  border-radius:0 !important;
+  background:transparent !important;
+  color:#a18b75 !important;
+  font-size:.49rem !important;
+  font-weight:700 !important;
+  letter-spacing:.06em !important;
+  text-transform:uppercase;
+}
+
+.promo-store-mark{
+  width:31px;
+  height:31px;
+  display:grid;
+  place-items:center;
+  border-radius:9px;
+  border:1px solid rgba(0,0,0,.06);
+  font-weight:800;
+  font-size:.68rem;
+  letter-spacing:-.03em;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.55);
+}
+/* bewusst nur angelehnt – keine echten Logos */
+.promo-store-billa{background:#f3d5d1;color:#a63e35}
+.promo-store-spar{background:#e2eee1;color:#317345;border-radius:50%}
+.promo-store-bipa{background:#f1d9e8;color:#9a4e78}
+.promo-store-dm{background:#e8eef5;color:#4d6684}
+.promo-store-lidl{background:#f5e7ba;color:#8a6940;border-radius:50%}
+.promo-store-hofer{background:#dfeaf0;color:#4e7284}
+.promo-store-penny{background:#f2dddd;color:#a64a48}
+.promo-store-mueller{background:#f0ded8;color:#934f3d}
+.promo-store-other{background:#efeee5;color:#77745e}
+
+.manual-promo-line{
+  margin-left:42px !important;
+  margin-top:4px !important;
+  font-size:.57rem !important;
+  line-height:1.3 !important;
+}
+.manual-promo-valid{
+  color:#66745d !important;
+  font-weight:700 !important;
+}
+.manual-promo-collect{
+  color:#8f7e6d !important;
+}
+.manual-promo-note{
+  margin:5px 0 0 42px !important;
+  padding-top:5px;
+  border-top:1px dashed rgba(126,105,82,.11);
+  color:#9b8d80 !important;
+  font-size:.53rem !important;
+  line-height:1.3;
+}
+.manual-promo-actions{
+  display:flex !important;
+  align-items:center !important;
+  gap:1px !important;
+}
+
+.manual-promo-details{
+  margin-top:9px !important;
+  border:0 !important;
+  border-top:1px solid rgba(132,111,86,.10) !important;
+  border-radius:0 !important;
+  background:transparent !important;
+  overflow:visible !important;
+}
+.manual-promo-details summary{
+  padding:9px 1px 2px !important;
+  color:#877565 !important;
+  font-size:.62rem !important;
+  font-weight:650 !important;
+}
+.manual-promo-form{
+  display:grid !important;
+  grid-template-columns:1fr !important;
+  gap:7px !important;
+  padding:8px 0 0 !important;
+}
+.manual-promo-form label{
+  display:grid !important;
+  gap:3px !important;
+}
+.manual-promo-form label span{
+  color:#9a8b7c !important;
+  font-size:.54rem !important;
+}
+.manual-promo-form input,
+.manual-promo-form select{
+  min-height:36px !important;
+  width:100% !important;
+}
+.manual-promo-note-field{
+  grid-column:auto !important;
+}
+.manual-promo-form .secondary-btn,
+.manual-promo-cancel{
+  min-height:36px !important;
+}
+
+@media(max-width:1050px){
+  .shopping-main-grid{
+    grid-template-columns:1fr !important;
+  }
+  .shopping-promo-panel{
+    position:static !important;
+    max-width:none !important;
+  }
+}
