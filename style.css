@@ -21540,3 +21540,272 @@ body.child-view-active #papaOverviewModal{
     max-width:46% !important;
   }
 }
+
+
+/* =========================================================
+   V42 – Drucken: eindeutige E-Mail-Bestellung & klare Icons
+   ========================================================= */
+
+.school-print-head{
+  align-items:flex-start !important;
+}
+
+.school-print-email-toggle{
+  width:auto !important;
+  min-width:0 !important;
+  height:34px !important;
+  padding:0 11px !important;
+  display:inline-flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  gap:7px !important;
+  border:1px solid rgba(128,137,83,.25) !important;
+  border-radius:999px !important;
+  background:#f4f7e8 !important;
+  color:#687345 !important;
+  font-size:.70rem !important;
+  white-space:nowrap !important;
+}
+
+.school-print-email-toggle-text{
+  font-size:.66rem;
+  font-weight:600;
+  letter-spacing:.01em;
+}
+
+.school-print-email-panel{
+  margin-top:8px !important;
+  padding:8px 10px !important;
+  border:1px solid rgba(128,137,83,.18) !important;
+  border-radius:11px !important;
+  background:#f7f8ed !important;
+  display:grid !important;
+  grid-template-columns:auto minmax(220px,1fr) auto !important;
+  align-items:center !important;
+  gap:9px !important;
+}
+.school-print-email-panel.hidden{
+  display:none !important;
+}
+
+.school-print-email-label{
+  font-size:.66rem !important;
+  color:#7d755f !important;
+  white-space:nowrap !important;
+}
+
+.school-print-row{
+  min-height:44px !important;
+}
+
+.school-print-row .workroom-todo-content{
+  display:flex !important;
+  align-items:center !important;
+  gap:10px !important;
+  min-width:0 !important;
+}
+
+.school-print-mail-badge{
+  display:inline-flex;
+  align-items:center;
+  gap:4px;
+  padding:3px 8px;
+  border-radius:999px;
+  background:#eef3dc;
+  border:1px solid rgba(126,139,76,.19);
+  color:#6e784b;
+  font-size:.61rem;
+  white-space:nowrap;
+}
+
+.school-print-row-mail{
+  background:linear-gradient(90deg,rgba(246,248,235,.82),rgba(255,253,250,.98)) !important;
+  border-color:rgba(126,139,76,.22) !important;
+}
+
+.school-print-action{
+  width:29px !important;
+  height:29px !important;
+  min-width:29px !important;
+  min-height:29px !important;
+  padding:0 !important;
+  display:grid !important;
+  place-items:center !important;
+  border-radius:8px !important;
+  font-size:.80rem !important;
+  line-height:1 !important;
+  text-decoration:none !important;
+  color:#8a7c6e !important;
+}
+
+.workroom-print-mail-order{
+  border:1px solid transparent !important;
+  background:transparent !important;
+}
+.workroom-print-mail-order.active{
+  background:#eef3dc !important;
+  border-color:rgba(126,139,76,.25) !important;
+  color:#657044 !important;
+}
+
+.school-print-drag{
+  width:29px !important;
+  height:29px !important;
+  display:grid !important;
+  place-items:center !important;
+  cursor:grab !important;
+  color:#a89d91 !important;
+  font-size:.82rem !important;
+  border-radius:8px !important;
+}
+.school-print-drag:hover{
+  background:#f3f0eb !important;
+  color:#766d64 !important;
+}
+.school-print-drag:active{
+  cursor:grabbing !important;
+}
+
+/* Old print arrows/move controls are no longer rendered. */
+.workroom-print-move-btn{
+  display:none !important;
+}
+
+@media(max-width:760px){
+  .school-print-email-toggle-text{
+    display:none;
+  }
+  .school-print-email-toggle{
+    width:34px !important;
+    padding:0 !important;
+  }
+  .school-print-email-panel{
+    grid-template-columns:1fr !important;
+  }
+  .school-print-row .workroom-todo-content{
+    align-items:flex-start !important;
+    flex-direction:column !important;
+    gap:4px !important;
+  }
+}
+
+
+/* =========================================================
+   V43 – Linksammlung: MABÜ, Zeitraum, Sortierung, Seiten
+   ========================================================= */
+
+.workroom-link-toolbar{
+  display:flex !important;
+  align-items:flex-end !important;
+  gap:8px !important;
+  flex-wrap:wrap !important;
+  margin:10px 0 12px !important;
+}
+
+.workroom-link-toolbar .workroom-link-filter-select-label{
+  display:flex !important;
+  flex-direction:column !important;
+  gap:4px !important;
+  min-width:150px !important;
+  color:#8d7c70 !important;
+  font-size:.63rem !important;
+}
+
+.workroom-link-toolbar select{
+  height:34px !important;
+  min-height:34px !important;
+  border-radius:10px !important;
+  padding:5px 30px 5px 10px !important;
+  background:#fffdfa !important;
+}
+
+.workroom-link-toolbar-spacer{
+  flex:1 1 auto;
+}
+
+.workroom-link-sort-label{
+  min-width:205px !important;
+}
+
+.workroom-link-important-filter,
+.workroom-link-sort-reset{
+  height:34px !important;
+  min-height:34px !important;
+  padding:5px 11px !important;
+  border-radius:999px !important;
+  white-space:nowrap !important;
+}
+
+.workroom-link-sort-reset{
+  border:1px solid rgba(128,117,99,.14) !important;
+  background:#faf8f3 !important;
+  color:#85796e !important;
+  cursor:pointer !important;
+}
+
+.workroom-link-sort-reset:hover{
+  background:#f1f3e5 !important;
+  color:#66704d !important;
+}
+
+#workroomLinkList{
+  grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+  grid-auto-flow:row !important;
+}
+
+/* 20 Treffer = bei zwei Spalten maximal 10 Zeilen pro Seite. */
+.workroom-link-pager{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:9px;
+  margin:10px 0 2px;
+  color:#8b7d72;
+  font-size:.68rem;
+}
+.workroom-link-pager.hidden{
+  display:none !important;
+}
+.workroom-link-pager button{
+  width:32px;
+  height:32px;
+  display:grid;
+  place-items:center;
+  padding:0;
+  border:1px solid rgba(130,117,99,.14);
+  border-radius:50%;
+  background:#fffdfa;
+  color:#7e7268;
+  cursor:pointer;
+  font-size:1rem;
+}
+.workroom-link-pager button:disabled{
+  opacity:.30;
+  cursor:default;
+}
+
+@media(max-width:900px){
+  .workroom-link-toolbar-spacer{
+    display:none;
+  }
+  .workroom-link-sort-label{
+    min-width:180px !important;
+  }
+  /* Auf einer Spalte ebenfalls höchstens 10 sichtbar: JS zeigt 20,
+     daher bei kleinen Screens wird die Liste zweispaltig belassen,
+     solange genug Breite vorhanden ist. */
+}
+
+@media(max-width:680px){
+  #workroomLinkList{
+    grid-template-columns:1fr !important;
+  }
+  .workroom-link-toolbar{
+    align-items:stretch !important;
+  }
+  .workroom-link-toolbar .workroom-link-filter-select-label,
+  .workroom-link-sort-label{
+    flex:1 1 46% !important;
+    min-width:145px !important;
+  }
+}
