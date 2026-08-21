@@ -2037,6 +2037,40 @@
   </div>
 </dialog>
   
+
+<dialog id="papaOverviewDialog" class="papa-overview-dialog">
+  <div class="papa-overview-header">
+    <div>
+      <p class="small-label">PAPA</p>
+      <h2>Alles auf einen Blick</h2>
+    </div>
+    <button id="closePapaOverviewBtn"
+            class="text-btn"
+            type="button"
+            aria-label="Schließen">×</button>
+  </div>
+
+  <div class="papa-quote-panel">
+    <div class="papa-triquetra-wrap">
+      <div class="papa-triquetra-ring">
+        <img src="triquetra.png.png"
+             class="papa-triquetra-image"
+             alt="Das Leben fließt – wir fließen mit">
+      </div>
+    </div>
+    <p id="papaQuote" class="papa-quote"></p>
+  </div>
+
+  <div class="papa-overview-tabs elegant-week-switch">
+    <button class="secondary-btn papa-tab active" data-week-offset="0" type="button">Diese Woche</button>
+    <button class="secondary-btn papa-tab" data-week-offset="1" type="button">Nächste Woche</button>
+    <button class="secondary-btn papa-tab" data-week-offset="2" type="button">+2 Wochen</button>
+    <button class="secondary-btn papa-tab" data-week-offset="3" type="button">+3 Wochen</button>
+  </div>
+
+  <div id="papaOverviewList" class="papa-overview-list"></div>
+</dialog>
+
   <script>
   /*
     APP-START – Firebase nur EINMAL laden und initialisieren.
