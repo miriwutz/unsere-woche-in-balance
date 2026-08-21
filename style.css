@@ -18150,3 +18150,56 @@ body.child-view-active #papaOverviewModal{
   border-radius:999px;
   background:#f6f3ec;
 }
+
+
+/* =========================================================
+   PUNKT 4c – Routinen in "Meine Woche": Mini-Vorschau + Archiv
+   ========================================================= */
+
+.workroom-week-routine-item.has-thumb{
+  grid-template-columns:28px 72px minmax(0,1fr) auto !important;
+}
+.routine-week-thumb{
+  position:relative;
+  display:block;
+  width:72px;
+  height:42px;
+  border-radius:9px;
+  overflow:hidden;
+  background:#eee9e1;
+  box-shadow:0 2px 8px rgba(74,64,55,.08);
+}
+.routine-week-thumb img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  display:block;
+}
+.routine-week-thumb span{
+  position:absolute;
+  left:50%;
+  top:50%;
+  transform:translate(-50%,-50%);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  width:20px;
+  height:20px;
+  border-radius:50%;
+  background:rgba(255,255,255,.88);
+  color:#6f6257;
+  font-size:.62rem;
+  box-shadow:0 1px 5px rgba(0,0,0,.1);
+}
+.workroom-week-routine-item.has-thumb .routine-week-rating{
+  grid-column:3/-1 !important;
+}
+@media(max-width:620px){
+  .workroom-week-routine-item.has-thumb{
+    grid-template-columns:28px 60px minmax(0,1fr) !important;
+  }
+  .routine-week-thumb{width:60px;height:36px;}
+  .workroom-week-routine-item.has-thumb .routine-rated-mark{
+    grid-column:3;
+  }
+}
