@@ -2755,52 +2755,6 @@ function renderArchive() {
   bindArchiveButtons();
 }
 
-function archivePlannedStatusHtml(a){
-  const routines=ensureWorkroomRoutines();
-  const matches=routines.items.filter(item=>{
-    if(item.sourceArchiveId===a.id) return true;
-    if(!item.url || !a.url) return false;
-    try{return normalizeUrl(item.url)===normalizeUrl(a.url);}
-    catch{return String(item.url).trim()===String(a.url).trim();}
-  });
-
-  if(!matches.length) return "";
-
-  const currentMonday=getMonday(new Date());
-  const dayShort={
-    Montag:"Mo",Dienstag:"Di",Mittwoch:"Mi",Donnerstag:"Do",
-    Freitag:"Fr",Samstag:"Sa",Sonntag:"So",daily:"täglich"
-  };
-
-  // gleiche Woche zusammenfassen: Fr + Sa · diese Woche
-  const groups=new Map();
-  matches.forEach(item=>{
-    const mon=parseLocalDate(item.weekKey);
-    const diff=Math.round((mon-currentMonday)/(7*24*60*60*1000));
-    const weekLabel=
-      diff===0 ? "diese Woche" :
-      diff===1 ? "nächste Woche" :
-      diff>1 ? `in ${diff} Wochen` :
-      "früher";
-
-    if(!groups.has(weekLabel)) groups.set(weekLabel,[]);
-    groups.get(weekLabel).push(dayShort[item.day] || item.day || "");
-  });
-
-  const parts=[...groups.entries()].map(([week,days])=>{
-    const unique=[...new Set(days.filter(Boolean))];
-    return `${unique.join(" + ")} · ${week}`;
-  });
-
-  const visible=parts.slice(0,2);
-  const extra=parts.length-visible.length;
-
-  return `
-    <div class="archive-planned-row" title="${escapeHtml(parts.join(" | "))}">
-      <span class="archive-planned-icon">◷</span>
-      <span><strong>Geplant</strong> ${visible.map(escapeHtml).join(" · ")}${extra?` · +${extra} weitere`:""}</span>
-    </div>`;
-}
 
 function archiveCardHtml(a) {
   const ratingLabel = {super:"✦ Gut", okay:"○ Mittel", nope:"— Schlecht"};
@@ -2824,8 +2778,6 @@ function archiveCardHtml(a) {
           <span>${escapeHtml(categoryLabel)}</span>
           <span>${a.timesDone || 0}× gemacht</span>
         </div>
-
-        ${archivePlannedStatusHtml(a)}
 
         <div class="archive-actions">
           <button type="button" class="archive-action favorite-btn ${a.favorite?"active":""}" data-id="${a.id}">
@@ -13225,7 +13177,13 @@ document.addEventListener("click", e => {
   }
 });
 document.addEventListener("change", e => {
-  if (e.target?.id === "recipeBeakerKitchen") updateBeakerMappingVisibility();
+  if (e.target?.id === "recipeBeakerKitchen") {
+    const selfCook=document.querySelector("#recipeSelfCook");
+    if(e.target.checked && selfCook && !selfCook.checked){
+      selfCook.checked=true;
+    }
+    updateBeakerMappingVisibility();
+  }
   if (e.target?.classList?.contains("beaker-map-unit")) {
     const editor = e.target.closest(".beaker-measure-editor");
     editor?.querySelector(".beaker-map-color")?.classList.toggle("hidden", e.target.value !== "cup");
