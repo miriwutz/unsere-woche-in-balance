@@ -723,13 +723,6 @@
         </div>
 
         <div class="recipe-v19-meta-grid">
-          <label class="recipe-field recipe-meta-kind">
-            <span>Rezeptart</span>
-            <select id="recipeSourceType" title="Rezeptart">
-              <option value="internal" selected>📖 Eigenes Rezept</option>
-              <option value="external">🔗 Internetrezept</option>
-            </select>
-          </label>
 
           <label class="recipe-field recipe-meta-difficulty">
             <span>Schwierigkeit</span>
@@ -763,41 +756,53 @@
       </section>
 
       <!-- 2: DAS EIGENTLICHE REZEPT -->
-      <section class="recipe-v17-tags">
-        <div class="recipe-v17-section-head compact">
-          <div>
-            <strong>Was passt dazu?</strong>
-            <small>Nur anklicken, was wirklich zutrifft.</small>
-          </div>
+      <section class="recipe-flag-strip" aria-label="Rezeptmerkmale">
+        <div class="recipe-flag-bar">
+          <label class="recipe-flag-chip" for="recipeKids">
+            <input id="recipeKids" class="recipe-flag-input" type="checkbox">
+            <span class="recipe-flag-state" aria-hidden="true"></span>
+            <span class="recipe-line-icon recipe-line-icon-kid" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="7" r="3"/><path d="M7 19c.7-3.7 2.4-5.7 5-5.7s4.3 2 5 5.7"/><path d="M9 5.5c.8-1.2 1.8-1.8 3-1.8s2.2.6 3 1.8"/></svg>
+            </span>
+            <span class="recipe-flag-text">Kindergericht</span>
+          </label>
+
+          <label class="recipe-flag-chip" for="recipeHealthy">
+            <input id="recipeHealthy" class="recipe-flag-input" type="checkbox">
+            <span class="recipe-flag-state" aria-hidden="true"></span>
+            <span class="recipe-line-icon recipe-line-icon-leaf" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M5 19c5-1 10-6 14-14"/><path d="M8 15c-3.6-.4-5-2.7-4.5-6 3.5-.2 6.2 1.2 7 4.2"/><path d="M13 10c.2-3.7 2.7-5.8 6.5-5.6.2 3.8-1.8 6.3-5.5 6.7"/></svg>
+            </span>
+            <span class="recipe-flag-text">Gesund &amp; bunt</span>
+          </label>
+
+          <label class="recipe-flag-chip" for="recipeSelfCook">
+            <input id="recipeSelfCook" class="recipe-flag-input" type="checkbox">
+            <span class="recipe-flag-state" aria-hidden="true"></span>
+            <span class="recipe-line-icon recipe-line-icon-chef" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M7 10a4 4 0 0 1 2-7 4.5 4.5 0 0 1 6 0 4 4 0 0 1 2 7"/><path d="M6 10h12l-1 9H7z"/><path d="M9 14h6"/></svg>
+            </span>
+            <span class="recipe-flag-text">Selbst kochen</span>
+          </label>
+
+          <label class="recipe-flag-chip" for="recipeBeakerKitchen" title="Aktiviert automatisch Selbst kochen">
+            <input id="recipeBeakerKitchen" class="recipe-flag-input" type="checkbox">
+            <span class="recipe-flag-state" aria-hidden="true"></span>
+            <span class="recipe-line-icon recipe-line-icon-cup" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M6 4h9l2 15H8z"/><path d="M15.5 7H18a3 3 0 0 1 0 6h-1.5"/><path d="M8 9h7"/><path d="M8.5 13h7"/></svg>
+            </span>
+            <span class="recipe-flag-text">Becherküche</span>
+          </label>
+
+          <label class="recipe-flag-chip recipe-flag-favorite" for="recipeFavorite">
+            <input id="recipeFavorite" class="recipe-flag-input" type="checkbox">
+            <span class="recipe-flag-state" aria-hidden="true"></span>
+            <span class="recipe-line-icon recipe-line-icon-heart" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M12 20S4 15.5 4 9.5A4.5 4.5 0 0 1 12 6a4.5 4.5 0 0 1 8 3.5C20 15.5 12 20 12 20z"/></svg>
+            </span>
+            <span class="recipe-flag-text">Favorit</span>
+          </label>
         </div>
-
-        <div class="recipe-feature-row recipe-feature-row-v17">
-          <label class="recipe-kids-toggle recipe-feature-kids">
-            <input id="recipeKids" type="checkbox">
-            <span><i class="recipe-feature-symbol" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="7" r="3"/><path d="M6.5 19c.7-4 2.7-6 5.5-6s4.8 2 5.5 6"/></svg></i>Kindergericht</span>
-          </label>
-
-          <label class="recipe-healthy-toggle recipe-feature-healthy">
-            <input id="recipeHealthy" type="checkbox">
-            <span><i class="recipe-feature-symbol" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 18c6-1 10-5 14-12"/><path d="M8 14C4 13 3 10 4 7c3 0 6 1 7 4"/><path d="M13 10c0-4 3-6 7-6 0 4-2 7-6 8"/></svg></i>Gesund & bunt</span>
-          </label>
-
-          <label class="recipe-selfcook-toggle-form recipe-feature-selfcook" title="Eigene größere Kinderansicht aktivieren">
-            <input id="recipeSelfCook" type="checkbox">
-            <span><i class="recipe-feature-symbol" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 11l7-6 7 6"/><path d="M7 10v9h10v-9"/><path d="M10 19v-5h4v5"/></svg></i>Selbst kochen</span>
-          </label>
-
-          <label class="recipe-beaker-toggle recipe-feature-beaker" title="Becher/Löffel werden in der Kinderansicht automatisch erkannt">
-            <input id="recipeBeakerKitchen" type="checkbox">
-            <span><i class="recipe-feature-symbol" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 7h11v9a4 4 0 0 1-4 4h-3a4 4 0 0 1-4-4V7z"/><path d="M17 9h1.5a2.5 2.5 0 0 1 0 5H17"/><path d="M8 4h7"/></svg></i>Becherküche</span>
-          </label>
-
-          <label class="recipe-favorite-toggle recipe-feature-favorite" title="Als Lieblingsrezept markieren">
-            <input id="recipeFavorite" type="checkbox">
-            <span><i class="recipe-feature-symbol" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20S4 15.5 4 9.5A4.5 4.5 0 0 1 12 6a4.5 4.5 0 0 1 8 3.5C20 15.5 12 20 12 20z"/></svg></i>Favorit</span>
-          </label>
-        </div>
-
       </section>
 
       <section class="recipe-v17-content recipe-internal-only">
@@ -847,26 +852,6 @@
       </div>
 
       <!-- 3: MERKMALE – schnell anklicken -->
-      
-
-      <section class="recipe-v18-links recipe-external-only recipe-section-hidden">
-        <div class="recipe-v17-section-head compact">
-          <div>
-            <strong id="recipeLinkSectionTitle">Links</strong>
-            <small id="recipeLinkSectionHint">Optional – Quelle oder passendes Video hinterlegen.</small>
-          </div>
-        </div>
-        <div class="recipe-v18-link-grid">
-          <label class="recipe-field recipe-v17-link">
-            <span id="recipeWebLabel">Rezept-Link</span>
-            <input id="recipeWebUrl" type="url" autocomplete="url" placeholder="https://…">
-          </label>
-          <label class="recipe-field recipe-v17-link">
-            <span>YouTube – falls das Rezept ein Video ist</span>
-            <input id="recipeYoutubeUrl" type="url" autocomplete="url" placeholder="https://…">
-          </label>
-        </div>
-      </section>
 
       
 
@@ -929,12 +914,6 @@
         <datalist id="recipeSearchSuggestions"></datalist>
         <div id="recipeAutocomplete" class="recipe-autocomplete hidden"></div>
       </div>
-
-      <select id="recipeSourceFilter">
-        <option value="all">Alle Rezeptarten</option>
-        <option value="internal">📖 Interne Rezepte</option>
-        <option value="external">🔗 Internetrezepte</option>
-      </select>
 
       <select id="recipeCategoryFilter">
         <option value="all">Alle Rezeptideen</option>
@@ -1618,6 +1597,20 @@
       <span class="workroom-fold-arrow">▾</span>
       <h3>🖨 Drucken</h3>
       <p>Was möchte ich in der Schule noch ausdrucken?</p>
+    </div>
+  </div>
+
+  <div class="school-print-mailbar">
+    <div class="school-print-mail-copy">
+      <span class="school-print-mail-icon" aria-hidden="true">✉</span>
+      <div>
+        <strong>Druckbestellung per E-Mail</strong>
+        <small>Einmal die Adresse hinterlegen. Das Briefsymbol beim Auftrag öffnet danach eine vorbereitete Mail.</small>
+      </div>
+    </div>
+    <div class="school-print-mail-controls">
+      <input id="schoolPrintEmail" type="email" autocomplete="email" placeholder="Druckerei / Schule – E-Mail-Adresse">
+      <button id="saveSchoolPrintEmailBtn" class="secondary-btn" type="button">Speichern</button>
     </div>
   </div>
 
