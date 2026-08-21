@@ -935,37 +935,61 @@
         <option value="advanced">Etwas aufwendiger</option>
       </select>
 
-      <label class="recipe-kids-filter">
+      <details id="recipeAlphaDetails" class="recipe-alpha-details">
+        <summary title="Alphabetisches Rezeptregister">
+          <span class="recipe-alpha-summary-label">ABC</span>
+          <span id="recipeLibraryCount" class="recipe-library-count">0</span>
+        </summary>
+        <div class="recipe-alpha-popover">
+          <div class="recipe-alpha-popover-head">
+            <span>Alphabetisch</span>
+            <small>nur vorhandene Buchstaben</small>
+          </div>
+          <div id="recipeTocList" class="recipe-toc-list"></div>
+        </div>
+      </details>
+
+      <label class="recipe-quick-filter recipe-kids-filter" title="Nur Kindergerichte">
         <input id="recipeKidsOnlyFilter" type="checkbox">
-        <span>♙ Kindergerichte</span>
+        <span class="recipe-filter-check" aria-hidden="true"></span>
+        <svg class="recipe-filter-icon" viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="12" cy="7.5" r="3.2"></circle>
+          <path d="M5.8 19c.5-4 2.8-6.2 6.2-6.2S17.7 15 18.2 19"></path>
+          <path d="M8.2 5.4c.9-1.2 2.1-1.8 3.8-1.8 1.6 0 2.9.6 3.8 1.8"></path>
+        </svg>
+        <span>Kindergerichte</span>
       </label>
 
-      <label class="recipe-selfcook-filter">
+      <label class="recipe-quick-filter recipe-selfcook-filter" title="Nur Rezepte zum Selbstkochen">
         <input id="recipeSelfCookOnlyFilter" type="checkbox">
-        <span>👧 Selbst kochen</span>
+        <span class="recipe-filter-check" aria-hidden="true"></span>
+        <svg class="recipe-filter-icon" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M7 10.2c-2.2-.2-3.5-1.5-3.5-3.3 0-1.7 1.3-3 3-3 .8-1.6 2.4-2.5 4.2-2.5 2 0 3.7 1 4.5 2.7.4-.2.9-.3 1.4-.3 2 0 3.6 1.5 3.6 3.4 0 1.7-1.2 2.9-3.2 3"></path>
+          <path d="M7 10.2V13h10v-2.8M8.4 13v6.5M15.6 13v6.5M8.4 19.5h7.2"></path>
+        </svg>
+        <span>Selbst kochen</span>
       </label>
 
-      <label class="recipe-healthy-filter">
+      <label class="recipe-quick-filter recipe-healthy-filter" title="Nur Gesund & bunt">
         <input id="recipeHealthyOnlyFilter" type="checkbox">
-        <span>❧ Gesund & bunt</span>
+        <span class="recipe-filter-check" aria-hidden="true"></span>
+        <svg class="recipe-filter-icon" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M19.5 4.5C13 4.8 8.2 8 6.5 13.5c-1 3.2.4 5.2 2.6 5.2 5.4 0 9.7-5.5 10.4-14.2Z"></path>
+          <path d="M5 20c2.8-4.8 6.4-8.1 11-10.5"></path>
+        </svg>
+        <span>Gesund & bunt</span>
       </label>
 
-      <label class="recipe-favorite-filter">
+      <label class="recipe-quick-filter recipe-favorite-filter" title="Nur Lieblingsrezepte">
         <input id="recipeFavoriteOnlyFilter" type="checkbox">
-        <span>★ Lieblingsrezepte</span>
+        <span class="recipe-filter-check" aria-hidden="true"></span>
+        <svg class="recipe-filter-icon" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M20.3 5.8c-2-2-5.1-1.8-6.9.4L12 7.8l-1.4-1.6C8.8 4 5.7 3.8 3.7 5.8c-2.1 2.1-2 5.5.2 7.5L12 20l8.1-6.7c2.2-2 2.3-5.4.2-7.5Z"></path>
+        </svg>
+        <span>Lieblingsrezepte</span>
       </label>
     </div>
 
-    <section class="recipe-library-nav card">
-      <div class="recipe-library-nav-head">
-        <div>
-          <span class="small-label">REZEPTBIBLIOTHEK</span>
-          <strong>Alphabetisches Rezeptregister</strong>
-        </div>
-        <span id="recipeLibraryCount" class="recipe-library-count">0 Rezepte</span>
-      </div>
-      <div id="recipeTocList" class="recipe-toc-list"></div>
-    </section>
 
     <section class="meal-plan-card card">
       <div class="meal-plan-head">
@@ -1592,26 +1616,29 @@
 
 <!-- DRUCKEN -->
 <article class="card workroom-main-card workroom-fold-card" data-workroom-fold="prints">
- <div class="workroom-card-head workroom-fold-head">
+ <div class="workroom-card-head workroom-fold-head school-print-head">
     <div>
       <span class="workroom-fold-arrow">▾</span>
       <h3>🖨 Drucken</h3>
       <p>Was möchte ich in der Schule noch ausdrucken?</p>
     </div>
+
+    <button id="toggleSchoolPrintEmail"
+            class="school-print-email-toggle"
+            type="button"
+            aria-expanded="false"
+            title="Druck-E-Mail anzeigen">✉</button>
   </div>
 
-  <div class="school-print-mailbar">
-    <div class="school-print-mail-copy">
-      <span class="school-print-mail-icon" aria-hidden="true">✉</span>
-      <div>
-        <strong>Druckbestellung per E-Mail</strong>
-        <small>Einmal die Adresse hinterlegen. Das Briefsymbol beim Auftrag öffnet danach eine vorbereitete Mail.</small>
-      </div>
-    </div>
-    <div class="school-print-mail-controls">
-      <input id="schoolPrintEmail" type="email" autocomplete="email" placeholder="Druckerei / Schule – E-Mail-Adresse">
-      <button id="saveSchoolPrintEmailBtn" class="secondary-btn" type="button">Speichern</button>
-    </div>
+  <div id="schoolPrintEmailPanel" class="school-print-email-panel hidden">
+    <span class="school-print-email-label">Druckbestellung</span>
+    <input id="schoolPrintEmail"
+           type="email"
+           autocomplete="email"
+           placeholder="E-Mail-Adresse">
+    <button id="saveSchoolPrintEmailBtn"
+            class="secondary-btn"
+            type="button">Speichern</button>
   </div>
 
   <div id="schoolPrintList" class="workroom-list">
@@ -1720,6 +1747,7 @@
         <option value="documents">📎 Unterlagen & Belege</option>
         <option value="bureaucracy">🗂 Bürokratie</option>
         <option value="current">📌 Aktuell</option>
+        <option value="private">♡ Privat</option>
         <option value="other">✨ Sonstiges</option>
       </select>
     </label>
@@ -1770,6 +1798,7 @@
   <option value="documents">📎 Unterlagen & Belege</option>
   <option value="bureaucracy">🗂 Bürokratie</option>
   <option value="current">📌 Aktuell</option>
+  <option value="private">♡ Privat</option>
   <option value="other">✨ Sonstiges</option>
 </select>
 
