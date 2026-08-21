@@ -3831,6 +3831,14 @@ function renderRoutineAreaTasks(){
       .filter(item=>activeRoutineWeekOffset===0)
       .filter(item=>routineAppliesToWeek(item,todayWeekKey))
       .filter(item=>routineAppliesToDate(item,today))
+      // Erledigte Tagesdurchführungen verschwinden oben,
+      // die Wochenplanung unten bleibt dabei unangetastet.
+      .filter(item=>{
+        const c=routineCompletion(item.id,today);
+        if(!c?.done) return true;
+        if(item.url && !c.rating) return true; // wartet noch auf Bewertung
+        return false;
+      })
       .sort((a,b)=>Number(a.order||0)-Number(b.order||0));
 
     if(!items.length){
@@ -3897,9 +3905,11 @@ function renderRoutineAreaTasks(){
       save();
       renderRoutineAreaTasks();
     }else{
+      // Nur die heutige Durchführung erledigen.
+      // Der Plan selbst bleibt unten in der Wochenübersicht erhalten.
       setRoutineCompletion(item.id,date,{done:true});
-      state.workroom.routines.items=state.workroom.routines.items.filter(x=>x.id!==item.id);
       save();
+      renderRoutineAreaTasks();
       renderRoutines();
       renderWorkroomWeekOverview(activeWorkroomWeekOffset);
     }
@@ -4006,14 +4016,16 @@ function renderRoutines(){
   const dayNames=["Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag","Sonntag"];
   const partLabel={morning:"Morgens",school:"Schulalltag",afterschool:"Nach der Schule",evening:"Abends",other:"Sonstiges"};
 
-  const cardHtml=item=>{
+  const cardHtml=(item,occurrenceDate=null)=>{
     const cat=routineCategoryMeta[item.category||"none"] || routineCategoryMeta.other;
     const thumb=item.url ? thumbnailFor(item.url) : "";
-    return `<div class="routine-week-plan-card" data-id="${item.id}">
+    const completion=occurrenceDate ? routineCompletion(item.id,occurrenceDate) : null;
+    const doneClass=completion?.done ? "is-completed" : "";
+    return `<div class="routine-week-plan-card ${doneClass}" data-id="${item.id}">
       ${thumb?`<a class="routine-week-plan-thumb" href="${escapeHtml(item.url)}" target="_blank" rel="noopener"><img src="${escapeHtml(thumb)}" alt="" loading="lazy"><span>▶</span></a>`:""}
       <div class="routine-week-plan-copy">
         <strong>${escapeHtml(item.title||"Routinepunkt")}</strong>
-        <small>${partLabel[item.part||"morning"]}${item.url?` · ${cat[1]}`:""}${item.sticky?" · jede Woche":""}</small>
+        <small>${partLabel[item.part||"morning"]}${item.url?` · ${cat[1]}`:""}${item.sticky?" · jede Woche":""}${completion?.done?" · heute erledigt":""}</small>
       </div>
       <div class="routine-week-plan-actions">
         <button class="routine-edit-btn" data-id="${item.id}" type="button" title="Bearbeiten" aria-label="Bearbeiten">✎</button>
@@ -4028,7 +4040,7 @@ function renderRoutines(){
     ${dailyItems.length?`
       <div class="routine-week-daily">
         <span class="routine-week-daily-label">Täglich</span>
-        <div class="routine-week-daily-items">${dailyItems.map(cardHtml).join("")}</div>
+        <div class="routine-week-daily-items">${dailyItems.map(item=>cardHtml(item,activeRoutineWeekOffset===0?new Date():null)).join("")}</div>
       </div>`:""}
     <div class="routine-week-grid">
       ${dayNames.map((day,i)=>{
@@ -4041,7 +4053,7 @@ function renderRoutines(){
             <span>${d.toLocaleDateString("de-AT",{day:"2-digit",month:"2-digit"})}</span>
           </header>
           <div class="routine-week-day-items">
-            ${dayItems.length?dayItems.map(cardHtml).join(""):'<span class="routine-week-day-empty">–</span>'}
+            ${dayItems.length?dayItems.map(item=>cardHtml(item,d)).join(""):'<span class="routine-week-day-empty">–</span>'}
           </div>
         </section>`;
       }).join("")}
@@ -4347,8 +4359,8 @@ document.addEventListener("click",e=>{
   entry.planned=false;
   entry.updatedAt=Date.now();
 
+  // Die konkrete Durchführung ist erledigt; die Wochenplanung bleibt bestehen.
   setRoutineCompletion(item.id,date,{done:true,rating,archived:true});
-  state.workroom.routines.items=state.workroom.routines.items.filter(x=>x.id!==item.id);
 
   // Direkt lokal sichern, bevor ein Cloud-Zyklus dazwischenfunken kann.
   localStorage.setItem("balanceProd.archive",JSON.stringify(state.archive));
