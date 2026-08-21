@@ -1298,6 +1298,9 @@ state.school = (() => {
   state.school.children[id].tasks=Array.isArray(state.school.children[id].tasks)?state.school.children[id].tasks:[];
   state.school.children[id].links=Array.isArray(state.school.children[id].links)?state.school.children[id].links:[];
   state.school.children[id].interestLinks=Array.isArray(state.school.children[id].interestLinks)?state.school.children[id].interestLinks:[];
+  state.school.children[id].interestLinks.forEach(link=>{
+    if(link && link.category==="lernen") link.category="lesen";
+  });
 });
 
 
@@ -2938,6 +2941,29 @@ document.querySelectorAll(".remove-tt-row").forEach(btn => {
 });
 function homeByForDate(id,date){const c=timetablePerson(id);if(!c)return"";const t=ensureManualTimetable(c),day=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"][date.getDay()];return t.homeBy[day]||""}
 
+
+function youtubeVideoId(url){
+  try{
+    const u=new URL(url);
+    const host=u.hostname.replace(/^www\./,"").toLowerCase();
+    if(host==="youtu.be"){
+      return u.pathname.split("/").filter(Boolean)[0] || "";
+    }
+    if(host==="youtube.com" || host==="m.youtube.com"){
+      if(u.pathname==="/watch") return u.searchParams.get("v") || "";
+      const parts=u.pathname.split("/").filter(Boolean);
+      const idx=parts.findIndex(x=>["shorts","embed","live"].includes(x));
+      if(idx>=0 && parts[idx+1]) return parts[idx+1];
+    }
+  }catch(e){}
+  return "";
+}
+
+function youtubeThumbUrl(url){
+  const id=youtubeVideoId(url);
+  return id ? `https://i.ytimg.com/vi/${encodeURIComponent(id)}/mqdefault.jpg` : "";
+}
+
 function renderSchool(){
   ["1","2"].forEach(id=>{
     const c=state.school.children[id], n=document.querySelector(`#schoolName${id}`);
@@ -2958,10 +2984,10 @@ function renderSchool(){
     if(fe){
       const categoryMeta={
         ideen:["✨","Ideen"],
-        lernen:["📚","Lernen"],
         lesen:["📖","Lesen"],
         musik:["🎧","Musik & Video"],
         hobby:["♡","Hobby"],
+        sport:["⚽","Sport"],
         sonstiges:["🌿","Sonstiges"]
       };
       const finds=Array.isArray(c.interestLinks)?c.interestLinks:[];
@@ -2977,13 +3003,26 @@ function renderSchool(){
             return `<section class="school-find-group">
               <div class="school-find-group-title"><span>${meta[0]}</span><strong>${meta[1]}</strong></div>
               <div class="school-find-group-items">
-                ${items.map(x=>`<div class="school-find">
-                  <a href="${escapeHtml(x.url)}" target="_blank" rel="noopener">
-                    <span class="school-find-name">${escapeHtml(x.name)}</span>
-                    <span class="school-find-domain">${escapeHtml((()=>{try{return new URL(x.url).hostname.replace(/^www\\./,"")}catch{return ""}})())}</span>
-                  </a>
-                  <button class="school-del" data-kind="find" data-child="${id}" data-id="${x.id}" aria-label="Fundstück löschen">×</button>
-                </div>`).join("")}
+                ${items.map(x=>{
+                  const thumb=youtubeThumbUrl(x.url);
+                  return `<div class="school-find ${thumb ? "school-find-youtube" : ""}">
+                    <a href="${escapeHtml(x.url)}" target="_blank" rel="noopener" class="school-find-main">
+                      <span class="school-find-copy">
+                        <span class="school-find-name">${escapeHtml(x.name)}</span>
+                        <span class="school-find-domain">${escapeHtml((()=>{try{return new URL(x.url).hostname.replace(/^www\\./,"")}catch{return ""}})())}</span>
+                      </span>
+                      ${thumb ? `<span class="school-find-thumb-wrap">
+                        <img class="school-find-thumb"
+                             src="${escapeHtml(thumb)}"
+                             alt=""
+                             loading="lazy"
+                             referrerpolicy="no-referrer">
+                        <span class="school-find-play">▶</span>
+                      </span>` : ""}
+                    </a>
+                    <button class="school-del" data-kind="find" data-child="${id}" data-id="${x.id}" aria-label="Fundstück löschen">×</button>
+                  </div>`;
+                }).join("")}
               </div>
             </section>`;
           }).join("")
@@ -11759,9 +11798,19 @@ document.querySelector("#schoolMotivationBanner")?.addEventListener("click", e =
 
 
 // Kinder-Dashboard-Kacheln
+
+function closeAllSchoolDashboardPanels(id){
+  [
+    `#schoolLinksPanel${id}`,
+    `#schoolFindsPanel${id}`,
+    `#schoolTimetableManage${id}`
+  ].forEach(sel => document.querySelector(sel)?.classList.add("hidden"));
+}
+
 document.querySelectorAll("[data-school-panel='links']").forEach(btn => {
   btn.addEventListener("click", () => {
     const id=btn.dataset.child;
+    closeAllSchoolDashboardPanels(id);
     document.querySelector(`#schoolLinksPanel${id}`)?.classList.remove("hidden");
   });
 });
@@ -11776,6 +11825,7 @@ document.querySelectorAll("[data-close-school-panel='links']").forEach(btn => {
 document.querySelectorAll("[data-school-panel='finds']").forEach(btn => {
   btn.addEventListener("click", () => {
     const id=btn.dataset.child;
+    closeAllSchoolDashboardPanels(id);
     document.querySelector(`#schoolFindsPanel${id}`)?.classList.remove("hidden");
   });
 });
