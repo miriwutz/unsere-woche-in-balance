@@ -7131,11 +7131,21 @@ function renderWorkroomLinks() {
     .sort((a,b)=>Number(a.order??999999)-Number(b.order??999999));
 
   // Sortierung ist nur eine Ansicht. Die manuelle Reihenfolge in state bleibt unverändert.
+  // Immer gruppenweise: ALLE Treffer zuerst, danach ALLE übrigen.
+  // Innerhalb beider Gruppen bleibt die eigene manuelle Reihenfolge exakt erhalten.
   if(activeWorkroomLinkSort !== "manual"){
-    links = links
-      .map((link,index)=>({link,index,hit:workroomLinkMatchesSort(link,activeWorkroomLinkSort)}))
-      .sort((a,b)=>Number(b.hit)-Number(a.hit) || a.index-b.index)
-      .map(x=>x.link);
+    const matchingGroup = [];
+    const remainingGroup = [];
+
+    links.forEach(link => {
+      if(workroomLinkMatchesSort(link, activeWorkroomLinkSort)){
+        matchingGroup.push(link);
+      }else{
+        remainingGroup.push(link);
+      }
+    });
+
+    links = [...matchingGroup, ...remainingGroup];
   }
 
   const totalPages=Math.max(1,Math.ceil(links.length/WORKROOM_LINKS_PER_PAGE));
@@ -7440,6 +7450,8 @@ document.querySelector("#workroomLinkSortSelect")?.addEventListener("change", e 
 });
 
 document.querySelector("#resetWorkroomLinkSort")?.addEventListener("click", () => {
+  // Nur die Ansichtssortierung zurücksetzen.
+  // Die gespeicherte manuelle Reihenfolge wurde nie verändert und erscheint wieder exakt.
   activeWorkroomLinkSort = "manual";
   workroomLinkPage = 1;
 
