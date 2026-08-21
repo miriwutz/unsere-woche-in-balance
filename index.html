@@ -173,16 +173,23 @@
       </div>
 
       <div class="quick-links card">
-  <div class="quick-links-title">🔗 Schnellzugriff</div>
-
-<div class="quick-links-row">
-    <a href="https://gymkatzelsdorf.webuntis.com/today" target="_blank" class="quick-link">WebUntis</a>
-    <a href="https://www.eduflow.at/EduFlow/" target="_blank" class="quick-link">EduFlow</a>
-    <a href="https://my.schoolfox.app/#/home" target="_blank" class="quick-link">SchoolFox 1</a>
-    <a href="https://my.schoolfox.app/#/home" target="_blank" class="quick-link">SchoolFox 2</a>
-    <a href="https://teams.microsoft.com" target="_blank" class="quick-link">Teams</a>
-</div>
-</div>
+        <div class="quick-links-main">
+          <div class="quick-links-title">🔗 Schnellzugriff</div>
+          <div id="quickLinksRow" class="quick-links-row"></div>
+        </div>
+        <details class="quick-links-editor">
+          <summary>Links bearbeiten</summary>
+          <div class="quick-links-editor-body">
+            <div class="quick-link-entry">
+              <input id="quickLinkLabel" type="text" placeholder="Name, z. B. Musikschule">
+              <input id="quickLinkUrl" type="url" placeholder="https://…">
+              <button id="cancelQuickLinkEditBtn" class="secondary-btn hidden" type="button">Abbrechen</button>
+              <button id="saveQuickLinkBtn" class="secondary-btn" type="button">+ Link</button>
+            </div>
+            <div id="quickLinksManageList" class="quick-links-manage-list"></div>
+          </div>
+        </details>
+      </div>
       
       
       <details class="family-question-card card">
@@ -205,7 +212,10 @@
             <button id="addFamilyQuestionBtn" class="secondary-btn" type="button">+ Frage</button>
           </div>
 
-          <div id="familyQuestionList" class="family-question-list"></div>
+          <details id="familyQuestionExisting" class="family-question-existing">
+            <summary><span id="familyQuestionExistingLabel">Offene Fragen</span></summary>
+            <div id="familyQuestionList" class="family-question-list"></div>
+          </details>
         </div>
       </details>
 
@@ -276,6 +286,18 @@
             <select id="entryType">
               <option value="todo">To-do</option>
               <option value="event">Termin</option>
+            </select>
+          </label>
+
+          <label class="recurrence-top-field">
+            Wiederholung
+            <select id="recurrence">
+              <option value="none">Keine</option>
+              <option value="weekly">Wöchentlich</option>
+              <option value="biweekly">Alle 2 Wochen</option>
+              <option value="monthly">Monatlich</option>
+              <option value="yearly">Jährlich</option>
+              <option value="schoolyear-noe">Schuljahr NÖ</option>
             </select>
           </label>
 
@@ -437,17 +459,6 @@
           <summary>Weitere Angaben</summary>
           <div class="todo-more-settings-body">
         <div class="recurrence-row">
-          <label>
-            Wiederholung
-            <select id="recurrence">
-              <option value="none">Keine</option>
-              <option value="weekly">Wöchentlich</option>
-              <option value="biweekly">Alle 2 Wochen</option>
-              <option value="monthly">Monatlich</option>
-              <option value="yearly">Jährlich</option>
-              <option value="schoolyear-noe">Schuljahr NÖ</option>
-            </select>
-          </label>
           <div id="schoolHolidayHint" class="school-holiday-hint hidden">
             🎒 Wöchentlich im gewählten Schuljahr NÖ – Ferien und offizielle schulfreie Tage werden ausgelassen.
           </div>
@@ -473,6 +484,7 @@
               <option value="important">Wichtig</option>
               <option value="medium" selected>Mittel</option>
               <option value="low">Kann warten</option>
+              <option value="weekplan">Wochenplan</option>
             </select>
           </label>
           <label>
