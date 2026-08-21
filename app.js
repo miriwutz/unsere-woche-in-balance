@@ -3776,9 +3776,14 @@ function renderPapaOverview(weekOffset = 0) {
   }
 }
 
-document.querySelector("#openPapaOverviewBtn")?.addEventListener("click", () => {
+document.addEventListener("click", (event) => {
+  const papaBtn = event.target.closest("#openPapaOverviewBtn");
+  if (!papaBtn) return;
+
   setRandomPapaQuote();
-  document.querySelectorAll(".papa-tab").forEach(btn=>btn.classList.toggle("active",Number(btn.dataset.weekOffset||0)===0));
+  document.querySelectorAll(".papa-tab").forEach(btn =>
+    btn.classList.toggle("active", Number(btn.dataset.weekOffset || 0) === 0)
+  );
   renderPapaOverview(0);
   papaOverviewDialog?.showModal();
 });
