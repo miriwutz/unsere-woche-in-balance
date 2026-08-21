@@ -15801,3 +15801,169 @@ body.child-view-active #papaOverviewModal{
     grid-template-columns:1fr !important;
   }
 }
+
+
+/* =========================================================
+   V25 – Familienfragen: dynamisches Shabby-Chic-Vintageschild
+   ========================================================= */
+
+.week-family-questions{
+  width:min(var(--question-sign-width,330px),100%) !important;
+  max-width:690px !important;
+  min-width:0 !important;
+  flex:0 1 auto !important;
+  justify-self:start !important;
+  padding:8px 18px 9px !important;
+  border:1px solid rgba(132,104,72,.38) !important;
+  border-radius:7px 9px 7px 10px !important;
+  background:
+    linear-gradient(96deg,
+      rgba(250,244,222,.97) 0%,
+      rgba(255,251,236,.98) 46%,
+      rgba(246,239,216,.96) 100%) !important;
+  box-shadow:
+    inset 0 0 0 2px rgba(255,255,255,.55),
+    inset 0 0 20px rgba(141,112,75,.055),
+    0 3px 8px rgba(75,58,42,.07) !important;
+  transform:rotate(-.12deg) !important;
+}
+
+/* unperfekte zweite Rahmenlinie wie bei altem lackiertem Holzschild */
+.week-family-questions::before{
+  content:"" !important;
+  position:absolute !important;
+  inset:3px !important;
+  width:auto !important;
+  height:auto !important;
+  margin:0 !important;
+  border:1px solid rgba(155,127,93,.13) !important;
+  border-radius:5px 7px 6px 8px !important;
+  background:transparent !important;
+  box-shadow:none !important;
+  pointer-events:none !important;
+}
+
+/* kleine Messing-"Nägel" an den Seiten */
+.week-family-questions::after{
+  content:"•                              •" !important;
+  position:absolute !important;
+  inset:50% 5px auto 5px !important;
+  width:auto !important;
+  height:auto !important;
+  margin:0 !important;
+  transform:translateY(-54%) !important;
+  display:flex !important;
+  justify-content:space-between !important;
+  color:#b79a72 !important;
+  background:transparent !important;
+  box-shadow:none !important;
+  font-size:.65rem !important;
+  line-height:1 !important;
+  pointer-events:none !important;
+}
+
+.week-family-question-items{
+  position:relative !important;
+  z-index:1 !important;
+  display:grid !important;
+  grid-template-columns:repeat(var(--question-cols,1),minmax(0,1fr)) !important;
+  column-gap:14px !important;
+  row-gap:2px !important;
+  align-items:start !important;
+}
+
+.week-family-question{
+  min-height:24px !important;
+  grid-template-columns:21px minmax(0,1fr) !important;
+  gap:5px !important;
+  padding:1px 0 !important;
+}
+
+.week-family-question-mark{
+  width:20px !important;
+  height:20px !important;
+  min-width:20px !important;
+  border:1px solid rgba(118,91,61,.38) !important;
+  background:
+    radial-gradient(circle at 38% 32%,#fffaf0 0 28%,#efe1c1 72%,#e6d2aa 100%) !important;
+  color:#765d43 !important;
+  font-size:.72rem !important;
+  box-shadow:
+    inset 0 0 0 1px rgba(255,255,255,.58),
+    0 1px 2px rgba(82,62,42,.08) !important;
+}
+
+.week-family-question-copy strong{
+  font-size:.74rem !important;
+  line-height:1.05 !important;
+  color:#514239 !important;
+}
+
+.week-family-question-copy small{
+  margin-top:0 !important;
+  color:#a08067 !important;
+  font-size:.47rem !important;
+  letter-spacing:.025em !important;
+}
+
+/* Nur bei vielen Fragen wächst das Schild nach unten; nie unnötig breit/hoch. */
+.week-family-questions[data-question-count="1"]{
+  padding-top:7px !important;
+  padding-bottom:7px !important;
+}
+.week-family-questions[data-question-count="4"],
+.week-family-questions[data-question-count="5"],
+.week-family-questions[data-question-count="6"]{
+  padding-top:9px !important;
+  padding-bottom:9px !important;
+}
+
+/* =========================================================
+   V25 – To-do-Listen standardmäßig eingeklappt
+   ========================================================= */
+
+#todoList.todo-list-collapsed{
+  display:none !important;
+}
+
+#todos .filters{
+  margin-bottom:0 !important;
+}
+
+#todos .filter{
+  transition:background .15s ease,border-color .15s ease,transform .15s ease !important;
+}
+
+#todos .filter.active{
+  box-shadow:0 3px 10px rgba(84,68,58,.06) !important;
+}
+
+/* Sobald ein Reiter geöffnet wird, bekommt die Liste etwas Luft darunter. */
+#todos .filters:has(.filter.active) + #todoList{
+  margin-top:10px !important;
+}
+
+/* kein optischer "leerer Kasten", solange alles eingeklappt ist */
+#todos .filters:not(:has(.filter.active)){
+  padding-bottom:2px !important;
+}
+
+@media(max-width:1100px){
+  .week-family-questions{
+    width:min(var(--question-sign-width,330px),100%) !important;
+    max-width:100% !important;
+  }
+  .week-family-question-items{
+    grid-template-columns:repeat(min(var(--question-cols,1),2),minmax(0,1fr)) !important;
+  }
+}
+
+@media(max-width:760px){
+  .week-family-questions{
+    width:100% !important;
+    transform:none !important;
+  }
+  .week-family-question-items{
+    grid-template-columns:1fr !important;
+  }
+}
