@@ -16855,39 +16855,37 @@ body.child-view-active #papaOverviewModal{
 }
 
 
-/* =========================================================
-   V35 – neutrale Termine ohne Person: blasses Oliv
-   ========================================================= */
 
-/* Karten, die keiner Person zugeordnet sind */
-.event-person-block:not([style*="--person-color"]),
-.event-lane:not([style*="--person-color"]){
-  border-color:#aaa793793 !important;
-}
-
-/* Falls die neutrale Farbe über die bestehende Inline-/Variablenlogik kommt,
-   wird nur der bekannte graue Default auf blasses Oliv umgebogen. */
-.week-grid{
-  --neutral-event-color:#aaa793793;
-}
-
-/* dezente olivfarbene Fläche statt kühlem Grau */
-.event-person-block:not([style*="--person-color"]),
-.event-lane:not([style*="--person-color"]){
-  background:linear-gradient(145deg,#fffdfa 0%,#f3f2e8 100%) !important;
-  color:#555347 !important;
-}
 
 /* =========================================================
-   KORREKTUR – nicht zugeteilt: NUR blass-oliver Rahmen
-   Personenrahmen bleiben vollständig unverändert.
+   FIX – neutrale Karten: NUR blass-oliver Rahmen
+   Alle gewählten Personen-/Gemeinsam-Rahmen bleiben original.
    ========================================================= */
-.person-group-general.grouped-family-block,
-.person-group-general.grouped-family-section,
-.event-person-block.person-group-general{
+.person-group-general{
   --group-border:#b8b58d !important;
-  background:
-    linear-gradient(var(--paper),var(--paper)) padding-box,
-    linear-gradient(#b8b58d,#b8b58d) border-box !important;
-  color:inherit !important;
+}
+
+
+/* =========================================================
+   FIX – Papa "Alles auf einen Blick"
+   Geschlossen darf der Dialog keinesfalls als unsichtbares Grid
+   über der Seite liegen; geöffnet wird er wieder als Dialog gerendert.
+   ========================================================= */
+#papaOverviewDialog:not([open]){
+  display:none !important;
+}
+
+#papaOverviewDialog[open]{
+  display:grid !important;
+  position:fixed !important;
+  inset:50% auto auto 50% !important;
+  transform:translate(-50%,-50%) !important;
+  z-index:10050 !important;
+  width:min(560px,calc(100vw - 32px)) !important;
+  margin:0 !important;
+}
+
+#papaOverviewDialog::backdrop{
+  background:rgba(66,55,50,.34) !important;
+  backdrop-filter:blur(2px) !important;
 }
