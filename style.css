@@ -18928,3 +18928,48 @@ body.child-view-active #papaOverviewModal{
 .routine-area-tasks.hidden{
   display:none !important;
 }
+
+
+/* =========================================================
+   PUNKT 4m – Bereichsaktionen stabil
+   ========================================================= */
+.routine-area-rating{
+  grid-column:2/-1 !important;
+  display:flex !important;
+  align-items:center;
+  gap:7px;
+  flex-wrap:wrap;
+  margin-top:4px;
+  padding:8px 10px;
+  border-radius:10px;
+  background:linear-gradient(90deg,rgba(231,237,210,.78),rgba(247,246,235,.82));
+  border:1px solid rgba(108,121,72,.13);
+}
+.routine-rating-label{
+  margin-right:3px;
+  color:#746d59;
+  font-family:"Playfair Display",Georgia,serif;
+  font-size:.8rem;
+}
+.routine-area-edit,
+.routine-area-delete{
+  width:29px;
+  height:29px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  padding:0;
+  border-radius:9px;
+  border:1px solid transparent;
+  background:transparent;
+  color:#927d69;
+  cursor:pointer;
+}
+.routine-area-edit:hover,
+.routine-area-delete:hover{
+  background:#f3eee5;
+  border-color:rgba(126,105,83,.15);
+}
+.routine-area-task.awaiting-rating{
+  box-shadow:inset 3px 0 0 rgba(113,126,71,.28);
+}
