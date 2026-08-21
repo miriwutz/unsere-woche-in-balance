@@ -721,10 +721,34 @@
             </select>
           </label>
         </div>
+
+        <div class="recipe-v18-meta-grid">
+          <label class="recipe-field">
+            <span>Rezeptart</span>
+            <select id="recipeSourceType" title="Rezeptart">
+              <option value="internal" selected>📖 Eigenes Rezept</option>
+              <option value="external">🔗 Internetrezept</option>
+            </select>
+          </label>
+
+          <label class="recipe-field">
+            <span>Schwierigkeit</span>
+            <select id="recipeDifficulty">
+              <option value="easy">Einfach</option>
+              <option value="medium" selected>Mittel</option>
+              <option value="advanced">Etwas aufwendiger</option>
+            </select>
+          </label>
+
+          <label class="recipe-field recipe-time-field recipe-internal-only">
+            <span>Zeit</span>
+            <input id="recipeTime" type="text" placeholder="z. B. 20 Min.">
+          </label>
+        </div>
       </section>
 
-      <!-- 2: DAS EIGENTLICHE REZEPT – bewusst am größten -->
-      <section class="recipe-v17-content">
+      <!-- 2: DAS EIGENTLICHE REZEPT -->
+      <section class="recipe-v17-content recipe-internal-only">
         <div class="recipe-v17-section-head">
           <div>
             <strong>Zutaten & Zubereitung</strong>
@@ -786,6 +810,25 @@
         </div>
       </section>
 
+      <section class="recipe-v18-links">
+        <div class="recipe-v17-section-head compact">
+          <div>
+            <strong id="recipeLinkSectionTitle">Links</strong>
+            <small id="recipeLinkSectionHint">Optional – Quelle oder passendes Video hinterlegen.</small>
+          </div>
+        </div>
+        <div class="recipe-v18-link-grid">
+          <label class="recipe-field recipe-v17-link">
+            <span id="recipeWebLabel">Quellen-Link – optional</span>
+            <input id="recipeWebUrl" type="url" autocomplete="url" placeholder="https://…">
+          </label>
+          <label class="recipe-field recipe-v17-link">
+            <span>YouTube – optional</span>
+            <input id="recipeYoutubeUrl" type="url" autocomplete="url" placeholder="https://…">
+          </label>
+        </div>
+      </section>
+
       <div id="recipeBeakerMapping" class="recipe-entry-section recipe-beaker-mapping hidden">
         <div class="recipe-entry-section-head">
           <div>
@@ -825,38 +868,16 @@
       <details class="recipe-entry-more recipe-v17-more">
         <summary>
           <span>Weitere Angaben</span>
-          <small>Rezeptart, Zeit, Links, Backdaten, Bewertung …</small>
+          <small>Backdaten, Kartenzeichen und Bewertung</small>
         </summary>
 
         <div class="recipe-v17-more-grid">
-          <label class="recipe-field">
-            <span>Rezeptart</span>
-            <select id="recipeSourceType" title="Rezeptart">
-              <option value="internal" selected>📖 Internes Rezept</option>
-              <option value="external">🔗 Internetrezept</option>
-            </select>
-          </label>
-
-          <label class="recipe-field">
-            <span>Schwierigkeit</span>
-            <select id="recipeDifficulty">
-              <option value="easy">Einfach</option>
-              <option value="medium" selected>Mittel</option>
-              <option value="advanced">Etwas aufwendiger</option>
-            </select>
-          </label>
-
-          <label class="recipe-field recipe-time-field">
-            <span>Zeit</span>
-            <input id="recipeTime" type="text" placeholder="z. B. 20 Min.">
-          </label>
-
-          <label class="recipe-field recipe-bake-field">
+          <label class="recipe-field recipe-bake-field recipe-internal-only">
             <span>Backzeit</span>
             <input id="recipeBakeTime" type="text" inputmode="numeric" placeholder="z. B. 35 Min.">
           </label>
 
-          <label class="recipe-field recipe-temp-field">
+          <label class="recipe-field recipe-temp-field recipe-internal-only">
             <span>Grad</span>
             <input id="recipeTemperature" type="text" inputmode="numeric" placeholder="z. B. 180 °C">
           </label>
@@ -893,16 +914,6 @@
                 <option value="✪">✪ Cool Star</option>
               </optgroup>
             </select>
-          </label>
-
-          <label class="recipe-field recipe-v17-link">
-            <span id="recipeWebLabel">Quellen-Link – optional</span>
-            <input id="recipeWebUrl" type="url" autocomplete="url" placeholder="https://…">
-          </label>
-
-          <label class="recipe-field recipe-v17-link">
-            <span>YouTube – optional</span>
-            <input id="recipeYoutubeUrl" type="url" autocomplete="url" placeholder="https://…">
           </label>
         </div>
       </details>
@@ -968,10 +979,16 @@
       </label>
     </div>
 
-    <details class="recipe-toc card">
-      <summary>Inhaltsverzeichnis</summary>
+    <section class="recipe-library-nav card">
+      <div class="recipe-library-nav-head">
+        <div>
+          <span class="small-label">REZEPTBIBLIOTHEK</span>
+          <strong>Schnell nach Kategorie</strong>
+        </div>
+        <span id="recipeLibraryCount" class="recipe-library-count">0 Rezepte</span>
+      </div>
       <div id="recipeTocList" class="recipe-toc-list"></div>
-    </details>
+    </section>
 
     <section class="meal-plan-card card">
       <div class="meal-plan-head">
