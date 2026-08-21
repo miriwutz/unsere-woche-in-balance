@@ -930,6 +930,35 @@ state.familySettings = (() => {
   state.familySettings[key].taskIcon = state.familySettings[key].taskIcon || defaultFamilySettings[key].taskIcon || state.familySettings[key].icon || "⭐";
 });
 
+const defaultQuickLinks=[
+{id:"ql-webuntis",label:"WebUntis",url:"https://gymkatzelsdorf.webuntis.com/today"},
+{id:"ql-eduflow",label:"EduFlow",url:"https://www.eduflow.at/EduFlow/"},
+{id:"ql-schoolfox1",label:"SchoolFox 1",url:"https://my.schoolfox.app/#/home"},
+{id:"ql-schoolfox2",label:"SchoolFox 2",url:"https://my.schoolfox.app/#/home"},
+{id:"ql-teams",label:"Teams",url:"https://teams.microsoft.com"}];
+if(!Array.isArray(state.familySettings.quickLinks)) state.familySettings.quickLinks=defaultQuickLinks.map(x=>({...x}));
+let editingQuickLinkId=null;
+function normalizeExternalUrl(v){const s=String(v||"").trim();return !s?"":(/^https?:\/\//i.test(s)?s:`https://${s}`);}
+function resetQuickLinkEditor(){
+ editingQuickLinkId=null;
+ const a=document.querySelector("#quickLinkLabel"),b=document.querySelector("#quickLinkUrl");
+ if(a)a.value="";if(b)b.value="";
+ const c=document.querySelector("#saveQuickLinkBtn");if(c)c.textContent="+ Link";
+ document.querySelector("#cancelQuickLinkEditBtn")?.classList.add("hidden");
+}
+function renderQuickLinks(){
+ const links=state.familySettings.quickLinks||[];
+ const row=document.querySelector("#quickLinksRow");
+ if(row)row.innerHTML=links.map(x=>`<a href="${escapeHtml(normalizeExternalUrl(x.url))}" target="_blank" rel="noopener" class="quick-link">${escapeHtml(x.label||"Link")}</a>`).join("");
+ const list=document.querySelector("#quickLinksManageList");
+ if(list)list.innerHTML=links.map(x=>`<div class="quick-link-manage-row"><span><strong>${escapeHtml(x.label||"Link")}</strong><small>${escapeHtml(x.url||"")}</small></span><button type="button" class="quick-link-edit" data-id="${x.id}">✎</button><button type="button" class="quick-link-remove" data-id="${x.id}">×</button></div>`).join("");
+ document.querySelectorAll(".quick-link-edit").forEach(btn=>btn.onclick=()=>{const x=links.find(v=>v.id===btn.dataset.id);if(!x)return;editingQuickLinkId=x.id;document.querySelector("#quickLinkLabel").value=x.label||"";document.querySelector("#quickLinkUrl").value=x.url||"";document.querySelector("#saveQuickLinkBtn").textContent="Speichern";document.querySelector("#cancelQuickLinkEditBtn")?.classList.remove("hidden");});
+ document.querySelectorAll(".quick-link-remove").forEach(btn=>btn.onclick=()=>{state.familySettings.quickLinks=links.filter(v=>v.id!==btn.dataset.id);save();renderQuickLinks();});
+}
+document.querySelector("#saveQuickLinkBtn")?.addEventListener("click",()=>{const label=document.querySelector("#quickLinkLabel")?.value.trim()||"";const url=normalizeExternalUrl(document.querySelector("#quickLinkUrl")?.value||"");if(!label||!url)return;if(editingQuickLinkId){const x=state.familySettings.quickLinks.find(v=>v.id===editingQuickLinkId);if(x){x.label=label;x.url=url;}}else state.familySettings.quickLinks.push({id:uid(),label,url});save();resetQuickLinkEditor();renderQuickLinks();});
+document.querySelector("#cancelQuickLinkEditBtn")?.addEventListener("click",resetQuickLinkEditor);
+
+
 
 // V33 – frühere sehr kräftige Papa-Rottöne einmalig in ein ruhigeres
 // Vintage-Terrakotta überführen. Eigene andere Farbwahlen bleiben unangetastet.
@@ -1674,8 +1703,10 @@ function renderWeek() {
     const occurrences = state.todos.filter(t => occursOnDate(t, date));
  const todos = occurrences.filter(t =>
   (t.type || "todo") === "todo" &&
+  t.priority !== "weekplan" &&
   !isOccurrenceDone(t, date)
 );
+    const weekplanTodos=occurrences.filter(t=>(t.type||"todo")==="todo"&&t.priority==="weekplan"&&!isOccurrenceDone(t,date));
     const events = occurrences.filter(t => t.type === "event");
 
     const videoHtml = videos.map(v => `
@@ -1728,10 +1759,11 @@ function renderWeek() {
             </div>
             ${groupItems.map(t => `
               <div class="todo-mini-wrap">
-                <label class="todo-mini grouped-todo-row ${t.superImportant ? "super-important" : ""}">
+                <label class="todo-mini grouped-todo-row ${t.superImportant ? "super-important" : ""} ${t.priority==="important"?"priority-important":""} ${t.priority==="low"?"priority-low":""}">
                   <input class="check mini-todo-check" data-id="${t.id}" data-date="${dateKey(date)}" type="checkbox" ${isOccurrenceDone(t, date) ? "checked":""}>
                   <span>
                     ${t.superImportant ? `<span class="tiny-star">★</span>` : ''}
+                    ${t.priority==="important"?`<span class="priority-mark" title="Wichtig">◆</span>`:""}
                     ${escapeHtml(t.text)}
                   </span>
                 </label>
@@ -1748,6 +1780,8 @@ function renderWeek() {
           </button>` : ""}
       </div>
     ` : "";
+
+const weekplanHtml=weekplanTodos.length?`<div class="weekplan-quiet-list">${weekplanTodos.map(t=>`<button type="button" class="weekplan-quiet-item" data-id="${t.id}" data-date="${dateKey(date)}">${escapeHtml(t.text)}</button>`).join("")}</div>`:"";
 
 const renderEventCard = (t) => {
   const eventCategory = t.eventCategory || "normal";
@@ -1931,6 +1965,7 @@ const eventHtml = orderedEvents.length ? `
 
       <div class="week-band week-band-todos">
         ${todoHtml || ""}
+        ${weekplanHtml || ""}
       </div>
 
       <div class="week-band week-band-videos">
@@ -2002,6 +2037,17 @@ const eventHtml = orderedEvents.length ? `
     renderAll();
 
     if (!wasDone && e.target.checked) showMotivation(todoMotivationalMessage());
+  }));
+
+  document.querySelectorAll(".weekplan-quiet-item").forEach(btn=>btn.addEventListener("click",()=>{
+    const item=state.todos.find(t=>t.id===btn.dataset.id);
+    const d=parseLocalDate(btn.dataset.date);
+    if(!item||!d)return;
+    btn.classList.add("is-finishing");
+    setOccurrenceDone(item,d,true);
+    item.updatedAt=Date.now();
+    save();
+    setTimeout(()=>{renderWeek();renderTodos();},420);
   }));
 
   document.querySelectorAll(".roll-todo-today").forEach(btn => btn.addEventListener("click", e => {
@@ -4816,6 +4862,10 @@ function renderFamilyQuestions(){
   }
 
   const list = document.querySelector("#familyQuestionList");
+  const existing=document.querySelector("#familyQuestionExisting");
+  const existingLabel=document.querySelector("#familyQuestionExistingLabel");
+  if(existingLabel)existingLabel.textContent=`Offene Fragen (${open.length})`;
+  if(existing)existing.classList.toggle("hidden",open.length===0);
   if(list){
     list.innerHTML = open.length ? open.map(q => `
       <div class="family-question-list-item" style="--question-color:${familyQuestionRecipientColor(q.to)}">
@@ -4940,6 +4990,7 @@ function renderAll() {
   renderMealPlan();
   renderPinboard();
   renderFamilyQuestions();
+  renderQuickLinks();
 }
 
 async function updateVideoPreview() {
@@ -6456,6 +6507,7 @@ document.querySelector("#entryType").addEventListener("change", updateEntryTypeU
 document.querySelector("#recurrence").addEventListener("change", updateEntryTypeUI);
 document.querySelector("#todoPeriod").addEventListener("change", updateEntryTypeUI);
 document.querySelector("#eventCategory").addEventListener("change", updateEntryTypeUI);
+document.querySelector("#todoPriority")?.addEventListener("change",()=>{if(document.querySelector("#todoPriority").value==="weekplan"){document.querySelector("#todoPeriod").value="week";document.querySelector("#recurrence").value="weekly";updateEntryTypeUI();}});
 
 document.querySelector("#cancelTodoEditBtn").addEventListener("click", resetTodoEditor);
 
@@ -6470,7 +6522,9 @@ document.querySelector("#addTodoBtn").addEventListener("click", () => {
     ? weekdayNameForDate(todayDate)
     : document.querySelector("#todoDay").value;
   const selectedFamily = selectedFamilyMembers();
-  const recurrence = document.querySelector("#recurrence").value;
+  const selectedPriority=document.querySelector("#todoPriority").value;
+  let recurrence=document.querySelector("#recurrence").value;
+  if(type==="todo"&&selectedPriority==="weekplan")recurrence="weekly";
  const eventDate = document.querySelector("#eventDate").value;
 const eventEndDate = document.querySelector("#eventEndDate")?.value || "";
 const eventTime = document.querySelector("#eventTime").value;
@@ -6492,6 +6546,8 @@ const eventEndTime = document.querySelector("#eventEndTime")?.value || "";
   const anchorDate = type === "event"
     ? (recurrence === "schoolyear-noe" ? (schoolyearAnchor ? dateKey(schoolyearAnchor) : null) : eventDate)
     : (selectedTodoDate ? dateKey(selectedTodoDate) : null);
+
+  if(type==="todo"&&selectedPriority==="weekplan"&&!selectedDay){alert("Für einen Wochenplan-Eintrag bitte einen Wochentag auswählen.");return;}
 
   if (type === "event" && recurrence !== "schoolyear-noe" && !eventDate) {
     alert("Bitte für den Termin ein Datum auswählen.");
@@ -6515,7 +6571,7 @@ const eventEndTime = document.querySelector("#eventEndTime")?.value || "";
     item.type = type;
     item.superImportant = superImportant;
     item.text = text;
-    item.priority = document.querySelector("#todoPriority").value;
+    item.priority = selectedPriority;
     item.area = document.querySelector("#todoArea").value;
     item.period = period;
     item.day = selectedDay;
@@ -6540,7 +6596,7 @@ item.endTime = type === "event" ? eventEndTime : "";
       type,
       superImportant,
       text,
-      priority: document.querySelector("#todoPriority").value,
+      priority: selectedPriority,
       area: document.querySelector("#todoArea").value,
       period,
       day: selectedDay,
