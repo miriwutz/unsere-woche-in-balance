@@ -10984,6 +10984,12 @@ function renderAll() {
   renderSubstitutions();
   renderShopping();
   renderFamilyQuestions();
+
+  // Punkt 2f:
+  // Dies ist die tatsächlich wirksame (spätere) renderAll()-Definition.
+  // Schnellzugriff hier rendern, damit die gespeicherten/Standard-Buttons
+  // beim Laden und nach jedem Gesamtrender zuverlässig erscheinen.
+  renderQuickLinks();
 }
 
 
