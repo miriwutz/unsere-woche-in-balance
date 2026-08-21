@@ -12310,7 +12310,7 @@ function schoolTimetableSubjectIcon(subject){
   if(s==="rel" || s.includes("relig")) return `<span class="tt-subject-symbol tt-symbol-rel" aria-hidden="true">✝</span>`;
   if(s.includes("turn") || s.includes("sport") || s==="bu" || s==="bsp") return `<span class="tt-subject-symbol tt-symbol-sport" aria-hidden="true">♟</span>`;
   if(s.includes("werk") || s==="tec" || s==="tex") return `<span class="tt-subject-symbol tt-symbol-werken" aria-hidden="true">⌁</span>`;
-  if(s==="gu" || s.includes("grund")) return `<span class="tt-subject-symbol tt-symbol-gu" aria-hidden="true"><i></i><i></i></span>`;
+  if(s==="gu" || s.includes("grund")) return `<span class="tt-subject-symbol tt-symbol-gu" aria-hidden="true"><i></i></span>`;
   return `<span class="tt-subject-symbol tt-symbol-default" aria-hidden="true">·</span>`;
 }
 
@@ -12373,6 +12373,34 @@ function renderSchoolChildDashboard(id){
     host.innerHTML=schoolChildIcons.map(x=>
       `<button type="button" class="school-icon-choice ${x===icon?"active":""}" data-icon="${x}" aria-label="Zeichen ${x}">${x}</button>`
     ).join("");
+  }
+
+  if(host && host.dataset.dragScrollBound!=="1"){
+    host.dataset.dragScrollBound="1";
+    let down=false,startX=0,startScroll=0,moved=false;
+    host.addEventListener("pointerdown",e=>{
+      if(e.button!==0) return;
+      down=true; moved=false; startX=e.clientX; startScroll=host.scrollLeft;
+      host.setPointerCapture?.(e.pointerId);
+      host.classList.add("is-dragging");
+    });
+    host.addEventListener("pointermove",e=>{
+      if(!down) return;
+      const dx=e.clientX-startX;
+      if(Math.abs(dx)>3) moved=true;
+      host.scrollLeft=startScroll-dx;
+    });
+    const stop=e=>{
+      if(!down) return;
+      down=false;
+      host.releasePointerCapture?.(e.pointerId);
+      host.classList.remove("is-dragging");
+    };
+    host.addEventListener("pointerup",stop);
+    host.addEventListener("pointercancel",stop);
+    host.addEventListener("click",e=>{
+      if(moved){e.preventDefault();e.stopPropagation();moved=false;}
+    },true);
   }
 
   // Aufgaben-Zeichen ist unabhängig vom persönlichen Header-Zeichen.
