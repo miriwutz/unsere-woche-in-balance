@@ -3879,6 +3879,7 @@ function renderRoutines(){
     btn.classList.toggle("active",Number(btn.dataset.routineWeek||0)===activeRoutineWeekOffset);
   });
   renderRoutineIdeaChecks();
+  renderRoutineAreaTasks();
 
   const items=routines.items
     .filter(item=>routineAppliesToWeek(item,weekKey))
