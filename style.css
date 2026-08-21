@@ -22102,3 +22102,44 @@ body:has(#workroomLinkSortSelect option:checked:not([value="manual"])) .workroom
   white-space:nowrap !important;
 }
 
+/* =========================================================
+   V51 – Rezepte: ABC-Popover senkrecht statt nebeneinander
+   =========================================================
+   Das ABC-Feld bleibt exakt an derselben Stelle.
+   Nur die aufgeklappte Buchstabenliste wird untereinander angezeigt.
+   ========================================================= */
+
+#recipeAlphaDetails .recipe-alpha-popover{
+  width:118px !important;
+  min-width:118px !important;
+  max-width:118px !important;
+  padding:8px !important;
+}
+
+#recipeAlphaDetails .recipe-alpha-popover-head{
+  display:none !important;
+}
+
+#recipeAlphaDetails .recipe-toc-list{
+  display:grid !important;
+  grid-template-columns:1fr !important;
+  gap:4px !important;
+  margin:0 !important;
+  align-items:stretch !important;
+}
+
+#recipeAlphaDetails .recipe-alpha-chip{
+  width:100% !important;
+  min-width:0 !important;
+  height:28px !important;
+  padding:3px 8px !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:space-between !important;
+  border-radius:8px !important;
+}
+
+#recipeAlphaDetails .recipe-alpha-chip b{
+  flex:0 0 auto !important;
+}
+
