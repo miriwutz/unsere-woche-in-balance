@@ -9200,9 +9200,9 @@ function recipeLeadingAmount(line) {
 function automaticChildIngredientName(line) {
   return String(line || "")
     .replace(/^\s*([0-9]+(?:[.,][0-9]+)?|[¼½¾⅓⅔])\s*/i, "")
-    .replace(/\b(blau(?:er|e|es|en)?|rot(?:er|e|es|en)?|grün(?:er|e|es|en)?|gruen(?:er|e|es|en)?|gelb(?:er|e|es|en)?|orange(?:r|e|s|n)?|lila)\b/gi, "")
+    .replace(/^\s*(g|kg|gramm|gram|ml|milliliter|l|liter|stück|stk\.?|prise)\b\.?\s*/i, "")
+    .replace(/\b(blau(?:er|e|es|en)?|rot(?:er|e|es|en)?|grün(?:er|e|es|en)?|gruen(?:er|e|es|en)?|gelb(?:er|e|s|en)?|orange(?:r|e|s|n)?|lila)\b/gi, "")
     .replace(/\b(topfenbecher|joghurtbecher|becher|esslöffel|el|teelöffel|tl)\b/gi, "")
-    .replace(/^\s*prise\s+/i, "")
     .replace(/\s+/g, " ")
     .trim();
 }
@@ -13039,30 +13039,43 @@ document.addEventListener("change", (event) => {
    am Rezept unter beakerMappings gespeichert.
    ========================================================= */
 function recipeMeasureEditorTemplate(value = {}) {
-  const amount = String(value.amount || "");
-  const unit = String(value.unit || "cup");
-  const color = String(value.color || "blue");
-  const esc = (s) => String(s).replace(/[&<>"']/g, m => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
+  const amount=String(value.amount || "");
+  const unit=String(value.unit || "cup");
+  const color=String(value.color || "blue");
+  const esc=(s)=>String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
+
+  const unitOptions=[
+    ["cup","Becher"],
+    ["quark","Topfenbecher"],
+    ["yogurt","Joghurtbecher"],
+    ["tbsp","EL"],
+    ["tsp","TL"],
+    ["pinch","Prise"]
+  ];
+  const colorOptions=[
+    ["blue","Blau"],["red","Rot"],["green","Grün"],
+    ["yellow","Gelb"],["orange","Orange"],["purple","Lila"]
+  ];
+
   return `
     <span class="beaker-measure-editor">
-      <input class="beaker-map-amount" type="text" inputmode="decimal" placeholder="Menge" value="${esc(amount)}">
-      <select class="beaker-map-unit">
-        <option value="cup" ${unit==="cup"?"selected":""}>Becher</option>
-        <option value="quark" ${unit==="quark"?"selected":""}>Topfenbecher</option>
-        <option value="yogurt" ${unit==="yogurt"?"selected":""}>Joghurtbecher</option>
-        <option value="tbsp" ${unit==="tbsp"?"selected":""}>EL</option>
-        <option value="tsp" ${unit==="tsp"?"selected":""}>TL</option>
-        <option value="pinch" ${unit==="pinch"?"selected":""}>Prise</option>
-      </select>
-      <select class="beaker-map-color ${unit==="cup" ? "" : "hidden"}">
-        <option value="blue" ${color==="blue"?"selected":""}>Blau</option>
-        <option value="red" ${color==="red"?"selected":""}>Rot</option>
-        <option value="green" ${color==="green"?"selected":""}>Grün</option>
-        <option value="yellow" ${color==="yellow"?"selected":""}>Gelb</option>
-        <option value="orange" ${color==="orange"?"selected":""}>Orange</option>
-        <option value="purple" ${color==="purple"?"selected":""}>Lila</option>
-      </select>
-      <button class="beaker-measure-remove" type="button" title="Dieses Maß entfernen">×</button>
+      <label class="beaker-editor-field beaker-editor-amount">
+        <span>Menge</span>
+        <input class="beaker-map-amount" type="text" inputmode="decimal" placeholder="1" value="${esc(amount)}">
+      </label>
+      <label class="beaker-editor-field beaker-editor-unit">
+        <span>Maß</span>
+        <select class="beaker-map-unit">
+          ${unitOptions.map(([v,l])=>`<option value="${v}" ${unit===v?"selected":""}>${l}</option>`).join("")}
+        </select>
+      </label>
+      <label class="beaker-editor-field beaker-editor-color ${unit==="cup"?"":"hidden"}">
+        <span>Farbe</span>
+        <select class="beaker-map-color">
+          ${colorOptions.map(([v,l])=>`<option value="${v}" ${color===v?"selected":""}>${l}</option>`).join("")}
+        </select>
+      </label>
+      <button class="beaker-measure-remove" type="button" title="Dieses Maß entfernen" aria-label="Dieses Maß entfernen">×</button>
     </span>`;
 }
 
@@ -13075,8 +13088,8 @@ function recipeBeakerRowTemplate(value = {}) {
   return `
     <div class="beaker-map-row">
       <div class="beaker-map-source">
-        <input class="beaker-map-ingredient" type="text" value="${esc(ingredient)}" readonly>
-        <small>aus Zutaten übernommen</small>
+        <strong class="beaker-map-ingredient-label">${esc(ingredient)}</strong>
+        <input class="beaker-map-ingredient" type="hidden" value="${esc(ingredient)}">
       </div>
       <span class="beaker-map-arrow">→</span>
       <div class="beaker-measures">
@@ -13186,7 +13199,7 @@ document.addEventListener("change", e => {
   }
   if (e.target?.classList?.contains("beaker-map-unit")) {
     const editor = e.target.closest(".beaker-measure-editor");
-    editor?.querySelector(".beaker-map-color")?.classList.toggle("hidden", e.target.value !== "cup");
+    editor?.querySelector(".beaker-editor-color")?.classList.toggle("hidden", e.target.value !== "cup");
   }
 });
 document.addEventListener("input", e=>{
