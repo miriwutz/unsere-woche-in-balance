@@ -75,6 +75,7 @@ function saveLocal() {
   localStorage.setItem("balanceProd.meals", JSON.stringify(state.meals));
   localStorage.setItem("balanceProd.pinboard", JSON.stringify(state.pinboard));
   localStorage.setItem("balanceProd.familyQuestions", JSON.stringify(state.familyQuestions || []));
+  localStorage.setItem("balanceProd.familyQuestions", JSON.stringify(state.familyQuestions || []));
   localStorage.setItem("balanceProd.recipeLinkFeedback", JSON.stringify(state.recipeLinkFeedback));
   localStorage.setItem("balanceProd.timeTracking", JSON.stringify(state.timeTracking));
   localStorage.setItem("balanceProd.trash", JSON.stringify(state.trash || []));
@@ -7170,15 +7171,78 @@ return `
   </section>
 `;
 }
-const shoppingPromoInfo=[
-{shop:"SPAR",kind:"Rabattmarkerl",status:"Bald wieder da",detail:"Letzte Runde: Sammeln 28.05.–17.06.2026 · Einlösen 18.06.–01.07.2026",source:"https://www.spar.at/aktionen/rabattmarkerl"},
-{shop:"BILLA",kind:"jö Rabattsammler",status:"laufend",detail:"Ös sammeln · 1× pro Monat einlösbar · bis zu 20 %",source:"https://www.billa.at/unsere-aktionen/aktionen"},
-{shop:"BILLA",kind:"-25 % Pickerl",status:"Zeitraum wechselt",detail:"Aktuelle Gültigkeit im BILLA-Aktionsbereich prüfen",source:"https://www.billa.at/unsere-aktionen/aktionen/richtigvielsparen"},
-{shop:"BIPA",kind:"Rabattsticker",status:"Derzeit keine",detail:"Nächste Sticker werden auf der offiziellen Aktionsseite veröffentlicht",source:"https://www.bipa.at/cp/aktionssticker"}
+const shoppingPromoInfo = [
+  {
+    shop:"SPAR",
+    kind:"Rabattmarkerl",
+    status:"24.08.–19.09.",
+    statusClass:"verified",
+    detail:"Sammeln 24.08.–09.09.2026 · Einlösen 10.09.–19.09.2026 · bis zu 20 %",
+    source:"https://www.spar.at/aktionen/rabattmarkerl",
+    note:"am 21.08.2026 auf der offiziellen SPAR-Seite geprüft"
+  },
+  {
+    shop:"SPAR",
+    kind:"-20/-25 % Wochenaktionen",
+    status:"wöchentlich",
+    statusClass:"verified",
+    detail:"Zusätzliche wechselnde Prozent-Aktionen stehen im aktuellen SPAR-Flugblatt.",
+    source:"https://www.spar.at/aktionen",
+    note:"Zeiträume und Warengruppen wechseln – deshalb Link statt geratenem Datum"
+  },
+  {
+    shop:"BILLA",
+    kind:"jö Rabattsammler",
+    status:"1× monatlich",
+    statusClass:"evergreen",
+    detail:"Ös sammeln und einmal pro Monat bis zu 20 % auf einen Einkauf einlösen.",
+    source:"https://www.billa.at/unsere-aktionen/jo-bonus-club-vorteile-billa",
+    note:"dauerhafter jö-Vorteil; Voraussetzungen laut BILLA"
+  },
+  {
+    shop:"BILLA",
+    kind:"-25 % Aktionen / Pickerl",
+    status:"aktuell prüfen",
+    statusClass:"verified",
+    detail:"Wechselnde -25 %-Aktionen und Lieblingsprodukt-Pickerl; genaue Gültigkeit im Aktionsbereich.",
+    source:"https://www.billa.at/unsere-aktionen/aktionen/richtigvielsparen",
+    note:"BILLA veröffentlicht die jeweiligen aktuellen Zeiträume"
+  },
+  {
+    shop:"BIPA",
+    kind:"-25 % Lieblingsprodukt",
+    status:"20.08.–28.08.",
+    statusClass:"verified",
+    detail:"2 Rabattsticker für je -25 % auf ein Lieblingsprodukt.",
+    source:"https://www.bipa.at/cp/aktionssticker",
+    note:"am 21.08.2026 auf der offiziellen BIPA-Seite geprüft"
+  },
+  {
+    shop:"BIPA",
+    kind:"Markensticker",
+    status:"20.08.–02.09.",
+    statusClass:"verified",
+    detail:"Zusätzliche -25 %-Sticker auf ausgewählte Marken, z. B. Gillette/Abtei.",
+    source:"https://www.bipa.at/cp/aktionssticker",
+    note:"am 21.08.2026 auf der offiziellen BIPA-Seite geprüft"
+  }
 ];
+
 function renderShoppingPromoInfo(){
- const box=document.querySelector("#shoppingPromoInfo"); if(!box)return;
- box.innerHTML=shoppingPromoInfo.map(x=>`<a class="shopping-promo-row" href="${escapeHtml(x.source)}" target="_blank" rel="noopener"><span class="shopping-promo-shop">${escapeHtml(x.shop)}</span><span class="shopping-promo-copy"><strong>${escapeHtml(x.kind)}</strong><small>${escapeHtml(x.detail)}</small></span><span class="shopping-promo-status">${escapeHtml(x.status)}</span></a>`).join("");
+  const box=document.querySelector("#shoppingPromoInfo");
+  if(!box) return;
+
+  box.innerHTML=shoppingPromoInfo.map(x=>`
+    <a class="shopping-promo-row" href="${escapeHtml(x.source)}" target="_blank" rel="noopener">
+      <span class="shopping-promo-shop">${escapeHtml(x.shop)}</span>
+      <span class="shopping-promo-copy">
+        <strong>${escapeHtml(x.kind)}</strong>
+        <small>${escapeHtml(x.detail)}</small>
+        <span class="shopping-promo-source-note">${escapeHtml(x.note || "")}</span>
+      </span>
+      <span class="shopping-promo-status ${escapeHtml(x.statusClass || "")}">${escapeHtml(x.status)}</span>
+    </a>
+  `).join("");
 }
 
 function renderShopping() {
@@ -10334,6 +10398,7 @@ function snapshotPersistentState() {
     recipes: state.recipes,
     meals: state.meals,
     pinboard: state.pinboard,
+    familyQuestions: state.familyQuestions || [],
     timeTracking: state.timeTracking,
     recipeLinkFeedback: state.recipeLinkFeedback,
     workroom: state.workroom,
@@ -10394,6 +10459,7 @@ function snapshotPersistentState() {
     recipes: state.recipes,
     meals: state.meals,
     pinboard: state.pinboard,
+    familyQuestions: state.familyQuestions || [],
     timeTracking: state.timeTracking,
     trash: state.trash || [],
     recipeLinkFeedback: state.recipeLinkFeedback,
@@ -10429,6 +10495,7 @@ function saveLocal() {
   localStorage.setItem("balanceProd.recipes", JSON.stringify(state.recipes));
   localStorage.setItem("balanceProd.meals", JSON.stringify(state.meals));
   localStorage.setItem("balanceProd.pinboard", JSON.stringify(state.pinboard));
+  localStorage.setItem("balanceProd.familyQuestions", JSON.stringify(state.familyQuestions || []));
   localStorage.setItem("balanceProd.recipeLinkFeedback", JSON.stringify(state.recipeLinkFeedback));
   localStorage.setItem("balanceProd.timeTracking", JSON.stringify(state.timeTracking));
   localStorage.setItem("balanceProd.trash", JSON.stringify(state.trash || []));
@@ -10451,6 +10518,7 @@ function cloudPayload() {
     recipes: state.recipes,
     meals: state.meals,
     pinboard: state.pinboard,
+    familyQuestions: state.familyQuestions || [],
     recipeLinkFeedback: state.recipeLinkFeedback,
     workroom: state.workroom,
     school: state.school,
@@ -10487,6 +10555,14 @@ function applyCloudData(data) {
     if (Array.isArray(data.pinboard)) {
       handleIncomingPinboard(data.pinboard);
       state.pinboard = guardedMergeById(state.pinboard, data.pinboard, "Pinnwand");
+    }
+
+    if (Array.isArray(data.familyQuestions)) {
+      state.familyQuestions = guardedMergeById(
+        state.familyQuestions,
+        data.familyQuestions,
+        "Familienfragen"
+      );
     }
 
     if (data.recipeLinkFeedback && typeof data.recipeLinkFeedback === "object") {
