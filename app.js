@@ -6701,17 +6701,9 @@ document.querySelector("#workroomLinkImportantFilter")?.addEventListener("click"
   renderRoutines();
 });
 
-document.querySelector("#addVideoBtn").addEventListener("click", () => {
-  detectedVideoTitle = "";
-  document.querySelector("#videoPreview").className = "video-preview empty-preview";
-  document.querySelector("#videoPreview").innerHTML = `
-    <div class="preview-placeholder">▶</div>
-    <div>
-      <strong>Vorschau</strong>
-      <p>Füge einen YouTube-Link ein. Titel und Bild erscheinen automatisch.</p>
-    </div>`;
-  document.querySelector("#videoDialog").showModal();
-});
+// Der frühere Startseiten-Button "#addVideoBtn" wurde bewusst entfernt.
+// Videos werden jetzt über Werkraum → Routinen gepflegt.
+// Deshalb darf hier kein Listener mehr auf ein nicht vorhandenes Element gesetzt werden.
 
 document.querySelector("#closeVideoDialogBtn").addEventListener("click", () => {
   document.querySelector("#videoDialog").close();
