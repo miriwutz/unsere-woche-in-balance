@@ -17761,3 +17761,178 @@ body.child-view-active #papaOverviewModal{
 }
 .tt-symbol-gu i:first-child{border-radius:2px 0 0 2px;transform:skewY(8deg);}
 .tt-symbol-gu i:last-child{border-radius:0 2px 2px 0;transform:skewY(-8deg);}
+
+
+/* =========================================================
+   PUNKT 3e – Abschlusskorrekturen Kinderbereich + Papa
+   ========================================================= */
+
+/* Fundstücke: Suchfeld links, Kategorie rechts. */
+.school-find-tools{
+  width:100% !important;
+  max-width:none !important;
+  display:grid !important;
+  grid-template-columns:minmax(260px,1fr) minmax(175px,230px) !important;
+  gap:10px !important;
+  align-items:center !important;
+  margin:5px 0 16px !important;
+  padding:0 !important;
+  border:0 !important;
+  border-radius:0 !important;
+  background:transparent !important;
+}
+.school-find-search-wrap{
+  position:relative;
+  display:flex;
+  align-items:center;
+  min-width:0;
+  height:40px;
+  padding:0 12px 0 34px;
+  border:1px solid rgba(112,96,83,.16);
+  border-radius:999px;
+  background:rgba(255,255,255,.68);
+}
+.school-find-search-wrap .school-find-search-icon{
+  position:absolute !important;
+  left:13px;
+  top:50%;
+  transform:translateY(-50%);
+  opacity:.48;
+  pointer-events:none;
+}
+.school-find-search-wrap .school-find-search{
+  min-width:0;
+  width:100% !important;
+  height:100%;
+  padding:0 !important;
+}
+.school-find-filter{
+  height:40px !important;
+  width:100% !important;
+  border-radius:999px !important;
+  border:1px solid rgba(154,132,184,.28) !important;
+  background:linear-gradient(145deg,rgba(252,250,255,.94),rgba(244,240,249,.9)) !important;
+  box-shadow:0 2px 8px rgba(112,90,135,.05);
+}
+@media(max-width:720px){
+  .school-find-tools{grid-template-columns:1fr !important;}
+}
+
+/* Zeichenleiste: nativen Firefox-Scrollbar ausblenden, stattdessen feine violette Linie.
+   Horizontal scrollen funktioniert weiter und zusätzlich per Ziehen mit der Maus. */
+.school-icon-picker{
+  position:relative;
+  padding-bottom:13px !important;
+}
+#schoolIconChoices{
+  scrollbar-width:none !important;
+  -ms-overflow-style:none;
+  padding-bottom:2px !important;
+  cursor:grab;
+  user-select:none;
+}
+#schoolIconChoices::-webkit-scrollbar{display:none !important;}
+#schoolIconChoices.is-dragging{cursor:grabbing;}
+.school-icon-picker::after{
+  content:"";
+  position:absolute;
+  left:112px;
+  right:18px;
+  bottom:8px;
+  height:2px;
+  border-radius:999px;
+  background:linear-gradient(90deg,rgba(151,128,181,.50),rgba(183,164,205,.22));
+  pointer-events:none;
+}
+@media(max-width:700px){
+  .school-icon-picker::after{left:16px;}
+}
+
+/* Finas GU: kleines Heft statt Buch. */
+.tt-symbol-gu{
+  position:relative;
+  font-size:0 !important;
+}
+.tt-symbol-gu i{
+  position:relative;
+  display:block !important;
+  width:13px !important;
+  height:16px !important;
+  border:1.4px solid #7d7690 !important;
+  border-radius:2px !important;
+  background:rgba(255,255,255,.74) !important;
+  transform:none !important;
+}
+.tt-symbol-gu i::before{
+  content:"";
+  position:absolute;
+  left:2px;
+  top:3px;
+  bottom:3px;
+  width:1px;
+  background:#a697b3;
+  box-shadow:3px 2px 0 -0.2px #c0b6c8,
+             3px 5px 0 -0.2px #c0b6c8,
+             3px 8px 0 -0.2px #c0b6c8;
+}
+
+/* Papa-Button: archaischer, Linienbogen statt Herz. */
+#openPapaOverviewBtn.papa-week-btn{
+  min-width:92px !important;
+  border-color:#98705b !important;
+  background:linear-gradient(145deg,#fffaf3 0%,#efe2d3 100%) !important;
+  color:#654b3c !important;
+  font-family:"Playfair Display",Georgia,serif !important;
+  letter-spacing:.015em;
+}
+#openPapaOverviewBtn .papa-week-bow{
+  width:25px;
+  height:18px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  color:#7b5b43;
+}
+#openPapaOverviewBtn .papa-week-bow svg{
+  width:25px;
+  height:18px;
+  overflow:visible;
+}
+#openPapaOverviewBtn .papa-bow-curve,
+#openPapaOverviewBtn .papa-bow-string,
+#openPapaOverviewBtn .papa-bow-arrow,
+#openPapaOverviewBtn .papa-bow-arrowhead{
+  fill:none;
+  stroke:currentColor;
+  stroke-width:1.35;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+}
+#openPapaOverviewBtn .papa-bow-string{stroke-width:.9;opacity:.72;}
+#openPapaOverviewBtn .papa-week-label{font-size:.96rem;}
+
+/* Papa-Popup: neue Bogenschützen-Zeichnung statt Triquetra-Siegel. */
+#papaOverviewDialog .papa-quote-panel{
+  grid-template-columns:190px minmax(0,1fr) !important;
+  column-gap:24px !important;
+}
+#papaOverviewDialog .papa-triquetra-ring{
+  width:185px !important;
+  height:132px !important;
+}
+#papaOverviewDialog .papa-archer-image{
+  width:100% !important;
+  height:100% !important;
+  object-fit:contain !important;
+  object-position:center !important;
+  filter:saturate(.72) sepia(.05);
+}
+@media(max-width:760px){
+  #papaOverviewDialog .papa-quote-panel{
+    grid-template-columns:125px minmax(0,1fr) !important;
+  }
+  #papaOverviewDialog .papa-triquetra-ring{
+    width:120px !important;
+    height:105px !important;
+  }
+}
