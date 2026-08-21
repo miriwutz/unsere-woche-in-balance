@@ -4744,6 +4744,20 @@ function familyQuestionRecipientColor(key){
   return familyColor(key);
 }
 
+let editingFamilyQuestionId = null;
+
+function resetFamilyQuestionEditor(){
+  editingFamilyQuestionId = null;
+  const input = document.querySelector("#familyQuestionText");
+  const to = document.querySelector("#familyQuestionTo");
+  const add = document.querySelector("#addFamilyQuestionBtn");
+  const cancel = document.querySelector("#cancelFamilyQuestionEditBtn");
+  if(input) input.value = "";
+  if(to) to.value = "shared";
+  if(add) add.textContent = "+ Frage";
+  cancel?.classList.add("hidden");
+}
+
 function renderFamilyQuestions(){
   const open = (state.familyQuestions || [])
     .filter(q => !q.done && !q.deleted)
@@ -4810,6 +4824,8 @@ function renderFamilyQuestions(){
           <strong>${escapeHtml(q.text)}</strong>
           <small>an ${escapeHtml(familyQuestionRecipientLabel(q.to))}</small>
         </span>
+        <button type="button" class="family-question-edit"
+                data-question-id="${q.id}">✎</button>
         <button type="button" class="family-question-done"
                 data-question-id="${q.id}">✓ Fertig</button>
         <button type="button" class="family-question-delete"
@@ -4818,6 +4834,25 @@ function renderFamilyQuestions(){
       </div>
     `).join("") : "";
   }
+
+
+  document.querySelectorAll(".family-question-edit").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const q = state.familyQuestions.find(x => x.id === btn.dataset.questionId);
+      if(!q) return;
+      editingFamilyQuestionId = q.id;
+      const input = document.querySelector("#familyQuestionText");
+      const to = document.querySelector("#familyQuestionTo");
+      const add = document.querySelector("#addFamilyQuestionBtn");
+      const cancel = document.querySelector("#cancelFamilyQuestionEditBtn");
+      if(input) input.value = q.text || "";
+      if(to) to.value = q.to || "shared";
+      if(add) add.textContent = "Änderung speichern";
+      cancel?.classList.remove("hidden");
+      document.querySelector(".family-question-card")?.setAttribute("open", "");
+      input?.focus();
+    });
+  });
 
   document.querySelectorAll(".family-question-done").forEach(btn => {
     btn.addEventListener("click", () => {
@@ -4850,24 +4885,34 @@ function addFamilyQuestion(){
   const text = input?.value.trim();
   if(!text) return;
 
-  state.familyQuestions.push({
-    id: uid(),
-    text,
-    to: to?.value || "shared",
-    done:false,
-    deleted:false,
-    createdAt:Date.now(),
-    updatedAt:Date.now()
-  });
+  if(editingFamilyQuestionId){
+    const q = state.familyQuestions.find(x => x.id === editingFamilyQuestionId);
+    if(q){
+      q.text = text;
+      q.to = to?.value || "shared";
+      q.updatedAt = Date.now();
+    }
+  }else{
+    state.familyQuestions.push({
+      id: uid(),
+      text,
+      to: to?.value || "shared",
+      done:false,
+      deleted:false,
+      createdAt:Date.now(),
+      updatedAt:Date.now()
+    });
+  }
 
-  input.value = "";
   persistFamilyQuestionsNow();
   save();
+  resetFamilyQuestionEditor();
   renderFamilyQuestions();
   input.focus();
 }
 
 document.querySelector("#addFamilyQuestionBtn")?.addEventListener("click", addFamilyQuestion);
+document.querySelector("#cancelFamilyQuestionEditBtn")?.addEventListener("click", resetFamilyQuestionEditor);
 document.querySelector("#familyQuestionText")?.addEventListener("keydown", e => {
   if(e.key === "Enter"){
     e.preventDefault();
