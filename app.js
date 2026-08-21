@@ -25,7 +25,7 @@ const state = {
 
   workroom: JSON.parse(
     localStorage.getItem("balanceProd.workroom") ||
-    '{"todos":[],"prints":[],"links":[],"substitutions":[],"plans":{"week":[],"year":[]}}'
+    '{"todos":[],"prints":[],"links":[],"substitutions":[],"routines":{"items":[],"completions":{}},"plans":{"week":[],"year":[]}}'
   ),
 
   settings: {
@@ -1530,6 +1530,7 @@ function ensureArchiveEntry(video) {
       title: video.title,
       url: video.url,
       thumbnail: video.thumbnail || thumbnailFor(video.url),
+      category: video.category || "other",
       rating: null,
       favorite: false,
       lastDone: null
@@ -1539,6 +1540,7 @@ function ensureArchiveEntry(video) {
 
   entry.title = video.title || entry.title;
   entry.thumbnail = entry.thumbnail || video.thumbnail || thumbnailFor(video.url);
+  entry.category = video.category || entry.category || "other";
   return entry;
 }
 
@@ -1738,9 +1740,9 @@ function renderWeek() {
 
     const dateLabel = date.toLocaleDateString("de-AT",{day:"2-digit",month:"2-digit"});
 
-    const videos = state.videos
-      .filter(v => v.day === day && v.weekKey === weekKey)
-      .filter(v => !(v.done && ratingFor(v.url)));
+    // Übungen/Videos gehören nicht mehr auf die Familien-Startseite.
+    // Sie werden ab jetzt über Werkraum → Routinen → Meine Woche geführt.
+    const videos = [];
     const occurrences = state.todos.filter(t => occursOnDate(t, date));
  const todos = occurrences.filter(t =>
   (t.type || "todo") === "todo" &&
@@ -2168,9 +2170,9 @@ const eventHtml = orderedEvents.length ? `
     archived.rating = rating;
 
     const ratingText = {
-      super: "Als „Gut“ gespeichert 😊",
-      okay: "Als „Mittel“ gespeichert 🙂",
-      nope: "Als „Schlecht“ gespeichert 😕"
+      super: "✦ Als „Gut“ gespeichert.",
+      okay: "○ Als „Mittel“ gespeichert.",
+      nope: "— Als „Schlecht“ gespeichert."
     };
 
     save();
@@ -2696,10 +2698,15 @@ document.querySelector("#recurrence").value = item.recurrence || "none";
 }
 
 let archiveFilter = "all";
+let archiveCategoryFilter = "all";
 
 function renderArchive() {
   const list = document.querySelector("#archiveList");
   let items = [...state.archive];
+
+  if(archiveCategoryFilter!=="all"){
+    items=items.filter(x=>(x.category||"other")===archiveCategoryFilter);
+  }
 
   if (archiveFilter === "favorite") items = items.filter(x => x.favorite);
   if (archiveFilter === "wanted") items = getMostWantedEntries();
@@ -2716,9 +2723,9 @@ function renderArchive() {
   if (archiveFilter === "all") {
     const groups = [
       ["unrated","☆ Noch bewerten", byNewest(items.filter(x => !x.rating))],
-      ["super","😊 Gut", byNewest(items.filter(x => x.rating === "super"))],
-      ["okay","🙂 Mittel", byNewest(items.filter(x => x.rating === "okay"))],
-      ["nope","😕 Schlecht", byNewest(items.filter(x => x.rating === "nope"))]
+      ["super","✦ Gut", byNewest(items.filter(x => x.rating === "super"))],
+      ["okay","○ Mittel", byNewest(items.filter(x => x.rating === "okay"))],
+      ["nope","— Schlecht", byNewest(items.filter(x => x.rating === "nope"))]
     ];
 
     list.className = "archive-columns";
@@ -2740,13 +2747,13 @@ function renderArchive() {
 }
 
 function archiveCardHtml(a) {
-  const ratingLabel = {super:"😊 Gut", okay:"🙂 Mittel", nope:"😕 Schlecht"};
+  const ratingLabel = {super:"✦ Gut", okay:"○ Mittel", nope:"— Schlecht"};
   return `
     <article class="archive-card">
       ${a.thumbnail ? `<img class="archive-thumb" src="${escapeHtml(a.thumbnail)}" alt="">` : ""}
       <div class="archive-content">
         <h3>${escapeHtml(a.title)}</h3>
-        <p>${ratingLabel[a.rating] || "Noch nicht bewertet"} · <strong>${a.timesDone || 0}× gemacht</strong>${isMostWanted(a.url) ? ' <span class="most-wanted-badge" title="Dynamisch Most wanted">🔥 Most wanted</span>' : ''}</p>
+        <p>${ratingLabel[a.rating] || "Noch nicht bewertet"} · <span>${({yoga:"Yoga",meditation:"Meditation",pain:"Schmerz",sport:"Sport",other:"Sonstiges"})[a.category||"other"]}</span> · <strong>${a.timesDone || 0}× gemacht</strong>${isMostWanted(a.url) ? ' <span class="most-wanted-badge" title="Dynamisch Most wanted">✦ Most wanted</span>' : ''}</p>
         <div class="archive-actions">
           <button type="button" class="text-btn favorite-btn" data-id="${a.id}">${a.favorite ? "♥ Favorit" : "♡ Favorit"}</button>
           <button type="button" class="text-btn replan-btn" data-id="${a.id}">+ Einplanen</button>
@@ -2756,6 +2763,11 @@ function archiveCardHtml(a) {
       </div>
     </article>`;
 }
+
+document.querySelector("#archiveCategoryFilter")?.addEventListener("change",e=>{
+  archiveCategoryFilter=e.currentTarget.value||"all";
+  renderArchive();
+});
 
 function bindArchiveButtons() {
   document.querySelectorAll(".favorite-btn").forEach(btn => btn.addEventListener("click", e => {
@@ -3523,6 +3535,216 @@ document.querySelector("#closeFamilyTimetableDialog")?.addEventListener("click",
 
 
 
+
+// ===== WERKRAUM – ROUTINEN =====
+
+let activeRoutineWeekOffset = 0;
+let editingRoutineId = null;
+
+const routineCategoryMeta = {
+  none:["","Kein Video"],
+  yoga:["◌","Yoga"],
+  meditation:["◇","Meditation"],
+  pain:["∿","Schmerz"],
+  sport:["△","Sport"],
+  other:["·","Sonstiges"]
+};
+
+function ensureWorkroomRoutines(){
+  state.workroom = normalizeWorkroom(state.workroom);
+  state.workroom.routines = state.workroom.routines || {items:[],completions:{}};
+  state.workroom.routines.items = Array.isArray(state.workroom.routines.items) ? state.workroom.routines.items : [];
+  state.workroom.routines.completions = state.workroom.routines.completions && typeof state.workroom.routines.completions==="object"
+    ? state.workroom.routines.completions
+    : {};
+  return state.workroom.routines;
+}
+
+function routineWeekKey(offset=0){
+  const monday=getMonday(new Date());
+  monday.setDate(monday.getDate()+Number(offset||0)*7);
+  return dateKey(monday);
+}
+
+function routineAppliesToWeek(item,weekKey){
+  return !!item.sticky || item.weekKey===weekKey;
+}
+
+function routineAppliesToDate(item,date){
+  if(item.day==="daily" || !item.day) return true;
+  const names=["Sonntag","Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag"];
+  return names[date.getDay()]===item.day;
+}
+
+function routineCompletionKey(itemId,date){
+  return `${itemId}__${dateKey(date)}`;
+}
+
+function routineCompletion(itemId,date){
+  return ensureWorkroomRoutines().completions[routineCompletionKey(itemId,date)] || null;
+}
+
+function setRoutineCompletion(itemId,date,patch){
+  const routines=ensureWorkroomRoutines();
+  const key=routineCompletionKey(itemId,date);
+  const current=routines.completions[key] || {};
+  routines.completions[key]={...current,...patch,updatedAt:Date.now()};
+}
+
+function routineVideoTitle(item){
+  return item.title || "Routinevideo";
+}
+
+function routineArchiveFromItem(item,rating){
+  if(!item.url) return;
+  let entry=state.archive.find(a=>normalizeUrl(a.url)===normalizeUrl(item.url));
+  if(!entry){
+    entry={
+      id:uid(),
+      title:routineVideoTitle(item),
+      url:item.url,
+      thumbnail:thumbnailFor(item.url),
+      timesDone:0,
+      rating:null,
+      favorite:false,
+      lastDone:null,
+      category:item.category || "other"
+    };
+    state.archive.push(entry);
+  }
+  entry.title=routineVideoTitle(item);
+  entry.thumbnail=entry.thumbnail || thumbnailFor(item.url);
+  entry.category=item.category || entry.category || "other";
+  entry.rating=rating || entry.rating;
+  entry.timesDone=(entry.timesDone||0)+1;
+  entry.lastDone=new Date().toISOString();
+}
+
+function resetRoutineEditor(){
+  editingRoutineId=null;
+  const ids=["routineTitle","routineUrl"];
+  ids.forEach(id=>{const el=document.querySelector(`#${id}`);if(el)el.value="";});
+  const part=document.querySelector("#routinePart"); if(part) part.value="morning";
+  const cat=document.querySelector("#routineCategory"); if(cat) cat.value="none";
+  const day=document.querySelector("#routineDay"); if(day) day.value="daily";
+  const sticky=document.querySelector("#routineSticky"); if(sticky) sticky.checked=false;
+  const saveBtn=document.querySelector("#saveRoutineBtn"); if(saveBtn) saveBtn.textContent="+ Routinepunkt";
+  document.querySelector("#cancelRoutineEditBtn")?.classList.add("hidden");
+}
+
+function renderRoutines(){
+  const list=document.querySelector("#routineList");
+  if(!list) return;
+  const routines=ensureWorkroomRoutines();
+  const weekKey=routineWeekKey(activeRoutineWeekOffset);
+  const weekLabel=document.querySelector("#routineWeekLabel");
+  if(weekLabel) weekLabel.textContent=activeRoutineWeekOffset===0?"Diese Woche":"Nächste Woche";
+
+  document.querySelectorAll(".routine-week-btn").forEach(btn=>{
+    btn.classList.toggle("active",Number(btn.dataset.routineWeek||0)===activeRoutineWeekOffset);
+  });
+
+  const items=routines.items
+    .filter(item=>routineAppliesToWeek(item,weekKey))
+    .sort((a,b)=>{
+      const partOrder={morning:0,evening:1,other:2};
+      return (partOrder[a.part]??9)-(partOrder[b.part]??9) ||
+        String(a.day||"daily").localeCompare(String(b.day||"daily"),"de") ||
+        Number(a.order||0)-Number(b.order||0);
+    });
+
+  if(!items.length){
+    list.innerHTML='<div class="workroom-empty">Für diese Woche ist noch keine Routine geplant.</div>';
+    return;
+  }
+
+  const partLabel={morning:"Morgen",evening:"Abend",other:"Sonstiges"};
+  list.innerHTML=items.map(item=>{
+    const cat=routineCategoryMeta[item.category||"none"] || routineCategoryMeta.other;
+    return `<div class="routine-row" data-id="${item.id}">
+      <div class="routine-row-main">
+        <span class="routine-part">${partLabel[item.part||"morning"]}</span>
+        <strong>${escapeHtml(item.title||"Routinepunkt")}</strong>
+        <div class="routine-meta">
+          <span>${item.day==="daily"||!item.day?"täglich":escapeHtml(item.day)}</span>
+          ${item.url?`<span class="routine-category">${cat[0]} ${cat[1]}</span>`:""}
+          ${item.sticky?'<span>∞ bleibt</span>':""}
+        </div>
+      </div>
+      ${item.url?`<a class="routine-open-video" href="${escapeHtml(item.url)}" target="_blank" rel="noopener">Video öffnen</a>`:""}
+      <button class="routine-edit-btn" data-id="${item.id}" type="button" title="Bearbeiten">✎</button>
+      <button class="routine-delete-btn" data-id="${item.id}" type="button" title="Löschen">×</button>
+    </div>`;
+  }).join("");
+
+  document.querySelectorAll(".routine-edit-btn").forEach(btn=>btn.addEventListener("click",()=>{
+    const item=routines.items.find(x=>x.id===btn.dataset.id);
+    if(!item) return;
+    editingRoutineId=item.id;
+    document.querySelector("#routinePart").value=item.part||"morning";
+    document.querySelector("#routineTitle").value=item.title||"";
+    document.querySelector("#routineUrl").value=item.url||"";
+    document.querySelector("#routineCategory").value=item.category||"none";
+    document.querySelector("#routineDay").value=item.day||"daily";
+    document.querySelector("#routineSticky").checked=!!item.sticky;
+    document.querySelector("#saveRoutineBtn").textContent="Änderung speichern";
+    document.querySelector("#cancelRoutineEditBtn")?.classList.remove("hidden");
+    document.querySelector("#routineTitle")?.focus();
+  }));
+
+  document.querySelectorAll(".routine-delete-btn").forEach(btn=>btn.addEventListener("click",()=>{
+    state.workroom.routines.items=state.workroom.routines.items.filter(x=>x.id!==btn.dataset.id);
+    save();
+    renderRoutines();
+    renderWorkroomWeekOverview(activeWorkroomWeekOffset);
+  }));
+}
+
+function saveRoutineFromForm(){
+  const routines=ensureWorkroomRoutines();
+  const title=(document.querySelector("#routineTitle")?.value||"").trim();
+  let url=(document.querySelector("#routineUrl")?.value||"").trim();
+  if(!title && !url) return;
+  if(url && !/^https?:\/\//i.test(url)) url="https://"+url;
+
+  const payload={
+    part:document.querySelector("#routinePart")?.value || "morning",
+    title:title || "Routinevideo",
+    url,
+    category:url ? (document.querySelector("#routineCategory")?.value || "other") : "none",
+    day:document.querySelector("#routineDay")?.value || "daily",
+    sticky:!!document.querySelector("#routineSticky")?.checked,
+    weekKey:routineWeekKey(activeRoutineWeekOffset),
+    updatedAt:Date.now()
+  };
+
+  if(editingRoutineId){
+    const item=routines.items.find(x=>x.id===editingRoutineId);
+    if(item) Object.assign(item,payload);
+  }else{
+    routines.items.push({
+      id:uid(),
+      ...payload,
+      createdAt:Date.now(),
+      order:routines.items.length
+    });
+  }
+
+  save();
+  resetRoutineEditor();
+  renderRoutines();
+  renderWorkroomWeekOverview(activeWorkroomWeekOffset);
+}
+
+document.querySelector("#saveRoutineBtn")?.addEventListener("click",saveRoutineFromForm);
+document.querySelector("#cancelRoutineEditBtn")?.addEventListener("click",resetRoutineEditor);
+document.querySelectorAll(".routine-week-btn").forEach(btn=>btn.addEventListener("click",()=>{
+  activeRoutineWeekOffset=Number(btn.dataset.routineWeek||0);
+  resetRoutineEditor();
+  renderRoutines();
+}));
+
+
 // ===== WERKRAUM – Meine Woche =====
 
 const workroomWeekDialog = document.querySelector("#workroomWeekDialog");
@@ -3581,10 +3803,13 @@ function renderWorkroomWeekOverview(weekOffset=0){
     if(check<today) return;
 
     const entries=workroomWeekEntriesForDate(date);
+    const routineItems=ensureWorkroomRoutines().items
+      .filter(item=>routineAppliesToWeek(item,dateKey(monday)))
+      .filter(item=>routineAppliesToDate(item,date));
     const isToday=check.getTime()===today.getTime();
 
-    if(!entries.length && !(weekOffset===0 && isToday)) return;
-    cards.push({dayName,date,entries,isToday});
+    if(!entries.length && !routineItems.length && !(weekOffset===0 && isToday)) return;
+    cards.push({dayName,date,entries,routineItems,isToday});
   });
 
   if(!cards.length){
@@ -3628,10 +3853,65 @@ function renderWorkroomWeekOverview(weekOffset=0){
                   ${time?`<small>${escapeHtml(time)}</small>`:""}
                 </div>
               </div>`;
-          }).join("") : `<div class="workroom-week-today-empty">Heute ist nichts eingetragen. 🌿</div>`}
+          }).join("") : ""}
+
+          ${day.routineItems?.length ? `
+            <div class="workroom-week-routine-block">
+              ${["morning","evening","other"].map(part=>{
+                const group=day.routineItems.filter(x=>(x.part||"morning")===part);
+                if(!group.length) return "";
+                const label={morning:"Morgenroutine",evening:"Abendroutine",other:"Routine"}[part];
+                return `<section class="workroom-week-routine-group">
+                  <span class="workroom-week-routine-label">${label}</span>
+                  ${group.map(item=>{
+                    const completion=routineCompletion(item.id,day.date);
+                    const done=!!completion?.done;
+                    const category=routineCategoryMeta[item.category||"none"]||routineCategoryMeta.other;
+                    return `<div class="workroom-week-routine-item ${done?"done":""}" data-routine-id="${item.id}" data-date="${dateKey(day.date)}">
+                      <button class="routine-week-check" type="button" data-id="${item.id}" data-date="${dateKey(day.date)}" aria-label="Routinepunkt abhaken">${done?"✓":""}</button>
+                      <div class="routine-week-copy">
+                        <strong>${escapeHtml(item.title||"Routinepunkt")}</strong>
+                        ${item.url?`<a href="${escapeHtml(item.url)}" target="_blank" rel="noopener">${category[0]} ${category[1]} · Video öffnen</a>`:""}
+                      </div>
+                      ${done && item.url && !completion?.rating ? `
+                        <div class="routine-week-rating" aria-label="Video bewerten">
+                          <button type="button" data-rating="super" data-id="${item.id}" data-date="${dateKey(day.date)}">✦ <span>Gut</span></button>
+                          <button type="button" data-rating="okay" data-id="${item.id}" data-date="${dateKey(day.date)}">○ <span>Mittel</span></button>
+                          <button type="button" data-rating="nope" data-id="${item.id}" data-date="${dateKey(day.date)}">— <span>Schlecht</span></button>
+                        </div>`:""}
+                      ${done && completion?.rating ? `<span class="routine-rated-mark">${{super:"✦ Gut",okay:"○ Mittel",nope:"— Schlecht"}[completion.rating]||""}</span>`:""}
+                    </div>`;
+                  }).join("")}
+                </section>`;
+              }).join("")}
+            </div>`:""}
+
+          ${!day.entries.length && !day.routineItems?.length ? `<div class="workroom-week-today-empty">Heute ist nichts eingetragen. 🌿</div>`:""}
         </div>
       </section>`;
   }).join("");
+
+  document.querySelectorAll(".routine-week-check").forEach(btn=>btn.addEventListener("click",()=>{
+    const item=ensureWorkroomRoutines().items.find(x=>x.id===btn.dataset.id);
+    const date=parseLocalDate(btn.dataset.date);
+    if(!item || !date) return;
+    const current=routineCompletion(item.id,date);
+    setRoutineCompletion(item.id,date,{done:!current?.done,rating:!current?.done?null:null});
+    save();
+    renderWorkroomWeekOverview(activeWorkroomWeekOffset);
+  }));
+
+  document.querySelectorAll(".routine-week-rating button").forEach(btn=>btn.addEventListener("click",()=>{
+    const item=ensureWorkroomRoutines().items.find(x=>x.id===btn.dataset.id);
+    const date=parseLocalDate(btn.dataset.date);
+    if(!item || !date) return;
+    const rating=btn.dataset.rating;
+    setRoutineCompletion(item.id,date,{done:true,rating});
+    routineArchiveFromItem(item,rating);
+    save();
+    renderWorkroomWeekOverview(activeWorkroomWeekOffset);
+    renderArchive();
+  }));
 
   const todayCard=list.querySelector(".workroom-week-day.is-today");
   if(todayCard) requestAnimationFrame(()=>todayCard.scrollIntoView({block:"nearest"}));
@@ -5177,6 +5457,7 @@ function renderAll() {
   renderSchoolPrints();
   renderWorkroomShopping();
   renderWorkroomLinks();
+  renderRoutines();
   renderShopping();
   renderRecipes();
   renderMealPlan();
@@ -6307,6 +6588,7 @@ function renderWorkroomLinks() {
       state.workroom.links = state.workroom.links.filter(link => link.id !== id);
       save();
       renderWorkroomLinks();
+  renderRoutines();
     });
   });
 
@@ -6393,18 +6675,21 @@ document.querySelector("#addWorkroomLinkBtn")?.addEventListener("click", () => {
 
   save();
   renderWorkroomLinks();
+  renderRoutines();
 });
 
 // Kategorie-Filter
 document.querySelector("#workroomLinkCategoryFilter")?.addEventListener("change", e => {
   activeWorkroomLinkCategory = e.currentTarget.value || "all";
   renderWorkroomLinks();
+  renderRoutines();
 });
 
 // Zeitraum-Filter
 document.querySelector("#workroomLinkUseFilterSelect")?.addEventListener("change", e => {
   activeWorkroomLinkUse = e.currentTarget.value || "all";
   renderWorkroomLinks();
+  renderRoutines();
 });
 
 // Wichtig-Filter
@@ -6413,6 +6698,7 @@ document.querySelector("#workroomLinkImportantFilter")?.addEventListener("click"
   e.currentTarget.classList.toggle("active", activeWorkroomLinkImportant);
   e.currentTarget.setAttribute("aria-pressed", activeWorkroomLinkImportant ? "true" : "false");
   renderWorkroomLinks();
+  renderRoutines();
 });
 
 document.querySelector("#addVideoBtn").addEventListener("click", () => {
@@ -10537,6 +10823,14 @@ function normalizeWorkroom(w) {
     interestLinks: Array.isArray(src.interestLinks) ? src.interestLinks : [],
     shopping: Array.isArray(src.shopping) ? src.shopping : [],
     substitutions: Array.isArray(src.substitutions) ? src.substitutions : [],
+    routines: src.routines && typeof src.routines === "object"
+      ? {
+          items: Array.isArray(src.routines.items) ? src.routines.items : [],
+          completions: src.routines.completions && typeof src.routines.completions === "object"
+            ? src.routines.completions
+            : {}
+        }
+      : {items:[], completions:{}},
     plans: src.plans && typeof src.plans === "object"
       ? src.plans
       : {week:[], year:[]}
@@ -11120,6 +11414,7 @@ function renderAll() {
   renderSchoolPrints();
   renderWorkroomShopping();
   renderWorkroomLinks();
+  renderRoutines();
   renderRecipes();
   renderMealPlan();
   renderPinboard();
@@ -12133,6 +12428,7 @@ document.addEventListener("click", (e) => {
     renderSchoolWorkTodos();
     renderSchoolPrints();
     renderWorkroomLinks();
+  renderRoutines();
   }, 0);
 });
 /* V36: Becherküche => Selbst-kochen automatisch */
