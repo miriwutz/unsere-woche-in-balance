@@ -15661,3 +15661,143 @@ body.child-view-active #papaOverviewModal{
     height:42px !important;
   }
 }
+
+
+/* =========================================================
+   V24 – Familienfragen als kleines Vintage-Schild
+   ========================================================= */
+.week-family-questions{
+  position:relative !important;
+  flex:0 1 660px !important;
+  max-width:660px !important;
+  min-width:300px !important;
+  margin:0 10px !important;
+  padding:7px 12px 8px !important;
+  border:1px solid rgba(137,111,79,.34) !important;
+  border-radius:8px !important;
+  background:
+    linear-gradient(rgba(255,252,241,.90),rgba(249,243,224,.92)),
+    repeating-linear-gradient(0deg,rgba(105,79,48,.025) 0 1px,transparent 1px 4px) !important;
+  box-shadow:
+    inset 0 0 0 2px rgba(255,255,255,.48),
+    0 2px 7px rgba(74,55,38,.06) !important;
+}
+
+/* kleine "Nagelköpfe", damit es wie ein altes Schild wirkt */
+.week-family-questions::before,
+.week-family-questions::after{
+  content:"" !important;
+  position:absolute !important;
+  top:50% !important;
+  width:4px !important;
+  height:4px !important;
+  margin-top:-2px !important;
+  border-radius:50% !important;
+  background:#b89c78 !important;
+  box-shadow:inset 0 1px 1px rgba(255,255,255,.55) !important;
+}
+.week-family-questions::before{left:5px !important;}
+.week-family-questions::after{right:5px !important;}
+
+.week-family-question-title{
+  display:none !important;
+}
+
+.week-family-question-items{
+  display:grid !important;
+  grid-template-columns:repeat(3,minmax(0,1fr)) !important;
+  gap:3px 12px !important;
+  align-items:center !important;
+}
+
+.week-family-question{
+  min-width:0 !important;
+  min-height:27px !important;
+  display:grid !important;
+  grid-template-columns:24px minmax(0,1fr) !important;
+  align-items:center !important;
+  gap:5px !important;
+  padding:1px 0 !important;
+  border:0 !important;
+  border-radius:0 !important;
+  background:transparent !important;
+  box-shadow:none !important;
+}
+
+/* Das ? ist selbst der Abhakbutton – absichtlich neutral, nicht in Personenfarbe. */
+.week-family-question-mark{
+  width:22px !important;
+  height:22px !important;
+  min-width:22px !important;
+  padding:0 !important;
+  display:grid !important;
+  place-items:center !important;
+  border:1px solid rgba(126,101,70,.42) !important;
+  border-radius:50% !important;
+  background:#f8f0dc !important;
+  color:#7d674d !important;
+  font-family:Georgia,serif !important;
+  font-size:.82rem !important;
+  line-height:1 !important;
+  cursor:pointer !important;
+  box-shadow:inset 0 0 0 2px rgba(255,255,255,.45) !important;
+}
+.week-family-question-mark:hover{
+  background:#f1e5c8 !important;
+  border-color:rgba(111,84,54,.62) !important;
+  transform:translateY(-1px) !important;
+}
+
+.week-family-question-copy{
+  min-width:0 !important;
+  display:block !important;
+  line-height:1.05 !important;
+}
+
+.week-family-question-copy strong{
+  display:block !important;
+  overflow:hidden !important;
+  text-overflow:ellipsis !important;
+  white-space:nowrap !important;
+  color:#55473d !important;
+  font-family:"Cormorant Garamond",Georgia,serif !important;
+  font-size:.78rem !important;
+  font-weight:650 !important;
+}
+
+.week-family-question-copy small{
+  display:block !important;
+  margin-top:1px !important;
+  color:#9a8774 !important;
+  font-size:.51rem !important;
+  letter-spacing:.04em !important;
+}
+
+/* separate Häkchen-Taste im Schild gibt es nicht mehr */
+.week-family-questions .family-question-done:not(.week-family-question-mark){
+  display:none !important;
+}
+
+.week-family-question-more{
+  align-self:center !important;
+  justify-self:start !important;
+  color:#8e7b67 !important;
+  font-size:.58rem !important;
+  padding-left:2px !important;
+}
+
+@media(max-width:1100px){
+  .week-family-question-items{
+    grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+  }
+}
+@media(max-width:760px){
+  .week-family-questions{
+    flex-basis:100% !important;
+    max-width:none !important;
+    margin:6px 0 0 !important;
+  }
+  .week-family-question-items{
+    grid-template-columns:1fr !important;
+  }
+}
