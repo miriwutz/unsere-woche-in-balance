@@ -13,6 +13,7 @@ const state = {
   todos: JSON.parse(localStorage.getItem("balanceProd.todos") || "[]"),
   archive: JSON.parse(localStorage.getItem("balanceProd.archive") || "[]"),
   shopping: JSON.parse(localStorage.getItem("balanceProd.shopping") || "[]"),
+  shoppingPromos: JSON.parse(localStorage.getItem("balanceProd.shoppingPromos") || "[]"),
   recipes: JSON.parse(localStorage.getItem("balanceProd.recipes") || "[]"),
   meals: JSON.parse(localStorage.getItem("balanceProd.meals") || "{}"),
   pinboard: JSON.parse(localStorage.getItem("balanceProd.pinboard") || "[]"),
@@ -48,6 +49,7 @@ state.timeTracking.deletedEntries =
     ? state.timeTracking.deletedEntries : {};
 
 
+state.shoppingPromos = Array.isArray(state.shoppingPromos) ? state.shoppingPromos : [];
 state.recipes = Array.isArray(state.recipes) ? state.recipes : [];
 state.meals = state.meals && typeof state.meals === "object" ? state.meals : {};
 state.pinboard = Array.isArray(state.pinboard) ? state.pinboard : [];
@@ -103,6 +105,7 @@ function saveLocal() {
   localStorage.setItem("balanceProd.todos", JSON.stringify(state.todos));
   localStorage.setItem("balanceProd.archive", JSON.stringify(state.archive));
   localStorage.setItem("balanceProd.shopping", JSON.stringify(state.shopping));
+  localStorage.setItem("balanceProd.shoppingPromos", JSON.stringify(state.shoppingPromos || []));
   localStorage.setItem("balanceProd.recipes", JSON.stringify(state.recipes));
   localStorage.setItem("balanceProd.meals", JSON.stringify(state.meals));
   localStorage.setItem("balanceProd.pinboard", JSON.stringify(state.pinboard));
@@ -128,6 +131,7 @@ function cloudPayload() {
     todoTombstones: state.todoTombstones || {},
     archive: state.archive,
     shopping: state.shopping,
+    shoppingPromos: state.shoppingPromos || [],
     recipes: state.recipes,
     meals: state.meals,
     pinboard: state.pinboard,
@@ -7208,7 +7212,107 @@ return `
 `;
 }
 
+
+function formatPromoDate(value){
+  if(!value) return "";
+  const d = new Date(value + "T12:00:00");
+  if(Number.isNaN(d.getTime())) return value;
+  return new Intl.DateTimeFormat("de-AT",{day:"2-digit",month:"2-digit",year:"numeric"}).format(d);
+}
+
+function renderManualShoppingPromos(){
+  const box = document.querySelector("#manualPromoDisplay");
+  if(!box) return;
+
+  const promos = (state.shoppingPromos || [])
+    .filter(x => !x.deleted)
+    .sort((a,b) => Number(b.updatedAt || b.createdAt || 0) - Number(a.updatedAt || a.createdAt || 0));
+
+  if(!promos.length){
+    box.classList.add("hidden");
+    box.innerHTML = "";
+    return;
+  }
+
+  box.classList.remove("hidden");
+  box.innerHTML = `
+    <div class="manual-promo-display-head">
+      <span>✂</span>
+      <strong>Gemerkte Rabatte</strong>
+    </div>
+    <div class="manual-promo-cards">
+      ${promos.map(p => {
+        const collect = p.collectFrom || p.collectTo
+          ? `Sammeln ${p.collectFrom ? formatPromoDate(p.collectFrom) : "…"}${p.collectTo ? " – " + formatPromoDate(p.collectTo) : ""}`
+          : "";
+        const valid = p.validFrom || p.validTo
+          ? `Gültig ${p.validFrom ? formatPromoDate(p.validFrom) : "…"}${p.validTo ? " – " + formatPromoDate(p.validTo) : ""}`
+          : "";
+        return `
+          <div class="manual-promo-card">
+            <div class="manual-promo-card-top">
+              <span class="manual-promo-shop">${escapeHtml(p.shop || "")}</span>
+              <strong>${escapeHtml(p.title || "Rabatt")}</strong>
+              <button type="button" class="manual-promo-delete" data-promo-id="${p.id}" aria-label="Rabatt löschen">×</button>
+            </div>
+            ${collect ? `<div class="manual-promo-line">${escapeHtml(collect)}</div>` : ""}
+            ${valid ? `<div class="manual-promo-line manual-promo-valid">${escapeHtml(valid)}</div>` : ""}
+            ${p.note ? `<div class="manual-promo-note">${escapeHtml(p.note)}</div>` : ""}
+          </div>`;
+      }).join("")}
+    </div>
+  `;
+
+  box.querySelectorAll(".manual-promo-delete").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const item = state.shoppingPromos.find(x => x.id === btn.dataset.promoId);
+      if(!item) return;
+      item.deleted = true;
+      item.updatedAt = Date.now();
+      save();
+      renderManualShoppingPromos();
+    });
+  });
+}
+
+function addManualShoppingPromo(){
+  const shop = document.querySelector("#manualPromoShop")?.value.trim() || "";
+  const title = document.querySelector("#manualPromoTitle")?.value.trim() || "";
+  const collectFrom = document.querySelector("#manualPromoCollectFrom")?.value || "";
+  const collectTo = document.querySelector("#manualPromoCollectTo")?.value || "";
+  const validFrom = document.querySelector("#manualPromoValidFrom")?.value || "";
+  const validTo = document.querySelector("#manualPromoValidTo")?.value || "";
+  const note = document.querySelector("#manualPromoNote")?.value.trim() || "";
+
+  if(!shop || !title){
+    alert("Bitte mindestens Geschäft und Aktion eintragen.");
+    return;
+  }
+
+  state.shoppingPromos.push({
+    id: uid(),
+    shop, title, collectFrom, collectTo, validFrom, validTo, note,
+    createdAt: Date.now(),
+    updatedAt: Date.now(),
+    deleted:false
+  });
+
+  save();
+  renderManualShoppingPromos();
+
+  ["manualPromoTitle","manualPromoCollectFrom","manualPromoCollectTo",
+   "manualPromoValidFrom","manualPromoValidTo","manualPromoNote"].forEach(id => {
+    const el=document.querySelector("#"+id);
+    if(el) el.value="";
+  });
+  const shopEl=document.querySelector("#manualPromoShop");
+  if(shopEl) shopEl.value="";
+  document.querySelector("#manualPromoDetails")?.removeAttribute("open");
+}
+
+document.querySelector("#addManualPromoBtn")?.addEventListener("click", addManualShoppingPromo);
 function renderShopping() {
+  renderManualShoppingPromos();
   const list = document.querySelector("#shoppingList");
   if (!list) return;
 
@@ -10356,6 +10460,7 @@ function snapshotPersistentState() {
     todos: state.todos,
     archive: state.archive,
     shopping: state.shopping,
+    shoppingPromos: state.shoppingPromos || [],
     recipes: state.recipes,
     meals: state.meals,
     pinboard: state.pinboard,
@@ -10417,6 +10522,7 @@ function snapshotPersistentState() {
     todos: state.todos,
     archive: state.archive,
     shopping: state.shopping,
+    shoppingPromos: state.shoppingPromos || [],
     recipes: state.recipes,
     meals: state.meals,
     pinboard: state.pinboard,
@@ -10453,6 +10559,7 @@ function saveLocal() {
   localStorage.setItem("balanceProd.todos", JSON.stringify(state.todos));
   localStorage.setItem("balanceProd.archive", JSON.stringify(state.archive));
   localStorage.setItem("balanceProd.shopping", JSON.stringify(state.shopping));
+  localStorage.setItem("balanceProd.shoppingPromos", JSON.stringify(state.shoppingPromos || []));
   localStorage.setItem("balanceProd.recipes", JSON.stringify(state.recipes));
   localStorage.setItem("balanceProd.meals", JSON.stringify(state.meals));
   localStorage.setItem("balanceProd.pinboard", JSON.stringify(state.pinboard));
@@ -10476,6 +10583,7 @@ function cloudPayload() {
     todoTombstones: state.todoTombstones || {},
     archive: state.archive,
     shopping: state.shopping,
+    shoppingPromos: state.shoppingPromos || [],
     recipes: state.recipes,
     meals: state.meals,
     pinboard: state.pinboard,
@@ -10614,6 +10722,7 @@ function renderAll() {
   renderPinboard();
   renderSubstitutions();
   renderShopping();
+  renderFamilyQuestions();
 }
 
 
