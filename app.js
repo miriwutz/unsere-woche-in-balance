@@ -3805,7 +3805,7 @@ function renderRoutineAreaTasks(){
           const thumb=item.url ? thumbnailFor(item.url) : "";
           const category=routineCategoryMeta[item.category||"none"]||routineCategoryMeta.other;
           return `<div class="routine-area-task" data-routine-area-id="${item.id}">
-            <button class="routine-area-check" type="button" data-id="${item.id}" aria-label="Routinepunkt erledigen"><span>◇</span></button>
+            <button class="routine-area-check" type="button" data-id="${item.id}" aria-label="${item.url?"Video erledigen und bewerten":"Routinepunkt erledigen"}"><span>✓</span></button>
             ${thumb?`<a class="routine-area-thumb" href="${escapeHtml(item.url)}" target="_blank" rel="noopener"><img src="${escapeHtml(thumb)}" alt="" loading="lazy"><span>▶</span></a>`:""}
             <div class="routine-area-task-copy">
               <strong>${escapeHtml(item.title||"Routinepunkt")}</strong>
@@ -3891,7 +3891,7 @@ function renderRoutines(){
     });
 
   if(!items.length){
-    list.innerHTML='<div class="workroom-empty">Für diese Woche ist noch keine Routine geplant.</div>';
+    list.innerHTML="";
     return;
   }
 
@@ -4051,17 +4051,10 @@ function renderWorkroomWeekOverview(weekOffset=0){
     if(check<today) return;
 
     const entries=workroomWeekEntriesForDate(date);
-    const routineItems=ensureWorkroomRoutines().items
-      .filter(item=>routineAppliesToWeek(item,dateKey(monday)))
-      .filter(item=>routineAppliesToDate(item,date))
-      .filter(item=>{
-        const completion=routineCompletion(item.id,date);
-        if(!completion?.done) return true;
-        // Normale Routinepunkte verschwinden direkt nach dem Abhaken.
-        if(!item.url) return false;
-        // Videos bleiben nur so lange sichtbar, bis sie bewertet wurden.
-        return !completion.rating;
-      });
+    // Routinen werden ausschließlich direkt in den vier
+    // Routinenbereichen angezeigt und dort erledigt/bewertet.
+    // "Meine Woche" bleibt dadurch frei für echte Termine und To-dos.
+    const routineItems=[];
     const isToday=check.getTime()===today.getTime();
 
     if(!entries.length && !routineItems.length && !(weekOffset===0 && isToday)) return;
@@ -4218,6 +4211,9 @@ document.addEventListener("click",e=>{
     const current=routineCompletion(item.id,date);
     const entry=routineArchiveFromItem(item,rating,{countDone:!current?.archived});
     if(!entry) return;
+
+    entry.planned=false;
+    entry.updatedAt=Date.now();
 
     setRoutineCompletion(item.id,date,{done:true,rating,archived:true});
     state.workroom.routines.items=state.workroom.routines.items.filter(x=>x.id!==item.id);
