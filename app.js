@@ -3576,7 +3576,36 @@ document.querySelectorAll(".routine-idea-check").forEach(btn=>btn.addEventListen
     renderRoutineIdeaChecks();
     scheduleRoutineIdeaDailyReset();
   },Math.max(1000,next-now));
-})();
+})()
+
+document.addEventListener("click",e=>{
+  const row=e.target.closest(".routine-step");
+  if(row){
+    e.preventDefault();
+    e.stopPropagation();
+    const routines=ensureWorkroomRoutines();
+    const key=`${routineDayKey()}__step__${row.dataset.routineCard}__${row.dataset.routineStep}`;
+    routines.inspirationChecks[key]=!routines.inspirationChecks[key];
+    cleanupRoutineIdeaChecks();
+    save();
+    renderRoutineIdeaChecks();
+    return;
+  }
+
+  const quality=e.target.closest(".routine-quality-cloud button[data-quality]");
+  if(quality){
+    e.preventDefault();
+    e.stopPropagation();
+    const group=quality.closest(".routine-quality-cloud");
+    const routines=ensureWorkroomRoutines();
+    const key=`${routineDayKey()}__quality__${group.dataset.routineQualityCard}`;
+    routines.inspirationChecks[key]=routines.inspirationChecks[key]===quality.dataset.quality ? "" : quality.dataset.quality;
+    cleanupRoutineIdeaChecks();
+    save();
+    renderRoutineIdeaChecks();
+  }
+});
+;
 
 
 
@@ -3642,8 +3671,28 @@ function renderRoutineIdeaChecks(){
     if(btn){
       btn.dataset.checked=checked?"1":"0";
       btn.setAttribute("aria-pressed",String(checked));
-      btn.title=checked?"Für diese Woche erledigt":"Für diese Woche abhaken";
+      btn.title=checked?"Für heute erledigt":"Für heute abhaken";
     }
+  });
+
+  document.querySelectorAll(".routine-step").forEach(row=>{
+    const card=row.dataset.routineCard;
+    const step=row.dataset.routineStep;
+    const checked=!!routines.inspirationChecks[`${routineDayKey()}__step__${card}__${step}`];
+    row.classList.toggle("is-checked",checked);
+    row.setAttribute("aria-pressed",String(checked));
+    const mark=row.querySelector(".routine-step-mark");
+    if(mark) mark.textContent=checked?"✓":"◇";
+  });
+
+  document.querySelectorAll(".routine-quality-cloud").forEach(group=>{
+    const card=group.dataset.routineQualityCard;
+    const selected=routines.inspirationChecks[`${routineDayKey()}__quality__${card}`] || "";
+    group.querySelectorAll("button[data-quality]").forEach(btn=>{
+      const active=btn.dataset.quality===selected;
+      btn.classList.toggle("is-selected",active);
+      btn.setAttribute("aria-pressed",String(active));
+    });
   });
 }
 
@@ -3678,7 +3727,12 @@ function routineVideoTitle(item){
 
 function routineArchiveFromItem(item,rating,{countDone=false}={}){
   if(!item.url) return null;
-  let entry=state.archive.find(a=>normalizeUrl(a.url)===normalizeUrl(item.url));
+  if(!Array.isArray(state.archive)) state.archive=[];
+  let normalizedItemUrl="";
+  try{ normalizedItemUrl=normalizeUrl(item.url); }catch{ normalizedItemUrl=String(item.url||"").trim(); }
+  let entry=state.archive.find(a=>{
+    try{return normalizeUrl(a.url)===normalizedItemUrl;}catch{return String(a.url||"").trim()===normalizedItemUrl;}
+  });
   if(!entry){
     entry={
       id:uid(),
@@ -3689,7 +3743,9 @@ function routineArchiveFromItem(item,rating,{countDone=false}={}){
       rating:null,
       favorite:false,
       lastDone:null,
-      category:item.category || "other"
+      category:item.category || "other",
+      createdAt:Date.now(),
+      updatedAt:Date.now()
     };
     state.archive.push(entry);
   }
@@ -3701,6 +3757,7 @@ function routineArchiveFromItem(item,rating,{countDone=false}={}){
     entry.timesDone=(entry.timesDone||0)+1;
     entry.lastDone=new Date().toISOString();
   }
+  entry.updatedAt=Date.now();
   return entry;
 }
 
@@ -4028,34 +4085,46 @@ function renderWorkroomWeekOverview(weekOffset=0){
     renderWorkroomWeekOverview(activeWorkroomWeekOffset);
   }));
 
-  document.querySelectorAll(".routine-week-rating button").forEach(btn=>btn.addEventListener("click",e=>{
-    e.preventDefault();
-    e.stopPropagation();
-
-    const item=ensureWorkroomRoutines().items.find(x=>x.id===btn.dataset.id);
-    const date=parseLocalDate(btn.dataset.date);
-    if(!item || !date) return;
-
-    const rating=btn.dataset.rating;
-    const current=routineCompletion(item.id,date);
-
-    // Erst nach der Bewertung wandert das Video in "Unser Überblick".
-    // So kann das Abhaken selbst nicht mehr an der Archivlogik scheitern.
-    routineArchiveFromItem(item,rating,{countDone:!current?.archived});
-    setRoutineCompletion(item.id,date,{
-      done:true,
-      rating,
-      archived:true
-    });
-
-    save();
-    renderWorkroomWeekOverview(activeWorkroomWeekOffset);
-    renderArchive();
-  }));
+  // Bewertungsbuttons werden delegiert gebunden; dadurch bleiben sie auch
+  // nach jedem Neurendern zuverlässig klickbar.
+;
 
   const todayCard=list.querySelector(".workroom-week-day.is-today");
   if(todayCard) requestAnimationFrame(()=>todayCard.scrollIntoView({block:"nearest"}));
 }
+
+
+document.addEventListener("click",e=>{
+  const btn=e.target.closest(".routine-week-rating button[data-rating]");
+  if(!btn) return;
+
+  e.preventDefault();
+  e.stopPropagation();
+
+  const item=ensureWorkroomRoutines().items.find(x=>x.id===btn.dataset.id);
+  const date=parseLocalDate(btn.dataset.date);
+  if(!item || !date) return;
+
+  const rating=btn.dataset.rating;
+  btn.closest(".routine-week-rating")?.querySelectorAll("button").forEach(x=>x.classList.toggle("is-selected",x===btn));
+
+  window.setTimeout(()=>{
+    const current=routineCompletion(item.id,date);
+    const entry=routineArchiveFromItem(item,rating,{countDone:!current?.archived});
+    if(!entry) return;
+
+    setRoutineCompletion(item.id,date,{done:true,rating,archived:true});
+    // Direkt lokal sichern, bevor ein Cloud-Zyklus dazwischenfunken kann.
+    localStorage.setItem("balanceProd.archive",JSON.stringify(state.archive));
+    localStorage.setItem("balanceProd.workroom",JSON.stringify(state.workroom));
+    save();
+
+    // Nach der Bewertung verschwindet das Video sofort aus "Meine Woche"
+    // und ist im Überblick verfügbar.
+    renderArchive();
+    renderWorkroomWeekOverview(activeWorkroomWeekOffset);
+  },140);
+});
 
 document.querySelector("#openWorkroomWeekBtn")?.addEventListener("click",()=>{
   renderWorkroomWeekOverview(0);
