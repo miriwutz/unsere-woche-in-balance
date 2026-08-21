@@ -22143,3 +22143,11 @@ body:has(#workroomLinkSortSelect option:checked:not([value="manual"])) .workroom
   flex:0 0 auto !important;
 }
 
+/* =========================================================
+   V49 – Werkraum: Faltkarten vollständig schließen
+   Der ID-Selektor der zweispaltigen Linksammlung hat die
+   allgemeine Faltregel überstimmt. Nur diese Anzeige korrigieren.
+   ========================================================= */
+.workroom-fold-card:not(.open) > #workroomLinkList{
+  display:none !important;
+}
