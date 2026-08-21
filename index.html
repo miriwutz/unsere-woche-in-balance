@@ -152,7 +152,6 @@
     <span id="pinboardBadge" class="pinboard-badge hidden">0</span>
   </button>
 
-  <button id="addVideoBtn" class="primary-btn" type="button">＋ Übung eintragen</button>
 
   <button id="openFamilyTimetableBtn"
           class="secondary-btn week-icon-btn"
@@ -1349,6 +1348,84 @@
     </div>
   </aside>
 
+
+  <article class="card workroom-routine-card">
+    <div class="workroom-routine-head">
+      <div>
+        <p class="small-label">MEINE ROUTINEN</p>
+        <h3>Ruhig durch die Woche</h3>
+        <p>Feste Punkte bleiben. Videos und einzelne Bausteine kannst du für jede Woche neu wählen.</p>
+      </div>
+      <div class="routine-week-switch" aria-label="Routinen-Woche wählen">
+        <button type="button" class="routine-week-btn active" data-routine-week="0">Diese Woche</button>
+        <button type="button" class="routine-week-btn" data-routine-week="1">Nächste Woche</button>
+      </div>
+    </div>
+
+    <div class="routine-add-grid">
+      <label>
+        Bereich
+        <select id="routinePart">
+          <option value="morning" selected>Morgen</option>
+          <option value="evening">Abend</option>
+          <option value="other">Sonstiges</option>
+        </select>
+      </label>
+
+      <label class="routine-title-field">
+        Punkt
+        <input id="routineTitle" type="text" placeholder="z. B. Wasser trinken, 10 Min. Yoga …">
+      </label>
+
+      <label class="routine-url-field">
+        Video-Link <span class="optional-note">optional</span>
+        <input id="routineUrl" type="url" placeholder="YouTube-Link – optional">
+      </label>
+
+      <label>
+        Kategorie
+        <select id="routineCategory">
+          <option value="none">Kein Video</option>
+          <option value="yoga">Yoga</option>
+          <option value="meditation">Meditation</option>
+          <option value="pain">Schmerz</option>
+          <option value="sport">Sport</option>
+          <option value="other">Sonstiges</option>
+        </select>
+      </label>
+
+      <label>
+        Tag
+        <select id="routineDay">
+          <option value="daily" selected>Täglich</option>
+          <option value="Montag">Montag</option>
+          <option value="Dienstag">Dienstag</option>
+          <option value="Mittwoch">Mittwoch</option>
+          <option value="Donnerstag">Donnerstag</option>
+          <option value="Freitag">Freitag</option>
+          <option value="Samstag">Samstag</option>
+          <option value="Sonntag">Sonntag</option>
+        </select>
+      </label>
+
+      <label class="routine-sticky-toggle">
+        <input id="routineSticky" type="checkbox">
+        <span>Bleibt jede Woche</span>
+      </label>
+
+      <button id="saveRoutineBtn" class="secondary-btn routine-save-btn" type="button">+ Routinepunkt</button>
+      <button id="cancelRoutineEditBtn" class="text-btn hidden" type="button">Bearbeiten abbrechen</button>
+    </div>
+
+    <div class="routine-list-head">
+      <span id="routineWeekLabel">Diese Woche</span>
+      <small>In „Meine Woche“ kannst du die Punkte direkt abhaken.</small>
+    </div>
+    <div id="routineList" class="routine-list">
+      <div class="workroom-empty">Noch keine Routinen eingetragen.</div>
+    </div>
+  </article>
+
  <div class="workroom-grid">
 
   <!-- SCHUL-TO-DOS -->
@@ -1742,13 +1819,23 @@
           <button id="deleteAllExercisesBtn" class="secondary-btn danger-soft" type="button">Alle Übungen löschen</button>
         </div>
 
-        <div class="filters">
-          <button class="archive-filter active" data-archive="all">Alle</button>
-          <button class="archive-filter" data-archive="favorite">♡ Favoriten</button>
-          <button class="archive-filter" data-archive="wanted">🔥 Most wanted</button>
-          <button class="archive-filter" data-archive="super">💛 Sehr gern</button>
-          <button class="archive-filter" data-archive="okay">🙂 Passt gut</button>
-          <button class="archive-filter" data-archive="nope">🌿 Eher nicht</button>
+        <div class="exercise-filter-row">
+          <div class="filters">
+            <button class="archive-filter active" data-archive="all">Alle</button>
+            <button class="archive-filter" data-archive="favorite">♡ Favoriten</button>
+            <button class="archive-filter" data-archive="wanted">✦ Most wanted</button>
+            <button class="archive-filter" data-archive="super">✦ Gut</button>
+            <button class="archive-filter" data-archive="okay">○ Mittel</button>
+            <button class="archive-filter" data-archive="nope">— Schlecht</button>
+          </div>
+          <select id="archiveCategoryFilter" aria-label="Übungen nach Kategorie filtern">
+            <option value="all">Alle Kategorien</option>
+            <option value="yoga">Yoga</option>
+            <option value="meditation">Meditation</option>
+            <option value="pain">Schmerz</option>
+            <option value="sport">Sport</option>
+            <option value="other">Sonstiges</option>
+          </select>
         </div>
         <p class="archive-hint">Most wanted passt sich automatisch an: anfangs reichen 2 Durchführungen, später bleiben nur die am häufigsten genutzten Übungen oben.</p>
 
