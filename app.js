@@ -7115,10 +7115,13 @@ function renderWorkroomLinks() {
     return;
   }
 
-  list.innerHTML = pageLinks.map(link => {
+  list.innerHTML = pageLinks.map((link,pageIndex) => {
     const effectiveUse=workroomLinkEffectiveUse(link);
+    const visualColumn=pageIndex < 10 ? 1 : 2;
+    const visualRow=(pageIndex % 10) + 1;
     return `
     <div class="workroom-link-item ${link.important ? "workroom-link-item-important" : ""} ${effectiveUse === "private" ? "workroom-link-item-private" : ""}"
+         style="grid-column:${visualColumn};grid-row:${visualRow}"
          data-category="${escapeHtml(workroomLinkEffectiveCategory(link))}"
          data-id="${link.id}">
       <span class="workroom-link-drag-handle"
@@ -7156,13 +7159,24 @@ function renderWorkroomLinks() {
           type="button"
           data-id="${link.id}"
           title="Löschen">×</button>
+
+        <span class="workroom-link-touch-move" aria-label="Auf dem Tablet verschieben">
+          <button class="workroom-link-move-up"
+                  type="button"
+                  data-id="${link.id}"
+                  title="Nach oben">↑</button>
+          <button class="workroom-link-move-down"
+                  type="button"
+                  data-id="${link.id}"
+                  title="Nach unten">↓</button>
+        </span>
       </div>
     </div>`;
   }).join("");
 
   if(pager){
-    pager.classList.toggle("hidden",totalPages<=1);
-    if(pageLabel) pageLabel.textContent=`Seite ${workroomLinkPage} / ${totalPages}`;
+    pager.classList.toggle("hidden",links.length===0);
+    if(pageLabel) pageLabel.textContent=`Seite ${workroomLinkPage} von ${totalPages} · ${links.length} ${links.length===1 ? "Link" : "Links"}`;
     if(prevBtn) prevBtn.disabled=workroomLinkPage<=1;
     if(nextBtn) nextBtn.disabled=workroomLinkPage>=totalPages;
   }
@@ -7199,6 +7213,38 @@ function renderWorkroomLinks() {
       const addBtn = document.querySelector("#addWorkroomLinkBtn");
       addBtn.dataset.editId = link.id;
       addBtn.textContent = "Änderung speichern";
+    });
+  });
+
+  function moveWorkroomLinkByStep(id, delta){
+    if(activeWorkroomLinkSort!=="manual"){
+      showMotivation("Zum Verschieben zuerst auf „Eigene Reihenfolge“ zurückgehen.");
+      return;
+    }
+
+    const all=[...state.workroom.links]
+      .sort((a,b)=>Number(a.order??999999)-Number(b.order??999999));
+
+    const index=all.findIndex(link=>link.id===id);
+    const target=index+delta;
+    if(index<0 || target<0 || target>=all.length) return;
+
+    [all[index],all[target]]=[all[target],all[index]];
+    all.forEach((link,order)=>link.order=order);
+    state.workroom.links=all;
+    save();
+    renderWorkroomLinks();
+  }
+
+  list.querySelectorAll(".workroom-link-move-up").forEach(btn=>{
+    btn.addEventListener("click",e=>{
+      moveWorkroomLinkByStep(e.currentTarget.dataset.id,-1);
+    });
+  });
+
+  list.querySelectorAll(".workroom-link-move-down").forEach(btn=>{
+    btn.addEventListener("click",e=>{
+      moveWorkroomLinkByStep(e.currentTarget.dataset.id,1);
     });
   });
 
