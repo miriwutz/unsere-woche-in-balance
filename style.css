@@ -19487,3 +19487,15 @@ body.child-view-active #papaOverviewModal{
     max-width:none !important;
   }
 }
+
+
+/* =========================================================
+   PUNKT 5B – Planung bleibt vollständig, Durchführung verschwindet
+   ========================================================= */
+.routine-week-plan-card.is-completed{
+  background:linear-gradient(145deg,rgba(239,243,220,.80),rgba(255,254,249,.88));
+  border-color:rgba(111,125,73,.16);
+}
+.routine-week-plan-card.is-completed .routine-week-plan-copy strong{
+  color:#64684c;
+}
