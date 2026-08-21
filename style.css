@@ -18973,3 +18973,124 @@ body.child-view-active #papaOverviewModal{
 .routine-area-task.awaiting-rating{
   box-shadow:inset 3px 0 0 rgba(113,126,71,.28);
 }
+
+
+/* =========================================================
+   PUNKT 4n – kompakte einklappbare Wochenplanung
+   ========================================================= */
+.routine-planning-overview{
+  margin-top:10px;
+  border-top:1px solid rgba(112,96,77,.10);
+}
+.routine-planning-overview > summary{
+  list-style:none;
+  min-height:42px;
+  display:flex;
+  align-items:center;
+  gap:9px;
+  padding:8px 4px 5px;
+  cursor:pointer;
+  color:#594c43;
+  user-select:none;
+}
+.routine-planning-overview > summary::-webkit-details-marker{display:none}
+.routine-planning-chevron{
+  display:inline-flex;
+  width:18px;
+  height:18px;
+  align-items:center;
+  justify-content:center;
+  color:#a18c75;
+  font-size:1.15rem;
+  transition:transform .18s ease;
+}
+.routine-planning-overview[open] .routine-planning-chevron{transform:rotate(90deg)}
+#routineWeekLabel{
+  font-family:"Playfair Display",Georgia,serif;
+  font-size:.96rem;
+  font-weight:600;
+}
+.routine-planning-count{
+  margin-left:auto;
+  padding:3px 9px;
+  border:1px solid rgba(126,134,83,.16);
+  border-radius:999px;
+  background:rgba(239,242,221,.62);
+  color:#7d795e;
+  font-size:.72rem;
+}
+.routine-planning-list{
+  display:grid;
+  gap:6px;
+  padding:3px 0 8px;
+}
+.routine-plan-row{
+  display:grid;
+  grid-template-columns:minmax(105px,130px) auto minmax(0,1fr) auto;
+  gap:10px;
+  align-items:center;
+  min-height:52px;
+  padding:7px 10px;
+  border:1px solid rgba(121,105,85,.11);
+  border-radius:11px;
+  background:rgba(255,255,255,.58);
+}
+.routine-plan-when{
+  display:flex;
+  flex-direction:column;
+  gap:1px;
+}
+.routine-plan-when strong{
+  font-size:.78rem;
+  color:#5e5147;
+}
+.routine-plan-when span,
+.routine-plan-copy small{
+  font-size:.7rem;
+  color:#9b826c;
+}
+.routine-plan-copy{
+  min-width:0;
+  display:flex;
+  flex-direction:column;
+  gap:2px;
+}
+.routine-plan-copy strong{
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  font-family:"Playfair Display",Georgia,serif;
+  color:#51443b;
+}
+.routine-plan-thumb{
+  position:relative;
+  width:56px;
+  height:34px;
+  overflow:hidden;
+  border-radius:7px;
+}
+.routine-plan-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.routine-plan-thumb span{
+  position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  color:white;text-shadow:0 1px 4px rgba(0,0,0,.4);font-size:.75rem;
+}
+.routine-plan-actions{
+  display:flex;
+  align-items:center;
+  gap:4px;
+}
+.routine-plan-actions a{
+  color:#8f6f75;
+  font-size:.72rem;
+  text-decoration:none;
+}
+.routine-plan-actions button{
+  width:28px;height:28px;padding:0;border:0;border-radius:8px;
+  background:transparent;color:#917e6e;cursor:pointer;
+}
+.routine-plan-actions button:hover{background:#f2ede4}
+@media(max-width:760px){
+  .routine-plan-row{grid-template-columns:92px 1fr auto}
+  .routine-plan-thumb{display:none}
+  .routine-plan-actions a{display:none}
+}
