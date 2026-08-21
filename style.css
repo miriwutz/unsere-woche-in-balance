@@ -17398,3 +17398,29 @@ body.child-view-active #papaOverviewModal{
 .weekplan-bottom-slot:last-child{
   padding-bottom:11px !important;
 }
+
+
+/* =========================================================
+   PUNKT 2i – eigentliche Ursache behoben
+   ========================================================= */
+
+/*
+  V33 hatte .week-grid .day auf display:block !important gesetzt.
+  Dadurch konnte margin-top:auto am unteren Wochenplan-Sockel
+  technisch NIE wirken. Genau deshalb blieb "Blumen gießen"
+  trotz aller Abstandskorrekturen direkt nach dem normalen Inhalt.
+
+  Die Tageskarte ist wieder eine vertikale Flex-Spalte.
+  Die Wochenbänder bleiben unverändert und behalten ihre in JS
+  synchronisierten Höhen.
+*/
+.week-grid .day{
+  display:flex !important;
+  flex-direction:column !important;
+}
+
+/* Der untere Sockel darf jetzt tatsächlich den restlichen Raum übernehmen. */
+.week-grid .day > .day-bottom-stack{
+  margin-top:auto !important;
+  flex:0 0 auto !important;
+}
