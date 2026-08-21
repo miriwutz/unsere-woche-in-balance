@@ -18892,3 +18892,39 @@ body.child-view-active #papaOverviewModal{
 #routineList:empty{
   display:none !important;
 }
+
+
+/* =========================================================
+   PUNKT 4l – Werkraum-Tab nur noch Blume des Lebens
+   ========================================================= */
+
+/* Alte CSS-Werkzeugzeichen vollständig abschalten. */
+.tab[data-view="workroom"]::before,
+.tabs .tab[data-view="workroom"]::before{
+  content:"" !important;
+  display:none !important;
+}
+
+/* Die neue Blume bleibt auch in schmalen Ansichten sichtbar. */
+.tab[data-view="workroom"] .nav-flower-of-life{
+  display:inline-flex !important;
+  flex:0 0 auto;
+}
+@media(max-width:700px){
+  .tab[data-view="workroom"]{
+    font-size:0 !important;
+  }
+  .tab[data-view="workroom"] .nav-flower-of-life{
+    margin:0 !important;
+    width:21px;
+    height:21px;
+  }
+  .tab[data-view="workroom"] .nav-flower-of-life svg{
+    width:20px;
+    height:20px;
+  }
+}
+
+.routine-area-tasks.hidden{
+  display:none !important;
+}
