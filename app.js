@@ -8368,19 +8368,45 @@ function cleanupExpiredShoppingPromos(){
 
 function shoppingStoreMark(shop){
   const key=String(shop||"").trim().toLowerCase();
-  const map={
-    "billa":["BI","billa"],
-    "spar":["SP","spar"],
-    "bipa":["BP","bipa"],
-    "dm":["dm","dm"],
-    "lidl":["Li","lidl"],
-    "hofer":["H","hofer"],
-    "penny":["P","penny"],
-    "müller":["M","mueller"],
-    "mueller":["M","mueller"]
+  const clsMap={
+    "billa":"billa",
+    "spar":"spar",
+    "bipa":"bipa",
+    "dm":"dm",
+    "lidl":"lidl",
+    "hofer":"hofer",
+    "penny":"penny",
+    "müller":"mueller",
+    "mueller":"mueller"
   };
-  const [label,cls]=map[key]||["✦","other"];
-  return `<span class="promo-store-mark promo-store-${cls}" aria-hidden="true">${escapeHtml(label)}</span>`;
+  const cls=clsMap[key]||"other";
+  const accessible=String(shop||"Geschäft").trim() || "Geschäft";
+
+  if(cls==="billa"){
+    return `<span class="promo-store-mark promo-store-billa" role="img" aria-label="${escapeHtml(accessible)}"><span class="promo-logo-billa">BILLA</span></span>`;
+  }
+  if(cls==="bipa"){
+    return `<span class="promo-store-mark promo-store-bipa" role="img" aria-label="${escapeHtml(accessible)}"><span class="promo-logo-bipa">BIPA</span></span>`;
+  }
+  if(cls==="spar"){
+    return `<span class="promo-store-mark promo-store-spar" role="img" aria-label="${escapeHtml(accessible)}"><span class="promo-logo-spar-tree"></span></span>`;
+  }
+  if(cls==="dm"){
+    return `<span class="promo-store-mark promo-store-dm" role="img" aria-label="${escapeHtml(accessible)}"><span class="promo-logo-word">dm</span></span>`;
+  }
+  if(cls==="lidl"){
+    return `<span class="promo-store-mark promo-store-lidl" role="img" aria-label="${escapeHtml(accessible)}"><span class="promo-logo-word">Lidl</span></span>`;
+  }
+  if(cls==="hofer"){
+    return `<span class="promo-store-mark promo-store-hofer" role="img" aria-label="${escapeHtml(accessible)}"><span class="promo-logo-word">H</span></span>`;
+  }
+  if(cls==="penny"){
+    return `<span class="promo-store-mark promo-store-penny" role="img" aria-label="${escapeHtml(accessible)}"><span class="promo-logo-word">PENNY</span></span>`;
+  }
+  if(cls==="mueller"){
+    return `<span class="promo-store-mark promo-store-mueller" role="img" aria-label="${escapeHtml(accessible)}"><span class="promo-logo-word">M</span></span>`;
+  }
+  return `<span class="promo-store-mark promo-store-other" role="img" aria-label="${escapeHtml(accessible)}">✦</span>`;
 }
 
 function renderManualShoppingPromos(){
