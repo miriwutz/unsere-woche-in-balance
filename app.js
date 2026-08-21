@@ -3820,7 +3820,15 @@ function renderWorkroomWeekOverview(weekOffset=0){
     const entries=workroomWeekEntriesForDate(date);
     const routineItems=ensureWorkroomRoutines().items
       .filter(item=>routineAppliesToWeek(item,dateKey(monday)))
-      .filter(item=>routineAppliesToDate(item,date));
+      .filter(item=>routineAppliesToDate(item,date))
+      .filter(item=>{
+        const completion=routineCompletion(item.id,date);
+        if(!completion?.done) return true;
+        // Normale Routinepunkte verschwinden direkt nach dem Abhaken.
+        if(!item.url) return false;
+        // Videos bleiben nur so lange sichtbar, bis sie bewertet wurden.
+        return !completion.rating;
+      });
     const isToday=check.getTime()===today.getTime();
 
     if(!entries.length && !routineItems.length && !(weekOffset===0 && isToday)) return;
@@ -3931,34 +3939,45 @@ function renderWorkroomWeekOverview(weekOffset=0){
     const willBeDone=!current?.done;
 
     if(willBeDone){
-      // Sobald ein Video wirklich erledigt wurde, erscheint es sofort
-      // in "Unser Überblick". Die Bewertung kann direkt danach folgen.
-      if(item.url && !current?.archived){
-        routineArchiveFromItem(item,null,{countDone:true});
-      }
+      // Zuerst nur den Routinepunkt abschließen.
+      // Bei einem Video bleibt die Zeile anschließend für die Bewertung stehen.
       setRoutineCompletion(item.id,date,{
         done:true,
-        rating:current?.rating || null,
-        archived:!!item.url || !!current?.archived
+        rating:null,
+        archived:!!current?.archived
       });
     }else{
-      // Nur den Tages-Haken zurücknehmen; die bereits entstandene
-      // Verlaufshistorie im Überblick bleibt bewusst erhalten.
-      setRoutineCompletion(item.id,date,{done:false,rating:null});
+      setRoutineCompletion(item.id,date,{
+        done:false,
+        rating:null,
+        archived:!!current?.archived
+      });
     }
 
     save();
     renderWorkroomWeekOverview(activeWorkroomWeekOffset);
-    renderArchive();
   }));
 
-  document.querySelectorAll(".routine-week-rating button").forEach(btn=>btn.addEventListener("click",()=>{
+  document.querySelectorAll(".routine-week-rating button").forEach(btn=>btn.addEventListener("click",e=>{
+    e.preventDefault();
+    e.stopPropagation();
+
     const item=ensureWorkroomRoutines().items.find(x=>x.id===btn.dataset.id);
     const date=parseLocalDate(btn.dataset.date);
     if(!item || !date) return;
+
     const rating=btn.dataset.rating;
-    setRoutineCompletion(item.id,date,{done:true,rating,archived:true});
-    routineArchiveFromItem(item,rating,{countDone:false});
+    const current=routineCompletion(item.id,date);
+
+    // Erst nach der Bewertung wandert das Video in "Unser Überblick".
+    // So kann das Abhaken selbst nicht mehr an der Archivlogik scheitern.
+    routineArchiveFromItem(item,rating,{countDone:!current?.archived});
+    setRoutineCompletion(item.id,date,{
+      done:true,
+      rating,
+      archived:true
+    });
+
     save();
     renderWorkroomWeekOverview(activeWorkroomWeekOffset);
     renderArchive();
