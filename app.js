@@ -2013,7 +2013,7 @@ const eventHtml = (weekMultiDayEvents.length || singleDayEvents.length) ? `
   }));
 }
 
-let todoFilter = "all";
+let todoFilter = null;
 let editingTodoId = null;
 
 
@@ -2237,6 +2237,16 @@ function renderTodoTrash() {
 function renderTodos() {
   const list = document.querySelector("#todoList");
   renderTodoTrash();
+
+  if (!todoFilter) {
+    if (list) {
+      list.innerHTML = "";
+      list.classList.add("todo-list-collapsed");
+    }
+    return;
+  }
+
+  list?.classList.remove("todo-list-collapsed");
   let todos = state.todos.filter(t => !t.archived);
 
   if (todoFilter === "done") {
@@ -4667,8 +4677,16 @@ function renderFamilyQuestions(){
     if(!open.length){
       strip.classList.add("hidden");
       strip.innerHTML = "";
+      strip.style.removeProperty("--question-cols");
+      strip.style.removeProperty("--question-sign-width");
+      delete strip.dataset.questionCount;
     }else{
       const visible = open.slice(0,6);
+      const cols = Math.min(Math.max(visible.length,1),3);
+      const signWidth = visible.length <= 1 ? 330 : visible.length === 2 ? 510 : 690;
+      strip.style.setProperty("--question-cols", cols);
+      strip.style.setProperty("--question-sign-width", signWidth + "px");
+      strip.dataset.questionCount = String(visible.length);
       strip.classList.remove("hidden");
       strip.innerHTML = `
         <div class="week-family-question-items">
@@ -4680,7 +4698,7 @@ function renderFamilyQuestions(){
                       aria-label="Frage erledigt">?</button>
               <span class="week-family-question-copy">
                 <strong>${escapeHtml(q.text)}</strong>
-                <small>${escapeHtml(familyQuestionRecipientLabel(q.to))}</small>
+                <small>→ ${escapeHtml(familyQuestionRecipientLabel(q.to))}</small>
               </span>
             </div>
           `).join("")}
@@ -6394,9 +6412,18 @@ showMotivation(type === "event" ? "Termin hinzugefügt ✓" : "To-do hinzugefüg
 });
 
 document.querySelectorAll(".filter").forEach(btn => btn.addEventListener("click", () => {
+  const next = btn.dataset.filter;
+  const isAlreadyOpen = todoFilter === next && btn.classList.contains("active");
+
   document.querySelectorAll(".filter").forEach(x => x.classList.remove("active"));
-  btn.classList.add("active");
-  todoFilter = btn.dataset.filter;
+
+  if (isAlreadyOpen) {
+    todoFilter = null;
+  } else {
+    todoFilter = next;
+    btn.classList.add("active");
+  }
+
   renderTodos();
 }));
 
