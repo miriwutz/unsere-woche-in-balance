@@ -7131,21 +7131,36 @@ function renderWorkroomLinks() {
     .sort((a,b)=>Number(a.order??999999)-Number(b.order??999999));
 
   // Sortierung ist nur eine Ansicht. Die manuelle Reihenfolge in state bleibt unverändert.
-  // Gruppenweise: ALLE Treffer zuerst, danach ALLE übrigen.
-  // Innerhalb beider Gruppen bleibt die eigene Reihenfolge erhalten.
+  // Gewählte Gruppe zuerst; danach werden auch die übrigen Gruppen sauber gebündelt.
+  // Innerhalb jeder Gruppe bleibt die eigene Reihenfolge erhalten.
   if(activeWorkroomLinkSort !== "manual"){
-    const matchingGroup = [];
-    const remainingGroup = [];
+    const baseOrder = ["year","bureaucracy","private","current","later","soon"];
+    const groupOrder = [
+      activeWorkroomLinkSort,
+      ...baseOrder.filter(key => key !== activeWorkroomLinkSort)
+    ];
 
-    links.forEach(link => {
-      if(workroomLinkMatchesSort(link, activeWorkroomLinkSort)){
-        matchingGroup.push(link);
-      }else{
-        remainingGroup.push(link);
-      }
-    });
+    const groupKey = link => {
+      if(workroomLinkEffectiveCategory(link) === "bureaucracy") return "bureaucracy";
+      return workroomLinkEffectiveUse(link);
+    };
 
-    links = matchingGroup.concat(remainingGroup);
+    const rank = new Map(groupOrder.map((key,index) => [key,index]));
+
+    links = links
+      .map((link,index) => ({ link, index }))
+      .sort((a,b) => {
+        const aSelected = workroomLinkMatchesSort(a.link, activeWorkroomLinkSort) ? 0 : 1;
+        const bSelected = workroomLinkMatchesSort(b.link, activeWorkroomLinkSort) ? 0 : 1;
+        if(aSelected !== bSelected) return aSelected - bSelected;
+
+        const aRank = rank.get(groupKey(a.link)) ?? groupOrder.length;
+        const bRank = rank.get(groupKey(b.link)) ?? groupOrder.length;
+        if(aRank !== bRank) return aRank - bRank;
+
+        return a.index - b.index;
+      })
+      .map(entry => entry.link);
   }
 
   const totalPages=Math.max(1,Math.ceil(links.length/WORKROOM_LINKS_PER_PAGE));
