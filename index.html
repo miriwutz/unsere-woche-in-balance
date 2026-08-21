@@ -128,6 +128,7 @@
             <button id="nextWeekBtn" class="week-arrow" type="button" aria-label="Nächste Woche">›</button>
           </div>
         </div>
+       <div id="weekFamilyQuestions" class="week-family-questions hidden" aria-live="polite"></div>
        <div class="week-head-actions">
   <button id="openPinboardBtn" class="secondary-btn pinboard-open-btn" type="button">
     <span class="pinboard-icon">💌</span>
@@ -174,6 +175,31 @@
 </div>
 </div>
       
+      
+      <div class="family-question-card card">
+        <div class="family-question-card-head">
+          <div>
+            <strong>💬 Frage an die Familie</strong>
+            <span>Bleibt oben im Wochenplan, bis sie erledigt ist.</span>
+          </div>
+        </div>
+
+        <div class="family-question-entry">
+          <input id="familyQuestionText" type="text" autocomplete="on"
+                 placeholder="z. B. Wer kann Fina am Freitag abholen?">
+          <select id="familyQuestionTo" aria-label="An wen?">
+            <option value="shared">Alle</option>
+            <option value="a">Mama</option>
+            <option value="b">Papa</option>
+            <option value="c">Lou</option>
+            <option value="d">Fina</option>
+          </select>
+          <button id="addFamilyQuestionBtn" class="secondary-btn" type="button">+ Frage</button>
+        </div>
+
+        <div id="familyQuestionList" class="family-question-list"></div>
+      </div>
+
       <details class="family-settings card">
         <summary>🎨 Unsere Farben</summary>
         <p class="family-settings-hint">Namen und Farben könnt ihr jederzeit ändern. Die Farben gelten überall auf der Seite.</p>
