@@ -7071,13 +7071,11 @@ function workroomLinkEffectiveUse(link){
 }
 
 function workroomLinkMatchesSort(link, sortKey){
+  if(sortKey==="soon") return workroomLinkEffectiveUse(link)==="soon";
   if(sortKey==="year") return workroomLinkEffectiveUse(link)==="year";
   if(sortKey==="current") return workroomLinkEffectiveUse(link)==="current";
   if(sortKey==="later") return workroomLinkEffectiveUse(link)==="later";
   if(sortKey==="private") return workroomLinkEffectiveUse(link)==="private";
-  if(sortKey==="bureaucracy"){
-    return workroomLinkEffectiveCategory(link)==="bureaucracy" || link.use==="bureaucracy";
-  }
   return false;
 }
 
@@ -7134,16 +7132,15 @@ function renderWorkroomLinks() {
   // Gewählte Gruppe zuerst; danach werden auch die übrigen Gruppen sauber gebündelt.
   // Innerhalb jeder Gruppe bleibt die eigene Reihenfolge erhalten.
   if(activeWorkroomLinkSort !== "manual"){
-    const baseOrder = ["year","bureaucracy","private","current","later","soon"];
+    const baseOrder = ["soon","year","private","current","later"];
     const groupOrder = [
       activeWorkroomLinkSort,
       ...baseOrder.filter(key => key !== activeWorkroomLinkSort)
     ];
 
-    const groupKey = link => {
-      if(workroomLinkEffectiveCategory(link) === "bureaucracy") return "bureaucracy";
-      return workroomLinkEffectiveUse(link);
-    };
+    // Sortiert wird hier ausschließlich nach Zeitraum.
+    // Bürokratie ist eine MABÜ-Kategorie und bleibt davon unabhängig.
+    const groupKey = link => workroomLinkEffectiveUse(link);
 
     const rank = new Map(groupOrder.map((key,index) => [key,index]));
 
