@@ -1104,8 +1104,8 @@
         </div>
 
         <div class="school-find-add">
-          <input id="schoolFindName1" autocomplete="on" placeholder="Titel, z. B. Pferdevideo">
-          <input id="schoolFindUrl1" autocomplete="url" placeholder="https://…">
+          <input id="schoolFindName1" autocomplete="on" placeholder="Titel – optional">
+          <input id="schoolFindUrl1" autocomplete="url" placeholder="Link einfügen …">
           <select id="schoolFindCategory1" aria-label="Kategorie">
             <option value="ideen">✨ Ideen</option>
             <option value="lesen">📖 Lesen</option>
@@ -1114,7 +1114,18 @@
             <option value="sport">🩰 Sport</option>
             <option value="sonstiges">🌿 Sonstiges</option>
           </select>
+          <select id="schoolFindRating1" aria-label="Bewertung">
+            <option value="gut">♡ Gut</option>
+            <option value="mittel" selected>○ Mittel</option>
+            <option value="schlecht">– Schlecht</option>
+          </select>
           <button class="secondary-btn add-school-find" data-child="1">+ Merken</button>
+        </div>
+
+        <div class="school-find-tools">
+          <span class="school-find-search-icon">⌕</span>
+          <input id="schoolFindSearch1" class="school-find-search" data-child="1" type="search"
+                 placeholder="Fundstücke durchsuchen …" autocomplete="off">
         </div>
 
         <div id="schoolFinds1" class="school-finds"></div>
@@ -1227,8 +1238,8 @@
         </div>
 
         <div class="school-find-add">
-          <input id="schoolFindName2" autocomplete="on" placeholder="Titel, z. B. Pferdevideo">
-          <input id="schoolFindUrl2" autocomplete="url" placeholder="https://…">
+          <input id="schoolFindName2" autocomplete="on" placeholder="Titel – optional">
+          <input id="schoolFindUrl2" autocomplete="url" placeholder="Link einfügen …">
           <select id="schoolFindCategory2" aria-label="Kategorie">
             <option value="ideen">✨ Ideen</option>
             <option value="lesen">📖 Lesen</option>
@@ -1237,7 +1248,18 @@
             <option value="sport">🩰 Sport</option>
             <option value="sonstiges">🌿 Sonstiges</option>
           </select>
+          <select id="schoolFindRating2" aria-label="Bewertung">
+            <option value="gut">♡ Gut</option>
+            <option value="mittel" selected>○ Mittel</option>
+            <option value="schlecht">– Schlecht</option>
+          </select>
           <button class="secondary-btn add-school-find" data-child="2">+ Merken</button>
+        </div>
+
+        <div class="school-find-tools">
+          <span class="school-find-search-icon">⌕</span>
+          <input id="schoolFindSearch2" class="school-find-search" data-child="2" type="search"
+                 placeholder="Fundstücke durchsuchen …" autocomplete="off">
         </div>
 
         <div id="schoolFinds2" class="school-finds"></div>
