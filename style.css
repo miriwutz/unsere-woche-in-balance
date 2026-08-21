@@ -19094,3 +19094,179 @@ body.child-view-active #papaOverviewModal{
   .routine-plan-thumb{display:none}
   .routine-plan-actions a{display:none}
 }
+
+
+/* =========================================================
+   PUNKT 4o – Planung ≠ Durchführung
+   ========================================================= */
+
+.routine-planning-list{
+  padding:8px 0 10px !important;
+}
+
+.routine-week-daily{
+  display:grid;
+  grid-template-columns:72px minmax(0,1fr);
+  gap:9px;
+  align-items:start;
+  margin-bottom:9px;
+  padding:8px 9px;
+  border:1px solid rgba(116,128,77,.13);
+  border-radius:12px;
+  background:rgba(241,244,225,.56);
+}
+.routine-week-daily-label{
+  padding-top:7px;
+  font-family:"Playfair Display",Georgia,serif;
+  color:#666b4d;
+  font-size:.82rem;
+}
+.routine-week-daily-items{
+  display:flex;
+  flex-wrap:wrap;
+  gap:7px;
+}
+.routine-week-daily-items .routine-week-plan-card{
+  flex:1 1 220px;
+}
+
+.routine-week-grid{
+  display:grid;
+  grid-template-columns:repeat(7,minmax(0,1fr));
+  gap:6px;
+}
+.routine-week-day{
+  min-width:0;
+  min-height:138px;
+  border:1px solid rgba(119,103,84,.12);
+  border-radius:12px;
+  background:rgba(255,255,255,.49);
+  overflow:hidden;
+}
+.routine-week-day > header{
+  display:flex;
+  justify-content:space-between;
+  align-items:baseline;
+  gap:5px;
+  padding:8px 9px 7px;
+  border-bottom:1px solid rgba(119,103,84,.08);
+  background:linear-gradient(145deg,rgba(249,247,239,.9),rgba(246,247,237,.58));
+}
+.routine-week-day > header strong{
+  font-family:"Playfair Display",Georgia,serif;
+  font-size:.78rem;
+  color:#5c4d42;
+}
+.routine-week-day > header span{
+  font-size:.64rem;
+  color:#a18c78;
+}
+.routine-week-day.is-today{
+  border-color:rgba(164,132,77,.28);
+  box-shadow:inset 0 3px 0 rgba(183,148,83,.20);
+}
+.routine-week-day-items{
+  display:grid;
+  gap:5px;
+  padding:7px;
+}
+.routine-week-day-empty{
+  color:#c3b9ad;
+  text-align:center;
+  padding:17px 0;
+}
+
+.routine-week-plan-card{
+  display:grid;
+  grid-template-columns:auto minmax(0,1fr) auto;
+  gap:6px;
+  align-items:center;
+  padding:6px;
+  border:1px solid rgba(116,101,82,.09);
+  border-radius:9px;
+  background:#fffefa;
+}
+.routine-week-plan-thumb{
+  position:relative;
+  width:42px;
+  height:27px;
+  overflow:hidden;
+  border-radius:6px;
+}
+.routine-week-plan-thumb img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  display:block;
+}
+.routine-week-plan-thumb span{
+  position:absolute;
+  inset:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:white;
+  text-shadow:0 1px 4px rgba(0,0,0,.45);
+  font-size:.55rem;
+}
+.routine-week-plan-copy{
+  min-width:0;
+  display:grid;
+  gap:1px;
+}
+.routine-week-plan-copy strong{
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  font-family:"Playfair Display",Georgia,serif;
+  font-size:.72rem;
+  color:#57493e;
+}
+.routine-week-plan-copy small{
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  font-size:.61rem;
+  color:#9b806a;
+}
+.routine-week-plan-actions{
+  display:flex;
+  flex-direction:column;
+  gap:1px;
+}
+.routine-week-plan-actions button{
+  width:22px;
+  height:22px;
+  padding:0;
+  border:0;
+  border-radius:6px;
+  background:transparent;
+  color:#9a8472;
+  cursor:pointer;
+}
+.routine-week-plan-actions button:hover{
+  background:#f2ede4;
+}
+
+.archive-planned-badge{
+  display:inline-block;
+  margin-left:3px;
+  padding:2px 6px;
+  border:1px solid rgba(113,124,75,.17);
+  border-radius:999px;
+  background:#f0f3df;
+  color:#707852;
+  font-size:.68rem;
+  font-weight:500;
+}
+
+@media(max-width:1100px){
+  .routine-week-grid{
+    grid-template-columns:repeat(4,minmax(0,1fr));
+  }
+}
+@media(max-width:720px){
+  .routine-week-grid{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+  }
+}
