@@ -20227,3 +20227,119 @@ body.child-view-active #papaOverviewModal{
     grid-template-columns:60px 1fr 76px 24px !important;
   }
 }
+
+
+/* =========================================================
+   PUNKT 11 – Rezeptformular Feinschliff
+   ========================================================= */
+
+/* Feldbeschriftungen IMMER oberhalb des Feldes.
+   Ältere Styles hatten einzelne Labels unter das Feld gedrückt. */
+.recipe-form-v17 .recipe-field{
+  display:flex !important;
+  flex-direction:column !important;
+  align-items:stretch !important;
+  gap:4px !important;
+}
+.recipe-form-v17 .recipe-field > span{
+  order:-1 !important;
+  display:block !important;
+  margin:0 !important;
+  min-height:13px;
+  font-size:.61rem !important;
+  line-height:1.15 !important;
+  color:#8b796c !important;
+}
+.recipe-form-v17 .recipe-field > input,
+.recipe-form-v17 .recipe-field > select,
+.recipe-form-v17 .recipe-field > textarea{
+  order:0 !important;
+  margin:0 !important;
+}
+
+/* "Was passt dazu?" – wirklich kleine, süße Auswahlknöpfe */
+.recipe-feature-row-v17{
+  display:flex !important;
+  flex-wrap:wrap !important;
+  align-items:center !important;
+  gap:7px !important;
+}
+.recipe-kids-toggle,
+.recipe-healthy-toggle,
+.recipe-selfcook-toggle-form,
+.recipe-beaker-toggle,
+.recipe-favorite-toggle{
+  display:inline-flex !important;
+  align-items:center !important;
+  gap:6px !important;
+  flex:0 0 auto !important;
+  width:auto !important;
+  min-width:0 !important;
+  max-width:max-content !important;
+  min-height:32px !important;
+  padding:5px 9px !important;
+  border:1px solid rgba(124,109,91,.13) !important;
+  border-radius:999px !important;
+  background:linear-gradient(145deg,#fffefb,#f8f6ef) !important;
+  color:#75675d !important;
+  box-shadow:0 1px 4px rgba(78,65,54,.025);
+  cursor:pointer;
+}
+.recipe-kids-toggle:hover,
+.recipe-healthy-toggle:hover,
+.recipe-selfcook-toggle-form:hover,
+.recipe-beaker-toggle:hover,
+.recipe-favorite-toggle:hover{
+  background:#f2f4e8 !important;
+  border-color:rgba(112,124,75,.22) !important;
+}
+.recipe-kids-toggle:has(input:checked),
+.recipe-healthy-toggle:has(input:checked),
+.recipe-selfcook-toggle-form:has(input:checked),
+.recipe-beaker-toggle:has(input:checked),
+.recipe-favorite-toggle:has(input:checked){
+  background:linear-gradient(145deg,#eaf0d7,#f5f6ea) !important;
+  border-color:rgba(107,125,68,.28) !important;
+  color:#5f6747 !important;
+}
+.recipe-kids-toggle input,
+.recipe-healthy-toggle input,
+.recipe-selfcook-toggle-form input,
+.recipe-beaker-toggle input,
+.recipe-favorite-toggle input{
+  width:15px !important;
+  height:15px !important;
+  min-width:15px !important;
+  min-height:15px !important;
+  margin:0 !important;
+  accent-color:#86935d;
+}
+.recipe-kids-toggle span,
+.recipe-healthy-toggle span,
+.recipe-selfcook-toggle-form span,
+.recipe-beaker-toggle span,
+.recipe-favorite-toggle span{
+  font-size:.67rem !important;
+  white-space:nowrap;
+}
+
+/* Becherküche direkt nach Zutaten/Zubereitung: optisch als Fortsetzung */
+.recipe-v17-content + .recipe-beaker-mapping{
+  margin-top:-1px !important;
+  border-top-left-radius:10px !important;
+  border-top-right-radius:10px !important;
+}
+.recipe-beaker-mapping{
+  background:linear-gradient(145deg,rgba(248,250,240,.92),rgba(255,254,249,.88)) !important;
+  border-color:rgba(112,128,78,.16) !important;
+}
+
+/* "Geplant" ist im Archiv nicht mehr nötig */
+.archive-planned-row{
+  display:none !important;
+}
+
+/* Etwas mehr Luft zwischen Metadaten und großen Textfeldern */
+.recipe-v19-meta-grid{
+  margin-top:11px !important;
+}
