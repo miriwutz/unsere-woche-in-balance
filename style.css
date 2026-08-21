@@ -20560,3 +20560,144 @@ body.child-view-active #papaOverviewModal{
     grid-template-columns:58px minmax(110px,1fr) 82px 24px !important;
   }
 }
+
+
+/* =========================================================
+   PUNKT 13 – Merkmalsbuttons wirklich ordentlich
+   ========================================================= */
+
+/* Alle fünf Kärtchen in EINER sauberen Reihe, gleich hoch,
+   ohne die alten 50%-Breiten aus früheren Versionen. */
+.recipe-v17-tags .recipe-feature-row-v17{
+  display:grid !important;
+  grid-template-columns:repeat(5,minmax(0,1fr)) !important;
+  gap:8px !important;
+  width:100% !important;
+  align-items:stretch !important;
+  margin-top:8px !important;
+}
+
+.recipe-v17-tags .recipe-feature-row-v17 > label{
+  box-sizing:border-box !important;
+  display:flex !important;
+  flex-direction:row !important;
+  align-items:center !important;
+  justify-content:flex-start !important;
+  width:100% !important;
+  min-width:0 !important;
+  max-width:none !important;
+  min-height:42px !important;
+  height:42px !important;
+  margin:0 !important;
+  padding:6px 10px !important;
+  gap:8px !important;
+
+  border:1px solid rgba(122,108,92,.14) !important;
+  border-radius:12px !important;
+  background:linear-gradient(145deg,rgba(255,254,250,.98),rgba(249,247,241,.94)) !important;
+  box-shadow:0 1px 4px rgba(72,61,51,.025) !important;
+  color:#70645a !important;
+  cursor:pointer !important;
+  transition:background .16s ease,border-color .16s ease,box-shadow .16s ease,transform .08s ease;
+}
+
+.recipe-v17-tags .recipe-feature-row-v17 > label:hover{
+  background:linear-gradient(145deg,#fbfbf4,#f1f4e5) !important;
+  border-color:rgba(112,125,77,.24) !important;
+}
+
+.recipe-v17-tags .recipe-feature-row-v17 > label:has(input:checked){
+  background:linear-gradient(145deg,#e8efd3,#f4f6e9) !important;
+  border-color:rgba(104,123,68,.32) !important;
+  box-shadow:0 1px 5px rgba(99,112,67,.06) !important;
+  color:#596242 !important;
+}
+
+/* echter Kreis */
+.recipe-v17-tags .recipe-feature-row-v17 > label > input[type="checkbox"]{
+  appearance:none !important;
+  -webkit-appearance:none !important;
+  position:relative !important;
+  display:grid !important;
+  place-items:center !important;
+  flex:0 0 20px !important;
+  width:20px !important;
+  min-width:20px !important;
+  max-width:20px !important;
+  height:20px !important;
+  min-height:20px !important;
+  max-height:20px !important;
+  margin:0 !important;
+  padding:0 !important;
+  aspect-ratio:1/1 !important;
+  border-radius:50% !important;
+  border:1.25px solid rgba(113,120,91,.36) !important;
+  background:#fffef9 !important;
+  box-shadow:none !important;
+  cursor:pointer !important;
+}
+
+.recipe-v17-tags .recipe-feature-row-v17 > label > input[type="checkbox"]::after{
+  content:"" !important;
+  width:8px !important;
+  height:8px !important;
+  border-radius:50% !important;
+  background:transparent !important;
+  transform:scale(.35);
+  transition:transform .13s ease,background .13s ease;
+}
+
+.recipe-v17-tags .recipe-feature-row-v17 > label > input[type="checkbox"]:checked{
+  background:#fffef9 !important;
+  border-color:#87965c !important;
+}
+
+.recipe-v17-tags .recipe-feature-row-v17 > label > input[type="checkbox"]:checked::after{
+  background:#8f9f63 !important;
+  transform:scale(1);
+}
+
+.recipe-v17-tags .recipe-feature-row-v17 > label > span{
+  display:flex !important;
+  align-items:center !important;
+  gap:6px !important;
+  min-width:0 !important;
+  white-space:nowrap !important;
+  overflow:hidden !important;
+  text-overflow:ellipsis !important;
+  font-size:.70rem !important;
+  line-height:1 !important;
+}
+
+.recipe-v17-tags .recipe-feature-symbol{
+  flex:0 0 auto;
+  width:18px;
+  display:inline-grid !important;
+  place-items:center !important;
+  font-family:inherit !important;
+  font-style:normal !important;
+  font-size:.83rem !important;
+  line-height:1 !important;
+  color:inherit !important;
+  filter:saturate(.78);
+}
+
+/* Favorit darf etwas romantischer bleiben. */
+.recipe-v17-tags .recipe-favorite-toggle .recipe-feature-symbol{
+  font-family:Georgia,"Times New Roman",serif !important;
+  font-size:1rem !important;
+  color:#ad806d !important;
+}
+
+/* Auf mittleren Screens nicht hässlich brechen:
+   lieber 3 + 2 sauber als überbreite Einzelkästen. */
+@media(max-width:980px){
+  .recipe-v17-tags .recipe-feature-row-v17{
+    grid-template-columns:repeat(3,minmax(0,1fr)) !important;
+  }
+}
+@media(max-width:650px){
+  .recipe-v17-tags .recipe-feature-row-v17{
+    grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+  }
+}
