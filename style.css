@@ -18398,3 +18398,88 @@ body.child-view-active #papaOverviewModal{
 .workroom-week-routine-item.done.has-thumb .routine-week-rating{
   margin-top:5px;
 }
+
+
+/* =========================================================
+   PUNKT 4f – Inspirationskarten abhaken
+   ========================================================= */
+
+.routine-idea-card summary{
+  grid-template-columns:28px auto minmax(0,1fr) 31px !important;
+}
+.routine-idea-check{
+  width:27px;
+  height:27px;
+  min-width:27px;
+  padding:0;
+  border:1.3px solid rgba(127,118,98,.34);
+  border-radius:9px;
+  background:rgba(255,255,255,.72);
+  color:transparent;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  transition:background .16s ease,border-color .16s ease,color .16s ease,transform .12s ease;
+}
+.routine-idea-check:hover{
+  border-color:rgba(105,113,76,.52);
+  transform:translateY(-1px);
+}
+.routine-idea-check span{
+  font-family:Georgia,serif;
+  font-size:.96rem;
+  transform:translateY(-1px);
+}
+.routine-idea-card.is-checked{
+  border-color:rgba(124,135,90,.27) !important;
+  background:linear-gradient(145deg,rgba(240,244,226,.92),rgba(248,248,239,.88)) !important;
+}
+.routine-idea-card.is-checked summary{
+  background:linear-gradient(145deg,rgba(230,237,207,.76),rgba(241,244,226,.72)) !important;
+}
+.routine-idea-card.is-checked .routine-idea-check{
+  border-color:rgba(104,117,69,.48);
+  background:rgba(220,229,191,.86);
+  color:#667044;
+}
+.routine-idea-card.is-checked summary strong{
+  color:#5e6841;
+}
+.routine-idea-card.is-checked summary small{
+  color:#7e8764;
+}
+@media(max-width:800px){
+  .routine-idea-card summary{
+    grid-template-columns:28px 1fr 31px !important;
+  }
+  .routine-idea-card summary small{
+    grid-column:2;
+  }
+  .routine-idea-check{
+    grid-column:3;
+    grid-row:1 / span 2;
+  }
+}
+
+/* PUNKT 4g – Tagesroutinen: ganze Zeile markieren, Reset 03:00 */
+.routine-quality-row{display:none !important;}
+.routine-idea-card{
+  transition:background .18s ease,border-color .18s ease,box-shadow .18s ease;
+}
+.routine-idea-card.is-checked{
+  background:linear-gradient(145deg,rgba(226,233,202,.90),rgba(240,243,222,.84)) !important;
+  border-color:rgba(112,126,73,.34) !important;
+  box-shadow:inset 4px 0 0 rgba(123,136,82,.30);
+}
+.routine-idea-card.is-checked summary{
+  background:rgba(224,232,198,.66) !important;
+}
+.routine-idea-card.is-checked .routine-idea-body{
+  background:rgba(241,244,226,.58);
+}
+.routine-idea-card.is-checked .routine-idea-check{
+  background:rgba(204,216,165,.94) !important;
+  border-color:rgba(96,112,57,.55) !important;
+  color:#59663b !important;
+}
