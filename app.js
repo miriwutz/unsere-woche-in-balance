@@ -3777,6 +3777,25 @@ function resetRoutineEditor(){
 }
 
 
+
+function routineAreaDate(item,offset=activeRoutineWeekOffset){
+  const monday=getMonday(new Date());
+  monday.setDate(monday.getDate()+Number(offset||0)*7);
+
+  if(item?.day && item.day!=="daily"){
+    const names=["Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag","Sonntag"];
+    const di=names.indexOf(item.day);
+    const date=new Date(monday);
+    if(di>=0) date.setDate(monday.getDate()+di);
+    return date;
+  }
+
+  // Bei einer täglichen Routine in der aktuellen Woche ist "heute"
+  // der relevante Abschluss-Tag; in einer Zukunftswoche nehmen wir Montag.
+  if(Number(offset||0)===0) return new Date();
+  return new Date(monday);
+}
+
 function renderRoutineAreaTasks(){
   const routines=ensureWorkroomRoutines();
   const weekKey=routineWeekKey(activeRoutineWeekOffset);
@@ -3804,8 +3823,12 @@ function renderRoutineAreaTasks(){
         ${items.map(item=>{
           const thumb=item.url ? thumbnailFor(item.url) : "";
           const category=routineCategoryMeta[item.category||"none"]||routineCategoryMeta.other;
-          return `<div class="routine-area-task" data-routine-area-id="${item.id}">
-            <button class="routine-area-check" type="button" data-id="${item.id}" aria-label="${item.url?"Video erledigen und bewerten":"Routinepunkt erledigen"}"><span>✓</span></button>
+          const completionDate=routineAreaDate(item,activeRoutineWeekOffset);
+          const completion=routineCompletion(item.id,completionDate);
+          const awaiting=!!(item.url && completion?.done && !completion?.rating);
+
+          return `<div class="routine-area-task ${awaiting?"awaiting-rating":""}" data-routine-area-id="${item.id}">
+            <button class="routine-area-check" type="button" data-id="${item.id}" aria-label="${item.url?"Video erledigen und bewerten":"Routinepunkt erledigen"}"><span>${awaiting?"✓":"◇"}</span></button>
             ${thumb?`<a class="routine-area-thumb" href="${escapeHtml(item.url)}" target="_blank" rel="noopener"><img src="${escapeHtml(thumb)}" alt="" loading="lazy"><span>▶</span></a>`:""}
             <div class="routine-area-task-copy">
               <strong>${escapeHtml(item.title||"Routinepunkt")}</strong>
@@ -3813,9 +3836,15 @@ function renderRoutineAreaTasks(){
             </div>
             <div class="routine-area-task-actions">
               ${item.url?`<a href="${escapeHtml(item.url)}" target="_blank" rel="noopener">Video</a>`:""}
-              <button class="routine-edit-btn" data-id="${item.id}" type="button" title="Bearbeiten">✎</button>
-              <button class="routine-delete-btn" data-id="${item.id}" type="button" title="Löschen">×</button>
+              <button class="routine-area-edit" data-id="${item.id}" type="button" title="Bearbeiten" aria-label="Bearbeiten">✎</button>
+              <button class="routine-area-delete" data-id="${item.id}" type="button" title="Löschen" aria-label="Löschen">×</button>
             </div>
+            ${awaiting?`<div class="routine-area-rating">
+              <span class="routine-rating-label">Wie war es?</span>
+              <button type="button" data-rating="super" data-id="${item.id}" data-date="${dateKey(completionDate)}">✦ Gut</button>
+              <button type="button" data-rating="okay" data-id="${item.id}" data-date="${dateKey(completionDate)}">○ Mittel</button>
+              <button type="button" data-rating="nope" data-id="${item.id}" data-date="${dateKey(completionDate)}">— Schlecht</button>
+            </div>`:""}
           </div>`;
         }).join("")}
       </div>`;
@@ -3828,32 +3857,20 @@ function renderRoutineAreaTasks(){
     const item=ensureWorkroomRoutines().items.find(x=>x.id===btn.dataset.id);
     if(!item) return;
 
-    // Für die Routinenplanung wird beim Abhaken der aktuelle Tag verwendet.
-    // Wenn ein spezieller Wochentag eingetragen ist, nutzen wir den passenden Tag dieser Planungswoche.
-    const monday=getMonday(new Date());
-    monday.setDate(monday.getDate()+activeRoutineWeekOffset*7);
-    let date=new Date(monday);
-    if(item.day && item.day!=="daily"){
-      const names=["Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag","Sonntag"];
-      const di=names.indexOf(item.day);
-      if(di>=0) date.setDate(monday.getDate()+di);
-    }
+    const date=routineAreaDate(item,activeRoutineWeekOffset);
+    const current=routineCompletion(item.id,date);
 
     if(item.url){
-      // Videos: erst erledigt markieren, dann stilvoll bewerten.
-      setRoutineCompletion(item.id,date,{done:true,rating:null,archived:false});
-      btn.closest(".routine-area-task")?.classList.add("awaiting-rating");
-      const row=btn.closest(".routine-area-task");
-      if(row && !row.querySelector(".routine-area-rating")){
-        const rating=document.createElement("div");
-        rating.className="routine-area-rating";
-        rating.innerHTML=`
-          <button type="button" data-rating="super" data-id="${item.id}" data-date="${dateKey(date)}">✦ Gut</button>
-          <button type="button" data-rating="okay" data-id="${item.id}" data-date="${dateKey(date)}">○ Mittel</button>
-          <button type="button" data-rating="nope" data-id="${item.id}" data-date="${dateKey(date)}">— Schlecht</button>`;
-        row.appendChild(rating);
-      }
+      // 1. Klick = erledigt und Bewertung dauerhaft sichtbar.
+      // Ein weiterer Klick nimmt den Status wieder zurück.
+      const willAwait=!(current?.done && !current?.rating);
+      setRoutineCompletion(item.id,date,{
+        done:willAwait,
+        rating:null,
+        archived:!!current?.archived
+      });
       save();
+      renderRoutineAreaTasks();
     }else{
       setRoutineCompletion(item.id,date,{done:true});
       state.workroom.routines.items=state.workroom.routines.items.filter(x=>x.id!==item.id);
@@ -3861,6 +3878,67 @@ function renderRoutineAreaTasks(){
       renderRoutines();
       renderWorkroomWeekOverview(activeWorkroomWeekOffset);
     }
+  }));
+
+  // Bearbeiten muss direkt hier gebunden werden, weil die alte untere
+  // Routinenliste bei normalen Bereichen leer ist.
+  document.querySelectorAll(".routine-area-edit").forEach(btn=>btn.addEventListener("click",e=>{
+    e.preventDefault();
+    e.stopPropagation();
+
+    const item=ensureWorkroomRoutines().items.find(x=>x.id===btn.dataset.id);
+    if(!item) return;
+
+    editingRoutineId=item.id;
+    document.querySelector("#routinePart").value=item.part||"morning";
+    document.querySelector("#routineTitle").value=item.title||"";
+    document.querySelector("#routineUrl").value=item.url||"";
+    document.querySelector("#routineCategory").value=item.category||"none";
+    document.querySelector("#routineDay").value=item.day||"daily";
+    document.querySelector("#routineSticky").checked=!!item.sticky;
+
+    const saveBtn=document.querySelector("#saveRoutineBtn");
+    if(saveBtn) saveBtn.textContent="Änderung speichern";
+
+    document.querySelector(".routine-add-grid")?.scrollIntoView({behavior:"smooth",block:"center"});
+    document.querySelector("#routineTitle")?.focus();
+  }));
+
+  // Löschen direkt im Bereich; bei aus dem Überblick eingeplanten Videos
+  // wird der Archiv-Eintrag wieder freigegeben.
+  document.querySelectorAll(".routine-area-delete").forEach(btn=>btn.addEventListener("click",e=>{
+    e.preventDefault();
+    e.stopPropagation();
+
+    const routines=ensureWorkroomRoutines();
+    const item=routines.items.find(x=>x.id===btn.dataset.id);
+    if(!item) return;
+
+    if(item.sourceArchiveId){
+      const archived=state.archive.find(x=>x.id===item.sourceArchiveId);
+      if(archived){
+        archived.planned=false;
+        archived.updatedAt=Date.now();
+      }
+    }else if(item.url){
+      const archived=state.archive.find(x=>{
+        try{return normalizeUrl(x.url)===normalizeUrl(item.url);}
+        catch{return String(x.url||"").trim()===String(item.url||"").trim();}
+      });
+      if(archived){
+        archived.planned=false;
+        archived.updatedAt=Date.now();
+      }
+    }
+
+    routines.items=routines.items.filter(x=>x.id!==item.id);
+    Object.keys(routines.completions||{}).forEach(key=>{
+      if(key.startsWith(`${item.id}__`)) delete routines.completions[key];
+    });
+
+    save();
+    renderRoutines();
+    renderArchive();
   }));
 }
 
@@ -4208,27 +4286,25 @@ document.addEventListener("click",e=>{
   const rating=btn.dataset.rating;
   btn.closest(".routine-week-rating")?.querySelectorAll("button").forEach(x=>x.classList.toggle("is-selected",x===btn));
 
-  window.setTimeout(()=>{
-    const current=routineCompletion(item.id,date);
-    const entry=routineArchiveFromItem(item,rating,{countDone:!current?.archived});
-    if(!entry) return;
+  const current=routineCompletion(item.id,date);
+  const entry=routineArchiveFromItem(item,rating,{countDone:!current?.archived});
+  if(!entry) return;
 
-    entry.planned=false;
-    entry.updatedAt=Date.now();
+  entry.planned=false;
+  entry.updatedAt=Date.now();
 
-    setRoutineCompletion(item.id,date,{done:true,rating,archived:true});
-    state.workroom.routines.items=state.workroom.routines.items.filter(x=>x.id!==item.id);
-    // Direkt lokal sichern, bevor ein Cloud-Zyklus dazwischenfunken kann.
-    localStorage.setItem("balanceProd.archive",JSON.stringify(state.archive));
-    localStorage.setItem("balanceProd.workroom",JSON.stringify(state.workroom));
-    save();
+  setRoutineCompletion(item.id,date,{done:true,rating,archived:true});
+  state.workroom.routines.items=state.workroom.routines.items.filter(x=>x.id!==item.id);
 
-    // Nach der Bewertung verschwindet das Video sofort aus "Meine Woche"
-    // und ist im Überblick verfügbar.
-    renderArchive();
-    renderRoutines();
-    renderWorkroomWeekOverview(activeWorkroomWeekOffset);
-  },140);
+  // Direkt lokal sichern, bevor ein Cloud-Zyklus dazwischenfunken kann.
+  localStorage.setItem("balanceProd.archive",JSON.stringify(state.archive));
+  localStorage.setItem("balanceProd.workroom",JSON.stringify(state.workroom));
+  save();
+
+  // Nach der Bewertung sofort weg aus der Routine und zurück in den Überblick.
+  renderArchive();
+  renderRoutines();
+  renderWorkroomWeekOverview(activeWorkroomWeekOffset);
 });
 
 document.querySelector("#openWorkroomWeekBtn")?.addEventListener("click",()=>{
