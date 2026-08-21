@@ -7006,6 +7006,56 @@ let activeWorkroomLinkCategory = "all";
 let activeWorkroomLinkUse = "all";
 let activeWorkroomLinkImportant = false;
 
+function normalizedWorkroomLinkUrl(url){
+  try{
+    const u=new URL(String(url||"").trim());
+    u.hash="";
+    if(u.pathname.length>1) u.pathname=u.pathname.replace(/\/+$/,"");
+    return u.toString().toLowerCase();
+  }catch{
+    return String(url||"").trim().replace(/\/+$/,"").toLowerCase();
+  }
+}
+
+function cleanupDuplicateWorkroomLinks(){
+  state.workroom=normalizeWorkroom(state.workroom);
+
+  const seen=new Set();
+  const cleaned=[];
+
+  // Newest copy wins when the same exact destination was accidentally stored twice.
+  [...state.workroom.links]
+    .sort((a,b)=>Number(b.updatedAt||b.createdAt||0)-Number(a.updatedAt||a.createdAt||0))
+    .forEach(link=>{
+      const key=normalizedWorkroomLinkUrl(link.url);
+      if(key && seen.has(key)) return;
+      if(key) seen.add(key);
+      cleaned.push(link);
+    });
+
+  if(cleaned.length!==state.workroom.links.length){
+    state.workroom.links=cleaned;
+    save();
+  }
+}
+
+function ensureWorkroomLinkOrder(){
+  state.workroom=normalizeWorkroom(state.workroom);
+
+  const hasMissing=state.workroom.links.some(link=>!Number.isFinite(Number(link.order)));
+  if(!hasMissing) return;
+
+  // Preserve the currently familiar newest-first order once, then user order takes over.
+  const initial=[...state.workroom.links].sort((a,b)=>{
+    if(!!b.important!==!!a.important) return Number(!!b.important)-Number(!!a.important);
+    return Number(b.updatedAt||b.createdAt||0)-Number(a.updatedAt||a.createdAt||0);
+  });
+
+  initial.forEach((link,index)=>link.order=index);
+  state.workroom.links=initial;
+  save();
+}
+
 function renderWorkroomLinks() {
   try {
     const localWorkroom = JSON.parse(localStorage.getItem("balanceProd.workroom") || "null");
@@ -7026,18 +7076,8 @@ function renderWorkroomLinks() {
   if (!list) return;
 
   state.workroom = normalizeWorkroom(state.workroom);
-
-  const categoryLabels = {
-    wood: "🪵 Holz",
-    paper: "📄 Papier",
-    free: "✂️ Freies Arbeiten",
-    experiment: "🧪 Experimentieren",
-    documents: "📎 Unterlagen & Belege",
-    bureaucracy: "🗂 Bürokratie",
-    current: "📌 Aktuell",
-    private: "♡ Privat",
-    other: "✨ Sonstiges"
-  };
+  cleanupDuplicateWorkroomLinks();
+  ensureWorkroomLinkOrder();
 
   const useLabels = {
     soon: "Demnächst",
@@ -7059,10 +7099,7 @@ function renderWorkroomLinks() {
     .filter(link =>
       !activeWorkroomLinkImportant || !!link.important
     )
-    .sort((a,b) => {
-      if (!!b.important !== !!a.important) return Number(!!b.important) - Number(!!a.important);
-      return Number(b.updatedAt || b.createdAt || 0) - Number(a.updatedAt || a.createdAt || 0);
-    });
+    .sort((a,b)=>Number(a.order??999999)-Number(b.order??999999));
 
   if (!links.length) {
     list.innerHTML =
@@ -7071,7 +7108,13 @@ function renderWorkroomLinks() {
   }
 
   list.innerHTML = links.map(link => `
-    <div class="workroom-link-item ${link.important ? "workroom-link-item-important" : ""} ${link.category === "private" ? "workroom-link-item-private" : ""}" data-category="${escapeHtml(link.category || "other")}" data-id="${link.id}">
+    <div class="workroom-link-item ${link.important ? "workroom-link-item-important" : ""} ${link.category === "private" ? "workroom-link-item-private" : ""}"
+         data-category="${escapeHtml(link.category || "other")}"
+         data-id="${link.id}">
+      <span class="workroom-link-drag-handle"
+            title="Ziehen zum Verschieben"
+            aria-label="Ziehen zum Verschieben">⠿</span>
+
       <div class="workroom-link-main">
         <div class="workroom-link-texts">
           <a
@@ -7084,13 +7127,10 @@ function renderWorkroomLinks() {
           </a>
 
           ${link.note
-            ? `<div class="workroom-link-note">${escapeHtml(link.note)}</div>`
+            ? `<span class="workroom-link-note">${escapeHtml(link.note)}</span>`
             : ""}
 
-          <div class="workroom-link-meta">
-            <span class="workroom-link-category">${categoryLabels[link.category] || "✨ Sonstiges"}</span>
-            <span class="workroom-link-use">${useLabels[link.use || "soon"] || "Demnächst"}</span>
-          </div>
+          <span class="workroom-link-use">${useLabels[link.use || "soon"] || "Demnächst"}</span>
         </div>
       </div>
 
@@ -7114,9 +7154,13 @@ function renderWorkroomLinks() {
     btn.addEventListener("click", e => {
       const id = e.currentTarget.dataset.id;
       state.workroom.links = state.workroom.links.filter(link => link.id !== id);
+      // Keep order dense after deletion.
+      [...state.workroom.links]
+        .sort((a,b)=>Number(a.order??999999)-Number(b.order??999999))
+        .forEach((link,index)=>link.order=index);
       save();
       renderWorkroomLinks();
-  renderRoutines();
+      renderRoutines();
     });
   });
 
@@ -7138,6 +7182,44 @@ function renderWorkroomLinks() {
       addBtn.textContent = "Änderung speichern";
     });
   });
+
+  if(typeof Sortable!=="undefined"){
+    new Sortable(list,{
+      animation:160,
+      handle:".workroom-link-drag-handle",
+      draggable:".workroom-link-item",
+      ghostClass:"workroom-sort-ghost",
+      chosenClass:"workroom-sort-chosen",
+      dragClass:"workroom-sort-drag",
+      filter:".workroom-link-actions,.workroom-link-actions *,a,button,input,select,textarea",
+      preventOnFilter:false,
+
+      onEnd:()=>{
+        const visibleIds=[...list.querySelectorAll(".workroom-link-item")].map(row=>row.dataset.id);
+
+        // Reorder only the positions occupied by currently visible items.
+        // Hidden/filter-excluded items keep their relative positions.
+        const all=[...state.workroom.links]
+          .sort((a,b)=>Number(a.order??999999)-Number(b.order??999999));
+
+        const visibleSet=new Set(visibleIds);
+        const slots=[];
+        all.forEach((item,index)=>{
+          if(visibleSet.has(item.id)) slots.push(index);
+        });
+
+        visibleIds.forEach((id,i)=>{
+          const replacement=state.workroom.links.find(link=>link.id===id);
+          if(replacement && slots[i]!==undefined) all[slots[i]]=replacement;
+        });
+
+        all.forEach((link,index)=>link.order=index);
+        state.workroom.links=all;
+        save();
+        renderWorkroomLinks();
+      }
+    });
+  }
 }
 
 // Link speichern / bearbeiten
@@ -7181,7 +7263,21 @@ document.querySelector("#addWorkroomLinkBtn")?.addEventListener("click", () => {
     delete button.dataset.editId;
     button.textContent = "+ Speichern";
   } else {
-    state.workroom.links.push({
+    const duplicate=state.workroom.links.find(link=>
+      normalizedWorkroomLinkUrl(link.url)===normalizedWorkroomLinkUrl(url)
+    );
+
+    if(duplicate){
+      showMotivation("Dieser Link ist bereits gespeichert.");
+      return;
+    }
+
+    // New links always go to the top.
+    state.workroom.links.forEach(link=>{
+      link.order=(Number(link.order)||0)+1;
+    });
+
+    state.workroom.links.unshift({
       id: uid(),
       title,
       note,
@@ -7189,6 +7285,7 @@ document.querySelector("#addWorkroomLinkBtn")?.addEventListener("click", () => {
       category,
       use,
       important,
+      order: 0,
       createdAt: Date.now(),
       updatedAt: Date.now()
     });
