@@ -9252,24 +9252,31 @@ function recipeRatingLabel(value) {
 }
 
 function updateRecipeSourceForm() {
-  const source = document.querySelector("#recipeSourceType")?.value || "internal";
-  const external = source === "external";
-  const internalIds = ["recipeTime","recipeIngredients","recipeSteps","recipeBakeTime","recipeTemperature"];
-  internalIds.forEach(id => document.querySelector(`#${id}`)?.classList.toggle("recipe-source-hidden", external));
-  const web = document.querySelector("#recipeWebUrl");
-  const webLabel = document.querySelector("#recipeWebLabel");
-  if (web) {
-    web.placeholder = external ? "Link zum Internetrezept …" : "Link zur Quelle – optional";
-    web.classList.toggle("recipe-external-required", external);
+  const source=document.querySelector("#recipeSourceType")?.value || "internal";
+  const external=source==="external";
+
+  document.querySelectorAll(".recipe-internal-only").forEach(el=>{
+    el.classList.toggle("recipe-section-hidden",external);
+  });
+
+  const web=document.querySelector("#recipeWebUrl");
+  const webLabel=document.querySelector("#recipeWebLabel");
+  const title=document.querySelector("#recipeLinkSectionTitle");
+  const hint=document.querySelector("#recipeLinkSectionHint");
+
+  if(web){
+    web.placeholder=external?"Link zum Internetrezept …":"Link zur Quelle – optional";
+    web.classList.toggle("recipe-external-required",external);
   }
-  if (webLabel) {
-    webLabel.textContent = external ? "Link zum Internetrezept" : "Link – optional";
-  }
-  document.querySelector(".recipe-entry-content")?.classList.toggle("recipe-section-hidden", external);
+  if(webLabel) webLabel.textContent=external?"Link zum Internetrezept":"Quellen-Link – optional";
+  if(title) title.textContent=external?"Internetrezept":"Links";
+  if(hint) hint.textContent=external
+    ?"Mindestens einen Link eintragen – Zutaten und Zubereitung brauchst du hier nicht."
+    :"Optional – Quelle oder passendes Video hinterlegen.";
 }
 
 function resetRecipeForm() {
-  ["#recipeTitle","#recipeTime","#recipeIngredients","#recipeSteps","#recipeWebUrl","#recipeYoutubeUrl"]
+  ["#recipeTitle","#recipeTime","#recipeIngredients","#recipeSteps","#recipeWebUrl","#recipeYoutubeUrl","#recipeBakeTime","#recipeTemperature"]
     .forEach(sel => {
       const el = document.querySelector(sel);
       if (el) el.value = "";
@@ -9338,6 +9345,8 @@ function startRecipeEdit(recipe) {
   document.querySelector("#recipeHealthy").checked = !!recipe.healthy;
   document.querySelector("#recipeFavorite").checked = !!recipe.favorite;
   document.querySelector("#recipeTime").value = recipe.time || "";
+  document.querySelector("#recipeBakeTime").value = recipe.bakeTime || "";
+  document.querySelector("#recipeTemperature").value = recipe.temperature || "";
   document.querySelector("#recipeIngredients").value = normalizedRecipeLines(recipe.ingredients).join("\n");
   document.querySelector("#recipeSteps").value = normalizedRecipeLines(recipe.steps).join("\n");
   document.querySelector("#recipeWebUrl").value = recipe.webUrl || "";
@@ -10168,61 +10177,43 @@ function renderRecipeSearchSuggestions() {
 }
 
 function renderRecipeToc() {
-  const host = document.querySelector("#recipeTocList");
-  if (!host) return;
+  const host=document.querySelector("#recipeTocList");
+  if(!host) return;
 
-  const recipes = (state.recipes || [])
-    .slice()
-    .sort((a,b) => String(a.title || "").localeCompare(String(b.title || ""), "de"));
+  const recipes=Array.isArray(state.recipes)?state.recipes:[];
+  const countEl=document.querySelector("#recipeLibraryCount");
+  if(countEl) countEl.textContent=`${recipes.length} ${recipes.length===1?"Rezept":"Rezepte"}`;
 
-  if (!recipes.length) {
-    host.innerHTML = `<span class="recipe-toc-empty">Noch keine Rezepte.</span>`;
+  if(!recipes.length){
+    host.innerHTML='<span class="recipe-toc-empty">Noch keine Rezepte.</span>';
     return;
   }
 
-  const categoryOrder = ["breakfast","spread","soup","main","small","salad","sweet","drink","other"];
-  const groups = categoryOrder
-    .map(category => ({
-      category,
-      label: recipeCategoryLabel(category),
-      recipes: recipes.filter(r => (r.category || "main") === category)
-    }))
-    .filter(group => group.recipes.length);
+  const order=["breakfast","spread","soup","main","small","salad","sweet","drink","other"];
+  const groups=order.map(category=>({
+    category,
+    label:recipeCategoryLabel(category),
+    count:recipes.filter(r=>(r.category||"main")===category).length
+  })).filter(g=>g.count);
 
-  host.innerHTML = `
-    <div class="recipe-toc-groups">
-      ${groups.map(group => `
-        <section class="recipe-toc-group">
-          <h4>${escapeHtml(group.label)}</h4>
-          <div class="recipe-toc-group-list">
-            ${group.recipes.map(r => `
-              <button type="button" class="recipe-toc-link" data-id="${r.id}" data-title="${escapeHtml(r.title || "")}">
-                <span class="recipe-toc-name">${escapeHtml(r.title || "Ohne Titel")}</span>
-                <span class="recipe-toc-marks">
-                  ${recipeSelfCook(r) ? `<span title="Selbst kochen">👧</span>` : ""}
-                  ${recipeBeakerKitchen(r) ? `<span title="Becherküche">🥣</span>` : ""}
-                  ${r.favorite ? `<span title="Lieblingsrezept">★</span>` : ""}
-                </span>
-              </button>
-            `).join("")}
-          </div>
-        </section>
-      `).join("")}
-    </div>
+  host.innerHTML=`
+    <button type="button" class="recipe-library-chip ${activeRecipeCategory==="all"?"active":""}" data-category="all">
+      <span>Alle</span><b>${recipes.length}</b>
+    </button>
+    ${groups.map(g=>`
+      <button type="button" class="recipe-library-chip ${activeRecipeCategory===g.category?"active":""}" data-category="${g.category}">
+        <span>${escapeHtml(g.label)}</span><b>${g.count}</b>
+      </button>`).join("")}
   `;
 
-  host.querySelectorAll(".recipe-toc-link").forEach(btn => {
-    btn.addEventListener("click", () => {
-      const search = document.querySelector("#recipeSearch");
-      if (search) search.value = btn.dataset.title || "";
-      activeRecipeSearch = btn.dataset.title || "";
-      renderRecipes();
-      requestAnimationFrame(() => {
-        const card = document.querySelector(`#recipe-${CSS.escape(btn.dataset.id)}`);
-        if (card) card.scrollIntoView({behavior:"smooth", block:"start"});
-      });
-    });
-  });
+  host.querySelectorAll(".recipe-library-chip").forEach(btn=>btn.addEventListener("click",()=>{
+    activeRecipeCategory=btn.dataset.category||"all";
+    recipePage=0;
+    const select=document.querySelector("#recipeCategoryFilter");
+    if(select) select.value=activeRecipeCategory;
+    renderRecipes();
+    requestAnimationFrame(()=>document.querySelector("#recipeList")?.scrollIntoView({behavior:"smooth",block:"start"}));
+  }));
 }
 
 function mealPlanMonday(offset = 0) {
@@ -10632,9 +10623,11 @@ document.querySelector("#saveRecipeBtn")?.addEventListener("click", () => {
     beakerKitchen: !!document.querySelector("#recipeBeakerKitchen")?.checked,
       beakerMappings: readRecipeBeakerMappings(),
     healthy: !!document.querySelector("#recipeHealthy")?.checked,
-    time: document.querySelector("#recipeTime")?.value.trim() || "",
-    ingredients: recipeLines(document.querySelector("#recipeIngredients")?.value),
-    steps: recipeLines(document.querySelector("#recipeSteps")?.value),
+    time: sourceType === "external" ? "" : (document.querySelector("#recipeTime")?.value.trim() || ""),
+    bakeTime: sourceType === "external" ? "" : (document.querySelector("#recipeBakeTime")?.value.trim() || ""),
+    temperature: sourceType === "external" ? "" : (document.querySelector("#recipeTemperature")?.value.trim() || ""),
+    ingredients: sourceType === "external" ? [] : recipeLines(document.querySelector("#recipeIngredients")?.value),
+    steps: sourceType === "external" ? [] : recipeLines(document.querySelector("#recipeSteps")?.value),
     webUrl,
     youtubeUrl
   };
