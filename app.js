@@ -3595,8 +3595,8 @@ function routineVideoTitle(item){
   return item.title || "Routinevideo";
 }
 
-function routineArchiveFromItem(item,rating){
-  if(!item.url) return;
+function routineArchiveFromItem(item,rating,{countDone=false}={}){
+  if(!item.url) return null;
   let entry=state.archive.find(a=>normalizeUrl(a.url)===normalizeUrl(item.url));
   if(!entry){
     entry={
@@ -3615,9 +3615,12 @@ function routineArchiveFromItem(item,rating){
   entry.title=routineVideoTitle(item);
   entry.thumbnail=entry.thumbnail || thumbnailFor(item.url);
   entry.category=item.category || entry.category || "other";
-  entry.rating=rating || entry.rating;
-  entry.timesDone=(entry.timesDone||0)+1;
-  entry.lastDone=new Date().toISOString();
+  if(rating) entry.rating=rating;
+  if(countDone){
+    entry.timesDone=(entry.timesDone||0)+1;
+    entry.lastDone=new Date().toISOString();
+  }
+  return entry;
 }
 
 function resetRoutineEditor(){
@@ -3867,8 +3870,13 @@ function renderWorkroomWeekOverview(weekOffset=0){
                     const completion=routineCompletion(item.id,day.date);
                     const done=!!completion?.done;
                     const category=routineCategoryMeta[item.category||"none"]||routineCategoryMeta.other;
-                    return `<div class="workroom-week-routine-item ${done?"done":""}" data-routine-id="${item.id}" data-date="${dateKey(day.date)}">
+                    const routineThumb=item.url ? thumbnailFor(item.url) : "";
+                    return `<div class="workroom-week-routine-item ${done?"done":""} ${routineThumb?"has-thumb":""}" data-routine-id="${item.id}" data-date="${dateKey(day.date)}">
                       <button class="routine-week-check" type="button" data-id="${item.id}" data-date="${dateKey(day.date)}" aria-label="Routinepunkt abhaken">${done?"✓":""}</button>
+                      ${routineThumb?`<a class="routine-week-thumb" href="${escapeHtml(item.url)}" target="_blank" rel="noopener" aria-label="Video öffnen">
+                        <img src="${escapeHtml(routineThumb)}" alt="" loading="lazy" referrerpolicy="no-referrer">
+                        <span>▶</span>
+                      </a>`:""}
                       <div class="routine-week-copy">
                         <strong>${escapeHtml(item.title||"Routinepunkt")}</strong>
                         ${item.url?`<a href="${escapeHtml(item.url)}" target="_blank" rel="noopener">${category[0]} ${category[1]} · Video öffnen</a>`:""}
@@ -3895,10 +3903,30 @@ function renderWorkroomWeekOverview(weekOffset=0){
     const item=ensureWorkroomRoutines().items.find(x=>x.id===btn.dataset.id);
     const date=parseLocalDate(btn.dataset.date);
     if(!item || !date) return;
+
     const current=routineCompletion(item.id,date);
-    setRoutineCompletion(item.id,date,{done:!current?.done,rating:!current?.done?null:null});
+    const willBeDone=!current?.done;
+
+    if(willBeDone){
+      // Sobald ein Video wirklich erledigt wurde, erscheint es sofort
+      // in "Unser Überblick". Die Bewertung kann direkt danach folgen.
+      if(item.url && !current?.archived){
+        routineArchiveFromItem(item,null,{countDone:true});
+      }
+      setRoutineCompletion(item.id,date,{
+        done:true,
+        rating:current?.rating || null,
+        archived:!!item.url || !!current?.archived
+      });
+    }else{
+      // Nur den Tages-Haken zurücknehmen; die bereits entstandene
+      // Verlaufshistorie im Überblick bleibt bewusst erhalten.
+      setRoutineCompletion(item.id,date,{done:false,rating:null});
+    }
+
     save();
     renderWorkroomWeekOverview(activeWorkroomWeekOffset);
+    renderArchive();
   }));
 
   document.querySelectorAll(".routine-week-rating button").forEach(btn=>btn.addEventListener("click",()=>{
@@ -3906,8 +3934,8 @@ function renderWorkroomWeekOverview(weekOffset=0){
     const date=parseLocalDate(btn.dataset.date);
     if(!item || !date) return;
     const rating=btn.dataset.rating;
-    setRoutineCompletion(item.id,date,{done:true,rating});
-    routineArchiveFromItem(item,rating);
+    setRoutineCompletion(item.id,date,{done:true,rating,archived:true});
+    routineArchiveFromItem(item,rating,{countDone:false});
     save();
     renderWorkroomWeekOverview(activeWorkroomWeekOffset);
     renderArchive();
