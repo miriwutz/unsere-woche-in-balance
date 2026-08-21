@@ -17439,3 +17439,71 @@ body.child-view-active #papaOverviewModal{
   margin-left: 8px !important;
   margin-bottom: 12px !important;
 }
+
+
+/* =========================================================
+   PUNKT 3a – "Für euch", Spotify, Finas Stundenplan-Symbole
+   Fundstücke bleiben in diesem Durchgang bewusst unverändert.
+   ========================================================= */
+
+/* Spotify: klein, persönlich, nicht wie eine fünfte große Kachel */
+.school-music-row{
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  gap:8px;
+  flex-wrap:wrap;
+  margin:10px 2px 2px;
+}
+.school-spotify-pill{
+  display:inline-flex;
+  align-items:center;
+  min-height:34px;
+  padding:7px 14px;
+  border:1px solid #d9ddc0;
+  border-radius:999px;
+  background:linear-gradient(145deg,#f4f6e8,#fbfaf3);
+  color:#4f5540;
+  text-decoration:none;
+  font-weight:650;
+  box-shadow:0 5px 16px rgba(90,88,66,.06);
+}
+.school-spotify-edit,
+.school-spotify-cancel{
+  border:0;
+  background:transparent;
+  color:#9b927f;
+  font:inherit;
+  font-size:.82rem;
+  cursor:pointer;
+}
+.school-spotify-edit:hover{color:#655e51;text-decoration:underline}
+.school-spotify-editor{
+  width:100%;
+  display:flex;
+  justify-content:flex-end;
+  align-items:center;
+  gap:7px;
+}
+.school-spotify-editor input{
+  width:min(430px,100%);
+  border-radius:999px !important;
+}
+.school-spotify-editor.hidden{display:none !important}
+
+/* Finas Stundenplan: kleine Fachzeichen, Text bleibt klar lesbar */
+.tt-fina .tt-subject-display{
+  vertical-align:middle;
+}
+.tt-fina .tt-subject-display > span{
+  vertical-align:middle;
+}
+.tt-fina .tt-subject-icon{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:1.45em;
+  margin-right:4px;
+  opacity:.78;
+  font-size:.92em;
+}
