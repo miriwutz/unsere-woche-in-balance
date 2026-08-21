@@ -953,7 +953,14 @@ function renderQuickLinks(){
  const list=document.querySelector("#quickLinksManageList");
  if(list)list.innerHTML=links.map(x=>`<div class="quick-link-manage-row"><span><strong>${escapeHtml(x.label||"Link")}</strong><small>${escapeHtml(x.url||"")}</small></span><button type="button" class="quick-link-edit" data-id="${x.id}">✎</button><button type="button" class="quick-link-remove" data-id="${x.id}">×</button></div>`).join("");
  document.querySelectorAll(".quick-link-edit").forEach(btn=>btn.onclick=()=>{const x=links.find(v=>v.id===btn.dataset.id);if(!x)return;editingQuickLinkId=x.id;document.querySelector("#quickLinkLabel").value=x.label||"";document.querySelector("#quickLinkUrl").value=x.url||"";document.querySelector("#saveQuickLinkBtn").textContent="Speichern";document.querySelector("#cancelQuickLinkEditBtn")?.classList.remove("hidden");});
- document.querySelectorAll(".quick-link-remove").forEach(btn=>btn.onclick=()=>{state.familySettings.quickLinks=links.filter(v=>v.id!==btn.dataset.id);save();renderQuickLinks();});
+ document.querySelectorAll(".quick-link-remove").forEach(btn=>btn.onclick=()=>{
+   const link=links.find(v=>v.id===btn.dataset.id);
+   if(!link)return;
+   if(!window.confirm(`"${link.label || "Link"}" wirklich aus dem Schnellzugriff löschen?`))return;
+   state.familySettings.quickLinks=links.filter(v=>v.id!==btn.dataset.id);
+   save();
+   renderQuickLinks();
+ });
 }
 document.querySelector("#saveQuickLinkBtn")?.addEventListener("click",()=>{const label=document.querySelector("#quickLinkLabel")?.value.trim()||"";const url=normalizeExternalUrl(document.querySelector("#quickLinkUrl")?.value||"");if(!label||!url)return;if(editingQuickLinkId){const x=state.familySettings.quickLinks.find(v=>v.id===editingQuickLinkId);if(x){x.label=label;x.url=url;}}else state.familySettings.quickLinks.push({id:uid(),label,url});save();resetQuickLinkEditor();renderQuickLinks();});
 document.querySelector("#cancelQuickLinkEditBtn")?.addEventListener("click",resetQuickLinkEditor);
@@ -1074,6 +1081,27 @@ function motivationalMessage() {
   return messages[Math.floor(Math.random() * messages.length)];
 }
 
+
+function familyQuestionThankYouMessage() {
+  const messages = [
+    "💛 RIESENDANKE! Du hast mir damit wirklich geholfen.",
+    "🌷 Tausend Dank – genau solche kleinen Hilfen machen den Alltag leichter.",
+    "✨ Danke, dass du das übernommen hast. Das bedeutet mir wirklich viel.",
+    "🌿 RIESENDANKE! Schön, dass wir uns aufeinander verlassen können.",
+    "💫 Danke! Damit hast du gerade ein Stück Last von jemand anderem übernommen.",
+    "🌼 Ganz großes Danke – solche Gefallen sind alles andere als selbstverständlich.",
+    "🫶 Danke, dass du dich darum gekümmert hast. Das war richtig lieb.",
+    "💛 Wirklich: Danke. Genau so fühlt sich Familie an."
+  ];
+  return messages[Math.floor(Math.random() * messages.length)];
+}
+
+function showFamilyQuestionThanks() {
+  const toast = document.querySelector("#motivationToast");
+  if (toast) toast.classList.add("family-thanks");
+  showMotivation(familyQuestionThankYouMessage());
+  window.setTimeout(() => toast?.classList.remove("family-thanks"), 7200);
+}
 
 function todoMotivationalMessage() {
   const messages = [
@@ -1965,7 +1993,6 @@ const eventHtml = orderedEvents.length ? `
 
       <div class="week-band week-band-todos">
         ${todoHtml || ""}
-        ${weekplanHtml || ""}
       </div>
 
       <div class="week-band week-band-videos">
@@ -1979,6 +2006,7 @@ const eventHtml = orderedEvents.length ? `
           : ""}
       </div>
 
+      ${weekplanHtml ? `<div class="weekplan-bottom-slot">${weekplanHtml}</div>` : ""}
       ${quietBottomHtml}
     `;
     grid.appendChild(dayEl);
@@ -2393,6 +2421,12 @@ function renderTodos() {
     if (todoFilter === "todo" || todoFilter === "event") {
       todos = todos.filter(t => (t.type || "todo") === todoFilter);
     }
+    if (todoFilter === "weekplan") {
+      todos = todos.filter(t =>
+        (t.type || "todo") === "todo" &&
+        t.priority === "weekplan"
+      );
+    }
     if (todoFilter === "latest") {
       todos = todos.filter(t => isNewEntry(t));
     }
@@ -2493,7 +2527,7 @@ todos.sort((a, b) => {
   }
 
   const labels = {
-    important:"Wichtig", medium:"Mittel", low:"Kann warten",
+    important:"Wichtig", medium:"Mittel", low:"Kann warten", weekplan:"Wochenplan",
     work:"Arbeit", private:"Privat",
     today:"Heute", week:"Diese Woche", month:"Diesen Monat", later:"Irgendwann",
     todo:"To-do", event:"Termin"
@@ -4913,6 +4947,7 @@ function renderFamilyQuestions(){
       persistFamilyQuestionsNow();
       save();
       renderFamilyQuestions();
+      showFamilyQuestionThanks();
     });
   });
 
