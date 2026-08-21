@@ -6678,25 +6678,22 @@ function syncSchoolPrintEmailUI(){
   if(input && document.activeElement!==input) input.value=getSchoolPrintEmail();
 }
 
-function openSchoolPrintMail(item){
-  const email=getSchoolPrintEmail();
-  if(!email){
-    const input=document.querySelector("#schoolPrintEmail");
-    input?.focus();
-    showMotivation("Bitte zuerst die E-Mail-Adresse für Druckbestellungen hinterlegen.");
-    return;
+function setSchoolPrintEmailPanel(open=true){
+  const panel=document.querySelector("#schoolPrintEmailPanel");
+  const toggle=document.querySelector("#toggleSchoolPrintEmail");
+  if(!panel) return;
+
+  panel.classList.toggle("hidden",!open);
+  toggle?.setAttribute("aria-expanded",open ? "true" : "false");
+
+  if(open){
+    syncSchoolPrintEmailUI();
+    window.setTimeout(()=>document.querySelector("#schoolPrintEmail")?.focus(),0);
   }
-  const subject=`Druckbestellung – ${item?.text || "Druckauftrag"}`;
-  const lines=[
-    `Hallo,`,
-    ``,
-    `bitte folgenden Druckauftrag ausdrucken:`,
-    `${item?.text || ""}`,
-    item?.url ? `Link: ${item.url}` : "",
-    ``,
-    `Danke!`
-  ].filter((line,index,arr)=>line!=="" || (index>0 && arr[index-1]!==""));
-  window.location.href=`mailto:${encodeURIComponent(email)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(lines.join("\n"))}`;
+}
+
+function showSchoolPrintEmail(){
+  setSchoolPrintEmailPanel(true);
 }
 
 function renderSchoolPrints() {
@@ -6766,8 +6763,8 @@ const prints = [...state.workroom.prints]
             class="workroom-print-mail"
             type="button"
             data-id="${p.id}"
-            title="Druckbestellung per E-Mail öffnen"
-            aria-label="Druckbestellung per E-Mail öffnen">✉</button>
+            title="Druck-E-Mail anzeigen"
+            aria-label="Druck-E-Mail anzeigen">✉</button>
 
           <button
             class="workroom-print-edit"
@@ -6842,10 +6839,8 @@ const prints = [...state.workroom.prints]
 });
 
   document.querySelectorAll(".workroom-print-mail").forEach(btn => {
-    btn.addEventListener("click", e => {
-      const id=e.currentTarget.dataset.id;
-      const item=state.workroom.prints.find(p=>p.id===id);
-      if(item) openSchoolPrintMail(item);
+    btn.addEventListener("click", () => {
+      showSchoolPrintEmail();
     });
   });
 
@@ -6982,6 +6977,12 @@ document.querySelector("#addSchoolPrintBtn")?.addEventListener("click", () => {
   renderSchoolPrints();
 });
 
+document.querySelector("#toggleSchoolPrintEmail")?.addEventListener("click", e=>{
+  const panel=document.querySelector("#schoolPrintEmailPanel");
+  const willOpen=!!panel?.classList.contains("hidden");
+  setSchoolPrintEmailPanel(willOpen);
+});
+
 document.querySelector("#saveSchoolPrintEmailBtn")?.addEventListener("click",()=>{
   const input=document.querySelector("#schoolPrintEmail");
   const value=String(input?.value || "").trim();
@@ -6994,6 +6995,7 @@ document.querySelector("#saveSchoolPrintEmailBtn")?.addEventListener("click",()=
   else localStorage.removeItem(SCHOOL_PRINT_EMAIL_KEY);
   syncSchoolPrintEmailUI();
   showMotivation(value ? "Druck-E-Mail gespeichert." : "Druck-E-Mail entfernt.");
+  setSchoolPrintEmailPanel(true);
 });
 
 // =============================
@@ -7033,6 +7035,7 @@ function renderWorkroomLinks() {
     documents: "📎 Unterlagen & Belege",
     bureaucracy: "🗂 Bürokratie",
     current: "📌 Aktuell",
+    private: "♡ Privat",
     other: "✨ Sonstiges"
   };
 
@@ -7068,7 +7071,7 @@ function renderWorkroomLinks() {
   }
 
   list.innerHTML = links.map(link => `
-    <div class="workroom-link-item ${link.important ? "workroom-link-item-important" : ""}" data-id="${link.id}">
+    <div class="workroom-link-item ${link.important ? "workroom-link-item-important" : ""} ${link.category === "private" ? "workroom-link-item-private" : ""}" data-category="${escapeHtml(link.category || "other")}" data-id="${link.id}">
       <div class="workroom-link-main">
         <div class="workroom-link-texts">
           <a
@@ -10246,7 +10249,10 @@ function renderRecipeToc() {
     .sort((a,b) => String(a.title || "").localeCompare(String(b.title || ""), "de", {sensitivity:"base"}));
 
   const countEl = document.querySelector("#recipeLibraryCount");
-  if (countEl) countEl.textContent = `${filtered.length} ${filtered.length === 1 ? "Rezept" : "Rezepte"}`;
+  if (countEl) {
+    countEl.textContent = String(filtered.length);
+    countEl.title = `${filtered.length} ${filtered.length === 1 ? "Rezept" : "Rezepte"}`;
+  }
 
   if (!filtered.length) {
     activeRecipeLetter = "all";
@@ -10276,6 +10282,8 @@ function renderRecipeToc() {
     activeRecipeLetter = btn.dataset.letter || "all";
     recipePage = 0;
     renderRecipes();
+    const details = document.querySelector("#recipeAlphaDetails");
+    if (details?.open) details.open = false;
     requestAnimationFrame(() => document.querySelector("#recipeList")?.scrollIntoView({behavior:"smooth", block:"start"}));
   }));
 }
