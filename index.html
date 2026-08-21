@@ -1350,23 +1350,79 @@
 
 
   <article class="card workroom-routine-card">
-    <div class="workroom-routine-head">
-      <div>
-        <p class="small-label">MEINE ROUTINEN</p>
-        <h3>Ruhig durch die Woche</h3>
-        <p>Feste Punkte bleiben. Videos und einzelne Bausteine kannst du für jede Woche neu wählen.</p>
+    <button id="toggleRoutinePanelBtn" class="workroom-routine-toggle" type="button" aria-expanded="false" aria-controls="workroomRoutineBody">
+      <span class="workroom-routine-toggle-icon">🌿</span>
+      <span class="workroom-routine-toggle-copy">
+        <span class="small-label">MEINE ROUTINEN</span>
+        <strong>Ruhig durch die Woche</strong>
+        <small>Feste Anker und wechselnde Bausteine</small>
+      </span>
+      <span class="workroom-routine-toggle-arrow">›</span>
+    </button>
+
+    <div id="workroomRoutineBody" class="workroom-routine-body hidden">
+      <div class="workroom-routine-head">
+        <div>
+          <h3>Routinen planen</h3>
+          <p>Feste Punkte bleiben. Videos und einzelne Bausteine kannst du für jede Woche neu wählen.</p>
+        </div>
+        <div class="routine-week-switch" aria-label="Routinen-Woche wählen">
+          <button type="button" class="routine-week-btn active" data-routine-week="0">Diese Woche</button>
+          <button type="button" class="routine-week-btn" data-routine-week="1">Nächste Woche</button>
+        </div>
       </div>
-      <div class="routine-week-switch" aria-label="Routinen-Woche wählen">
-        <button type="button" class="routine-week-btn active" data-routine-week="0">Diese Woche</button>
-        <button type="button" class="routine-week-btn" data-routine-week="1">Nächste Woche</button>
+
+      <div class="routine-inspiration" aria-label="Routinenideen">
+        <details class="routine-idea-card">
+          <summary><span>🌿</span><strong>Morgens</strong><small>Ausrichten statt durchplanen · 2–4 Min.</small></summary>
+          <div class="routine-idea-body">
+            <p>3 ruhige Atemzüge – <strong>Ausatmen länger als Einatmen.</strong></p>
+            <p>Kurz in den Körper spüren: <em>Wo halte ich gerade Spannung?</em> → bewusst lösen.</p>
+            <p><strong>Welche Qualität möchte ich heute leben?</strong></p>
+            <div class="routine-quality-cloud"><span>Ruhe</span><span>Leichtigkeit</span><span>Klarheit</span><span>Geduld</span><span>Mut</span><span>Freundlichkeit</span></div>
+            <blockquote>„Nicht alles muss heute genau geplant sein.“</blockquote>
+            <p class="routine-contrast"><s>Was muss ich heute alles schaffen?</s><br><strong>Wie möchte ich heute durch diesen Tag gehen?</strong></p>
+          </div>
+        </details>
+
+        <details class="routine-idea-card">
+          <summary><span>☀️</span><strong>Schulalltag</strong><small>Mini-Unterbrechungen · 10–30 Sek.</small></summary>
+          <div class="routine-idea-body">
+            <p><strong>Vor Schule / Klasse:</strong> bewusst einatmen · lang ausatmen · Schultern und Kiefer lösen.</p>
+            <p><strong>Vor der nächsten Stunde:</strong> Füße spüren · ausatmen · „Wo ist gerade meine Aufmerksamkeit?“</p>
+            <blockquote>Where focus goes, energy flows.</blockquote>
+            <p><strong>Wenn etwas stresst:</strong> Daumen nacheinander an die Finger tippen: „Frieden beginnt in mir.“ Erst danach reagieren.</p>
+            <p><strong>Bei Entscheidungen:</strong> „Dient das meiner Vision von mir selbst?“</p>
+          </div>
+        </details>
+
+        <details class="routine-idea-card">
+          <summary><span>🍃</span><strong>Nach der Schule</strong><small>Arbeitsmodus verlassen · 3–5 Min.</small></summary>
+          <div class="routine-idea-body">
+            <p>Kurz hinsetzen oder hinlegen. Kleiner Bodyscan: Gesicht → Schultern → Bauch → Hände → Beine.</p>
+            <p>Spannung bewusst lockerlassen. 3–5 Atemzüge mit besonders langer Ausatmung.</p>
+            <blockquote>„Der Schultag ist vorbei. Ich muss ihn nicht im Körper mit nach Hause nehmen.“</blockquote>
+          </div>
+        </details>
+
+        <details class="routine-idea-card">
+          <summary><span>🌙</span><strong>Abends</strong><small>Loslassen statt optimieren · 2–5 Min.</small></summary>
+          <div class="routine-idea-body">
+            <p>Keine Tagesbewertung und keine lange Reflexion.</p>
+            <p><strong>Was darf für heute genug sein?</strong></p>
+            <p>Den Körper Stück für Stück entspannen oder einen kurzen Bodyscan machen.</p>
+            <blockquote>„Alles ist in mir.“</blockquote>
+          </div>
+        </details>
       </div>
-    </div>
 
     <div class="routine-add-grid">
       <label>
         Bereich
         <select id="routinePart">
           <option value="morning" selected>Morgen</option>
+          <option value="school">Schulalltag</option>
+          <option value="afterschool">Nach der Schule</option>
           <option value="evening">Abend</option>
           <option value="other">Sonstiges</option>
         </select>
@@ -1423,6 +1479,7 @@
     </div>
     <div id="routineList" class="routine-list">
       <div class="workroom-empty">Noch keine Routinen eingetragen.</div>
+    </div>
     </div>
   </article>
 
