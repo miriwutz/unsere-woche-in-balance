@@ -17507,3 +17507,66 @@ body.child-view-active #papaOverviewModal{
   opacity:.78;
   font-size:.92em;
 }
+
+.tab[data-view="school"]::before{content:"" !important;display:none !important;}
+
+/* Fundstücke – übersichtlicher, bewertbar und durchsuchbar */
+.school-find-add{
+  grid-template-columns:minmax(150px,1fr) minmax(220px,1.45fr) minmax(130px,.7fr) minmax(120px,.62fr) auto !important;
+  align-items:center;
+}
+.school-find-tools{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  max-width:620px;
+  margin:4px 0 16px;
+  padding:0 12px;
+  border:1px solid rgba(112,96,83,.16);
+  border-radius:999px;
+  background:rgba(255,255,255,.62);
+}
+.school-find-search-icon{opacity:.52;font-size:1.05rem}
+.school-find-search{
+  width:100%;
+  border:0 !important;
+  outline:0 !important;
+  box-shadow:none !important;
+  background:transparent !important;
+  padding:10px 0 !important;
+}
+.school-find-group-items{
+  display:grid !important;
+  grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+  gap:10px !important;
+}
+.school-find{
+  min-width:0;
+  border:1px solid rgba(112,96,83,.13) !important;
+  border-radius:14px !important;
+  background:rgba(255,255,255,.52) !important;
+  box-shadow:0 4px 14px rgba(80,70,60,.035);
+}
+.school-find-subline{
+  display:flex;
+  gap:8px;
+  align-items:center;
+  flex-wrap:wrap;
+  margin-top:4px;
+}
+.school-find-rating{
+  display:inline-flex;
+  align-items:center;
+  border-radius:999px;
+  padding:2px 7px;
+  font-size:.72rem;
+  line-height:1.35;
+}
+.school-find-rating.rating-gut{background:#eef3e5;color:#66704d}
+.school-find-rating.rating-mittel{background:#f5f0e7;color:#887861}
+.school-find-rating.rating-schlecht{background:#f4eeee;color:#927474}
+.school-find-domain{font-size:.72rem !important;opacity:.62}
+@media(max-width:900px){
+  .school-find-add{grid-template-columns:1fr 1fr !important}
+  .school-find-group-items{grid-template-columns:1fr !important}
+}
