@@ -18853,3 +18853,42 @@ body.child-view-active #papaOverviewModal{
   .routine-area-task-actions{grid-column:3;grid-row:1/span 2;}
   .routine-area-rating{grid-column:2/-1;}
 }
+
+
+/* =========================================================
+   PUNKT 4k – Routinen nur im jeweiligen Bereich
+   ========================================================= */
+.nav-flower-of-life{
+  width:18px;
+  height:18px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  margin-right:5px;
+  color:#8b8e68;
+  vertical-align:-3px;
+}
+.nav-flower-of-life svg{
+  width:17px;
+  height:17px;
+  fill:none;
+  stroke:currentColor;
+  stroke-width:.9;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+}
+.routine-area-check{
+  color:#766b59 !important;
+}
+.routine-area-check span{
+  opacity:.72;
+  font-family:Georgia,serif;
+}
+.routine-area-task.awaiting-rating .routine-area-check{
+  background:linear-gradient(145deg,#e4ebc9,#f0f3df) !important;
+  border-color:rgba(99,113,61,.38) !important;
+  color:#5c673f !important;
+}
+#routineList:empty{
+  display:none !important;
+}
