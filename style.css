@@ -21809,3 +21809,83 @@ body.child-view-active #papaOverviewModal{
     min-width:145px !important;
   }
 }
+
+
+/* =========================================================
+   V44 – Linksammlung: sortiert wirklich lesbar + Tabletpfeile
+   ========================================================= */
+
+/* Die Sortierung läuft jetzt nicht mehr im Zickzack:
+   Treffer 1–10 stehen links untereinander, 11–20 rechts. */
+#workroomLinkList{
+  display:grid !important;
+  grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+  grid-template-rows:repeat(10,auto) !important;
+  grid-auto-flow:column !important;
+  align-items:start !important;
+}
+
+/* Desktop: Handgriff zum Ziehen; Tablet: Pfeile zurück. */
+.workroom-link-touch-move{
+  display:none;
+  align-items:center;
+  gap:1px;
+}
+.workroom-link-touch-move button{
+  width:27px !important;
+  height:27px !important;
+  min-width:27px !important;
+  min-height:27px !important;
+  padding:0 !important;
+  display:grid !important;
+  place-items:center !important;
+  border:0 !important;
+  border-radius:7px !important;
+  background:transparent !important;
+  color:#9b8e82 !important;
+  cursor:pointer !important;
+}
+
+@media (hover:none), (pointer:coarse){
+  .workroom-link-drag-handle{
+    display:none !important;
+  }
+  .workroom-link-touch-move{
+    display:inline-flex !important;
+  }
+  .workroom-link-touch-move button:hover,
+  .workroom-link-touch-move button:active{
+    background:#f2f3e8 !important;
+    color:#6e7752 !important;
+  }
+}
+
+/* Bei aktiver Ansichtssortierung keine Verschiebesteuerung anbieten:
+   Rückgängig/Eigene Reihenfolge stellt sie wieder her. */
+body:has(#workroomLinkSortSelect option:checked:not([value="manual"])) .workroom-link-touch-move{
+  opacity:.36;
+}
+
+/* Auf kleinen Bildschirmen wirklich einspaltig und Reihenfolge linear. */
+@media(max-width:680px){
+  #workroomLinkList{
+    grid-template-columns:1fr !important;
+    grid-template-rows:none !important;
+    grid-auto-flow:row !important;
+  }
+  #workroomLinkList .workroom-link-item{
+    grid-column:1 !important;
+    grid-row:auto !important;
+  }
+}
+
+/* V45 – Seitennavigation Linksammlung klar sichtbar */
+.workroom-link-pager{
+  margin:12px 0 8px !important;
+  min-height:34px;
+  font-size:.74rem !important;
+}
+.workroom-link-pager span{
+  min-width:145px;
+  text-align:center;
+}
