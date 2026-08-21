@@ -1335,7 +1335,18 @@
       <p id="workroomCalmQuote">In Ruhe entsteht oft das Klarste.</p>
       <span class="workroom-calm-sub">Planen · vorbereiten · gestalten</span>
       <button id="openWorkroomWeekBtn" class="workroom-week-button" type="button">
-        <span id="workroomWeekIcon" class="workroom-week-button-icon">✦</span>
+        <span id="workroomWeekIcon" class="workroom-week-button-icon workroom-flower-icon" aria-hidden="true">
+  <svg viewBox="0 0 34 34" focusable="false">
+    <circle cx="17" cy="17" r="5.3"/>
+    <circle cx="17" cy="11.7" r="5.3"/>
+    <circle cx="21.6" cy="14.4" r="5.3"/>
+    <circle cx="21.6" cy="19.7" r="5.3"/>
+    <circle cx="17" cy="22.3" r="5.3"/>
+    <circle cx="12.4" cy="19.7" r="5.3"/>
+    <circle cx="12.4" cy="14.4" r="5.3"/>
+    <circle cx="17" cy="17" r="12.3"/>
+  </svg>
+</span>
         <span class="workroom-week-button-copy">
           <strong>Meine Woche</strong>
           <small>Was steht für mich an?</small>
@@ -1365,10 +1376,14 @@
         <div>
           <h3>Routinen planen</h3>
           <p>Feste Punkte bleiben. Videos und einzelne Bausteine kannst du für jede Woche neu wählen.</p>
+          <div id="routineEditingWeekHint" class="routine-editing-week-hint">Du bearbeitest gerade: <strong>Diese Woche</strong></div>
         </div>
         <div class="routine-week-switch" aria-label="Routinen-Woche wählen">
           <button type="button" class="routine-week-btn active" data-routine-week="0">Diese Woche</button>
           <button type="button" class="routine-week-btn" data-routine-week="1">Nächste Woche</button>
+          <button type="button" class="routine-week-btn" data-routine-week="2">+2 Wochen</button>
+          <button type="button" class="routine-week-btn" data-routine-week="3">+3 Wochen</button>
+          <button type="button" class="routine-week-btn" data-routine-week="4">+4 Wochen</button>
         </div>
       </div>
 
@@ -1381,6 +1396,7 @@
             <button type="button" class="routine-idea-check" data-routine-idea-check="morning" aria-label="Morgendliche Ausrichtung abhaken"><span>✓</span></button>
           </summary>
           <div class="routine-idea-body">
+            <div class="routine-area-tasks" data-routine-area-tasks="morning"></div>
             <button type="button" class="routine-step" data-routine-card="morning" data-routine-step="breath"><span class="routine-step-mark">◇</span><span>3 ruhige Atemzüge – <strong>Ausatmen länger als Einatmen.</strong></span></button>
             <button type="button" class="routine-step" data-routine-card="morning" data-routine-step="body"><span class="routine-step-mark">◇</span><span>Kurz in den Körper spüren: <em>Wo halte ich gerade Spannung?</em> → bewusst lösen.</span></button>
             <div class="routine-quality-block">
@@ -1407,6 +1423,7 @@
             <button type="button" class="routine-idea-check" data-routine-idea-check="school" aria-label="Mini-Unterbrechungen im Schulalltag abhaken"><span>✓</span></button>
           </summary>
           <div class="routine-idea-body">
+            <div class="routine-area-tasks" data-routine-area-tasks="school"></div>
             <button type="button" class="routine-step" data-routine-card="school" data-routine-step="arrival"><span class="routine-step-mark">◇</span><span><strong>Vor Schule / Klasse:</strong> bewusst einatmen · lang ausatmen · Schultern und Kiefer lösen.</span></button>
             <button type="button" class="routine-step" data-routine-card="school" data-routine-step="lesson"><span class="routine-step-mark">◇</span><span><strong>Vor der nächsten Stunde:</strong> Füße spüren · ausatmen · „Wo ist gerade meine Aufmerksamkeit?“</span></button>
             <button type="button" class="routine-step routine-step-quote" data-routine-card="school" data-routine-step="focus"><span class="routine-step-mark">◇</span><span>Where focus goes, energy flows.</span></button>
@@ -1423,6 +1440,7 @@
             <button type="button" class="routine-idea-check" data-routine-idea-check="afterschool" aria-label="Routine nach der Schule abhaken"><span>✓</span></button>
           </summary>
           <div class="routine-idea-body">
+            <div class="routine-area-tasks" data-routine-area-tasks="afterschool"></div>
             <button type="button" class="routine-step" data-routine-card="afterschool" data-routine-step="bodyscan"><span class="routine-step-mark">◇</span><span>Kurz hinsetzen oder hinlegen. Kleiner Bodyscan: Gesicht → Schultern → Bauch → Hände → Beine.</span></button>
             <button type="button" class="routine-step" data-routine-card="afterschool" data-routine-step="release"><span class="routine-step-mark">◇</span><span>Spannung bewusst lockerlassen. 3–5 Atemzüge mit besonders langer Ausatmung.</span></button>
             <button type="button" class="routine-step routine-step-quote" data-routine-card="afterschool" data-routine-step="close"><span class="routine-step-mark">◇</span><span>„Der Schultag ist vorbei. Ich muss ihn nicht im Körper mit nach Hause nehmen.“</span></button>
@@ -1437,6 +1455,7 @@
             <button type="button" class="routine-idea-check" data-routine-idea-check="evening" aria-label="Abendroutine abhaken"><span>✓</span></button>
           </summary>
           <div class="routine-idea-body">
+            <div class="routine-area-tasks" data-routine-area-tasks="evening"></div>
             <button type="button" class="routine-step" data-routine-card="evening" data-routine-step="noeval"><span class="routine-step-mark">◇</span><span>Keine Tagesbewertung und keine lange Reflexion.</span></button>
             <button type="button" class="routine-step" data-routine-card="evening" data-routine-step="enough"><span class="routine-step-mark">◇</span><span><strong>Was darf für heute genug sein?</strong></span></button>
             <button type="button" class="routine-step" data-routine-card="evening" data-routine-step="relax"><span class="routine-step-mark">◇</span><span>Den Körper Stück für Stück entspannen oder einen kurzen Bodyscan machen.</span></button>
@@ -2088,6 +2107,19 @@
           <option>Sonntag</option>
         </select>
       </label>
+
+      <label>
+        Bereich in „Meine Woche“
+        <select id="replanPart">
+          <option value="morning">Morgenroutine</option>
+          <option value="school">Schulalltag</option>
+          <option value="afterschool">Nach der Schule</option>
+          <option value="evening">Abendroutine</option>
+          <option value="other">Sonstiges</option>
+        </select>
+      </label>
+
+      <p class="replan-hint">Die Übung verschwindet während der Planung aus „Unser Überblick“ und kommt nach dem Erledigen und Bewerten wieder zurück.</p>
 
       <div class="dialog-actions">
         <button id="cancelReplanBtn" type="button" class="secondary-btn">Abbrechen</button>
