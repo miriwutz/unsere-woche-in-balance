@@ -20701,3 +20701,114 @@ body.child-view-active #papaOverviewModal{
     grid-template-columns:repeat(2,minmax(0,1fr)) !important;
   }
 }
+
+
+/* =========================================================
+   PUNKT 14 – Merkmalszeile direkt unter Rezept, mit klaren Line-Icons
+   ========================================================= */
+
+.recipe-v17-main + .recipe-v17-tags{
+  margin-top:8px !important;
+  margin-bottom:10px !important;
+}
+
+.recipe-v17-tags{
+  padding:8px 10px !important;
+  border:1px solid rgba(113,120,100,.11) !important;
+  border-radius:12px !important;
+  background:rgba(255,254,250,.72) !important;
+}
+
+.recipe-v17-tags .recipe-v17-section-head{
+  display:none !important;
+}
+
+.recipe-v17-tags .recipe-feature-row-v17{
+  display:flex !important;
+  flex-wrap:wrap !important;
+  align-items:center !important;
+  justify-content:flex-start !important;
+  gap:7px !important;
+  width:100% !important;
+  margin:0 !important;
+}
+
+.recipe-v17-tags .recipe-feature-row-v17 > label{
+  display:inline-flex !important;
+  align-items:center !important;
+  gap:6px !important;
+  width:auto !important;
+  min-width:0 !important;
+  max-width:none !important;
+  height:34px !important;
+  min-height:34px !important;
+  margin:0 !important;
+  padding:5px 9px !important;
+  border-radius:10px !important;
+  border:1px solid rgba(121,108,91,.13) !important;
+  background:linear-gradient(145deg,#fffefb,#f8f6ef) !important;
+  color:#6f6258 !important;
+  box-shadow:0 1px 3px rgba(73,61,50,.025) !important;
+}
+
+.recipe-v17-tags .recipe-feature-row-v17 > label:has(input:checked){
+  background:linear-gradient(145deg,#e9efd6,#f4f6e9) !important;
+  border-color:rgba(106,122,72,.30) !important;
+  color:#596243 !important;
+}
+
+.recipe-v17-tags .recipe-feature-row-v17 > label > input[type="checkbox"]{
+  flex:0 0 17px !important;
+  width:17px !important;
+  min-width:17px !important;
+  max-width:17px !important;
+  height:17px !important;
+  min-height:17px !important;
+  max-height:17px !important;
+  border-radius:50% !important;
+}
+
+.recipe-v17-tags .recipe-feature-row-v17 > label > span{
+  display:inline-flex !important;
+  align-items:center !important;
+  gap:5px !important;
+  white-space:nowrap !important;
+  font-size:.68rem !important;
+}
+
+/* Aussagekräftige, zurückhaltende Line-Icons */
+.recipe-v17-tags .recipe-feature-symbol{
+  width:17px !important;
+  height:17px !important;
+  display:inline-grid !important;
+  place-items:center !important;
+  font-family:Georgia,"Times New Roman",serif !important;
+  font-style:normal !important;
+  font-size:.95rem !important;
+  line-height:1 !important;
+  color:#8d866f !important;
+  filter:none !important;
+}
+
+.recipe-feature-kids .recipe-feature-symbol{
+  font-size:.90rem !important;
+  color:#9d876b !important;
+}
+.recipe-feature-healthy .recipe-feature-symbol{
+  color:#7f9365 !important;
+}
+.recipe-feature-selfcook .recipe-feature-symbol{
+  color:#8e7967 !important;
+}
+.recipe-feature-beaker .recipe-feature-symbol{
+  color:#73899a !important;
+}
+.recipe-feature-favorite .recipe-feature-symbol{
+  color:#aa7a6b !important;
+}
+
+@media(max-width:760px){
+  .recipe-v17-tags .recipe-feature-row-v17{
+    gap:6px !important;
+  }
+}
