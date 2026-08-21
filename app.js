@@ -1721,7 +1721,7 @@ function renderWeek() {
           <div class="person-todo-group grouped-family-block ${groupAccentClass(groupKey)}"
                style="${groupKey === "shared"
                  ? `--group-border:${sharedGroupGradient(groupItems)}`
-                 : `--group-border:${familyColor(groupKey) || "#c8c0ba"}`}">
+                 : `--group-border:${groupKey === "general" ? "#b8b58d" : (familyColor(groupKey) || "#c8c0ba")}`}">
             <div class="person-todo-group-title">
               <span>${todoGroupLabel(groupKey)}</span>
               ${groupItems.some(isNewEntry) ? `<span class="new-entry-badge group-new-badge">NEU</span>` : ""}
@@ -1780,7 +1780,7 @@ const renderEventCard = (t) => {
     <div class="person-todo-group grouped-family-block event-person-block ${groupAccentClass(groupKey)}"
          style="${groupKey === "shared"
            ? `--group-border:${sharedGroupGradient([t])}`
-           : `--group-border:${familyColor(groupKey) || "#c8c0ba"}`}">
+           : `--group-border:${groupKey === "general" ? "#b8b58d" : (familyColor(groupKey) || "#c8c0ba")}`}">
       <div class="person-todo-group-title">
         <span>${todoGroupLabel(groupKey)}</span>
         ${isNewEntry(t) ? `<span class="new-entry-badge group-new-badge">NEU</span>` : ""}
@@ -1831,7 +1831,7 @@ const eventHtml = orderedEvents.length ? `
     ["1","2"].forEach(childId => {
       const child = state.school.children[childId];
       child.tasks.forEach(task => {
-        if (task.due === dateKey(date)) {
+        if (task.due === dateKey(date) && !task.done) {
           schoolTasksForDate.push({...task, childId, childName: child.name});
         }
       });
@@ -2458,7 +2458,7 @@ todos.sort((a, b) => {
     <section class="todo-person-section grouped-family-section ${groupAccentClass(groupKey)}"
       style="${groupKey === "shared"
         ? `--group-border:${sharedGroupGradient(groupItems)}`
-        : `--group-border:${familyColor(groupKey) || "#c8c0ba"}`}">
+        : `--group-border:${groupKey === "general" ? "#b8b58d" : (familyColor(groupKey) || "#c8c0ba")}`}">
       <div class="todo-person-heading">
         <span>${todoGroupLabel(groupKey)}</span>
         <small>${groupItems.length} ${groupItems.length === 1 ? "Eintrag" : "Einträge"}</small>
