@@ -1531,6 +1531,35 @@ function renderWeek() {
   grid.innerHTML = "";
   const weekKey = currentWeekKey();
 
+  const weekDates = days.map((_, i) => dayDate(currentWeekMonday, i));
+  const weekDateKeys = weekDates.map(d => dateKey(d));
+
+  const mealExistsOnKey = (key) => {
+    const raw = normalizeMealEntry ? normalizeMealEntry(state.meals?.[key]) : state.meals?.[key];
+    if (!raw || raw.deleted) return false;
+    if (typeof raw === "string") return !!raw.trim();
+    return !!String(raw.label || raw.url || raw.recipeId || "").trim();
+  };
+
+  // Feste, aber kompakte Lanes nur für echte Mehrtagestermine.
+  // So bleibt derselbe Termin Do/Fr/Sa auf derselben Höhe.
+  const weekMultiDayEvents = state.todos
+    .filter(t => !t.archived && t.type === "event")
+    .filter(t => (t.recurrence || "none") === "none")
+    .filter(t => {
+      const start = t.date || "";
+      const end = t.endDate || start;
+      return start && end && end > start &&
+             start <= weekDateKeys[6] &&
+             end >= weekDateKeys[0];
+    })
+    .filter(t => !["birthday","nameday","anniversary"].includes(t.eventCategory || "normal"))
+    .sort((a,b) =>
+      (a.date || "").localeCompare(b.date || "") ||
+      (a.time || "").localeCompare(b.time || "") ||
+      String(a.id).localeCompare(String(b.id))
+    );
+
   days.forEach((day, index) => {
     const dayEl = document.createElement("article");
     dayEl.className = "day";
@@ -1683,26 +1712,59 @@ const quietBottomEvents = events
   .sort((a,b) => (a.time || "").localeCompare(b.time || ""));
 
 const visibleEvents = events
-  .filter(t => !quietBottomCategories.has(t.eventCategory || "normal"))
-  .sort((a,b) => {
-    const aStart = a.date || "";
-    const bStart = b.date || "";
-    const aMulti = !!(a.endDate && a.endDate !== a.date);
-    const bMulti = !!(b.endDate && b.endDate !== b.date);
+  .filter(t => !quietBottomCategories.has(t.eventCategory || "normal"));
 
-    // Mehrtagestermine zuerst, danach Uhrzeit.
-    if (aMulti !== bMulti) return aMulti ? -1 : 1;
-    return (a.time || "").localeCompare(b.time || "") ||
-           aStart.localeCompare(bStart) ||
-           String(a.id).localeCompare(String(b.id));
-  });
+const activeMultiIds = new Set(
+  visibleEvents
+    .filter(t => t.endDate && t.endDate !== t.date)
+    .map(t => t.id)
+);
 
-const eventHtml = visibleEvents.length ? `
+const singleDayEvents = visibleEvents
+  .filter(t => !activeMultiIds.has(t.id))
+  .sort((a,b) =>
+    (a.time || "").localeCompare(b.time || "") ||
+    String(a.id).localeCompare(String(b.id))
+  );
+
+// Nur die Mehrtagestermin-Lanes rendern, die in dieser Woche überhaupt
+// relevant sind. Nicht aktive Lanes bleiben als KOMPAKTER Platzhalter,
+// damit parallele Mehrtagestermine über alle Tage exakt ausgerichtet sind.
+const multiLaneHtml = weekMultiDayEvents.length
+  ? `<div class="multiday-event-lanes">
+      ${weekMultiDayEvents.map(t => {
+        const active = occursOnDate(t, date);
+        return active
+          ? `<div class="multiday-event-lane">${renderEventCard(t)}</div>`
+          : `<div class="multiday-event-lane multiday-event-placeholder" aria-hidden="true"></div>`;
+      }).join("")}
+    </div>`
+  : "";
+
+// Essen-Ausrichtung:
+// Wenn HEUTE kein Essen eingetragen ist, aber ein heute laufender
+// Mehrtagestermin an einem anderen Tag seines Verlaufs in DIESER Woche
+// unter einem Essensplan steht, reservieren wir nur die Höhe der Essenskarte.
+// Dadurch rutscht z.B. Samstag nicht nach oben.
+const todayActiveMulti = weekMultiDayEvents.filter(t => occursOnDate(t, date));
+const needsMealAlignment = !mealExistsOnKey(dateKey(date)) && todayActiveMulti.some(t => {
+  const start = t.date || "";
+  const end = t.endDate || start;
+  return weekDateKeys.some(key =>
+    key >= start && key <= end && mealExistsOnKey(key)
+  );
+});
+
+const mealAlignmentHtml = needsMealAlignment
+  ? `<div class="day-meal-section day-meal-align-spacer" aria-hidden="true">
+       <div class="day-meal"><span>📖</span><strong>&nbsp;</strong></div>
+     </div>`
+  : "";
+
+const eventHtml = (weekMultiDayEvents.length || singleDayEvents.length) ? `
   <div class="day-events">
-    ${visibleEvents.map(t => {
-      const isMulti = !!(t.endDate && t.endDate !== t.date);
-      return `<div class="${isMulti ? "multiday-event-lane" : "single-event-lane"}">${renderEventCard(t)}</div>`;
-    }).join("")}
+    ${multiLaneHtml}
+    ${singleDayEvents.map(t => `<div class="single-event-lane">${renderEventCard(t)}</div>`).join("")}
   </div>
 ` : "";
 
@@ -1792,7 +1854,7 @@ const eventHtml = visibleEvents.length ? `
         }).filter(Boolean);
         return rows.length ? `<div class="day-home-times" aria-label="Zu Hause bis">${rows.join("")}</div>` : "";
       })()}
-      ${mealHtml}
+      ${mealHtml || mealAlignmentHtml}
       ${eventHtml}
       ${schoolHtml}${todoHtml}
       ${videoHtml
