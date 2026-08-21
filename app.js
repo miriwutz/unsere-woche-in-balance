@@ -1417,6 +1417,7 @@ state.school = (() => {
   state.school.children[id].tasks=Array.isArray(state.school.children[id].tasks)?state.school.children[id].tasks:[];
   state.school.children[id].links=Array.isArray(state.school.children[id].links)?state.school.children[id].links:[];
   state.school.children[id].interestLinks=Array.isArray(state.school.children[id].interestLinks)?state.school.children[id].interestLinks:[];
+  state.school.children[id].spotifyUrl=typeof state.school.children[id].spotifyUrl==="string"?state.school.children[id].spotifyUrl:"";
   state.school.children[id].interestLinks.forEach(link=>{
     if(link && link.category==="lernen") link.category="lesen";
   });
@@ -3036,6 +3037,18 @@ function saveTTMatrix(id) {
   renderAll();
   closeManualTimetableEditor(id);
 }
+function timetableSubjectDisplay(subject,id){
+  const s=String(subject||"").trim();
+  if(id!=="2" || !s) return escapeHtml(s);
+  const key=s.toLowerCase();
+  let icon="";
+  if(key==="rel" || key.includes("relig")) icon="✝";
+  else if(key.includes("bewegung") || key.includes("sport") || key==="turnen") icon="👟";
+  else if(key==="gu" || key.includes("gesamtunterricht")) icon="📚";
+  else if(key.includes("werken") || key==="tw") icon="🛠";
+  return `${icon ? `<span class="tt-subject-icon" aria-hidden="true">${icon}</span>` : ""}<span>${escapeHtml(s)}</span>`;
+}
+
 function showManualTimetable(id){
   localStorage.setItem("balanceProd.lastTimetablePerson", String(id));
  const c=timetablePerson(id),t=ensureManualTimetable(c),
@@ -3074,7 +3087,7 @@ out.innerHTML=`<div class="tt-table-wrap"><table class="tt-table tt-view-table $
     <thead><tr><th>Zeit</th>${manualTimetableDayNames.map(x=>`<th>${x}</th>`).join("")}</tr></thead>
     <tbody>
       <tr class="tt-home-row tt-home-row-top"><th>⌂ Zu Hause bis</th>${manualTimetableDayKeys.map(day=>`<td>${escapeHtml(t.homeBy[day]||"–")}</td>`).join("")}</tr>
-      ${t.times.map((tm,r)=>`<tr><th>${escapeHtml(tm.from)}–${escapeHtml(tm.to)}</th>${manualTimetableDayKeys.map(day=>`<td>${escapeHtml(t.subjects[day][r]||"")}</td>`).join("")}</tr>`).join("")}
+      ${t.times.map((tm,r)=>`<tr><th>${escapeHtml(tm.from)}–${escapeHtml(tm.to)}</th>${manualTimetableDayKeys.map(day=>`<td class="tt-subject-display">${timetableSubjectDisplay(t.subjects[day][r]||"",id)}</td>`).join("")}</tr>`).join("")}
     </tbody>
   </table></div>`;
   d.showModal();
@@ -3208,6 +3221,21 @@ function renderSchool(){
           }).join("")
         : '<div class="school-finds-empty">Noch nichts gesammelt. Wenn dir etwas gefällt, kannst du es hier für später merken. ✨</div>';
     }
+    const spotifyInput=document.querySelector(`#schoolSpotifyUrl${id}`);
+    const spotifyOpen=document.querySelector(`#schoolSpotifyOpen${id}`);
+    const spotifyEdit=document.querySelector(`#schoolSpotifyEdit${id}`);
+    if(spotifyInput && document.activeElement!==spotifyInput) spotifyInput.value=c.spotifyUrl||"";
+    if(spotifyOpen){
+      if(c.spotifyUrl){
+        spotifyOpen.href=c.spotifyUrl;
+        spotifyOpen.classList.remove("hidden");
+        if(spotifyEdit) spotifyEdit.textContent="ändern";
+      }else{
+        spotifyOpen.removeAttribute("href");
+        spotifyOpen.classList.add("hidden");
+        if(spotifyEdit) spotifyEdit.textContent="+ Spotify-Link";
+      }
+    }
     const ti=document.querySelector(`#timetableUrl${id}`),to=document.querySelector(`#timetableOpen${id}`);
     if(ti && document.activeElement!==ti) ti.value=c.timetableUrl||"";
     if(to){
@@ -3314,6 +3342,25 @@ function addSchoolFind(id){
 document.querySelectorAll(".add-school-task").forEach(b=>b.addEventListener("click",e=>addSchoolTask(e.currentTarget.dataset.child)));
 document.querySelectorAll(".add-school-link").forEach(b=>b.addEventListener("click",e=>addSchoolLink(e.currentTarget.dataset.child)));
 document.querySelectorAll(".add-school-find").forEach(b=>b.addEventListener("click",e=>addSchoolFind(e.currentTarget.dataset.child)));
+
+document.querySelectorAll(".school-spotify-edit").forEach(b=>b.addEventListener("click",e=>{
+  const id=e.currentTarget.id.replace("schoolSpotifyEdit","");
+  document.querySelector(`#schoolSpotifyEditor${id}`)?.classList.toggle("hidden");
+  document.querySelector(`#schoolSpotifyUrl${id}`)?.focus();
+}));
+document.querySelectorAll(".school-spotify-cancel").forEach(b=>b.addEventListener("click",e=>{
+  document.querySelector(`#schoolSpotifyEditor${e.currentTarget.dataset.child}`)?.classList.add("hidden");
+}));
+document.querySelectorAll(".save-school-spotify").forEach(b=>b.addEventListener("click",e=>{
+  const id=e.currentTarget.dataset.child;
+  const input=document.querySelector(`#schoolSpotifyUrl${id}`);
+  let url=(input?.value||"").trim();
+  if(url && !/^https?:\/\//i.test(url)) url="https://"+url;
+  state.school.children[id].spotifyUrl=url;
+  save();
+  renderSchool();
+  document.querySelector(`#schoolSpotifyEditor${id}`)?.classList.add("hidden");
+}));
 ["1","2"].forEach(id=>document.querySelector(`#schoolName${id}`)?.addEventListener("change",e=>{state.school.children[id].name=e.currentTarget.value.trim()||(id === "1" ? "Lou" : "Fina");save();}));
 
 document.querySelectorAll(".save-timetable").forEach(b=>b.addEventListener("click",e=>{
