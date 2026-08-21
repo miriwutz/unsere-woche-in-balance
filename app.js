@@ -909,7 +909,7 @@ function uid() {
 
 const defaultFamilySettings = {
   a:{name:"Mama", color:"#c8897e"},
-  b:{name:"Papa", color:"#c84d4d"},
+  b:{name:"Papa", color:"#ad7468"},
   c:{name:"Lou", color:"#8f78b8", icon:"⭐", taskIcon:"🌙"},
   d:{name:"Fina", color:"#d58c9b", icon:"🌙", taskIcon:"⭐"}
 };
@@ -929,6 +929,20 @@ state.familySettings = (() => {
   state.familySettings[key].icon = state.familySettings[key].icon || defaultFamilySettings[key].icon || "⭐";
   state.familySettings[key].taskIcon = state.familySettings[key].taskIcon || defaultFamilySettings[key].taskIcon || state.familySettings[key].icon || "⭐";
 });
+
+
+// V33 – frühere sehr kräftige Papa-Rottöne einmalig in ein ruhigeres
+// Vintage-Terrakotta überführen. Eigene andere Farbwahlen bleiben unangetastet.
+try {
+  const oldPapaReds = new Set(["#c84d4d","#ff0000","#e60000","#ef3f3f"]);
+  const currentPapaColor = String(state.familySettings?.b?.color || "").toLowerCase();
+  if (oldPapaReds.has(currentPapaColor)) {
+    state.familySettings.b.color = "#ad7468";
+    localStorage.setItem("balanceProd.familySettings", JSON.stringify(state.familySettings));
+  }
+} catch (err) {
+  console.warn("Papa-Farbmigration nicht möglich:", err);
+}
 
 function familyName(key){
   return state.familySettings[key]?.name || defaultFamilySettings[key]?.name || "";
@@ -1569,6 +1583,52 @@ function weekHolidayLabel(date) {
 
 const expandedWeekTodoDays = new Set();
 
+
+function alignWeekBands(grid){
+  if(!grid) return;
+
+  const days = [...grid.querySelectorAll(".day")];
+  if(!days.length) return;
+
+  const bands = [
+    ".week-day-topband",
+    ".week-band-meal",
+    ".week-band-events",
+    ".week-band-school",
+    ".week-band-todos",
+    ".week-band-videos"
+  ];
+
+  bands.forEach(selector => {
+    const nodes = days.map(day => day.querySelector(selector)).filter(Boolean);
+    if(!nodes.length) return;
+
+    // Topband ist immer vorhanden; alle anderen Bänder nur dann,
+    // wenn mindestens ein Tag in der Woche dort echten Inhalt hat.
+    const alwaysVisible = selector === ".week-day-topband";
+    const hasWeekContent = alwaysVisible || nodes.some(node =>
+      [...node.children].some(child =>
+        !child.classList.contains("hidden") &&
+        (child.textContent.trim() || child.querySelector("img,button,input,a,details"))
+      )
+    );
+
+    nodes.forEach(node => {
+      node.style.removeProperty("min-height");
+      node.classList.toggle("week-band-unused", !hasWeekContent);
+    });
+
+    if(!hasWeekContent) return;
+
+    // Erst natürliche Höhen messen, dann exakt die größte Wochenhöhe
+    // auf alle sieben Tage übertragen.
+    const maxHeight = Math.ceil(Math.max(...nodes.map(node => node.scrollHeight)));
+    nodes.forEach(node => {
+      node.style.minHeight = `${maxHeight}px`;
+    });
+  });
+}
+
 function renderWeek() {
   weekLabel();
   const grid = document.querySelector("#weekGrid");
@@ -1830,7 +1890,7 @@ const eventHtml = orderedEvents.length ? `
         }).join("")}
       </div>` : "";
 
-    dayEl.innerHTML = `
+    const dayTopHtml = `
       <h3>${day}<span class="day-date">${dateLabel}</span></h3>
       ${(() => {
         const holiday = weekHolidayLabel(date);
@@ -1852,21 +1912,45 @@ const eventHtml = orderedEvents.length ? `
         }).filter(Boolean);
         return rows.length ? `<div class="day-home-times" aria-label="Zu Hause bis">${rows.join("")}</div>` : "";
       })()}
-      ${mealHtml || mealAlignmentHtml}
-      ${eventHtml}
-      ${schoolHtml}${todoHtml}
-      ${videoHtml
-        ? `<div class="day-bottom-slot">
-             <details class="day-video-details">
-               <summary>▷ Übung${videos.length === 1 ? "" : "en"} <span>${videos.length}</span></summary>
-               <div class="day-video-details-content">${videoHtml}</div>
-             </details>
-           </div>`
-        : ""}
+    `;
+
+    dayEl.innerHTML = `
+      <div class="week-day-topband">${dayTopHtml}</div>
+
+      <div class="week-band week-band-meal">
+        ${mealHtml || ""}
+      </div>
+
+      <div class="week-band week-band-events">
+        ${eventHtml || ""}
+      </div>
+
+      <div class="week-band week-band-school">
+        ${schoolHtml || ""}
+      </div>
+
+      <div class="week-band week-band-todos">
+        ${todoHtml || ""}
+      </div>
+
+      <div class="week-band week-band-videos">
+        ${videoHtml
+          ? `<div class="day-bottom-slot">
+               <details class="day-video-details">
+                 <summary>▷ Übung${videos.length === 1 ? "" : "en"} <span>${videos.length}</span></summary>
+                 <div class="day-video-details-content">${videoHtml}</div>
+               </details>
+             </div>`
+          : ""}
+      </div>
+
       ${quietBottomHtml}
     `;
     grid.appendChild(dayEl);
   });
+
+  // V33: gemeinsame Wochenbänder erst NACH dem Rendern messen.
+  alignWeekBands(grid);
 
   document.querySelectorAll(".day-meal-recipe").forEach(btn => btn.addEventListener("click", () => {
     const byId = state.recipes.find(r => r.id === btn.dataset.recipeId);
@@ -3574,7 +3658,7 @@ function renderPapaOverview(weekOffset = 0) {
   const list = document.querySelector("#papaOverviewList");
   if (!list) return;
 
-  const monday = new Date(currentWeekMonday);
+  const monday = getMonday(new Date());
   monday.setDate(monday.getDate() + (weekOffset * 7));
 
   const today = new Date();
@@ -4673,8 +4757,11 @@ function renderFamilyQuestions(){
       delete strip.dataset.questionCount;
     }else{
       const visible = open.slice(0,6);
-      const cols = Math.min(Math.max(visible.length,1),3);
-      const signWidth = visible.length <= 1 ? 330 : visible.length === 2 ? 510 : 690;
+      const cols = visible.length <= 2 ? visible.length : Math.min(3, visible.length);
+      const signWidth =
+        visible.length <= 1 ? 285 :
+        visible.length === 2 ? 430 :
+        visible.length === 3 ? 585 : 650;
       strip.style.setProperty("--question-cols", cols);
       strip.style.setProperty("--question-sign-width", signWidth + "px");
       strip.dataset.questionCount = String(visible.length);
