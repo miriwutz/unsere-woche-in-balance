@@ -1774,36 +1774,20 @@ const singleDayEvents = visibleEvents
 // Nur die Mehrtagestermin-Lanes rendern, die in dieser Woche überhaupt
 // relevant sind. Nicht aktive Lanes bleiben als KOMPAKTER Platzhalter,
 // damit parallele Mehrtagestermine über alle Tage exakt ausgerichtet sind.
-const multiLaneHtml = weekMultiDayEvents.length
+const activeMultiDayEvents = weekMultiDayEvents.filter(t => occursOnDate(t, date));
+
+const multiLaneHtml = activeMultiDayEvents.length
   ? `<div class="multiday-event-lanes">
-      ${weekMultiDayEvents.map(t => {
-        const active = occursOnDate(t, date);
-        return active
-          ? `<div class="multiday-event-lane">${renderEventCard(t)}</div>`
-          : `<div class="multiday-event-lane multiday-event-placeholder" aria-hidden="true"></div>`;
-      }).join("")}
+      ${activeMultiDayEvents.map(t =>
+        `<div class="multiday-event-lane">${renderEventCard(t)}</div>`
+      ).join("")}
     </div>`
   : "";
 
-// Essen-Ausrichtung:
-// Wenn HEUTE kein Essen eingetragen ist, aber ein heute laufender
-// Mehrtagestermin an einem anderen Tag seines Verlaufs in DIESER Woche
-// unter einem Essensplan steht, reservieren wir nur die Höhe der Essenskarte.
-// Dadurch rutscht z.B. Samstag nicht nach oben.
-const todayActiveMulti = weekMultiDayEvents.filter(t => occursOnDate(t, date));
-const needsMealAlignment = !mealExistsOnKey(dateKey(date)) && todayActiveMulti.some(t => {
-  const start = t.date || "";
-  const end = t.endDate || start;
-  return weekDateKeys.some(key =>
-    key >= start && key <= end && mealExistsOnKey(key)
-  );
-});
-
-const mealAlignmentHtml = needsMealAlignment
-  ? `<div class="day-meal-section day-meal-align-spacer" aria-hidden="true">
-       <div class="day-meal"><span>📖</span><strong>&nbsp;</strong></div>
-     </div>`
-  : "";
+// V31: keine unsichtbaren Essens-/Termin-Platzhalter mehr.
+// Sie machten einzelne Tage optisch künstlich leer bzw. schoben Termine
+// weit nach unten. Mehrtages- und Einzeltermine folgen nun kompakt aufeinander.
+const mealAlignmentHtml = "";
 
 const eventHtml = (weekMultiDayEvents.length || singleDayEvents.length) ? `
   <div class="day-events">
@@ -7242,21 +7226,24 @@ function renderManualShoppingPromos(){
     </div>
     <div class="manual-promo-cards">
       ${promos.map(p => {
-        const collect = p.collectFrom || p.collectTo
-          ? `Sammeln ${p.collectFrom ? formatPromoDate(p.collectFrom) : "…"}${p.collectTo ? " – " + formatPromoDate(p.collectTo) : ""}`
-          : "";
         const valid = p.validFrom || p.validTo
           ? `Gültig ${p.validFrom ? formatPromoDate(p.validFrom) : "…"}${p.validTo ? " – " + formatPromoDate(p.validTo) : ""}`
+          : "";
+        const collect = p.collectFrom || p.collectTo
+          ? `Sammeln ${p.collectFrom ? formatPromoDate(p.collectFrom) : "…"}${p.collectTo ? " – " + formatPromoDate(p.collectTo) : ""}`
           : "";
         return `
           <div class="manual-promo-card">
             <div class="manual-promo-card-top">
               <span class="manual-promo-shop">${escapeHtml(p.shop || "")}</span>
               <strong>${escapeHtml(p.title || "Rabatt")}</strong>
-              <button type="button" class="manual-promo-delete" data-promo-id="${p.id}" aria-label="Rabatt löschen">×</button>
+              <div class="manual-promo-actions">
+                <button type="button" class="manual-promo-edit" data-promo-id="${p.id}" aria-label="Rabatt bearbeiten">✎</button>
+                <button type="button" class="manual-promo-delete" data-promo-id="${p.id}" aria-label="Rabatt löschen">×</button>
+              </div>
             </div>
-            ${collect ? `<div class="manual-promo-line">${escapeHtml(collect)}</div>` : ""}
             ${valid ? `<div class="manual-promo-line manual-promo-valid">${escapeHtml(valid)}</div>` : ""}
+            ${collect ? `<div class="manual-promo-line">${escapeHtml(collect)}</div>` : ""}
             ${p.note ? `<div class="manual-promo-note">${escapeHtml(p.note)}</div>` : ""}
           </div>`;
       }).join("")}
@@ -7273,6 +7260,42 @@ function renderManualShoppingPromos(){
       renderManualShoppingPromos();
     });
   });
+
+  box.querySelectorAll(".manual-promo-edit").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const item = state.shoppingPromos.find(x => x.id === btn.dataset.promoId && !x.deleted);
+      if(!item) return;
+
+      document.querySelector("#manualPromoEditId").value = item.id;
+      document.querySelector("#manualPromoShop").value = item.shop || "";
+      document.querySelector("#manualPromoTitle").value = item.title || "";
+      document.querySelector("#manualPromoValidFrom").value = item.validFrom || "";
+      document.querySelector("#manualPromoValidTo").value = item.validTo || "";
+      document.querySelector("#manualPromoCollectFrom").value = item.collectFrom || "";
+      document.querySelector("#manualPromoCollectTo").value = item.collectTo || "";
+      document.querySelector("#manualPromoNote").value = item.note || "";
+
+      const details = document.querySelector("#manualPromoDetails");
+      details?.setAttribute("open","");
+      const saveBtn = document.querySelector("#addManualPromoBtn");
+      if(saveBtn) saveBtn.textContent = "Änderung speichern";
+      document.querySelector("#cancelManualPromoEditBtn")?.classList.remove("hidden");
+      details?.scrollIntoView({behavior:"smooth",block:"nearest"});
+    });
+  });
+}
+
+function resetManualPromoEditor(){
+  ["manualPromoTitle","manualPromoCollectFrom","manualPromoCollectTo",
+   "manualPromoValidFrom","manualPromoValidTo","manualPromoNote","manualPromoEditId"].forEach(id => {
+    const el=document.querySelector("#"+id);
+    if(el) el.value="";
+  });
+  const shopEl=document.querySelector("#manualPromoShop");
+  if(shopEl) shopEl.value="";
+  const saveBtn=document.querySelector("#addManualPromoBtn");
+  if(saveBtn) saveBtn.textContent="+ Rabatt merken";
+  document.querySelector("#cancelManualPromoEditBtn")?.classList.add("hidden");
 }
 
 function addManualShoppingPromo(){
@@ -7283,34 +7306,36 @@ function addManualShoppingPromo(){
   const validFrom = document.querySelector("#manualPromoValidFrom")?.value || "";
   const validTo = document.querySelector("#manualPromoValidTo")?.value || "";
   const note = document.querySelector("#manualPromoNote")?.value.trim() || "";
+  const editId = document.querySelector("#manualPromoEditId")?.value || "";
 
   if(!shop || !title){
     alert("Bitte mindestens Geschäft und Aktion eintragen.");
     return;
   }
 
-  state.shoppingPromos.push({
-    id: uid(),
-    shop, title, collectFrom, collectTo, validFrom, validTo, note,
-    createdAt: Date.now(),
-    updatedAt: Date.now(),
-    deleted:false
-  });
+  if(editId){
+    const item = state.shoppingPromos.find(x => x.id === editId && !x.deleted);
+    if(item){
+      Object.assign(item,{shop,title,collectFrom,collectTo,validFrom,validTo,note,updatedAt:Date.now()});
+    }
+  }else{
+    state.shoppingPromos.push({
+      id:uid(), shop,title,collectFrom,collectTo,validFrom,validTo,note,
+      createdAt:Date.now(), updatedAt:Date.now(), deleted:false
+    });
+  }
 
   save();
   renderManualShoppingPromos();
-
-  ["manualPromoTitle","manualPromoCollectFrom","manualPromoCollectTo",
-   "manualPromoValidFrom","manualPromoValidTo","manualPromoNote"].forEach(id => {
-    const el=document.querySelector("#"+id);
-    if(el) el.value="";
-  });
-  const shopEl=document.querySelector("#manualPromoShop");
-  if(shopEl) shopEl.value="";
+  resetManualPromoEditor();
   document.querySelector("#manualPromoDetails")?.removeAttribute("open");
 }
 
 document.querySelector("#addManualPromoBtn")?.addEventListener("click", addManualShoppingPromo);
+document.querySelector("#cancelManualPromoEditBtn")?.addEventListener("click", () => {
+  resetManualPromoEditor();
+  document.querySelector("#manualPromoDetails")?.removeAttribute("open");
+});
 function renderShopping() {
   renderManualShoppingPromos();
   const list = document.querySelector("#shoppingList");
