@@ -16956,3 +16956,117 @@ body.child-view-active #papaOverviewModal{
     max-height:min(760px,94vh) !important;
   }
 }
+
+/* =========================================================
+   PUNKT 2 – To-dos & Termine ruhiger und alltagstauglicher
+   ========================================================= */
+
+/* Papa-Dialog darf außerhalb des Wochenplans niemals als Seitenblock erscheinen. */
+#papaOverviewDialog.papa-overview-dialog:not([open]){
+  display:none !important;
+}
+
+/* Familienfragen wie "Unsere Farben": standardmäßig kompakt zugeklappt. */
+.family-question-card{
+  padding:0 !important;
+  overflow:hidden;
+}
+.family-question-card > summary.family-question-summary{
+  list-style:none;
+  cursor:pointer;
+  padding:12px 16px;
+  display:flex;
+  align-items:center;
+  min-height:44px;
+}
+.family-question-card > summary.family-question-summary::-webkit-details-marker{display:none}
+.family-question-summary::before{
+  content:"▸";
+  margin-right:8px;
+  color:#9b877b;
+  transition:transform .16s ease;
+}
+.family-question-card[open] .family-question-summary::before{transform:rotate(90deg)}
+.family-question-summary > span{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.family-question-summary strong{font-family:var(--serif);font-size:1rem;color:#5c4d47}
+.family-question-summary small{font-size:.72rem;color:#aa9488;font-weight:400}
+.family-question-body{padding:0 14px 12px}
+.family-question-entry{
+  grid-template-columns:minmax(240px,1fr) 130px auto auto !important;
+  gap:8px !important;
+}
+.family-question-edit,
+.family-question-done,
+.family-question-delete{
+  min-height:28px;
+}
+.family-question-edit{
+  border:1px solid #dfd4cc;
+  background:#fffdfa;
+  color:#8b7569;
+  border-radius:999px;
+  padding:3px 9px;
+  cursor:pointer;
+}
+
+/* Haupteingabe: die Felder, die man fast immer braucht, optisch zuerst. */
+.todo-form{padding:16px 18px 14px !important}
+.entry-top-row{margin-bottom:10px !important}
+.todo-primary-row{gap:10px !important}
+.todo-primary-row > label{
+  background:#fffefa !important;
+  border:1px solid rgba(164,157,105,.36) !important;
+  box-shadow:0 2px 9px rgba(92,78,63,.035) !important;
+}
+.todo-primary-task{grid-column:auto}
+.family-picker{margin:10px 0 8px !important}
+
+/* Termin: Datum/Zeit sind Hauptfelder; Zusatzart und Pling treten zurück. */
+.event-fields{gap:8px !important;margin-top:8px !important}
+.event-fields > label{background:#fffdfa;border-radius:12px}
+.event-fields > label:nth-child(5){
+  max-width:340px;
+  opacity:.82;
+}
+.pling-field{
+  margin-top:4px !important;
+  background:rgba(244,241,248,.48) !important;
+  border-color:rgba(187,175,202,.32) !important;
+  box-shadow:none !important;
+}
+.pling-device-row{opacity:.82}
+
+/* Seltenere To-do-/Terminangaben in eine ruhige zweite Ebene. */
+.todo-more-settings{
+  margin-top:10px;
+  border-top:1px solid rgba(185,170,158,.28);
+  padding-top:7px;
+}
+.todo-more-settings > summary{
+  list-style:none;
+  cursor:pointer;
+  width:max-content;
+  color:#9a887e;
+  font-size:.76rem;
+  padding:3px 2px;
+}
+.todo-more-settings > summary::-webkit-details-marker{display:none}
+.todo-more-settings > summary::before{content:"＋ ";color:#b09b8f}
+.todo-more-settings[open] > summary::before{content:"− ";}
+.todo-more-settings-body{
+  margin-top:8px;
+  padding:10px 12px;
+  border-radius:13px;
+  background:rgba(250,247,243,.72);
+}
+.todo-more-settings .recurrence-row,
+.todo-more-settings .form-row{margin-top:0 !important}
+.todo-more-settings .form-row{margin-top:8px !important}
+.todo-more-settings label{font-size:.72rem;color:#8d7c72}
+
+.todo-form-actions{margin-top:10px !important}
+
+@media(max-width:700px){
+  .family-question-entry{grid-template-columns:1fr 110px !important}
+  #cancelFamilyQuestionEditBtn,#addFamilyQuestionBtn{width:100%}
+}
