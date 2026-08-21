@@ -17236,3 +17236,54 @@ body.child-view-active #papaOverviewModal{
   align-items:center;
   gap:7px;
 }
+
+
+/* =========================================================
+   PUNKT 2e – gezielte Reparatur der zwei noch offenen Punkte
+   ========================================================= */
+
+/* Schnellzugriff: die Linkzeile selbst ist IMMER sichtbar.
+   Nur der Bearbeitungsbereich darf zugeklappt sein. */
+#quickLinksRow{
+  display:flex !important;
+  visibility:visible !important;
+  opacity:1 !important;
+  min-height:30px !important;
+  flex-wrap:wrap !important;
+  gap:7px !important;
+  align-items:center !important;
+}
+#quickLinksRow .quick-link{
+  display:inline-flex !important;
+  visibility:visible !important;
+  opacity:1 !important;
+}
+
+/* Wochenplan-Routinen wirklich in denselben unteren Sockel wie die stillen
+   Ereignisse legen: nicht am absoluten Kartenrand, sondern knapp darüber. */
+.weekplan-bottom-slot{
+  margin-top:auto !important;
+  margin-bottom:0 !important;
+  padding:0 10px 7px !important;
+  min-height:0 !important;
+}
+.day-quiet-events{
+  flex:0 0 auto !important;
+}
+/* Ohne Geburtstag/Namenstag bleibt unter der Routine derselbe optische Sockel. */
+.weekplan-bottom-slot:last-child{
+  padding-bottom:24px !important;
+}
+
+.day-bottom-stack{
+  margin-top:auto !important;
+  flex:0 0 auto;
+  padding-bottom:14px;
+}
+.day-bottom-stack .weekplan-bottom-slot{
+  margin-top:0 !important;
+  padding-bottom:7px !important;
+}
+.day-bottom-stack .day-quiet-events{
+  margin-top:0 !important;
+}
