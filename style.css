@@ -17664,3 +17664,100 @@ body.child-view-active #papaOverviewModal{
   .school-find-thumb-wrap{width:92px !important;height:52px !important;}
   .school-find-editor{grid-template-columns:1fr !important;}
 }
+
+
+/* Punkt 3d – feiner Zeichen-Scrollbar + Fundstücke-Kategoriefilter */
+#schoolIconChoices{
+  scrollbar-width:thin;
+  scrollbar-color:rgba(154,132,184,.42) transparent;
+}
+#schoolIconChoices::-webkit-scrollbar{height:4px;}
+#schoolIconChoices::-webkit-scrollbar-track{background:transparent;}
+#schoolIconChoices::-webkit-scrollbar-thumb{
+  background:rgba(154,132,184,.38);
+  border-radius:999px;
+}
+#schoolIconChoices::-webkit-scrollbar-thumb:hover{background:rgba(154,132,184,.58);}
+
+.school-find-tools{
+  display:grid !important;
+  grid-template-columns:minmax(220px,1fr) minmax(145px,190px) !important;
+  gap:9px !important;
+  align-items:center;
+}
+.school-find-tools .school-find-search-icon{
+  position:absolute;
+}
+.school-find-filter{
+  width:100%;
+  min-height:38px;
+  border:1px solid rgba(114,94,80,.16);
+  border-radius:14px;
+  background:rgba(255,255,255,.72);
+  color:inherit;
+  padding:0 34px 0 12px;
+}
+@media(max-width:720px){
+  .school-find-tools{grid-template-columns:1fr !important;}
+}
+
+/* ruhige, nicht-emojiartige Stundenplanzeichen */
+.tt-subject-symbol{
+  display:inline-flex;
+  width:20px;
+  height:20px;
+  align-items:center;
+  justify-content:center;
+  margin-right:5px;
+  color:#776a82;
+  vertical-align:middle;
+  font-family:Georgia,serif;
+  font-weight:600;
+}
+.tt-symbol-rel{font-size:17px;color:#8d718a;}
+.tt-symbol-sport{
+  font-size:0;
+  position:relative;
+}
+.tt-symbol-sport::before,
+.tt-symbol-sport::after{
+  content:"";
+  position:absolute;
+  bottom:5px;
+  width:10px;
+  height:5px;
+  border:1.4px solid #7e748c;
+  border-top:0;
+  border-radius:1px 5px 4px 3px;
+  transform:rotate(-8deg);
+}
+.tt-symbol-sport::before{left:1px;}
+.tt-symbol-sport::after{right:0;transform:rotate(8deg) scaleX(-1);}
+.tt-symbol-werken{
+  font-size:0;
+  position:relative;
+}
+.tt-symbol-werken::before{
+  content:"";
+  width:13px;height:3px;
+  border-radius:3px;
+  background:#82738a;
+  transform:rotate(-42deg);
+}
+.tt-symbol-werken::after{
+  content:"";
+  position:absolute;
+  width:7px;height:7px;
+  border:1.4px solid #82738a;
+  border-radius:50%;
+  right:1px;top:2px;
+}
+.tt-symbol-gu{gap:1px;}
+.tt-symbol-gu i{
+  display:block;
+  width:7px;height:11px;
+  border:1.3px solid #7d7690;
+  background:rgba(255,255,255,.7);
+}
+.tt-symbol-gu i:first-child{border-radius:2px 0 0 2px;transform:skewY(8deg);}
+.tt-symbol-gu i:last-child{border-radius:0 2px 2px 0;transform:skewY(-8deg);}
