@@ -18203,3 +18203,170 @@ body.child-view-active #papaOverviewModal{
     grid-column:3;
   }
 }
+
+
+/* =========================================================
+   PUNKT 4d – Routinen: zugeklappt, Inspirationsanker,
+   robuste stilvolle Checkboxen
+   ========================================================= */
+
+.workroom-routine-card{
+  padding:0 !important;
+  overflow:hidden;
+}
+.workroom-routine-toggle{
+  width:100%;
+  min-height:78px;
+  display:grid;
+  grid-template-columns:42px minmax(0,1fr) 26px;
+  align-items:center;
+  gap:12px;
+  padding:14px 18px;
+  border:0;
+  background:linear-gradient(145deg,rgba(255,253,248,.98),rgba(245,247,239,.94));
+  color:#554b41;
+  text-align:left;
+  cursor:pointer;
+}
+.workroom-routine-toggle-icon{
+  width:36px;height:36px;
+  display:flex;align-items:center;justify-content:center;
+  border-radius:50%;
+  background:rgba(238,241,226,.95);
+  font-size:1.05rem;
+}
+.workroom-routine-toggle-copy{
+  display:grid;
+  gap:2px;
+}
+.workroom-routine-toggle-copy strong{
+  font-family:"Playfair Display",Georgia,serif;
+  font-size:1.12rem;
+}
+.workroom-routine-toggle-copy small{color:#948779;}
+.workroom-routine-toggle-arrow{
+  font-size:1.5rem;
+  color:#9c8f81;
+  transition:transform .18s ease;
+}
+.workroom-routine-toggle.open .workroom-routine-toggle-arrow{transform:rotate(90deg);}
+.workroom-routine-body{
+  padding:0 22px 20px;
+  border-top:1px solid rgba(116,101,84,.09);
+}
+.workroom-routine-body.hidden{display:none !important;}
+
+.routine-inspiration{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:9px;
+  margin:14px 0 18px;
+}
+.routine-idea-card{
+  border:1px solid rgba(116,101,84,.12);
+  border-radius:14px;
+  background:rgba(255,255,255,.48);
+  overflow:hidden;
+}
+.routine-idea-card summary{
+  list-style:none;
+  display:grid;
+  grid-template-columns:28px auto 1fr;
+  align-items:center;
+  gap:8px;
+  padding:11px 12px;
+  cursor:pointer;
+}
+.routine-idea-card summary::-webkit-details-marker{display:none;}
+.routine-idea-card summary strong{
+  font-family:"Playfair Display",Georgia,serif;
+  color:#5e5349;
+}
+.routine-idea-card summary small{
+  justify-self:end;
+  color:#9b8f84;
+  text-align:right;
+}
+.routine-idea-card[open] summary{
+  background:linear-gradient(145deg,rgba(248,246,239,.86),rgba(242,245,235,.65));
+}
+.routine-idea-body{
+  padding:4px 14px 14px 48px;
+  color:#6d6258;
+  font-size:.88rem;
+  line-height:1.48;
+}
+.routine-idea-body p{margin:.45rem 0;}
+.routine-idea-body blockquote{
+  margin:.7rem 0;
+  padding:7px 10px;
+  border-left:2px solid rgba(145,126,100,.32);
+  background:rgba(249,246,238,.64);
+  font-family:"Playfair Display",Georgia,serif;
+  color:#5e5146;
+}
+.routine-quality-cloud{
+  display:flex;
+  flex-wrap:wrap;
+  gap:5px;
+  margin:7px 0;
+}
+.routine-quality-cloud span{
+  padding:3px 8px;
+  border:1px solid rgba(132,139,105,.18);
+  border-radius:999px;
+  background:#f5f6ed;
+  color:#687050;
+  font-size:.76rem;
+}
+.routine-contrast s{color:#a69b91;}
+
+.routine-week-check{
+  position:relative !important;
+  z-index:8 !important;
+  flex:0 0 auto;
+  width:27px !important;
+  height:27px !important;
+  min-width:27px !important;
+  padding:0 !important;
+  display:inline-flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  border:1.4px solid #b5aa98 !important;
+  border-radius:9px !important;
+  background:linear-gradient(145deg,#fffefa,#f5f0e7) !important;
+  color:#6c5c4b !important;
+  box-shadow:0 1px 3px rgba(77,65,53,.05);
+  cursor:pointer !important;
+  pointer-events:auto !important;
+  touch-action:manipulation;
+}
+.routine-week-check:hover{
+  border-color:#927a63 !important;
+  box-shadow:0 2px 7px rgba(77,65,53,.09);
+}
+.routine-week-check[data-done="1"]{
+  border-color:#9c876e !important;
+  background:linear-gradient(145deg,#f8f3e8,#eee5d6) !important;
+}
+.routine-week-check span{
+  display:block;
+  font-family:Georgia,serif;
+  font-size:1rem;
+  line-height:1;
+  transform:translateY(-1px);
+}
+.routine-week-thumb{
+  position:relative;
+  z-index:1 !important;
+}
+.routine-week-copy{
+  position:relative;
+  z-index:2;
+}
+@media(max-width:800px){
+  .routine-inspiration{grid-template-columns:1fr;}
+  .routine-idea-card summary{grid-template-columns:28px 1fr;}
+  .routine-idea-card summary small{grid-column:2;justify-self:start;text-align:left;}
+  .routine-idea-body{padding-left:48px;}
+}
