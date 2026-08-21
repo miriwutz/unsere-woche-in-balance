@@ -20343,3 +20343,220 @@ body.child-view-active #papaOverviewModal{
 .recipe-v19-meta-grid{
   margin-top:11px !important;
 }
+
+
+/* =========================================================
+   PUNKT 12 – Merkmale & Becherküche sauber
+   ========================================================= */
+
+/* Die fünf Merkmale gehören zusammen und stehen in EINER Reihe. */
+.recipe-v17-tags{
+  padding:12px 14px 13px !important;
+}
+.recipe-feature-row-v17{
+  display:flex !important;
+  flex-flow:row nowrap !important;
+  align-items:center !important;
+  justify-content:flex-start !important;
+  gap:8px !important;
+  width:100% !important;
+  margin-top:9px !important;
+}
+
+/* Alte breite Layoutregeln endgültig überschreiben. */
+.recipe-feature-row-v17 > label{
+  display:inline-flex !important;
+  flex:0 0 auto !important;
+  width:auto !important;
+  min-width:0 !important;
+  max-width:none !important;
+  min-height:34px !important;
+  margin:0 !important;
+  padding:6px 10px 6px 8px !important;
+  align-items:center !important;
+  gap:7px !important;
+  border-radius:999px !important;
+}
+
+/* Die Auswahl selbst ist ein echter kleiner Kreis, kein Oval. */
+.recipe-feature-row-v17 > label > input[type="checkbox"]{
+  appearance:none !important;
+  -webkit-appearance:none !important;
+  box-sizing:border-box !important;
+  flex:0 0 18px !important;
+  width:18px !important;
+  min-width:18px !important;
+  max-width:18px !important;
+  height:18px !important;
+  min-height:18px !important;
+  max-height:18px !important;
+  aspect-ratio:1/1 !important;
+  padding:0 !important;
+  margin:0 !important;
+  border:1px solid rgba(115,126,80,.36) !important;
+  border-radius:50% !important;
+  background:#fffef9 !important;
+  box-shadow:inset 0 0 0 3px #fffef9 !important;
+  cursor:pointer !important;
+}
+.recipe-feature-row-v17 > label > input[type="checkbox"]:checked{
+  background:#a4b274 !important;
+  border-color:#89975e !important;
+}
+.recipe-feature-row-v17 > label > input[type="checkbox"]:focus-visible{
+  outline:2px solid rgba(139,126,180,.34) !important;
+  outline-offset:2px;
+}
+
+.recipe-feature-row-v17 > label > span{
+  display:inline-flex !important;
+  align-items:center !important;
+  gap:5px !important;
+  white-space:nowrap !important;
+  font-size:.69rem !important;
+}
+.recipe-feature-symbol{
+  font-style:normal;
+  font-family:Georgia,"Times New Roman",serif;
+  font-size:.83rem;
+  line-height:1;
+  color:#909b68;
+}
+.recipe-favorite-toggle .recipe-feature-symbol{color:#b08a72}
+.recipe-beaker-toggle .recipe-feature-symbol{color:#788ca1}
+
+/* Hinweiszeile wurde entfernt; sollte aus alten Versionen noch etwas greifen: aus. */
+.recipe-v17-unit-hint,
+.beaker-unit-legend{
+  display:none !important;
+}
+
+/* Becherküche: Zutat schlicht links, nicht als Eingabefeld. */
+.beaker-map-row{
+  grid-template-columns:minmax(120px,1fr) 18px minmax(320px,2fr) 26px !important;
+  gap:8px !important;
+  align-items:center !important;
+  min-height:62px !important;
+  padding:8px 10px !important;
+}
+.beaker-map-source{
+  display:flex !important;
+  align-items:center !important;
+  min-width:0 !important;
+}
+.beaker-map-ingredient-label{
+  display:block;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  font-family:"Playfair Display",Georgia,serif;
+  font-size:.88rem;
+  font-weight:600;
+  color:#5e5046;
+}
+.beaker-map-arrow{
+  color:#aa9885 !important;
+  font-size:.72rem !important;
+}
+
+/* Maße wirklich kompakt; keine Überlappung. */
+.beaker-measures{
+  display:flex !important;
+  flex-wrap:wrap !important;
+  align-items:flex-end !important;
+  gap:7px !important;
+  min-width:0 !important;
+}
+.beaker-measure-editor{
+  position:relative !important;
+  display:grid !important;
+  grid-template-columns:58px 126px 82px 24px !important;
+  gap:5px !important;
+  align-items:end !important;
+  width:auto !important;
+  min-width:0 !important;
+  overflow:visible !important;
+  pointer-events:auto !important;
+}
+.beaker-editor-field{
+  display:flex !important;
+  flex-direction:column !important;
+  gap:3px !important;
+  min-width:0 !important;
+  pointer-events:auto !important;
+}
+.beaker-editor-field > span{
+  display:block !important;
+  padding-left:2px;
+  color:#a08e7c;
+  font-size:.52rem !important;
+  line-height:1 !important;
+}
+.beaker-editor-field input,
+.beaker-editor-field select{
+  box-sizing:border-box !important;
+  width:100% !important;
+  min-width:0 !important;
+  max-width:100% !important;
+  height:34px !important;
+  min-height:34px !important;
+  padding:4px 7px !important;
+  border-radius:9px !important;
+  pointer-events:auto !important;
+  position:relative !important;
+  z-index:2 !important;
+  background-color:#fffdfa !important;
+}
+.beaker-editor-amount input{
+  text-align:center;
+}
+.beaker-editor-color.hidden{
+  display:none !important;
+}
+.beaker-measure-remove{
+  align-self:end !important;
+  width:24px !important;
+  min-width:24px !important;
+  height:34px !important;
+  min-height:34px !important;
+  padding:0 !important;
+  display:grid !important;
+  place-items:center !important;
+  border:0 !important;
+  border-radius:8px !important;
+  background:transparent !important;
+  color:#aa9382 !important;
+  cursor:pointer !important;
+  pointer-events:auto !important;
+  z-index:3 !important;
+}
+.beaker-add-measure{
+  align-self:flex-end !important;
+  height:34px !important;
+  min-height:34px !important;
+  padding:5px 9px !important;
+  border-radius:999px !important;
+  white-space:nowrap !important;
+}
+.beaker-editor-plus{
+  display:none !important;
+}
+.beaker-map-remove{
+  width:26px !important;
+  height:26px !important;
+  padding:0 !important;
+  align-self:center !important;
+}
+
+@media(max-width:920px){
+  .recipe-feature-row-v17{
+    flex-wrap:wrap !important;
+  }
+  .beaker-map-row{
+    grid-template-columns:1fr !important;
+  }
+  .beaker-map-arrow{display:none !important}
+  .beaker-measure-editor{
+    grid-template-columns:58px minmax(110px,1fr) 82px 24px !important;
+  }
+}
