@@ -16889,3 +16889,70 @@ body.child-view-active #papaOverviewModal{
   background:rgba(66,55,50,.34) !important;
   backdrop-filter:blur(2px) !important;
 }
+
+
+/* =========================================================
+   PUNKT 1 ABSCHLUSS – Papa-Fenster
+   Reihenfolge: Titel -> Banner -> Wochenreiter -> Einträge
+   ========================================================= */
+
+#papaOverviewDialog.papa-overview-dialog{
+  width:min(780px,92vw) !important;
+  max-width:780px !important;
+  height:min(720px,86vh) !important;
+  max-height:min(720px,86vh) !important;
+  overflow:hidden !important;
+  display:grid !important;
+  grid-template-rows:auto auto auto minmax(0,1fr) !important;
+}
+
+/* 1: Überschrift */
+#papaOverviewDialog .papa-overview-header{
+  grid-row:1 !important;
+}
+
+/* 2: Spruch-/Triquetra-Banner direkt unter der Überschrift */
+#papaOverviewDialog .papa-quote-panel{
+  grid-row:2 !important;
+  margin:4px 26px 14px !important;
+  width:auto !important;
+  box-sizing:border-box !important;
+}
+
+/* 3: Wochenwahl unter dem Banner */
+#papaOverviewDialog .papa-overview-tabs.elegant-week-switch{
+  grid-row:3 !important;
+  width:calc(100% - 52px) !important;
+  margin:0 26px 12px !important;
+}
+
+/* 4: Einträge darunter, eigener Scrollbereich */
+#papaOverviewDialog .papa-overview-list{
+  grid-row:4 !important;
+  min-height:0 !important;
+  overflow:auto !important;
+  padding:8px 26px 28px !important;
+}
+
+/* Banner in der breiteren Ansicht etwas großzügiger */
+#papaOverviewDialog .papa-quote-panel{
+  grid-template-columns:135px minmax(0,1fr) !important;
+  column-gap:28px !important;
+}
+#papaOverviewDialog .papa-triquetra-ring{
+  width:125px !important;
+  height:125px !important;
+}
+#papaOverviewDialog .papa-quote{
+  font-size:1.14rem !important;
+  line-height:1.48 !important;
+}
+
+@media(max-width:760px){
+  #papaOverviewDialog.papa-overview-dialog{
+    width:calc(100vw - 24px) !important;
+    max-width:none !important;
+    height:min(760px,94vh) !important;
+    max-height:min(760px,94vh) !important;
+  }
+}
