@@ -2755,7 +2755,7 @@ function renderArchive() {
   bindArchiveButtons();
 }
 
-function archivePlannedLabels(a){
+function archivePlannedStatusHtml(a){
   const routines=ensureWorkroomRoutines();
   const matches=routines.items.filter(item=>{
     if(item.sourceArchiveId===a.id) return true;
@@ -2763,31 +2763,77 @@ function archivePlannedLabels(a){
     try{return normalizeUrl(item.url)===normalizeUrl(a.url);}
     catch{return String(item.url).trim()===String(a.url).trim();}
   });
+
   if(!matches.length) return "";
 
   const currentMonday=getMonday(new Date());
-  const labels=matches.slice(0,3).map(item=>{
+  const dayShort={
+    Montag:"Mo",Dienstag:"Di",Mittwoch:"Mi",Donnerstag:"Do",
+    Freitag:"Fr",Samstag:"Sa",Sonntag:"So",daily:"täglich"
+  };
+
+  // gleiche Woche zusammenfassen: Fr + Sa · diese Woche
+  const groups=new Map();
+  matches.forEach(item=>{
     const mon=parseLocalDate(item.weekKey);
     const diff=Math.round((mon-currentMonday)/(7*24*60*60*1000));
-    const w=diff===0?"diese Woche":diff===1?"nächste Woche":diff>1?`+${diff} Wochen`:"früher";
-    return `${item.day==="daily"?"täglich":item.day} · ${w}`;
+    const weekLabel=
+      diff===0 ? "diese Woche" :
+      diff===1 ? "nächste Woche" :
+      diff>1 ? `in ${diff} Wochen` :
+      "früher";
+
+    if(!groups.has(weekLabel)) groups.set(weekLabel,[]);
+    groups.get(weekLabel).push(dayShort[item.day] || item.day || "");
   });
-  return ` · <span class="archive-planned-badge">geplant: ${labels.map(escapeHtml).join(", ")}</span>`;
+
+  const parts=[...groups.entries()].map(([week,days])=>{
+    const unique=[...new Set(days.filter(Boolean))];
+    return `${unique.join(" + ")} · ${week}`;
+  });
+
+  const visible=parts.slice(0,2);
+  const extra=parts.length-visible.length;
+
+  return `
+    <div class="archive-planned-row" title="${escapeHtml(parts.join(" | "))}">
+      <span class="archive-planned-icon">◷</span>
+      <span><strong>Geplant</strong> ${visible.map(escapeHtml).join(" · ")}${extra?` · +${extra} weitere`:""}</span>
+    </div>`;
 }
 
 function archiveCardHtml(a) {
   const ratingLabel = {super:"✦ Gut", okay:"○ Mittel", nope:"— Schlecht"};
+  const categoryLabel=({yoga:"Yoga",meditation:"Meditation",pain:"Schmerz",sport:"Sport",other:"Sonstiges"})[a.category||"other"];
   return `
     <article class="archive-card">
-      ${a.thumbnail ? `<img class="archive-thumb" src="${escapeHtml(a.thumbnail)}" alt="">` : ""}
+      ${a.thumbnail ? `
+        <a class="archive-thumb-link" href="${escapeHtml(a.url)}" target="_blank" rel="noopener" aria-label="${escapeHtml(a.title)} öffnen">
+          <img class="archive-thumb" src="${escapeHtml(a.thumbnail)}" alt="">
+          <span class="archive-thumb-play">▶</span>
+        </a>` : ""}
+
       <div class="archive-content">
-        <h3>${escapeHtml(a.title)}</h3>
-        <p>${ratingLabel[a.rating] || "Noch nicht bewertet"} · <span>${({yoga:"Yoga",meditation:"Meditation",pain:"Schmerz",sport:"Sport",other:"Sonstiges"})[a.category||"other"]}</span> · <strong>${a.timesDone || 0}× gemacht</strong>${isMostWanted(a.url) ? ' <span class="most-wanted-badge" title="Dynamisch Most wanted">✦ Most wanted</span>' : ''}${archivePlannedLabels(a)}</p>
+        <div class="archive-title-row">
+          <h3>${escapeHtml(a.title)}</h3>
+          ${isMostWanted(a.url) ? '<span class="most-wanted-badge" title="Wird häufig genutzt">✦ Most wanted</span>' : ''}
+        </div>
+
+        <div class="archive-meta">
+          <span>${ratingLabel[a.rating] || "☆ Noch nicht bewertet"}</span>
+          <span>${escapeHtml(categoryLabel)}</span>
+          <span>${a.timesDone || 0}× gemacht</span>
+        </div>
+
+        ${archivePlannedStatusHtml(a)}
+
         <div class="archive-actions">
-          <button type="button" class="text-btn favorite-btn" data-id="${a.id}">${a.favorite ? "♥ Favorit" : "♡ Favorit"}</button>
-          <button type="button" class="text-btn replan-btn" data-id="${a.id}">+ Einplanen</button>
-          <button type="button" class="text-btn delete-exercise-btn" data-id="${a.id}">Löschen</button>
-          <a class="video-link" href="${escapeHtml(a.url)}" target="_blank" rel="noopener">YouTube öffnen</a>
+          <button type="button" class="archive-action favorite-btn ${a.favorite?"active":""}" data-id="${a.id}">
+            ${a.favorite ? "♥ Favorit" : "♡ Favorit"}
+          </button>
+          <button type="button" class="archive-action replan-btn" data-id="${a.id}">＋ Einplanen</button>
+          <a class="archive-action archive-open-link" href="${escapeHtml(a.url)}" target="_blank" rel="noopener">Video öffnen ↗</a>
+          <button type="button" class="archive-action archive-delete-action delete-exercise-btn" data-id="${a.id}" title="Aus der Übersicht löschen">Löschen</button>
         </div>
       </div>
     </article>`;
@@ -7615,6 +7661,19 @@ if (confirmReplanBtn) confirmReplanBtn.addEventListener("click", () => {
   const part=document.querySelector("#replanPart")?.value || "morning";
   const weekKey=dateKey(monday);
 
+  const alreadyPlanned=routines.items.some(existing=>{
+    if(existing.weekKey!==weekKey || existing.day!==day || (existing.part||"morning")!==part) return false;
+    if(existing.sourceArchiveId && existing.sourceArchiveId===item.id) return true;
+    if(!existing.url || !item.url) return false;
+    try{return normalizeUrl(existing.url)===normalizeUrl(item.url);}
+    catch{return String(existing.url).trim()===String(item.url).trim();}
+  });
+
+  if(alreadyPlanned){
+    showMotivation(`${item.title || "Übung"} ist dort bereits eingeplant.`);
+    return;
+  }
+
   routines.items.push({
     id:uid(),
     title:item.title || "Routinevideo",
@@ -9258,6 +9317,9 @@ function updateRecipeSourceForm() {
   document.querySelectorAll(".recipe-internal-only").forEach(el=>{
     el.classList.toggle("recipe-section-hidden",external);
   });
+  document.querySelectorAll(".recipe-external-only").forEach(el=>{
+    el.classList.toggle("recipe-section-hidden",!external);
+  });
 
   const web=document.querySelector("#recipeWebUrl");
   const webLabel=document.querySelector("#recipeWebLabel");
@@ -9265,18 +9327,16 @@ function updateRecipeSourceForm() {
   const hint=document.querySelector("#recipeLinkSectionHint");
 
   if(web){
-    web.placeholder=external?"Link zum Internetrezept …":"Link zur Quelle – optional";
+    web.placeholder=external?"Link zum Originalrezept …":"";
     web.classList.toggle("recipe-external-required",external);
   }
-  if(webLabel) webLabel.textContent=external?"Link zum Internetrezept":"Quellen-Link – optional";
-  if(title) title.textContent=external?"Internetrezept":"Links";
-  if(hint) hint.textContent=external
-    ?"Mindestens einen Link eintragen – Zutaten und Zubereitung brauchst du hier nicht."
-    :"Optional – Quelle oder passendes Video hinterlegen.";
+  if(webLabel) webLabel.textContent="Rezept-Link";
+  if(title) title.textContent="Internetquelle";
+  if(hint) hint.textContent="Hier öffnest du später direkt das Originalrezept oder Rezeptvideo.";
 }
 
 function resetRecipeForm() {
-  ["#recipeTitle","#recipeTime","#recipeIngredients","#recipeSteps","#recipeWebUrl","#recipeYoutubeUrl","#recipeBakeTime","#recipeTemperature"]
+  ["#recipeTitle","#recipeTime","#recipeIngredients","#recipeSteps","#recipeWebUrl","#recipeYoutubeUrl","#recipeBakeTime","#recipeTemperature","#recipeServings"]
     .forEach(sel => {
       const el = document.querySelector(sel);
       if (el) el.value = "";
@@ -9347,6 +9407,7 @@ function startRecipeEdit(recipe) {
   document.querySelector("#recipeTime").value = recipe.time || "";
   document.querySelector("#recipeBakeTime").value = recipe.bakeTime || "";
   document.querySelector("#recipeTemperature").value = recipe.temperature || "";
+  document.querySelector("#recipeServings").value = recipe.servings || "";
   document.querySelector("#recipeIngredients").value = normalizedRecipeLines(recipe.ingredients).join("\n");
   document.querySelector("#recipeSteps").value = normalizedRecipeLines(recipe.steps).join("\n");
   document.querySelector("#recipeWebUrl").value = recipe.webUrl || "";
@@ -10626,6 +10687,7 @@ document.querySelector("#saveRecipeBtn")?.addEventListener("click", () => {
     time: sourceType === "external" ? "" : (document.querySelector("#recipeTime")?.value.trim() || ""),
     bakeTime: sourceType === "external" ? "" : (document.querySelector("#recipeBakeTime")?.value.trim() || ""),
     temperature: sourceType === "external" ? "" : (document.querySelector("#recipeTemperature")?.value.trim() || ""),
+    servings: sourceType === "external" ? "" : (document.querySelector("#recipeServings")?.value.trim() || ""),
     ingredients: sourceType === "external" ? [] : recipeLines(document.querySelector("#recipeIngredients")?.value),
     steps: sourceType === "external" ? [] : recipeLines(document.querySelector("#recipeSteps")?.value),
     webUrl,
@@ -13061,8 +13123,8 @@ function recipeBeakerRowTemplate(value = {}) {
   return `
     <div class="beaker-map-row">
       <div class="beaker-map-source">
-        <input class="beaker-map-ingredient" type="text" placeholder="Zutat, z. B. Mehl" value="${esc(ingredient)}">
-        <small>Nur die Zutat genügt – „Mehl“ erkennt auch „100 g Mehl“.</small>
+        <input class="beaker-map-ingredient" type="text" value="${esc(ingredient)}" readonly>
+        <small>aus Zutaten übernommen</small>
       </div>
       <span class="beaker-map-arrow">→</span>
       <div class="beaker-measures">
@@ -13099,15 +13161,49 @@ function setRecipeBeakerMappings(rows = []) {
     measures: [{amount:row?.amount || "", unit:row?.unit || "cup", color:row?.color || "blue"}]
   }));
   normalized.forEach(addRecipeBeakerRow);
-  if (!host.children.length) addRecipeBeakerRow();
 }
 
+function syncRecipeBeakerMappingsFromIngredients({preserve=true}={}){
+  const host=document.querySelector("#recipeBeakerRows");
+  if(!host) return;
+
+  const lines=recipeLines(document.querySelector("#recipeIngredients")?.value);
+  const existing=preserve ? readRecipeBeakerMappings() : [];
+  const existingByKey=new Map(
+    existing.map(row=>[normalizeIngredientKey(row.ingredient),row])
+  );
+
+  const rows=[];
+  const seen=new Set();
+
+  lines.forEach(line=>{
+    const display=automaticChildIngredientName(line) || ingredientDisplayName(line) || String(line||"").trim();
+    const key=normalizeIngredientKey(display);
+    if(!key || seen.has(key)) return;
+    seen.add(key);
+
+    const old=existingByKey.get(key);
+    rows.push(old ? {...old,ingredient:display} : {
+      ingredient:display,
+      measures:[{amount:"",unit:"cup",color:"blue"}]
+    });
+  });
+
+  setRecipeBeakerMappings(rows);
+
+  if(!rows.length){
+    host.innerHTML='<div class="beaker-empty-note">Trage zuerst oben die Zutaten ein – sie erscheinen hier automatisch.</div>';
+  }
+}
+
+
 function updateBeakerMappingVisibility() {
-  const checked = !!document.querySelector("#recipeBeakerKitchen")?.checked;
-  document.querySelector("#recipeBeakerMapping")?.classList.toggle("hidden", !checked);
+  const checked=!!document.querySelector("#recipeBeakerKitchen")?.checked;
+  document.querySelector("#recipeBeakerMapping")?.classList.toggle("hidden",!checked);
+  if(checked) syncRecipeBeakerMappingsFromIngredients({preserve:true});
 }
 document.addEventListener("click", e => {
-  if (e.target?.id === "addRecipeBeakerRow") addRecipeBeakerRow();
+  if (e.target?.id === "syncRecipeBeakerRows") syncRecipeBeakerMappingsFromIngredients({preserve:true});
   if (e.target?.classList?.contains("beaker-map-remove")) e.target.closest(".beaker-map-row")?.remove();
   if (e.target?.classList?.contains("beaker-add-measure")) {
     const host = e.target.closest(".beaker-measures");
@@ -13133,6 +13229,15 @@ document.addEventListener("change", e => {
   if (e.target?.classList?.contains("beaker-map-unit")) {
     const editor = e.target.closest(".beaker-measure-editor");
     editor?.querySelector(".beaker-map-color")?.classList.toggle("hidden", e.target.value !== "cup");
+  }
+});
+document.addEventListener("input", e=>{
+  if(e.target?.id==="recipeIngredients" && document.querySelector("#recipeBeakerKitchen")?.checked){
+    window.clearTimeout(window.__beakerIngredientSyncTimer);
+    window.__beakerIngredientSyncTimer=window.setTimeout(
+      ()=>syncRecipeBeakerMappingsFromIngredients({preserve:true}),
+      180
+    );
   }
 });
 
