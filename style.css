@@ -17287,3 +17287,38 @@ body.child-view-active #papaOverviewModal{
 .day-bottom-stack .day-quiet-events{
   margin-top:0 !important;
 }
+
+
+/* =========================================================
+   PUNKT 2g – Wochenplan-Themen exakt über dem Geburtstagsplatz
+   ========================================================= */
+
+/* Wenn an diesem Tag kein Geburtstag/Namenstag/Jahrestag steht,
+   reservieren wir trotzdem GENAU diesen unteren Platz.
+   Dadurch sitzt z.B. "Blumen gießen" eine Zeile darüber. */
+.day-quiet-placeholder{
+  min-height:31px !important;
+  padding:0 !important;
+  margin:0 !important;
+  border:0 !important;
+  visibility:hidden;
+  pointer-events:none;
+}
+
+/* Alte Sonderabstände für "kein Geburtstag" neutralisieren:
+   der Platz wird jetzt sauber durch den Placeholder erzeugt. */
+.day-column:not(:has(.day-quiet-events:not(.day-quiet-placeholder))) .weekplan-bottom-slot{
+  margin-bottom:0 !important;
+}
+.weekplan-bottom-slot:last-child{
+  padding-bottom:7px !important;
+}
+
+/* Der gemeinsame untere Sockel bleibt kompakt. */
+.day-bottom-stack{
+  padding-bottom:14px !important;
+}
+.day-bottom-stack .weekplan-bottom-slot{
+  margin-bottom:0 !important;
+  padding:0 10px 5px !important;
+}
