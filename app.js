@@ -6971,6 +6971,7 @@ document.querySelector("#addSchoolPrintBtn")?.addEventListener("click", () => {
 });
 
 document.querySelector("#toggleSchoolPrintEmail")?.addEventListener("click", e=>{
+  e.stopPropagation();
   const panel=document.querySelector("#schoolPrintEmailPanel");
   const willOpen=!!panel?.classList.contains("hidden");
   setSchoolPrintEmailPanel(willOpen);
@@ -12878,6 +12879,9 @@ window.balanceDataSafety = {
 document.addEventListener("click", e => {
   const head = e.target.closest(".workroom-fold-head");
   if (!head) return;
+
+  // Buttons/links/selects inside a heading have their own function and must not fold the card.
+  if (e.target.closest("button,a,input,select,textarea")) return;
 
   const card = head.closest(".workroom-fold-card");
   if (!card) return;
