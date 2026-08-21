@@ -20812,3 +20812,84 @@ body.child-view-active #papaOverviewModal{
     gap:6px !important;
   }
 }
+
+/* =========================================================
+   V37 – Rezeptbereich: klare Hierarchie + alphabetische Bibliothek
+   ========================================================= */
+.recipes-section{width:100% !important;max-width:none !important}
+#recipeForm.recipe-form-v17{
+  width:100% !important;
+  max-width:none !important;
+  margin:0 !important;
+  padding:16px !important;
+  gap:10px !important;
+}
+.recipe-v17-main-grid{grid-template-columns:minmax(0,2fr) minmax(250px,.9fr) !important;gap:10px !important}
+.recipe-v19-meta-grid{
+  grid-template-columns:minmax(170px,1.25fr) minmax(155px,1fr) 92px 105px 105px 96px !important;
+  gap:8px !important;
+}
+.recipe-v19-meta-grid input,.recipe-v19-meta-grid select{height:36px !important;min-height:36px !important;padding:7px 9px !important}
+.recipe-form-v17 .recipe-field > span{font-size:.66rem !important;line-height:1.2 !important;color:#806f63 !important}
+
+/* Die fünf Merkmale sind eine einzige ruhige Zeile – keine langen leeren Kästen. */
+.recipe-v17-tags{padding:9px 10px !important}
+.recipe-v17-tags .recipe-feature-row-v17{
+  display:grid !important;
+  grid-template-columns:repeat(5,minmax(118px,max-content)) !important;
+  justify-content:start !important;
+  gap:7px !important;
+}
+.recipe-v17-tags .recipe-feature-row-v17 > label{
+  display:inline-flex !important;
+  width:auto !important;
+  min-width:118px !important;
+  height:36px !important;
+  min-height:36px !important;
+  padding:6px 10px !important;
+  gap:7px !important;
+  border-radius:999px !important;
+  background:rgba(255,253,249,.88) !important;
+  border:1px solid rgba(121,108,91,.16) !important;
+  box-shadow:0 1px 4px rgba(73,61,50,.025) !important;
+}
+.recipe-v17-tags .recipe-feature-row-v17 > label:has(input:checked){
+  background:#edf2e6 !important;
+  border-color:rgba(102,122,78,.32) !important;
+  color:#526044 !important;
+}
+.recipe-v17-tags .recipe-feature-row-v17 > label > input[type="checkbox"]{
+  width:17px !important;min-width:17px !important;height:17px !important;min-height:17px !important;border-radius:50% !important;
+}
+.recipe-v17-tags .recipe-feature-symbol{width:18px !important;height:18px !important;display:inline-grid !important;place-items:center !important}
+.recipe-v17-tags .recipe-feature-symbol svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.55;stroke-linecap:round;stroke-linejoin:round;display:block}
+.recipe-v17-tags .recipe-feature-row-v17 > label > span{font-size:.73rem !important;gap:6px !important}
+
+/* Zutaten/Zubereitung bleiben bewusst der größte Teil. */
+.recipe-content-grid-v17{grid-template-columns:1fr 1fr !important;gap:12px !important}
+#recipeIngredients,#recipeSteps{min-height:245px !important;font-size:.88rem !important;line-height:1.55 !important}
+
+/* Alphabetisches Register reagiert auf alle Filter. */
+.recipe-library-nav{padding:12px 14px !important}
+.recipe-library-nav-head strong{font-size:1rem !important}
+.recipe-toc-list{display:flex !important;flex-wrap:wrap !important;gap:6px !important;align-items:center !important}
+.recipe-alpha-chip{
+  display:inline-flex;align-items:center;justify-content:center;gap:6px;
+  min-width:42px;height:34px;padding:5px 9px;border:1px solid rgba(123,109,91,.14);
+  border-radius:999px;background:#fffdf8;color:#665b51;font:inherit;font-size:.75rem;cursor:pointer;
+}
+.recipe-alpha-chip b{display:grid;place-items:center;min-width:18px;height:18px;padding:0 5px;border-radius:999px;background:#f0f2e5;color:#73795a;font-size:.62rem;font-weight:600}
+.recipe-alpha-chip.active{background:#e8eedf;border-color:rgba(101,118,66,.30);color:#536043}
+.recipe-alpha-chip.active b{background:#d8e3c8;color:#4f5d3d}
+.recipe-library-count{font-size:.72rem !important}
+
+@media(max-width:1050px){
+  .recipe-v19-meta-grid{grid-template-columns:1fr 1fr 90px 100px 100px 92px !important}
+  .recipe-v17-tags .recipe-feature-row-v17{grid-template-columns:repeat(3,max-content) !important}
+}
+@media(max-width:760px){
+  .recipe-v17-main-grid,.recipe-content-grid-v17{grid-template-columns:1fr !important}
+  .recipe-v19-meta-grid{grid-template-columns:1fr 1fr !important}
+  .recipe-v17-tags .recipe-feature-row-v17{grid-template-columns:repeat(2,minmax(0,1fr)) !important}
+  .recipe-v17-tags .recipe-feature-row-v17 > label{min-width:0 !important;width:100% !important}
+}
