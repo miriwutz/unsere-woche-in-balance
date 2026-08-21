@@ -6786,6 +6786,19 @@ function renderSchoolPrints() {
             title="Löschen"
             aria-label="Löschen">×</button>
 
+          <span class="school-print-touch-move" aria-label="Auf dem Tablet verschieben">
+            <button class="workroom-print-move-up"
+                    type="button"
+                    data-id="${p.id}"
+                    title="Nach oben"
+                    aria-label="Nach oben">↑</button>
+            <button class="workroom-print-move-down"
+                    type="button"
+                    data-id="${p.id}"
+                    title="Nach unten"
+                    aria-label="Nach unten">↓</button>
+          </span>
+
           <span
             class="workroom-drag-handle school-print-drag"
             title="Ziehen zum Verschieben"
@@ -6860,7 +6873,28 @@ function renderSchoolPrints() {
     });
   });
 
-  // As with the school to-dos: move only by the hand/drag handle.
+  function moveSchoolPrintByStep(id, delta) {
+    const ordered=[...state.workroom.prints].sort((a,b)=>(a.order??0)-(b.order??0));
+    const index=ordered.findIndex(p=>p.id===id);
+    const target=index+delta;
+    if(index<0 || target<0 || target>=ordered.length) return;
+
+    [ordered[index],ordered[target]]=[ordered[target],ordered[index]];
+    ordered.forEach((item,order)=>item.order=order);
+    state.workroom.prints=ordered;
+    save();
+    renderSchoolPrints();
+  }
+
+  document.querySelectorAll(".workroom-print-move-up").forEach(btn=>{
+    btn.addEventListener("click",e=>moveSchoolPrintByStep(e.currentTarget.dataset.id,-1));
+  });
+
+  document.querySelectorAll(".workroom-print-move-down").forEach(btn=>{
+    btn.addEventListener("click",e=>moveSchoolPrintByStep(e.currentTarget.dataset.id,1));
+  });
+
+  // Desktop: drag handle; Tablet/Touch: arrow buttons.
   if (typeof Sortable !== "undefined") {
     const printList = document.querySelector("#schoolPrintList");
 
@@ -7143,11 +7177,11 @@ function renderWorkroomLinks() {
             ? `<span class="workroom-link-note">${escapeHtml(link.note)}</span>`
             : ""}
 
-          <span class="workroom-link-use">${useLabels[effectiveUse] || "Demnächst"}</span>
         </div>
       </div>
 
       <div class="workroom-link-actions">
+        <span class="workroom-link-use">${useLabels[effectiveUse] || "Demnächst"}</span>
         <button
           class="workroom-link-edit"
           type="button"
