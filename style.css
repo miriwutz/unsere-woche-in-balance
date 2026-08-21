@@ -19499,3 +19499,140 @@ body.child-view-active #papaOverviewModal{
 .routine-week-plan-card.is-completed .routine-week-plan-copy strong{
   color:#64684c;
 }
+
+
+/* =========================================================
+   PUNKT 6 – Rabattkarten: lesbarer, Aktionen rechts, Marken näher am Vorbild
+   ========================================================= */
+.manual-promo-card{
+  padding:11px 12px !important;
+}
+.manual-promo-card-top{
+  grid-template-columns:40px minmax(0,1fr) 58px !important;
+  gap:9px !important;
+  align-items:start !important;
+}
+.manual-promo-card-title strong{
+  font-size:.93rem !important;
+  line-height:1.12 !important;
+  white-space:normal !important;
+  overflow:visible !important;
+  text-overflow:clip !important;
+}
+.manual-promo-shop{
+  font-size:.58rem !important;
+}
+.manual-promo-line{
+  margin-left:49px !important;
+  font-size:.68rem !important;
+  line-height:1.35 !important;
+}
+.manual-promo-note{
+  margin-left:49px !important;
+  font-size:.63rem !important;
+}
+.manual-promo-actions{
+  width:58px !important;
+  display:flex !important;
+  justify-content:flex-end !important;
+  align-items:center !important;
+  gap:4px !important;
+  justify-self:end !important;
+}
+.manual-promo-edit,
+.manual-promo-delete{
+  position:static !important;
+  flex:0 0 26px !important;
+  width:26px !important;
+  height:26px !important;
+  min-width:26px !important;
+  min-height:26px !important;
+  font-size:.78rem !important;
+}
+.manual-promo-delete:hover{
+  background:#f4e8e3 !important;
+  color:#8a594d !important;
+}
+
+/* kleine Markenplaketten – näher an Form/Farbwelt der jeweiligen Geschäfte */
+.promo-store-mark{
+  box-sizing:border-box !important;
+  width:38px !important;
+  height:38px !important;
+  overflow:hidden !important;
+  display:grid !important;
+  place-items:center !important;
+  box-shadow:0 1px 3px rgba(65,54,45,.10) !important;
+}
+.promo-store-billa{
+  border-radius:8px !important;
+  background:#ffd800 !important;
+  border:1px solid #d9b800 !important;
+  color:#fff !important;
+}
+.promo-logo-billa{
+  width:100%;
+  padding:3px 1px 2px;
+  background:#d90022;
+  color:#fff;
+  text-align:center;
+  font:900 .53rem/1 Arial,sans-serif;
+  letter-spacing:-.04em;
+}
+.promo-store-bipa{
+  border-radius:50% !important;
+  background:#e6007e !important;
+  border:2px solid #fff !important;
+  outline:1px solid rgba(230,0,126,.22);
+  color:#fff !important;
+}
+.promo-logo-bipa{
+  color:#fff;
+  font:800 .48rem/1 Arial,sans-serif;
+  letter-spacing:-.03em;
+}
+.promo-store-spar{
+  border-radius:50% !important;
+  background:#fff !important;
+  border:2px solid #d7d7d2 !important;
+}
+.promo-logo-spar-tree{
+  position:relative;
+  width:25px;
+  height:25px;
+  border-radius:50%;
+  background:#00843d;
+}
+.promo-logo-spar-tree::before{
+  content:"";
+  position:absolute;
+  left:5px;
+  top:5px;
+  width:0;height:0;
+  border-left:7.5px solid transparent;
+  border-right:7.5px solid transparent;
+  border-bottom:13px solid #fff;
+}
+.promo-logo-spar-tree::after{
+  content:"";
+  position:absolute;
+  left:11px;
+  top:15px;
+  width:3px;
+  height:7px;
+  border-radius:2px;
+  background:#00843d;
+}
+.promo-store-dm{background:#fff !important;color:#1d4d8f !important;border-color:#d8e1ee !important}
+.promo-store-lidl{background:#ffed00 !important;color:#21409a !important;border-radius:50% !important;border-color:#21409a !important}
+.promo-store-hofer{background:#fff !important;color:#1e6b91 !important;border-color:#a9cedf !important}
+.promo-store-penny{background:#d71920 !important;color:#fff !important;border-color:#bd151b !important}
+.promo-store-mueller{background:#fff !important;color:#c9202f !important;border-color:#e3b9bd !important}
+.promo-logo-word{
+  font-family:Arial,sans-serif;
+  font-size:.55rem;
+  line-height:1;
+  font-weight:900;
+  letter-spacing:-.04em;
+}
+.promo-store-penny .promo-logo-word{font-size:.39rem;letter-spacing:-.06em}
