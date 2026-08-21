@@ -610,69 +610,78 @@
 
     </div>
 
-    <div id="manualPromoDisplay" class="manual-promo-display hidden"></div>
-
-    <details id="manualPromoDetails" class="manual-promo-details">
-      <summary>✂ Rabatt / Pickerl eintragen</summary>
-      <div class="manual-promo-form">
-        <input id="manualPromoEditId" type="hidden" value="">
-        <label>
-          <span>Geschäft</span>
-          <select id="manualPromoShop">
-            <option value="">Geschäft wählen</option>
-            <option>BILLA</option>
-            <option>SPAR</option>
-            <option>BIPA</option>
-            <option>dm</option>
-            <option>Lidl</option>
-            <option>Hofer</option>
-            <option>Penny</option>
-            <option>Müller</option>
-            <option>Sonstiges</option>
-          </select>
-        </label>
-
-        <label>
-          <span>Aktion</span>
-          <input id="manualPromoTitle" type="text" autocomplete="on"
-                 placeholder="z. B. -25 % Pickerl">
-        </label>
-
-        <label>
-          <span>Gültig / Einlösen von</span>
-          <input id="manualPromoValidFrom" type="date">
-        </label>
-
-        <label>
-          <span>Gültig / Einlösen bis</span>
-          <input id="manualPromoValidTo" type="date">
-        </label>
-
-        <label>
-          <span>Sammeln von</span>
-          <input id="manualPromoCollectFrom" type="date">
-        </label>
-
-        <label>
-          <span>Sammeln bis</span>
-          <input id="manualPromoCollectTo" type="date">
-        </label>
-
-        <label class="manual-promo-note-field">
-          <span>Notiz – optional</span>
-          <input id="manualPromoNote" type="text" autocomplete="on"
-                 placeholder="z. B. 4 Pickerl, ausgenommen ...">
-        </label>
-
-        <button id="addManualPromoBtn" type="button" class="secondary-btn">
-          + Rabatt merken
-        </button>
-        <button id="cancelManualPromoEditBtn" type="button" class="ghost-btn manual-promo-cancel hidden">Abbrechen</button>
-      </div>
-    </details>
-
-
     </div>
+
+    <aside class="shopping-promo-panel">
+      <div class="shopping-promo-head">
+        <span class="shopping-promo-icon">✦</span>
+        <div>
+          <strong>Rabatte & Pickerl</strong>
+          <small>Nur Aktuelles – Vergangenes verschwindet automatisch.</small>
+        </div>
+      </div>
+
+      <div id="manualPromoDisplay" class="manual-promo-display hidden"></div>
+
+      <details id="manualPromoDetails" class="manual-promo-details">
+        <summary>＋ Rabatt / Pickerl eintragen</summary>
+        <div class="manual-promo-form">
+          <input id="manualPromoEditId" type="hidden" value="">
+          <label>
+            <span>Geschäft</span>
+            <select id="manualPromoShop">
+              <option value="">Geschäft wählen</option>
+              <option>BILLA</option>
+              <option>SPAR</option>
+              <option>BIPA</option>
+              <option>dm</option>
+              <option>Lidl</option>
+              <option>Hofer</option>
+              <option>Penny</option>
+              <option>Müller</option>
+              <option>Sonstiges</option>
+            </select>
+          </label>
+
+          <label>
+            <span>Aktion</span>
+            <input id="manualPromoTitle" type="text" autocomplete="on"
+                   placeholder="z. B. -25 % Pickerl">
+          </label>
+
+          <label>
+            <span>Gültig / Einlösen von</span>
+            <input id="manualPromoValidFrom" type="date">
+          </label>
+
+          <label>
+            <span>Gültig / Einlösen bis</span>
+            <input id="manualPromoValidTo" type="date">
+          </label>
+
+          <label>
+            <span>Sammeln von</span>
+            <input id="manualPromoCollectFrom" type="date">
+          </label>
+
+          <label>
+            <span>Sammeln bis</span>
+            <input id="manualPromoCollectTo" type="date">
+          </label>
+
+          <label class="manual-promo-note-field">
+            <span>Notiz – optional</span>
+            <input id="manualPromoNote" type="text" autocomplete="on"
+                   placeholder="z. B. 4 Pickerl, ausgenommen ...">
+          </label>
+
+          <button id="addManualPromoBtn" type="button" class="secondary-btn">
+            + Rabatt merken
+          </button>
+          <button id="cancelManualPromoEditBtn" type="button" class="ghost-btn manual-promo-cancel hidden">Abbrechen</button>
+        </div>
+      </details>
+    </aside>
   </div>
   </article>
 
