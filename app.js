@@ -2702,7 +2702,7 @@ let archiveCategoryFilter = "all";
 
 function renderArchive() {
   const list = document.querySelector("#archiveList");
-  let items = [...state.archive];
+  let items = [...state.archive].filter(x=>!x.planned);
 
   if(archiveCategoryFilter!=="all"){
     items=items.filter(x=>(x.category||"other")===archiveCategoryFilter);
@@ -2785,6 +2785,7 @@ function bindArchiveButtons() {
     document.querySelector("#replanTitle").textContent = item.title;
     document.querySelector("#replanWeek").value = "0";
     document.querySelector("#replanDay").value = "Montag";
+    const part=document.querySelector("#replanPart"); if(part) part.value="morning";
     document.querySelector("#replanDialog").showModal();
   }));
 
@@ -3563,6 +3564,7 @@ document.querySelectorAll(".routine-idea-check").forEach(btn=>btn.addEventListen
 
   save();
   renderRoutineIdeaChecks();
+  renderRoutineAreaTasks();
 }));
 
 (function scheduleRoutineIdeaDailyReset(){
@@ -3752,6 +3754,7 @@ function routineArchiveFromItem(item,rating,{countDone=false}={}){
   entry.title=routineVideoTitle(item);
   entry.thumbnail=entry.thumbnail || thumbnailFor(item.url);
   entry.category=item.category || entry.category || "other";
+  entry.planned=false;
   if(rating) entry.rating=rating;
   if(countDone){
     entry.timesDone=(entry.timesDone||0)+1;
@@ -3773,13 +3776,104 @@ function resetRoutineEditor(){
   document.querySelector("#cancelRoutineEditBtn")?.classList.add("hidden");
 }
 
+
+function renderRoutineAreaTasks(){
+  const routines=ensureWorkroomRoutines();
+  const weekKey=routineWeekKey(activeRoutineWeekOffset);
+  const partLabel={morning:"Morgen",school:"Schulalltag",afterschool:"Nach der Schule",evening:"Abend",other:"Sonstiges"};
+
+  document.querySelectorAll("[data-routine-area-tasks]").forEach(host=>{
+    const part=host.dataset.routineAreaTasks;
+    const items=routines.items
+      .filter(item=>(item.part||"morning")===part)
+      .filter(item=>routineAppliesToWeek(item,weekKey))
+      .sort((a,b)=>String(a.day||"daily").localeCompare(String(b.day||"daily"),"de") || Number(a.order||0)-Number(b.order||0));
+
+    if(!items.length){
+      host.innerHTML="";
+      host.classList.add("hidden");
+      return;
+    }
+
+    host.classList.remove("hidden");
+    host.innerHTML=`
+      <div class="routine-area-task-head">
+        <span>Für ${activeRoutineWeekOffset===0?"diese Woche":activeRoutineWeekOffset===1?"nächste Woche":`+${activeRoutineWeekOffset} Wochen`}</span>
+      </div>
+      <div class="routine-area-task-list">
+        ${items.map(item=>{
+          const thumb=item.url ? thumbnailFor(item.url) : "";
+          const category=routineCategoryMeta[item.category||"none"]||routineCategoryMeta.other;
+          return `<div class="routine-area-task" data-routine-area-id="${item.id}">
+            <button class="routine-area-check" type="button" data-id="${item.id}" aria-label="Routinepunkt erledigen"><span>◇</span></button>
+            ${thumb?`<a class="routine-area-thumb" href="${escapeHtml(item.url)}" target="_blank" rel="noopener"><img src="${escapeHtml(thumb)}" alt="" loading="lazy"><span>▶</span></a>`:""}
+            <div class="routine-area-task-copy">
+              <strong>${escapeHtml(item.title||"Routinepunkt")}</strong>
+              <small>${item.day==="daily"||!item.day?"täglich":escapeHtml(item.day)}${item.url?` · ${category[1]}`:""}</small>
+            </div>
+            <div class="routine-area-task-actions">
+              ${item.url?`<a href="${escapeHtml(item.url)}" target="_blank" rel="noopener">Video</a>`:""}
+              <button class="routine-edit-btn" data-id="${item.id}" type="button" title="Bearbeiten">✎</button>
+              <button class="routine-delete-btn" data-id="${item.id}" type="button" title="Löschen">×</button>
+            </div>
+          </div>`;
+        }).join("")}
+      </div>`;
+  });
+
+  document.querySelectorAll(".routine-area-check").forEach(btn=>btn.addEventListener("click",e=>{
+    e.preventDefault();
+    e.stopPropagation();
+
+    const item=ensureWorkroomRoutines().items.find(x=>x.id===btn.dataset.id);
+    if(!item) return;
+
+    // Für die Routinenplanung wird beim Abhaken der aktuelle Tag verwendet.
+    // Wenn ein spezieller Wochentag eingetragen ist, nutzen wir den passenden Tag dieser Planungswoche.
+    const monday=getMonday(new Date());
+    monday.setDate(monday.getDate()+activeRoutineWeekOffset*7);
+    let date=new Date(monday);
+    if(item.day && item.day!=="daily"){
+      const names=["Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag","Sonntag"];
+      const di=names.indexOf(item.day);
+      if(di>=0) date.setDate(monday.getDate()+di);
+    }
+
+    if(item.url){
+      // Videos: erst erledigt markieren, dann stilvoll bewerten.
+      setRoutineCompletion(item.id,date,{done:true,rating:null,archived:false});
+      btn.closest(".routine-area-task")?.classList.add("awaiting-rating");
+      const row=btn.closest(".routine-area-task");
+      if(row && !row.querySelector(".routine-area-rating")){
+        const rating=document.createElement("div");
+        rating.className="routine-area-rating";
+        rating.innerHTML=`
+          <button type="button" data-rating="super" data-id="${item.id}" data-date="${dateKey(date)}">✦ Gut</button>
+          <button type="button" data-rating="okay" data-id="${item.id}" data-date="${dateKey(date)}">○ Mittel</button>
+          <button type="button" data-rating="nope" data-id="${item.id}" data-date="${dateKey(date)}">— Schlecht</button>`;
+        row.appendChild(rating);
+      }
+      save();
+    }else{
+      setRoutineCompletion(item.id,date,{done:true});
+      state.workroom.routines.items=state.workroom.routines.items.filter(x=>x.id!==item.id);
+      save();
+      renderRoutines();
+      renderWorkroomWeekOverview(activeWorkroomWeekOffset);
+    }
+  }));
+}
+
 function renderRoutines(){
   const list=document.querySelector("#routineList");
   if(!list) return;
   const routines=ensureWorkroomRoutines();
   const weekKey=routineWeekKey(activeRoutineWeekOffset);
   const weekLabel=document.querySelector("#routineWeekLabel");
-  if(weekLabel) weekLabel.textContent=activeRoutineWeekOffset===0?"Diese Woche":"Nächste Woche";
+  const weekNames={0:"Diese Woche",1:"Nächste Woche",2:"+2 Wochen",3:"+3 Wochen",4:"+4 Wochen"};
+  if(weekLabel) weekLabel.textContent=weekNames[activeRoutineWeekOffset] || `+${activeRoutineWeekOffset} Wochen`;
+  const editingHint=document.querySelector("#routineEditingWeekHint");
+  if(editingHint) editingHint.innerHTML=`Du bearbeitest gerade: <strong>${weekNames[activeRoutineWeekOffset] || `+${activeRoutineWeekOffset} Wochen`}</strong>`;
 
   document.querySelectorAll(".routine-week-btn").forEach(btn=>{
     btn.classList.toggle("active",Number(btn.dataset.routineWeek||0)===activeRoutineWeekOffset);
@@ -3788,6 +3882,7 @@ function renderRoutines(){
 
   const items=routines.items
     .filter(item=>routineAppliesToWeek(item,weekKey))
+    .filter(item=>(item.part||"morning")==="other")
     .sort((a,b)=>{
       const partOrder={morning:0,school:1,afterschool:2,evening:3,other:4};
       return (partOrder[a.part]??9)-(partOrder[b.part]??9) ||
@@ -3813,9 +3908,11 @@ function renderRoutines(){
           ${item.sticky?'<span>∞ bleibt</span>':""}
         </div>
       </div>
-      ${item.url?`<a class="routine-open-video" href="${escapeHtml(item.url)}" target="_blank" rel="noopener">Video öffnen</a>`:""}
-      <button class="routine-edit-btn" data-id="${item.id}" type="button" title="Bearbeiten">✎</button>
-      <button class="routine-delete-btn" data-id="${item.id}" type="button" title="Löschen">×</button>
+      <div class="routine-row-actions">
+        ${item.url?`<a class="routine-open-video" href="${escapeHtml(item.url)}" target="_blank" rel="noopener">Video öffnen</a>`:""}
+        <button class="routine-edit-btn" data-id="${item.id}" type="button" title="Bearbeiten" aria-label="Bearbeiten">✎</button>
+        <button class="routine-delete-btn" data-id="${item.id}" type="button" title="Löschen" aria-label="Löschen">×</button>
+      </div>
     </div>`;
   }).join("");
 
@@ -3835,10 +3932,19 @@ function renderRoutines(){
   }));
 
   document.querySelectorAll(".routine-delete-btn").forEach(btn=>btn.addEventListener("click",()=>{
+    const doomed=state.workroom.routines.items.find(x=>x.id===btn.dataset.id);
+    if(doomed?.sourceArchiveId){
+      const archived=state.archive.find(x=>x.id===doomed.sourceArchiveId);
+      if(archived){
+        archived.planned=false;
+        archived.updatedAt=Date.now();
+      }
+    }
     state.workroom.routines.items=state.workroom.routines.items.filter(x=>x.id!==btn.dataset.id);
     save();
     renderRoutines();
     renderWorkroomWeekOverview(activeWorkroomWeekOffset);
+    renderArchive();
   }));
 }
 
@@ -4095,7 +4201,7 @@ function renderWorkroomWeekOverview(weekOffset=0){
 
 
 document.addEventListener("click",e=>{
-  const btn=e.target.closest(".routine-week-rating button[data-rating]");
+  const btn=e.target.closest(".routine-week-rating button[data-rating], .routine-area-rating button[data-rating]");
   if(!btn) return;
 
   e.preventDefault();
@@ -4114,6 +4220,7 @@ document.addEventListener("click",e=>{
     if(!entry) return;
 
     setRoutineCompletion(item.id,date,{done:true,rating,archived:true});
+    state.workroom.routines.items=state.workroom.routines.items.filter(x=>x.id!==item.id);
     // Direkt lokal sichern, bevor ein Cloud-Zyklus dazwischenfunken kann.
     localStorage.setItem("balanceProd.archive",JSON.stringify(state.archive));
     localStorage.setItem("balanceProd.workroom",JSON.stringify(state.workroom));
@@ -4122,6 +4229,7 @@ document.addEventListener("click",e=>{
     // Nach der Bewertung verschwindet das Video sofort aus "Meine Woche"
     // und ist im Überblick verfügbar.
     renderArchive();
+    renderRoutines();
     renderWorkroomWeekOverview(activeWorkroomWeekOffset);
   },140);
 });
@@ -7355,23 +7463,48 @@ if (confirmReplanBtn) confirmReplanBtn.addEventListener("click", () => {
   const monday = getMonday(new Date());
   monday.setDate(monday.getDate() + weeksAhead * 7);
 
-  state.videos.push({
+  const routines=ensureWorkroomRoutines();
+  const part=document.querySelector("#replanPart")?.value || "morning";
+  const weekKey=dateKey(monday);
+
+  routines.items.push({
     id:uid(),
-    title:item.title,
+    title:item.title || "Routinevideo",
     url:item.url,
-    thumbnail:item.thumbnail || thumbnailFor(item.url),
+    category:item.category || "other",
+    part,
     day,
-    weekKey:dateKey(monday),
-    done:false,
-    rating:null,
+    sticky:false,
+    weekKey,
+    sourceArchiveId:item.id,
+    createdAt:Date.now(),
+    updatedAt:Date.now(),
+    order:routines.items.length
   });
+
+  // Während die Übung eingeplant ist, verschwindet sie aus "Unser Überblick".
+  // Nach dem Erledigen + Bewerten setzt routineArchiveFromItem planned wieder auf false.
+  item.planned=true;
+  item.updatedAt=Date.now();
 
   save();
   replanArchiveId = null;
   replanDialog.close();
-  currentWeekMonday = monday;
-  renderAll();
-  document.querySelector('[data-view="week"]').click();
+
+  // Direkt die Routinen öffnen und auf die geplante Woche springen.
+  activeRoutineWeekOffset=weeksAhead;
+  const body=document.querySelector("#workroomRoutineBody");
+  const toggle=document.querySelector("#toggleRoutinePanelBtn");
+  body?.classList.remove("hidden");
+  toggle?.classList.add("open");
+  toggle?.setAttribute("aria-expanded","true");
+
+  renderRoutines();
+  renderArchive();
+
+  document.querySelector('[data-view="workroom"]')?.click();
+  document.querySelector(".workroom-routine-card")?.scrollIntoView({behavior:"smooth",block:"start"});
+  showMotivation(`${item.title || "Übung"} ist für ${weeksAhead===0?"diese Woche":weeksAhead===1?"nächste Woche":`in ${weeksAhead} Wochen`} am ${day} eingeplant.`);
 });
 
 const deleteAllExercisesBtn = document.querySelector("#deleteAllExercisesBtn");
