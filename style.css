@@ -16877,3 +16877,17 @@ body.child-view-active #papaOverviewModal{
   background:linear-gradient(145deg,#fffdfa 0%,#f3f2e8 100%) !important;
   color:#555347 !important;
 }
+
+/* =========================================================
+   KORREKTUR – nicht zugeteilt: NUR blass-oliver Rahmen
+   Personenrahmen bleiben vollständig unverändert.
+   ========================================================= */
+.person-group-general.grouped-family-block,
+.person-group-general.grouped-family-section,
+.event-person-block.person-group-general{
+  --group-border:#b8b58d !important;
+  background:
+    linear-gradient(var(--paper),var(--paper)) padding-box,
+    linear-gradient(#b8b58d,#b8b58d) border-box !important;
+  color:inherit !important;
+}
