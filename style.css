@@ -19636,3 +19636,53 @@ body.child-view-active #papaOverviewModal{
   letter-spacing:-.04em;
 }
 .promo-store-penny .promo-logo-word{font-size:.39rem;letter-spacing:-.06em}
+
+
+/* =========================================================
+   PUNKT 7 – Unser Überblick: Filter kompakt und logisch
+   ========================================================= */
+.exercise-overview-card .exercise-filter-row{
+  display:flex !important;
+  align-items:center !important;
+  justify-content:space-between !important;
+  gap:14px !important;
+  margin-top:10px !important;
+  margin-bottom:10px !important;
+  flex-wrap:nowrap !important;
+}
+
+.exercise-overview-card .exercise-filter-row .filters{
+  display:flex !important;
+  align-items:center !important;
+  gap:4px !important;
+  flex-wrap:wrap !important;
+  min-width:0 !important;
+}
+
+#archiveCategoryFilter{
+  flex:0 0 190px !important;
+  width:190px !important;
+  min-width:190px !important;
+  max-width:190px !important;
+  height:36px !important;
+  margin:0 !important;
+  padding:0 34px 0 12px !important;
+  border-radius:999px !important;
+  background-color:#fbfaf5 !important;
+}
+
+.exercise-overview-card .archive-hint{
+  display:none !important;
+}
+
+@media(max-width:850px){
+  .exercise-overview-card .exercise-filter-row{
+    flex-wrap:wrap !important;
+  }
+  #archiveCategoryFilter{
+    flex:0 0 180px !important;
+    width:180px !important;
+    min-width:180px !important;
+    max-width:180px !important;
+  }
+}
