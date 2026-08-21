@@ -1523,13 +1523,16 @@
       <button id="cancelRoutineEditBtn" class="text-btn hidden" type="button">Bearbeiten abbrechen</button>
     </div>
 
-    <div class="routine-list-head">
-      <span id="routineWeekLabel">Diese Woche</span>
-      <small>In „Meine Woche“ kannst du die Punkte direkt abhaken.</small>
-    </div>
-    <div id="routineList" class="routine-list">
-      <div class="workroom-empty">Noch keine Routinen eingetragen.</div>
-    </div>
+    <details id="routinePlanningOverview" class="routine-planning-overview">
+      <summary>
+        <span class="routine-planning-chevron">›</span>
+        <span id="routineWeekLabel">Planung dieser Woche</span>
+        <span id="routinePlanningCount" class="routine-planning-count">0 Punkte</span>
+      </summary>
+      <div id="routineList" class="routine-list routine-planning-list">
+        <div class="workroom-empty">Für diese Woche ist noch nichts geplant.</div>
+      </div>
+    </details>
     </div>
   </article>
 
