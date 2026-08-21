@@ -1627,11 +1627,15 @@
             class="school-print-email-toggle"
             type="button"
             aria-expanded="false"
-            title="Druck-E-Mail anzeigen">✉</button>
+            title="E-Mail-Bestellung"
+            aria-label="E-Mail-Bestellung">
+      <span aria-hidden="true">✉</span>
+      <span class="school-print-email-toggle-text">E-Mail-Bestellung</span>
+    </button>
   </div>
 
   <div id="schoolPrintEmailPanel" class="school-print-email-panel hidden">
-    <span class="school-print-email-label">Druckbestellung</span>
+    <span class="school-print-email-label">Bestelladresse</span>
     <input id="schoolPrintEmail"
            type="email"
            autocomplete="email"
@@ -1734,38 +1738,57 @@
     </div>
   </div>
 
-  <!-- Kategorien -->
-  <div class="workroom-link-filter-row">
+  <!-- Filter & Sortierung -->
+  <div class="workroom-link-toolbar">
     <label class="workroom-link-filter-select-label">
-      Kategorie
+      MABÜ
       <select id="workroomLinkCategoryFilter">
-        <option value="all">Alle Kategorien</option>
+        <option value="all" selected>Alle MABÜ</option>
         <option value="wood">🪵 Holz</option>
         <option value="paper">📄 Papier</option>
         <option value="free">✂️ Freies Arbeiten</option>
         <option value="experiment">🧪 Experimentieren</option>
         <option value="documents">📎 Unterlagen & Belege</option>
         <option value="bureaucracy">🗂 Bürokratie</option>
-        <option value="current">📌 Aktuell</option>
-        <option value="private">♡ Privat</option>
         <option value="other">✨ Sonstiges</option>
       </select>
     </label>
-  </div>
 
-  <div class="workroom-link-use-filters" aria-label="Verwendungszeitraum">
     <label class="workroom-link-filter-select-label">
       Zeitraum
       <select id="workroomLinkUseFilterSelect">
+        <option value="all" selected>Alle Zeiträume</option>
         <option value="soon">Demnächst</option>
         <option value="current">📌 Aktuell</option>
-        <option value="bureaucracy">🗂 Bürokratie</option>
         <option value="year">🗓 Jahresplanung</option>
         <option value="later">🌙 Später vorgemerkt</option>
-        <option value="all" selected>Alle Zeiträume</option>
+        <option value="private">♡ Privat</option>
       </select>
     </label>
-    <button type="button" class="workroom-link-important-filter" id="workroomLinkImportantFilter" aria-pressed="false">⭐ Wichtig</button>
+
+    <button type="button"
+            class="workroom-link-important-filter"
+            id="workroomLinkImportantFilter"
+            aria-pressed="false">⭐ Wichtig</button>
+
+    <span class="workroom-link-toolbar-spacer"></span>
+
+    <label class="workroom-link-filter-select-label workroom-link-sort-label">
+      Sortieren
+      <select id="workroomLinkSortSelect">
+        <option value="manual" selected>Eigene Reihenfolge</option>
+        <option value="year">🗓 Jahresplanung zuerst</option>
+        <option value="bureaucracy">🗂 Bürokratie zuerst</option>
+        <option value="private">♡ Privat zuerst</option>
+        <option value="current">📌 Aktuell zuerst</option>
+        <option value="later">🌙 Später vorgemerkt zuerst</option>
+      </select>
+    </label>
+
+    <button id="resetWorkroomLinkSort"
+            class="workroom-link-sort-reset hidden"
+            type="button"
+            title="Zur eigenen Reihenfolge zurück">↶ Rückgängig</button>
   </div>
 
   <!-- gespeicherte Links -->
@@ -1773,6 +1796,12 @@
     <div class="workroom-empty">
       Noch keine Links gespeichert.
     </div>
+  </div>
+
+  <div id="workroomLinkPager" class="workroom-link-pager hidden" aria-label="Seiten der Linksammlung">
+    <button id="workroomLinkPrevPage" type="button" aria-label="Vorherige Seite">‹</button>
+    <span id="workroomLinkPageLabel">Seite 1 / 1</span>
+    <button id="workroomLinkNextPage" type="button" aria-label="Nächste Seite">›</button>
   </div>
 
   <!-- neuen Link eintragen -->
@@ -1790,24 +1819,22 @@
        type="url"
        placeholder="Link einfügen …">
 
-<select id="workroomLinkCategory">
+<select id="workroomLinkCategory" aria-label="MABÜ">
   <option value="wood">🪵 Holz</option>
   <option value="paper">📄 Papier</option>
   <option value="free">✂️ Freies Arbeiten</option>
   <option value="experiment">🧪 Experimentieren</option>
   <option value="documents">📎 Unterlagen & Belege</option>
   <option value="bureaucracy">🗂 Bürokratie</option>
-  <option value="current">📌 Aktuell</option>
-  <option value="private">♡ Privat</option>
   <option value="other">✨ Sonstiges</option>
 </select>
 
-<select id="workroomLinkUse">
+<select id="workroomLinkUse" aria-label="Zeitraum">
   <option value="soon" selected>Demnächst</option>
   <option value="current">📌 Aktuell</option>
-  <option value="bureaucracy">🗂 Bürokratie</option>
   <option value="year">🗓 Jahresplanung</option>
   <option value="later">🌙 Später vorgemerkt</option>
+  <option value="private">♡ Privat</option>
 </select>
 
 <label class="workroom-link-important-toggle">
