@@ -19686,3 +19686,44 @@ body.child-view-active #papaOverviewModal{
     max-width:180px !important;
   }
 }
+
+/* PUNKT 8 – Rabattkarten lesbarer */
+.shopping-promo-panel{width:340px!important;max-width:340px!important}
+.manual-promo-card{position:relative!important;padding:12px 48px 11px 12px!important}
+.manual-promo-card-top{display:grid!important;grid-template-columns:42px minmax(0,1fr)!important;gap:10px!important;align-items:center!important}
+.manual-promo-card-title strong{font-size:1rem!important;line-height:1.15!important}
+.manual-promo-shop{font-size:.64rem!important;line-height:1.1!important}
+.manual-promo-line{margin-left:52px!important;margin-right:2px!important;font-size:.76rem!important;line-height:1.4!important}
+.manual-promo-note{margin-left:52px!important;margin-right:2px!important;font-size:.69rem!important}
+.manual-promo-actions{position:absolute!important;top:50%!important;right:9px!important;transform:translateY(-50%)!important;width:30px!important;display:flex!important;flex-direction:column!important;gap:5px!important;align-items:center!important}
+.manual-promo-edit,.manual-promo-delete{width:28px!important;height:28px!important;min-width:28px!important;min-height:28px!important;display:grid!important;place-items:center!important;border-radius:8px!important;font-size:.86rem!important}
+@media(max-width:1050px){.shopping-promo-panel{width:auto!important;max-width:none!important}}
+
+/* PUNKT 8 – Rezeptbereich logisch & skalierbar */
+.recipe-form-v17{padding:16px!important;gap:12px!important}
+.recipe-v17-main,.recipe-v17-content,.recipe-v17-tags,.recipe-v18-links{border:1px solid rgba(109,128,116,.14)!important;border-radius:14px!important;background:rgba(255,255,255,.62)!important;padding:13px!important}
+.recipe-v18-meta-grid{display:grid;grid-template-columns:1.1fr 1fr .8fr;gap:10px;margin-top:11px;padding-top:11px;border-top:1px solid rgba(114,101,85,.08)}
+.recipe-v18-link-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.recipe-section-hidden{display:none!important}
+.recipe-v18-links:has(.recipe-external-required){border-color:rgba(149,125,82,.22)!important;background:linear-gradient(145deg,rgba(255,250,237,.82),rgba(250,249,242,.78))!important}
+.recipe-feature-row-v17{display:flex!important;flex-wrap:wrap!important;gap:8px!important;align-items:center!important}
+.recipe-kids-toggle,.recipe-healthy-toggle,.recipe-selfcook-toggle-form,.recipe-beaker-toggle,.recipe-favorite-toggle{width:auto!important;min-width:0!important;padding:7px 10px!important}
+.recipe-v17-more-grid{grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:10px!important}
+.recipe-form-actions-v17{margin-top:0!important;padding-top:3px!important}
+.recipe-filters{display:flex!important;align-items:center!important;gap:8px!important;flex-wrap:wrap!important;padding:10px!important}
+.recipe-search-wrap{flex:1 1 260px!important;min-width:220px!important}
+.recipe-filters select{flex:0 1 190px!important;min-width:150px!important}
+.recipe-library-nav{padding:11px 12px!important}
+.recipe-library-nav-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:9px}
+.recipe-library-nav-head>div{display:grid;gap:2px}
+.recipe-library-nav-head strong{font-family:"Playfair Display",Georgia,serif;color:#584a40;font-size:.95rem}
+.recipe-library-count{padding:4px 9px;border-radius:999px;background:#eef2e3;border:1px solid rgba(109,125,80,.14);color:#727a58;font-size:.69rem}
+.recipe-toc-list{display:flex!important;flex-wrap:wrap!important;gap:7px!important}
+.recipe-library-chip{display:inline-flex;align-items:center;gap:7px;min-height:34px;padding:6px 10px;border:1px solid rgba(123,109,91,.13);border-radius:999px;background:#fffdf8;color:#6f6155;font:inherit;font-size:.72rem;cursor:pointer}
+.recipe-library-chip b{display:grid;place-items:center;min-width:20px;height:20px;padding:0 5px;border-radius:999px;background:#f0f2e5;color:#73795a;font-size:.65rem}
+.recipe-library-chip.active{background:linear-gradient(145deg,#e8eed3,#f3f4e7);border-color:rgba(101,118,66,.27);color:#596340}
+.recipe-library-chip.active b{background:#dce5bd;color:#566239}
+@media(max-width:850px){
+  .recipe-v18-meta-grid,.recipe-v18-link-grid{grid-template-columns:1fr!important}
+  .recipe-v17-more-grid{grid-template-columns:1fr 1fr!important}
+}
