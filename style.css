@@ -15204,3 +15204,90 @@ body.child-view-active #papaOverviewModal{
     grid-template-columns:1fr !important;
   }
 }
+
+
+/* =========================================================
+   V21 – Mehrtagestermine: echte horizontale Ausrichtung
+   ========================================================= */
+
+/* Unsichtbare Essenskarte reserviert EXAKT denselben Platz wie echtes Essen,
+   aber nur an Tagen, an denen sie für einen Mehrtagestermin gebraucht wird. */
+.day-meal-align-spacer{
+  visibility:hidden !important;
+  pointer-events:none !important;
+}
+
+/* Die alte starre 78px-Lane war zu grob.
+   Jetzt kompakte, einheitliche Mehrtagestermin-Zeilen. */
+.day .multiday-event-lanes{
+  display:grid !important;
+  gap:8px !important;
+}
+.day .multiday-event-lane{
+  min-height:0 !important;
+  height:auto !important;
+  margin:0 !important;
+  padding:0 !important;
+}
+.day .multiday-event-lane .event-person-block{
+  min-height:72px !important;
+  height:auto !important;
+  margin:0 !important;
+  box-sizing:border-box !important;
+}
+.day .multiday-event-placeholder{
+  display:block !important;
+  visibility:hidden !important;
+  min-height:72px !important;
+  height:72px !important;
+  pointer-events:none !important;
+}
+
+/* Einzeltermine folgen direkt nach den Mehrtagesterminen. */
+.day .single-event-lane{
+  min-height:0 !important;
+  margin:0 !important;
+  padding:0 !important;
+}
+.day .single-event-lane .event-person-block{
+  margin:0 !important;
+}
+
+/* Kein alter gestrichelter Trenner / keine zusätzliche Event-Oberkante. */
+.day .day-events{
+  margin-top:0 !important;
+  padding-top:0 !important;
+  border-top:0 !important;
+  gap:8px !important;
+}
+
+/* Wochenenden bleiben ruhig; die Karten beginnen an derselben
+   vertikalen Grundlinie wie unter der Essenszeile der Werktage. */
+.day.is-weekend .day-events{
+  align-self:stretch !important;
+}
+
+/* Personenkarten etwas kompakter, damit Samstag nicht gestapelt wirkt. */
+.day .event-person-block{
+  padding-top:7px !important;
+  padding-bottom:7px !important;
+}
+.day .event-person-block .person-todo-group-title{
+  margin-bottom:4px !important;
+}
+.day .event-mini{
+  padding-top:4px !important;
+  padding-bottom:4px !important;
+}
+
+/* Mehrtägige Karten visuell minimal verbinden:
+   gleiche Höhe und etwas ruhigere Rundung. */
+.day .multiday-event-lane .event-person-block{
+  border-radius:12px !important;
+}
+
+/* Falls kein echter Essensplan und auch kein Mehrtagestermin läuft,
+   entsteht weiterhin KEIN leerer Essensplatz. */
+.day-meal-align-spacer + .day-events{
+  margin-top:0 !important;
+}
