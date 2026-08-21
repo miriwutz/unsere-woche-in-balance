@@ -2020,7 +2020,7 @@ const eventHtml = orderedEvents.length ? `
       ${(weekplanHtml || quietBottomHtml) ? `
         <div class="day-bottom-stack">
           ${weekplanHtml ? `<div class="weekplan-bottom-slot">${weekplanHtml}</div>` : ""}
-          ${quietBottomHtml}
+          ${quietBottomHtml || (weekplanHtml ? `<div class="day-quiet-events day-quiet-placeholder" aria-hidden="true"></div>` : "")}
         </div>
       ` : ""}
     `;
