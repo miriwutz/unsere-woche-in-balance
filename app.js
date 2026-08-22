@@ -1806,7 +1806,19 @@ function renderWeek() {
       if (!t || t.type !== "event" || (t.recurrence || "none") !== "none") return false;
       const start = t.date || "";
       const end = t.endDate || start;
-      return start && end > start && start <= weekEndKey && end >= weekStartKey;
+      if (!start || end <= start || start > weekEndKey || end < weekStartKey) return false;
+
+      const visibleStart = start < weekStartKey ? weekStartKey : start;
+      const visibleEnd = end > weekEndKey ? weekEndKey : end;
+      const visibleStartDate = parseLocalDate(visibleStart);
+      const visibleEndDate = parseLocalDate(visibleEnd);
+      const visibleDays = visibleStartDate && visibleEndDate
+        ? Math.round((visibleEndDate - visibleStartDate) / 86400000) + 1
+        : 1;
+
+      // Wenn in dieser Woche nur EIN Tag sichtbar ist, ist eine schmale
+      // Mehrtagsleiste irreführend. Dann bleibt der Termin eine normale Karte.
+      return visibleDays >= 2;
     })
     .slice()
     .sort((a,b) => {
@@ -2043,12 +2055,8 @@ const orderedEvents = [...visibleEvents].sort((a,b) => {
     String(a.id).localeCompare(String(b.id));
 });
 
-const multiDayEvents = orderedEvents.filter(t => {
-  const start = t.date || "";
-  const end = t.endDate || start;
-  return (t.recurrence || "none") === "none" && end > start;
-});
-const singleDayEvents = orderedEvents.filter(t => !multiDayEvents.includes(t));
+const multiDayEvents = orderedEvents.filter(t => multiDayTrackById.has(t.id));
+const singleDayEvents = orderedEvents.filter(t => !multiDayTrackById.has(t.id));
 
 const multiDayLaneHtml = multiDayTrackCount
   ? `<div class="multiday-event-lanes">
@@ -2293,6 +2301,8 @@ const eventHtml = (multiDayLaneHtml || singleEventHtml) ? `
       ...current,
       rating: current.rating === next ? "" : next,
       timesUsed: Number(current.timesUsed || 0),
+      hidden: false,
+      hiddenAt: 0,
       updatedAt: Date.now()
     };
 
@@ -11543,7 +11553,13 @@ function collectInternetRecipeLinks() {
       // × räumt den aktuellen Fund nur aus der Übersicht.
       // Wird der Link später im Essensplan/Rezept neu gespeichert,
       // ist sourceUpdatedAt neuer und er darf wieder erscheinen.
-      return !hiddenAt || Number(item.sourceUpdatedAt || 0) > hiddenAt;
+      const feedbackWasReactivated =
+        feedback.hidden === false &&
+        Number(feedback.updatedAt || 0) > hiddenAt;
+
+      return !hiddenAt ||
+        feedbackWasReactivated ||
+        Number(item.sourceUpdatedAt || 0) > hiddenAt;
     })
     .sort((a,b) => String(a.label).localeCompare(String(b.label), "de"));
 }
@@ -12051,6 +12067,8 @@ function renderRecipeLinkTracker() {
       state.recipeLinkFeedback[url] = {
         ...current,
         category:e.currentTarget.value || "other",
+        hidden:false,
+        hiddenAt:0,
         updatedAt:Date.now()
       };
       save();
@@ -12080,6 +12098,8 @@ function renderRecipeLinkTracker() {
       state.recipeLinkFeedback[url] = {
         ...current,
         rating: btn.dataset.rating,
+        hidden: false,
+        hiddenAt: 0,
         updatedAt: Date.now()
       };
       save();
