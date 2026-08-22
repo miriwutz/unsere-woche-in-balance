@@ -12377,6 +12377,36 @@ function cloudPayload() {
   }));
 }
 
+
+function mergeRecipeLinkFeedback(localValue, cloudValue) {
+  const local = localValue && typeof localValue === "object" ? localValue : {};
+  const remote = cloudValue && typeof cloudValue === "object" ? cloudValue : {};
+  const merged = {};
+
+  new Set([...Object.keys(local), ...Object.keys(remote)]).forEach(url => {
+    const a = local[url];
+    const b = remote[url];
+
+    if (!a) {
+      merged[url] = b;
+      return;
+    }
+    if (!b) {
+      merged[url] = a;
+      return;
+    }
+
+    const aTs = Number(a.updatedAt || a.lastUsed || 0);
+    const bTs = Number(b.updatedAt || b.lastUsed || 0);
+
+    if (bTs > aTs) merged[url] = {...a, ...b};
+    else if (aTs > bTs) merged[url] = {...b, ...a};
+    else merged[url] = {...b, ...a};
+  });
+
+  return merged;
+}
+
 function applyCloudData(data) {
   cloudApplying = true;
   try {
@@ -12434,10 +12464,10 @@ function applyCloudData(data) {
     }
 
     if (data.recipeLinkFeedback && typeof data.recipeLinkFeedback === "object") {
-      state.recipeLinkFeedback = {
-        ...(data.recipeLinkFeedback || {}),
-        ...(state.recipeLinkFeedback || {})
-      };
+      state.recipeLinkFeedback = mergeRecipeLinkFeedback(
+        state.recipeLinkFeedback,
+        data.recipeLinkFeedback
+      );
     }
 
     state.workroom = guardedWorkroomMerge(state.workroom, data.workroom);
