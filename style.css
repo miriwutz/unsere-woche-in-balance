@@ -23302,3 +23302,11 @@ button.day-meal-list-item:hover,a.day-meal-list-item:hover{background:rgba(164,1
   .day-meal-list-item{font-size:.76rem;padding:6px}
 }
 
+
+/* REZEPT EINPLANEN – eigener, ruhiger Dialog */
+.recipe-plan-dialog .recipe-plan-card{width:min(520px,calc(100vw - 28px))}
+.recipe-plan-name{margin:2px 0 14px;padding:10px 12px;border:1px solid rgba(166,139,126,.16);border-radius:10px;background:rgba(255,253,250,.66);color:#655952;font-family:Georgia,"Times New Roman",serif;font-size:1.02rem}
+.recipe-plan-fields{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.recipe-plan-fields label{display:grid;gap:6px}
+.recipe-plan-hint{margin:12px 0 0;color:var(--muted);font-size:.78rem;line-height:1.45}
+@media(max-width:560px){.recipe-plan-fields{grid-template-columns:1fr}}
