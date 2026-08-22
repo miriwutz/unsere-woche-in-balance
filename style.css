@@ -23810,3 +23810,109 @@ button.day-meal-list-item:hover,a.day-meal-list-item:hover{background:rgba(164,1
   }
 }
 
+/* =========================================================
+   WOCHENPLAN – vergangene Tage lesbar + Mehrtagstext stabil
+   ========================================================= */
+
+/* Bisher wurde der komplette vergangene Tag mit opacity:.58 ausgeblendet.
+   Dadurch konnte auch dunkler Text niemals wirklich dunkel werden.
+   Hintergrund bleibt ruhig, Text und Termine bleiben jetzt aber lesbar. */
+.day.past-day{
+  opacity:1 !important;
+  filter:none !important;
+}
+.day.past-day:hover{
+  opacity:1 !important;
+  filter:none !important;
+}
+
+/* Vergangene Tagesköpfe dürfen weiterhin dezent sein, aber nicht ausgewaschen. */
+.day.past-day .day-name,
+.day.past-day .day-date{
+  color:#786f69 !important;
+}
+
+/* Alte Spanning-Regel neutralisieren. */
+.multiday-span-label{
+  position:static !important;
+  width:auto !important;
+  height:auto !important;
+  transform:none !important;
+}
+
+/* Text sitzt auf dem mittleren Segment.
+   Er darf über benachbarte Segmente derselben Zeile schweben,
+   verändert aber NICHT die Höhe oder Position der Zeile. */
+.multiday-event-lane,
+.multiday-continuous-segment{
+  overflow:visible !important;
+}
+
+.multiday-center-label{
+  position:absolute !important;
+  z-index:12 !important;
+  top:50% !important;
+  left:50% !important;
+  transform:translate(-50%,-50%) !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  gap:5px !important;
+  width:max-content !important;
+  max-width:min(calc(var(--multi-span,1) * 100%), 430px) !important;
+  min-width:0 !important;
+  padding:0 8px !important;
+  box-sizing:border-box !important;
+  white-space:nowrap !important;
+  pointer-events:none !important;
+  color:#4f4946 !important;
+  opacity:1 !important;
+  text-align:center !important;
+}
+
+.multiday-center-label .multiday-person,
+.multiday-center-label .multiday-title,
+.multiday-center-label .multiday-sep{
+  color:#4f4946 !important;
+  opacity:1 !important;
+}
+
+.multiday-center-label .multiday-person{
+  font-weight:700 !important;
+}
+
+.multiday-center-label .multiday-title{
+  display:block !important;
+  min-width:0 !important;
+  overflow:hidden !important;
+  text-overflow:ellipsis !important;
+  white-space:nowrap !important;
+  font-weight:600 !important;
+}
+
+/* Lou bleibt etwas satter/dunkler als die übrigen Einzelbänder. */
+.multiday-continuous-segment[style*="#8f78b8"] .multiday-center-label,
+.multiday-continuous-segment[style*="#8f78b8"] .multiday-center-label .multiday-person,
+.multiday-continuous-segment[style*="#8f78b8"] .multiday-center-label .multiday-title{
+  color:#4f4054 !important;
+}
+
+/* Tablet: ausreichend Platz, aber keine riesigen schwebenden Labels. */
+@media(max-width:1100px){
+  .multiday-center-label{
+    max-width:min(calc(var(--multi-span,1) * 100%), 340px) !important;
+    font-size:.67rem !important;
+  }
+}
+
+/* Handy verwendet weiterhin die eigene kompakte Mehrtags-Zusammenfassung. */
+@media(max-width:700px){
+  .multiday-center-label{
+    position:static !important;
+    transform:none !important;
+    max-width:100% !important;
+    justify-content:flex-start !important;
+    padding:0 6px !important;
+  }
+}
+
