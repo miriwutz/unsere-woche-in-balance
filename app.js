@@ -6777,6 +6777,7 @@ function renderSchoolPrints() {
 
       item.done = e.currentTarget.checked;
       item.completedAt = item.done ? Date.now() : null;
+      item.updatedAt = Date.now();
 
       save();
       renderSchoolPrints();
@@ -6786,6 +6787,8 @@ function renderSchoolPrints() {
           const currentItem = state.workroom.prints.find(p => p.id === id);
           if (!currentItem || !currentItem.done) return;
 
+          state.workroom.printTombstones = state.workroom.printTombstones || {};
+          state.workroom.printTombstones[id] = Date.now();
           state.workroom.prints =
             state.workroom.prints.filter(p => p.id !== id);
 
@@ -6805,6 +6808,7 @@ function renderSchoolPrints() {
       if (!item) return;
 
       item.mailOrder = !item.mailOrder;
+      item.updatedAt = Date.now();
       save();
       renderSchoolPrints();
     });
@@ -6813,6 +6817,8 @@ function renderSchoolPrints() {
   document.querySelectorAll(".workroom-print-delete").forEach(btn => {
     btn.addEventListener("click", e => {
       const id = e.currentTarget.dataset.id;
+      state.workroom.printTombstones = state.workroom.printTombstones || {};
+      state.workroom.printTombstones[id] = Date.now();
       state.workroom.prints = state.workroom.prints.filter(p => p.id !== id);
       save();
       renderSchoolPrints();
@@ -6841,7 +6847,7 @@ function renderSchoolPrints() {
     if(index<0 || target<0 || target>=ordered.length) return;
 
     [ordered[index],ordered[target]]=[ordered[target],ordered[index]];
-    ordered.forEach((item,order)=>item.order=order);
+    ordered.forEach((item,order)=>{ item.order=order; item.updatedAt=Date.now(); });
     state.workroom.prints=ordered;
     save();
     renderSchoolPrints();
@@ -6876,7 +6882,10 @@ function renderSchoolPrints() {
 
           ids.forEach((id, index) => {
             const item = state.workroom.prints.find(p => p.id === id);
-            if (item) item.order = index;
+            if (item) {
+              item.order = index;
+              item.updatedAt = Date.now();
+            }
           });
 
           save();
@@ -6906,6 +6915,7 @@ document.querySelector("#addSchoolPrintBtn")?.addEventListener("click", () => {
     if (item) {
       item.text = text;
       item.url = url;
+      item.updatedAt = Date.now();
     }
 
     delete button.dataset.editId;
@@ -6920,7 +6930,8 @@ document.querySelector("#addSchoolPrintBtn")?.addEventListener("click", () => {
       completedAt: null,
       mailOrder: false,
       order: state.workroom.prints.length,
-      createdAt: Date.now()
+      createdAt: Date.now(),
+      updatedAt: Date.now()
     });
   }
 
@@ -7202,10 +7213,15 @@ function renderWorkroomLinks() {
   list.querySelectorAll(".workroom-link-delete").forEach(btn => {
     btn.addEventListener("click", e => {
       const id = e.currentTarget.dataset.id;
+      state.workroom.linkTombstones = state.workroom.linkTombstones || {};
+      state.workroom.linkTombstones[id] = Date.now();
       state.workroom.links = state.workroom.links.filter(link => link.id !== id);
       [...state.workroom.links]
         .sort((a,b)=>Number(a.order??999999)-Number(b.order??999999))
-        .forEach((link,index)=>link.order=index);
+        .forEach((link,index)=>{
+          link.order=index;
+          link.updatedAt=Date.now();
+        });
       save();
       renderWorkroomLinks();
       renderRoutines();
@@ -7248,7 +7264,7 @@ function renderWorkroomLinks() {
     if(index<0 || target<0 || target>=all.length) return;
 
     [all[index],all[target]]=[all[target],all[index]];
-    all.forEach((link,order)=>link.order=order);
+    all.forEach((link,order)=>{ link.order=order; link.updatedAt=Date.now(); });
     state.workroom.links=all;
     save();
     renderWorkroomLinks();
@@ -7295,7 +7311,7 @@ function renderWorkroomLinks() {
           if(replacement && slots[i]!==undefined) all[slots[i]]=replacement;
         });
 
-        all.forEach((link,index)=>link.order=index);
+        all.forEach((link,index)=>{ link.order=index; link.updatedAt=Date.now(); });
         state.workroom.links=all;
         save();
         renderWorkroomLinks();
@@ -8272,6 +8288,29 @@ function mergeWorkroomRoutinesSafely(localValue, remoteValue) {
   };
 }
 
+function mergeWorkroomListWithTombstones(localValue, remoteValue, tombstones) {
+  const local = Array.isArray(localValue) ? localValue : [];
+  const remote = Array.isArray(remoteValue) ? remoteValue : [];
+  const byId = new Map();
+
+  local.forEach(item => {
+    if(item?.id) byId.set(item.id, item);
+  });
+
+  remote.forEach(remoteItem => {
+    if(!remoteItem?.id) return;
+    const localItem = byId.get(remoteItem.id);
+    if(!localItem || itemTimestamp(remoteItem) >= itemTimestamp(localItem)){
+      byId.set(remoteItem.id, remoteItem);
+    }
+  });
+
+  return [...byId.values()].filter(item => {
+    const deletedAt = Number(tombstones?.[item.id] || 0);
+    return !deletedAt || itemTimestamp(item) > deletedAt;
+  });
+}
+
 function guardedWorkroomMerge(localValue, cloudValue) {
   const local = normalizeWorkroom(localValue);
   const remote = normalizeWorkroom(cloudValue);
@@ -8280,14 +8319,24 @@ function guardedWorkroomMerge(localValue, cloudValue) {
     local.todoTombstones,
     remote.todoTombstones
   );
+  const printTombstones = mergeWorkroomTodoTombstones(
+    local.printTombstones,
+    remote.printTombstones
+  );
+  const linkTombstones = mergeWorkroomTodoTombstones(
+    local.linkTombstones,
+    remote.linkTombstones
+  );
 
   return {
     ...local,
     ...remote,
     todoTombstones,
+    printTombstones,
+    linkTombstones,
     todos: mergeWorkroomTodosSafely(local.todos, remote.todos, todoTombstones),
-    prints: guardedMergeById(local.prints, remote.prints, "Druckliste"),
-    links: guardedMergeById(local.links, remote.links, "Werkraum-Links"),
+    prints: mergeWorkroomListWithTombstones(local.prints, remote.prints, printTombstones),
+    links: mergeWorkroomListWithTombstones(local.links, remote.links, linkTombstones),
     substitutions: guardedMergeById(local.substitutions, remote.substitutions, "Supplierungen"),
     routines: mergeWorkroomRoutinesSafely(local.routines, remote.routines),
     plans: {
@@ -11300,6 +11349,12 @@ function normalizeWorkroom(w) {
     todos: Array.isArray(src.todos) ? src.todos : [],
     todoTombstones: src.todoTombstones && typeof src.todoTombstones === "object"
       ? src.todoTombstones
+      : {},
+    printTombstones: src.printTombstones && typeof src.printTombstones === "object"
+      ? src.printTombstones
+      : {},
+    linkTombstones: src.linkTombstones && typeof src.linkTombstones === "object"
+      ? src.linkTombstones
       : {},
     prints: Array.isArray(src.prints) ? src.prints : [],
     links: Array.isArray(src.links) ? src.links : [],
