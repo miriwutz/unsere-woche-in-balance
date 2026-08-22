@@ -2126,10 +2126,12 @@ const multiDayLaneHtml = multiDayTrackCount
         const visibleStartIndex = weekDates.findIndex(d => dateKey(d) === visibleStart);
         const visibleEndIndex = weekDates.findIndex(d => dateKey(d) === visibleEnd);
         const visibleSpan = Math.max(1, visibleEndIndex - visibleStartIndex + 1);
+        const visibleCenterIndex = Math.floor((visibleStartIndex + visibleEndIndex) / 2);
 
-        // Der Text wird nur am ersten sichtbaren Tag erzeugt, spannt sich aber
-        // optisch über die gesamte sichtbare Dauer. So sitzt er mittig auf dem Band.
-        const showLabel = index === visibleStartIndex;
+        // Stabiler als ein über mehrere Tagescontainer gespanntes Element:
+        // Text nur auf dem mittleren sichtbaren Segment ausgeben.
+        // So springt keine Zeile und der Text bleibt auch bei Wochenwechseln sichtbar.
+        const showLabel = index === visibleCenterIndex;
 
         // Uhrzeit nur dort zeigen, wo der echte Start in dieser Woche liegt.
         // Bei Sa–Di steht 16:00 also in der Sa–So-Woche, nicht nochmals am Montag.
@@ -2147,7 +2149,7 @@ const multiDayLaneHtml = multiDayTrackCount
             class="multiday-continuous-segment ${isStart ? "is-start" : ""} ${isEnd ? "is-end" : ""}"
             style="--multi-accent:${accent};--multi-bg:${multiBackground};--multi-person-bg:${personBackground};--multi-span:${visibleSpan}">
             ${showLabel
-              ? `<span class="multiday-continuous-label multiday-span-label">
+              ? `<span class="multiday-continuous-label multiday-center-label">
                    ${personLabel ? `<span class="multiday-person"><i></i>${escapeHtml(personLabel)}</span><span class="multiday-sep">·</span>` : ""}
                    <span class="multiday-title">${startTime}${item.superImportant ? "★ " : ""}${escapeHtml(item.text)}${endTime}</span>
                  </span>`
