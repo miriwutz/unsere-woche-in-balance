@@ -24292,3 +24292,162 @@ button.day-meal-list-item:hover,a.day-meal-list-item:hover{background:rgba(164,1
   }
 }
 
+/* =========================================================
+   FORMULAR-FINAL – die drei Verschiebungen zuverlässig
+   ========================================================= */
+
+/* 1 + 2: To-do und Termin – Priorität/Bereich/Zeitraum wirklich oben */
+.entry-top-row{
+  display:flex !important;
+  flex-wrap:wrap !important;
+  align-items:flex-end !important;
+  gap:10px !important;
+}
+
+.entry-top-row > label:first-child{
+  flex:0 0 155px !important;
+}
+
+.entry-top-row .recurrence-top-field{
+  flex:0 0 220px !important;
+}
+
+.entry-top-row .super-important-control{
+  flex:0 0 auto !important;
+}
+
+.entry-top-row .family-picker-top{
+  flex:0 1 330px !important;
+  min-width:270px !important;
+}
+
+.entry-top-row .todo-quick-meta-row{
+  display:flex !important;
+  flex:1 1 360px !important;
+  min-width:330px !important;
+  gap:8px !important;
+  margin:0 !important;
+  padding:0 !important;
+  border:0 !important;
+  align-items:flex-end !important;
+}
+
+.entry-top-row .todo-quick-meta-row label{
+  flex:1 1 105px !important;
+  min-width:95px !important;
+  max-width:145px !important;
+}
+
+.entry-top-row .todo-quick-meta-row select{
+  width:100% !important;
+  min-width:0 !important;
+}
+
+/* Tablet: die drei Felder bleiben zusammen und rutschen höchstens als Block in Zeile 2. */
+@media(max-width:1050px){
+  .entry-top-row .family-picker-top{
+    flex:1 1 300px !important;
+  }
+
+  .entry-top-row .todo-quick-meta-row{
+    flex:1 1 100% !important;
+    min-width:0 !important;
+    justify-content:flex-start !important;
+  }
+
+  .entry-top-row .todo-quick-meta-row label{
+    flex:0 1 150px !important;
+    max-width:160px !important;
+  }
+}
+
+@media(max-width:620px){
+  .entry-top-row{
+    gap:8px !important;
+  }
+
+  .entry-top-row > label:first-child,
+  .entry-top-row .recurrence-top-field,
+  .entry-top-row .family-picker-top{
+    flex:1 1 100% !important;
+    min-width:0 !important;
+  }
+
+  .entry-top-row .todo-quick-meta-row{
+    display:grid !important;
+    grid-template-columns:repeat(3,minmax(0,1fr)) !important;
+  }
+
+  .entry-top-row .todo-quick-meta-row label{
+    max-width:none !important;
+    min-width:0 !important;
+  }
+}
+
+
+/* 3: Rezept – Kartenzeichen direkt nach Grad, niemals eigene Zeile am Desktop */
+.recipes-section #recipeForm .recipe-v19-meta-grid{
+  display:flex !important;
+  flex-wrap:nowrap !important;
+  gap:8px !important;
+  align-items:flex-end !important;
+}
+
+.recipes-section #recipeForm .recipe-v19-meta-grid > .recipe-field{
+  min-width:0 !important;
+  flex:0 0 auto !important;
+}
+
+.recipes-section #recipeForm .recipe-meta-difficulty{
+  width:145px !important;
+}
+.recipes-section #recipeForm .recipe-meta-rating{
+  width:165px !important;
+}
+.recipes-section #recipeForm .recipe-meta-servings{
+  width:80px !important;
+}
+.recipes-section #recipeForm .recipe-meta-time{
+  width:92px !important;
+}
+.recipes-section #recipeForm .recipe-meta-bake{
+  width:92px !important;
+}
+.recipes-section #recipeForm .recipe-meta-temp{
+  width:86px !important;
+}
+.recipes-section #recipeForm .recipe-card-mark-field{
+  width:155px !important;
+  max-width:155px !important;
+  grid-column:auto !important;
+  margin:0 !important;
+}
+
+.recipes-section #recipeForm .recipe-v19-meta-grid input,
+.recipes-section #recipeForm .recipe-v19-meta-grid select{
+  width:100% !important;
+  min-width:0 !important;
+  box-sizing:border-box !important;
+}
+
+/* Erst auf wirklich schmaleren Geräten darf die Metazeile umbrechen. */
+@media(max-width:980px){
+  .recipes-section #recipeForm .recipe-v19-meta-grid{
+    display:grid !important;
+    grid-template-columns:repeat(4,minmax(0,1fr)) !important;
+    flex-wrap:unset !important;
+  }
+
+  .recipes-section #recipeForm .recipe-v19-meta-grid > .recipe-field,
+  .recipes-section #recipeForm .recipe-card-mark-field{
+    width:auto !important;
+    max-width:none !important;
+  }
+}
+
+@media(max-width:620px){
+  .recipes-section #recipeForm .recipe-v19-meta-grid{
+    grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+  }
+}
+
