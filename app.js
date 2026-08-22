@@ -154,7 +154,6 @@ function currentCloudVersion(data) {
   return firestoreMillisValue(data?.updatedAt);
 }
 
-let lastDeviceAckAt = 0;
 let lastAcknowledgedSyncToken = "";
 
 async function acknowledgeCloudSnapshot(data, snapshotMeta = null) {
@@ -1523,8 +1522,6 @@ function ratingFor(url) {
 
 
 
-const familyNames = {a:"",b:"",c:"",d:""};
-
 function todoGroupKey(todo) {
   const members = Array.isArray(todo.family) ? todo.family.filter(x => state.familySettings[x]) : [];
   if (members.length === 0) return "general";
@@ -1661,15 +1658,6 @@ function renderWeek() {
   const weekKey = currentWeekKey();
 
   const weekDates = days.map((_, i) => dayDate(currentWeekMonday, i));
-  const weekDateKeys = weekDates.map(d => dateKey(d));
-
-  const mealExistsOnKey = (key) => {
-    const raw = normalizeMealEntry ? normalizeMealEntry(state.meals?.[key]) : state.meals?.[key];
-    if (!raw || raw.deleted) return false;
-    if (typeof raw === "string") return !!raw.trim();
-    return !!String(raw.label || raw.url || raw.recipeId || "").trim();
-  };
-
   // V32: Keine globalen Mehrtagestermin-Lanes mehr.
   // Jeder Tag zeigt nur die Einträge, die an diesem Datum wirklich vorkommen.
   // Dadurch verschwinden keine Personen-/Termin-Karten wegen einer Lane-Berechnung
@@ -1846,9 +1834,6 @@ const orderedEvents = [...visibleEvents].sort((a,b) => {
     String(a.time || "99:99").localeCompare(String(b.time || "99:99")) ||
     String(a.id).localeCompare(String(b.id));
 });
-
-// Keine unsichtbaren Platzhalter: leere Bereiche beanspruchen exakt 0 Höhe.
-const mealAlignmentHtml = "";
 
 const eventHtml = orderedEvents.length ? `
   <div class="day-events">
@@ -8318,7 +8303,6 @@ let recipeKidsOnly = false;
 let recipeSelfCookOnly = false;
 let recipeHealthyOnly = false;
 let recipeFavoriteOnly = false;
-let activeRecipeSource = "all";
 let activeRecipeSearch = "";
 let mealPlanWeekOffset = 0;
 let recipePage = 0;
