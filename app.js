@@ -13007,10 +13007,10 @@ function schoolChildDefaultIcon(id){
 function schoolTimetableSubjectIcon(subject){
   const s=String(subject||"").trim().toLowerCase();
   if(!s) return "";
-  if(s==="gu" || s.includes("grund")) return `<span class="tt-subject-symbol tt-symbol-gu" aria-hidden="true">📖</span>`;
-  if(s==="rel" || s.includes("relig")) return `<span class="tt-subject-symbol tt-symbol-rel" aria-hidden="true">🕊️</span>`;
-  if(s.includes("turn") || s.includes("sport") || s==="bu" || s==="bsp") return `<span class="tt-subject-symbol tt-symbol-sport" aria-hidden="true">🤸</span>`;
-  if(s.includes("werk") || s==="tec" || s==="tex") return `<span class="tt-subject-symbol tt-symbol-werken" aria-hidden="true">✂️</span>`;
+  if(s==="gu" || s.includes("grund")) return `<span class="tt-subject-symbol tt-symbol-gu" aria-hidden="true">📘</span>`;
+  if(s==="rel" || s.includes("relig")) return `<span class="tt-subject-symbol tt-symbol-rel" aria-hidden="true">✝️</span>`;
+  if(s.includes("turn") || s.includes("sport") || s==="bu" || s==="bsp") return `<span class="tt-subject-symbol tt-symbol-sport" aria-hidden="true">🏃</span>`;
+  if(s.includes("werk") || s==="tec" || s==="tex") return `<span class="tt-subject-symbol tt-symbol-werken" aria-hidden="true">🔨</span>`;
   return `<span class="tt-subject-symbol tt-symbol-default" aria-hidden="true">•</span>`;
 }
 
