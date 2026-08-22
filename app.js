@@ -8238,6 +8238,46 @@ document.querySelectorAll(".archive-filter").forEach(btn => btn.addEventListener
 }));
 
 
+const recipePlanDialog = document.querySelector("#recipePlanDialog");
+const closeRecipePlanDialogBtn = document.querySelector("#closeRecipePlanDialogBtn");
+const cancelRecipePlanBtn = document.querySelector("#cancelRecipePlanBtn");
+const confirmRecipePlanBtn = document.querySelector("#confirmRecipePlanBtn");
+
+function closeRecipePlanDialog() {
+  replanRecipeLink = null;
+  if (recipePlanDialog?.open) recipePlanDialog.close();
+}
+closeRecipePlanDialogBtn?.addEventListener("click", closeRecipePlanDialog);
+cancelRecipePlanBtn?.addEventListener("click", closeRecipePlanDialog);
+recipePlanDialog?.addEventListener("click", e => {
+  if (e.target === recipePlanDialog) closeRecipePlanDialog();
+});
+
+confirmRecipePlanBtn?.addEventListener("click", () => {
+  if (!replanRecipeLink?.url) return closeRecipePlanDialog();
+
+  const weeksAhead = Number(document.querySelector("#recipePlanWeek")?.value || 0);
+  const day = document.querySelector("#recipePlanDay")?.value || "Montag";
+  const monday = getMonday(new Date());
+  monday.setDate(monday.getDate() + weeksAhead * 7);
+  const target = new Date(monday);
+  target.setDate(monday.getDate() + Math.max(0, WEEK_DAYS.indexOf(day)));
+  const key = dateKey(target);
+  const planned = {...replanRecipeLink};
+
+  const list = normalizeMealEntries(state.meals?.[key]);
+  list.push({
+    id:uid(), label:planned.label || "Rezept", recipeId:planned.recipeId || "",
+    url:planned.url || "", deleted:false, updatedAt:Date.now()
+  });
+  state.meals[key] = list;
+  save();
+  closeRecipePlanDialog();
+  renderMealPlan();
+  renderWeek();
+  showMotivation(`${planned.label || "Rezept"} ist am ${day} im Essensplan.`);
+});
+
 const replanDialog = document.querySelector("#replanDialog");
 const closeReplanDialogBtn = document.querySelector("#closeReplanDialogBtn");
 const cancelReplanBtn = document.querySelector("#cancelReplanBtn");
@@ -8245,10 +8285,6 @@ const confirmReplanBtn = document.querySelector("#confirmReplanBtn");
 
 function closeReplanDialog() {
   replanArchiveId = null;
-  const part = document.querySelector("#replanPart");
-  part?.closest("label")?.classList.remove("hidden");
-  const hint = replanDialog?.querySelector(".replan-hint");
-  if (hint) hint.textContent = "Die Übung verschwindet während der Planung aus „Unser Überblick“ und kommt nach dem Erledigen und Bewerten wieder zurück.";
   if (replanDialog && replanDialog.open) replanDialog.close();
 }
 
@@ -8265,34 +8301,6 @@ if (confirmReplanBtn) confirmReplanBtn.addEventListener("click", () => {
   const weeksAhead = Number(document.querySelector("#replanWeek").value || 0);
   const day = document.querySelector("#replanDay").value;
 
-  if (replanMode === "recipe" && replanRecipeLink?.url) {
-    const monday = getMonday(new Date());
-    monday.setDate(monday.getDate() + weeksAhead * 7);
-    const dayIndex = WEEK_DAYS.indexOf(day);
-    const targetDate = new Date(monday);
-    targetDate.setDate(monday.getDate() + Math.max(0,dayIndex));
-    const key = dateKey(targetDate);
-
-    const list = normalizeMealEntries(state.meals?.[key]);
-    list.push({
-      id:uid(),
-      label:replanRecipeLink.label || "Rezept",
-      recipeId:replanRecipeLink.recipeId || "",
-      url:replanRecipeLink.url || "",
-      deleted:false,
-      updatedAt:Date.now()
-    });
-    state.meals[key]=list;
-
-    save();
-    closeReplanDialog();
-    renderMealPlan();
-    renderWeek();
-    showMotivation(`${replanRecipeLink.label || "Rezept"} ist am ${day} im Essensplan.`);
-    replanMode = "archive";
-    replanRecipeLink = null;
-    return;
-  }
 
   const item = state.archive.find(a => a.id === replanArchiveId);
   if (!item) {
@@ -11798,38 +11806,23 @@ function openMamaTimetableEditorDirect() {
 
 
 function openRecipeReuseDialog(link) {
-  if (!link?.url) return;
+  const dialog = document.querySelector("#recipePlanDialog");
+  if (!dialog || !link?.url) return;
 
-  replanMode = "recipe";
-  replanArchiveId = null;
   replanRecipeLink = {
-    url:link.url,
-    label:link.label || "Rezept",
-    recipeId:link.recipeId || ""
+    url:String(link.url || "").trim(),
+    label:String(link.label || "Rezept").trim(),
+    recipeId:String(link.recipeId || "")
   };
 
-  const dialog = document.querySelector("#replanDialog");
-  if (!dialog) return;
-
-  const smallLabel = dialog.querySelector(".small-label");
-  if (smallLabel) smallLabel.textContent = "REZEPT EINPLANEN";
-
-  const title = document.querySelector("#replanTitle");
-  if (title) title.textContent = replanRecipeLink.label;
-
-  const week = document.querySelector("#replanWeek");
-  const day = document.querySelector("#replanDay");
+  const name = document.querySelector("#recipePlanRecipeName");
+  const week = document.querySelector("#recipePlanWeek");
+  const day = document.querySelector("#recipePlanDay");
+  if (name) name.textContent = replanRecipeLink.label || "Rezept";
   if (week) week.value = "0";
   if (day) day.value = "Montag";
-
-  const part = document.querySelector("#replanPart");
-  part?.closest("label")?.classList.add("hidden");
-  const hint = dialog.querySelector(".replan-hint");
-  if (hint) hint.textContent = "Das Rezept wird zusätzlich im Essensplan des gewählten Tages eingetragen. Bereits geplante Gerichte bleiben erhalten.";
-
   dialog.showModal();
 }
-
 
 function populateSchoolYearSelect(select) {
   if (!select) return;
