@@ -23373,3 +23373,122 @@ button.day-meal-list-item:hover,a.day-meal-list-item:hover{background:rgba(164,1
   z-index:100 !important;
 }
 
+/* =========================================================
+   FEINSCHLIFF – Mehrtagestermine wieder mit Personen-Farbmix
+   ========================================================= */
+.multiday-continuous-segment{
+  background:var(--multi-bg, color-mix(in srgb, var(--multi-accent) 22%, #fffdfb)) !important;
+  border-top-color:color-mix(in srgb, var(--multi-accent) 48%, transparent) !important;
+  border-bottom-color:color-mix(in srgb, var(--multi-accent) 40%, transparent) !important;
+  color:#554e4a !important;
+  box-shadow:0 1px 0 rgba(90,72,62,.025) !important;
+}
+
+.multiday-continuous-segment.is-start{
+  border-left-color:color-mix(in srgb, var(--multi-accent) 48%, transparent) !important;
+}
+.multiday-continuous-segment.is-end{
+  border-right-color:color-mix(in srgb, var(--multi-accent) 48%, transparent) !important;
+}
+
+.multiday-person{
+  color:#574f4b !important;
+  font-weight:700 !important;
+}
+.multiday-person i{
+  background:var(--multi-person-bg, var(--multi-accent)) !important;
+  width:7px !important;
+  height:7px !important;
+  box-shadow:0 0 0 2px rgba(255,255,255,.78) !important;
+}
+
+/* Die Bänder bleiben schlank, aber nicht mehr fadendünn. */
+.week-band-events .multiday-event-lane,
+.week-band-events .multiday-event-placeholder,
+.day .multiday-event-lane,
+.day .multiday-event-placeholder{
+  height:30px !important;
+  min-height:30px !important;
+}
+.multiday-continuous-segment{
+  height:26px !important;
+  min-height:26px !important;
+  margin-top:2px !important;
+}
+.multiday-continuous-label,
+.multiday-continuous-end{
+  font-size:.69rem !important;
+}
+
+/* =========================================================
+   ESSENSPLAN – helles Oliv / Salbei, ruhig und vintage
+   ========================================================= */
+.meal-plan-card{
+  background:
+    linear-gradient(135deg,
+      rgba(239,241,226,.88) 0%,
+      rgba(246,246,236,.90) 48%,
+      rgba(241,238,226,.82) 100%) !important;
+  border-color:rgba(143,145,105,.24) !important;
+}
+
+.meal-plan-day{
+  background:rgba(255,254,249,.74) !important;
+  border-color:rgba(139,143,104,.20) !important;
+  box-shadow:0 1px 0 rgba(90,90,65,.02) !important;
+}
+
+.meal-plan-day-head{
+  color:#5f6248 !important;
+}
+
+.meal-plan-entry-main{
+  background:rgba(250,249,239,.88) !important;
+  border-color:rgba(139,143,104,.18) !important;
+}
+
+.meal-plan-entry-mark{
+  background:#8f9569 !important;
+  opacity:.68 !important;
+}
+
+.meal-plan-add-input{
+  background:rgba(255,254,249,.92) !important;
+  border-color:rgba(139,143,104,.22) !important;
+}
+
+.meal-plan-add-btn{
+  background:rgba(244,245,230,.92) !important;
+  border-color:rgba(139,143,104,.28) !important;
+  color:#747a53 !important;
+}
+.meal-plan-add-btn:hover{
+  background:rgba(231,234,209,.95) !important;
+}
+
+.meal-plan-week-switch .secondary-btn.active,
+#mealPlanThisWeekBtn.active,
+#mealPlanNextWeekBtn.active{
+  background:rgba(211,221,198,.92) !important;
+  border-color:rgba(126,142,105,.35) !important;
+  color:#526246 !important;
+}
+
+/* Das kleine Essenszeichen im Wochenplan übernimmt denselben Olivton. */
+.day-meal-vintage-toggle{
+  color:#7c8259 !important;
+  background:rgba(232,235,211,.38) !important;
+}
+.day-meal-vintage-toggle:hover{
+  background:rgba(221,226,195,.62) !important;
+}
+.day-meal-count{
+  background:rgba(151,158,107,.16) !important;
+  color:#626746 !important;
+}
+
+.day-meal-popover{
+  background:rgba(250,249,239,.96) !important;
+  border-color:rgba(139,143,104,.22) !important;
+}
+
