@@ -11433,9 +11433,13 @@ button.day-meal{cursor:pointer}
    V53 – Stundenplan exakt als eine durchgehende schöne Ansicht
    ========================================================= */
 
-/* Chooser wird im Wochenplan nicht mehr benötigt. */
+/* Der Familien-Stundenplan-Dialog wird im Werkraum als Editor benötigt.
+   Deshalb darf er nicht global ausgeblendet werden. */
 #familyTimetableDialog{
-  display:none !important;
+  display:none;
+}
+#familyTimetableDialog[open]{
+  display:block !important;
 }
 
 /* Modal */
