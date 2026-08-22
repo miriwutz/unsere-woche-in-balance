@@ -8285,6 +8285,45 @@ function startCloudSync() {
     }
 
     cloudReady = true;
+
+    // Einmalige Sicherheits-Nachlieferung für bereits vorhandene Rabatte/Pickerl:
+    // Frühere App-Versionen speicherten sie lokal, übernahmen sie aber nicht
+    // zuverlässig zwischen Geräten. Wenn nach dem sicheren Merge lokal Einträge
+    // vorhanden sind, die in der Cloud noch fehlen, werden NUR diese Promodaten
+    // nachgeliefert. Ein leeres Gerät kann dadurch nichts überschreiben.
+    if (firstSnapshot) {
+      const remotePromos = Array.isArray(cloudData?.shoppingPromos)
+        ? cloudData.shoppingPromos
+        : [];
+      const mergedPromos = Array.isArray(state.shoppingPromos)
+        ? state.shoppingPromos
+        : [];
+
+      const remoteById = new Map(
+        remotePromos.filter(x => x?.id).map(x => [x.id, x])
+      );
+
+      const promoBackfillNeeded = mergedPromos.some(localPromo => {
+        if (!localPromo?.id) return false;
+        const remotePromo = remoteById.get(localPromo.id);
+        if (!remotePromo) return true;
+        return itemTimestamp(localPromo) > itemTimestamp(remotePromo);
+      });
+
+      if (promoBackfillNeeded) {
+        const promoSyncToken =
+          `${Date.now()}-${getDeviceId()}-promo-${Math.random().toString(36).slice(2,8)}`;
+
+        ref.set({
+          shoppingPromos: JSON.parse(JSON.stringify(mergedPromos)),
+          syncToken: promoSyncToken,
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge: true }).catch(err => {
+          console.error("Rabatte/Pickerl Nachlieferung fehlgeschlagen:", err);
+        });
+      }
+    }
+
     updateSyncStatus(navigator.onLine ? "synced" : "offline");
     renderDeviceAcks(cloudData);
     acknowledgeCloudSnapshot(cloudData, snap.metadata);
