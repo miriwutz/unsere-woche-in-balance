@@ -11105,6 +11105,127 @@ function mergeMeals(localMeals, cloudMeals) {
   return merged;
 }
 
+function ensureMealPlanEditDialog() {
+  let dialog = document.querySelector("#mealPlanEditDialog");
+  if (dialog) return dialog;
+
+  dialog = document.createElement("dialog");
+  dialog.id = "mealPlanEditDialog";
+  dialog.className = "meal-plan-edit-dialog";
+  dialog.innerHTML = `
+    <form method="dialog" class="meal-plan-edit-card" id="mealPlanEditForm">
+      <div class="meal-plan-edit-head">
+        <div><small>ESSENSPLAN</small><h3>Gericht bearbeiten</h3></div>
+        <button type="button" class="meal-plan-edit-close" aria-label="Schließen">×</button>
+      </div>
+      <label><span>Name</span><input id="mealEditLabel" type="text" autocomplete="off"></label>
+      <label><span>Link <em>optional</em></span><input id="mealEditUrl" type="url" inputmode="url" placeholder="https://…"></label>
+      <div class="meal-plan-edit-two">
+        <label><span>Kategorie</span><select id="mealEditCategory">${onlineRecipeCategoryMeta.map(([value,label])=>`<option value="${value}">${label}</option>`).join("")}</select></label>
+        <label><span>Bewertung</span><select id="mealEditRating">
+          <option value="">○ Noch nicht bewertet</option>
+          <option value="love">💛 Sehr gern wieder</option>
+          <option value="okay">🙂 Passt gut</option>
+          <option value="no">🌿 Eher nicht</option>
+        </select></label>
+      </div>
+      <p class="meal-plan-edit-note">Link, Kategorie und Bewertung erscheinen automatisch auch unter „Unser Überblick“.</p>
+      <div class="meal-plan-edit-actions">
+        <button type="button" class="meal-plan-edit-cancel">Abbrechen</button>
+        <button type="submit" class="meal-plan-edit-save">Speichern</button>
+      </div>
+    </form>`;
+  document.body.appendChild(dialog);
+
+  if (!document.querySelector("#mealPlanEditDialogStyle")) {
+    const style=document.createElement("style");
+    style.id="mealPlanEditDialogStyle";
+    style.textContent=`
+      .meal-plan-edit-dialog{border:0;padding:0;background:transparent;max-width:min(520px,calc(100vw - 28px));width:100%;}
+      .meal-plan-edit-dialog::backdrop{background:rgba(64,57,50,.28);backdrop-filter:blur(2px)}
+      .meal-plan-edit-card{background:#fffdf9;border:1px solid #ddd7c9;border-radius:22px;padding:20px;box-shadow:0 18px 55px rgba(64,57,50,.18);color:#4f463e}
+      .meal-plan-edit-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px}.meal-plan-edit-head small{letter-spacing:.18em;font-size:10px;color:#8f8777}.meal-plan-edit-head h3{margin:4px 0 0;font-size:25px;font-weight:500}
+      .meal-plan-edit-close{border:1px solid #e4ddd1;background:#fffaf4;border-radius:50%;width:32px;height:32px;font-size:18px;color:#6f665d}
+      .meal-plan-edit-card label{display:block;margin:10px 0}.meal-plan-edit-card label>span{display:block;font-size:12px;margin-bottom:5px;color:#6f665d}.meal-plan-edit-card em{font-style:normal;color:#aaa18f}
+      .meal-plan-edit-card input,.meal-plan-edit-card select{box-sizing:border-box;width:100%;border:1px solid #ddd6c9;background:#fffdfa;border-radius:11px;padding:10px 11px;color:#4f463e;font:inherit}
+      .meal-plan-edit-two{display:grid;grid-template-columns:1fr 1fr;gap:10px}.meal-plan-edit-note{font-size:11px;color:#948b7c;margin:12px 0 4px}
+      .meal-plan-edit-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:16px}.meal-plan-edit-actions button{border-radius:999px;padding:9px 15px;border:1px solid #d9d1c3;background:#fffaf4;color:#5d554d}.meal-plan-edit-actions .meal-plan-edit-save{background:#77785d;color:#fff;border-color:#77785d}
+      .meal-plan-edit{border:0;background:transparent;color:#8a806f;cursor:pointer;padding:1px 4px}.meal-plan-edit:hover{color:#5f6049}
+      @media(max-width:560px){.meal-plan-edit-two{grid-template-columns:1fr}}
+    `;
+    document.head.appendChild(style);
+  }
+
+  dialog.querySelector(".meal-plan-edit-close")?.addEventListener("click",()=>dialog.close());
+  dialog.querySelector(".meal-plan-edit-cancel")?.addEventListener("click",()=>dialog.close());
+  dialog.addEventListener("click",e=>{ if(e.target===dialog) dialog.close(); });
+  return dialog;
+}
+
+function openMealPlanEditDialog(dateKeyValue, mealId) {
+  const dialog=ensureMealPlanEditDialog();
+  const list=normalizeMealEntries(state.meals?.[dateKeyValue]);
+  const meal=list.find(x=>x.id===mealId && !x.deleted);
+  if(!meal) return;
+
+  const linked=resolveMealRecipe(meal.recipeId,meal.label);
+  const linkedUrl=linked && normalizedRecipeSource(linked)==="external"
+    ? (linked.webUrl||linked.youtubeUrl||"") : "";
+  const currentUrl=String(meal.url||linkedUrl||"").trim();
+  const feedback=currentUrl ? (state.recipeLinkFeedback?.[currentUrl]||{}) : {};
+
+  dialog.dataset.date=dateKeyValue;
+  dialog.dataset.mealId=mealId;
+  dialog.dataset.originalUrl=currentUrl;
+  dialog.querySelector("#mealEditLabel").value=linked?.title || meal.label || "";
+  dialog.querySelector("#mealEditUrl").value=currentUrl;
+  dialog.querySelector("#mealEditCategory").value=feedback.category || linked?.category || "other";
+  dialog.querySelector("#mealEditRating").value=["love","okay","no"].includes(feedback.rating) ? feedback.rating : "";
+
+  const form=dialog.querySelector("#mealPlanEditForm");
+  form.onsubmit=e=>{
+    e.preventDefault();
+    const key=dialog.dataset.date;
+    const id=dialog.dataset.mealId;
+    const oldUrl=dialog.dataset.originalUrl||"";
+    const meals=normalizeMealEntries(state.meals?.[key]);
+    const item=meals.find(x=>x.id===id && !x.deleted);
+    if(!item) return;
+
+    const label=dialog.querySelector("#mealEditLabel").value.trim();
+    const rawUrl=dialog.querySelector("#mealEditUrl").value.trim();
+    const url=rawUrl ? normalizeExternalUrl(rawUrl) : "";
+    const category=dialog.querySelector("#mealEditCategory").value||"other";
+    const rating=dialog.querySelector("#mealEditRating").value||"";
+    if(!label && !url) return;
+
+    item.label=label || "Rezeptlink";
+    item.url=url;
+    item.updatedAt=Date.now();
+    state.meals[key]=meals;
+
+    if(url){
+      const current=state.recipeLinkFeedback[url]||{};
+      state.recipeLinkFeedback[url]={...current,category,rating:hiddenRating(rating),hidden:false,hiddenAt:0,updatedAt:Date.now()};
+    }
+    if(oldUrl && oldUrl!==url && state.recipeLinkFeedback[oldUrl]) {
+      state.recipeLinkFeedback[oldUrl]={...state.recipeLinkFeedback[oldUrl],updatedAt:Date.now()};
+    }
+
+    save();
+    dialog.close();
+    renderMealPlan();
+    renderRecipeLinkTracker();
+    renderWeek();
+  };
+
+  dialog.showModal();
+}
+
+function hiddenRating(value){
+  return ["love","okay","no"].includes(value) ? value : "";
+}
+
 function renderMealPlan() {
   const host = document.querySelector("#mealPlanGrid");
   if (!host) return;
@@ -11128,6 +11249,7 @@ function renderMealPlan() {
           <span class="meal-plan-entry-title">${escapeHtml(matched?.title || meal.label || "Rezept")}</span>
           ${matched ? `<button type="button" class="meal-plan-open" data-recipe-id="${matched.id}" title="Rezept öffnen">↗</button>`
             : meal.url ? `<a class="meal-plan-open" href="${escapeHtml(meal.url)}" target="_blank" rel="noopener" title="Link öffnen">↗</a>` : ""}
+          <button type="button" class="meal-plan-edit" data-date="${key}" data-meal-id="${escapeHtml(meal.id)}" title="Gericht bearbeiten">✎</button>
           <button type="button" class="meal-plan-remove" data-date="${key}" data-meal-id="${escapeHtml(meal.id)}" title="Aus diesem Tag entfernen">×</button>
         </div>
       </div>`;
@@ -11223,6 +11345,10 @@ function renderMealPlan() {
   host.querySelectorAll(".meal-plan-open[data-recipe-id]").forEach(btn=>btn.addEventListener("click",()=>{
     const recipe=state.recipes.find(r=>r.id===btn.dataset.recipeId);
     if(recipe) showRecipeDetail(recipe);
+  }));
+
+  host.querySelectorAll(".meal-plan-edit").forEach(btn=>btn.addEventListener("click",()=>{
+    openMealPlanEditDialog(btn.dataset.date, btn.dataset.mealId);
   }));
 
   host.querySelectorAll(".meal-plan-remove").forEach(btn=>btn.addEventListener("click",()=>{
