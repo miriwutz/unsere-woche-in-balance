@@ -22693,3 +22693,23 @@ body:has(#workroomLinkSortSelect option:checked:not([value="manual"])) .workroom
   margin-top:8px !important;
 }
 
+/* =========================================================
+   TERMINE – Korrektur: Mehrtages-Spuren wirklich ausrichten
+   ========================================================= */
+.day .multiday-event-lane,
+.day .multiday-event-placeholder{
+  min-height:78px !important;
+  height:78px !important;
+  box-sizing:border-box !important;
+}
+.day .multiday-event-placeholder{
+  visibility:hidden !important;
+  pointer-events:none !important;
+}
+.day .multiday-event-lane .event-person-block{
+  min-height:78px !important;
+  height:78px !important;
+  margin:0 !important;
+  box-sizing:border-box !important;
+}
+
