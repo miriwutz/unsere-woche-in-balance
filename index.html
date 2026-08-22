@@ -333,6 +333,36 @@
               </label>
             </div>
           </div>
+
+          <div class="todo-quick-meta-row">
+            <label>
+              Priorität
+              <select id="todoPriority">
+                <option value="important">Wichtig</option>
+                <option value="medium" selected>Mittel</option>
+                <option value="low">Kann warten</option>
+                <option value="weekplan">Wochenplan</option>
+              </select>
+            </label>
+
+            <label>
+              Bereich
+              <select id="todoArea">
+                <option value="work">Arbeit</option>
+                <option value="private">Privat</option>
+              </select>
+            </label>
+
+            <label>
+              Zeitraum
+              <select id="todoPeriod">
+                <option value="today">Heute</option>
+                <option value="week" selected>Woche</option>
+                <option value="month">Diesen Monat</option>
+                <option value="later">Irgendwann</option>
+              </select>
+            </label>
+          </div>
         </div>
 
         <div class="todo-primary-row">
@@ -468,36 +498,6 @@
         
 </div>
   
-        <div class="todo-quick-meta-row">
-          <label>
-            Priorität
-            <select id="todoPriority">
-              <option value="important">Wichtig</option>
-              <option value="medium" selected>Mittel</option>
-              <option value="low">Kann warten</option>
-              <option value="weekplan">Wochenplan</option>
-            </select>
-          </label>
-
-          <label>
-            Bereich
-            <select id="todoArea">
-              <option value="work">Arbeit</option>
-              <option value="private">Privat</option>
-            </select>
-          </label>
-
-          <label>
-            Zeitraum
-            <select id="todoPeriod">
-              <option value="today">Heute</option>
-              <option value="week" selected>Woche</option>
-              <option value="month">Diesen Monat</option>
-              <option value="later">Irgendwann</option>
-            </select>
-          </label>
-        </div>
-
         <div class="recurrence-row">
           <div id="schoolHolidayHint" class="school-holiday-hint hidden">
             🎒 Wöchentlich im gewählten Schuljahr NÖ – Ferien und offizielle schulfreie Tage werden ausgelassen.
