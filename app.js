@@ -14375,20 +14375,20 @@ function normalizePlanningFormLayout() {
     [priority, area, period].forEach(label => quickRow.appendChild(label));
 
     const oldDetails = document.querySelector(".todo-more-settings");
-    if (oldDetails) {
-      oldDetails.parentElement?.insertBefore(quickRow, oldDetails);
+    const topRow = document.querySelector(".entry-top-row");
 
+    if (oldDetails) {
       const hint = oldDetails.querySelector("#schoolHolidayHint")?.closest(".recurrence-row")
         || oldDetails.querySelector("#schoolHolidayHint");
       const schoolFields = oldDetails.querySelector("#schoolyearScheduleFields");
 
       if (hint) oldDetails.parentElement?.insertBefore(hint, oldDetails);
       if (schoolFields) oldDetails.parentElement?.insertBefore(schoolFields, oldDetails);
-
       oldDetails.remove();
-    } else if (!quickRow.isConnected) {
-      const actions = document.querySelector(".todo-form-actions");
-      actions?.parentElement?.insertBefore(quickRow, actions);
+    }
+
+    if (topRow && quickRow.parentElement !== topRow) {
+      topRow.appendChild(quickRow);
     }
   }
 
