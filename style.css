@@ -22824,3 +22824,64 @@ body:has(#workroomLinkSortSelect option:checked:not([value="manual"])) .workroom
   height:31px !important;
 }
 
+/* =========================================================
+   MEHRTAGE – gemeinsame Termine sichtbar + Person lesbar
+   ========================================================= */
+.multiday-continuous-segment{
+  border-top-color:color-mix(in srgb, var(--multi-accent) 58%, transparent) !important;
+  border-bottom-color:color-mix(in srgb, var(--multi-accent) 48%, transparent) !important;
+  background:color-mix(in srgb, var(--multi-accent) 18%, rgba(255,253,251,.88)) !important;
+  color:#5d5552 !important;
+}
+
+.multiday-continuous-segment.is-start{
+  border-left-color:color-mix(in srgb, var(--multi-accent) 58%, transparent) !important;
+}
+.multiday-continuous-segment.is-end{
+  border-right-color:color-mix(in srgb, var(--multi-accent) 58%, transparent) !important;
+}
+
+.multiday-continuous-label{
+  display:flex !important;
+  align-items:center !important;
+  gap:5px !important;
+  width:100% !important;
+}
+
+.multiday-person{
+  display:inline-flex !important;
+  align-items:center !important;
+  gap:4px !important;
+  flex:0 0 auto !important;
+  font-size:.67rem !important;
+  font-weight:700 !important;
+  color:color-mix(in srgb, var(--multi-accent) 72%, #4f4a48) !important;
+}
+
+.multiday-person i{
+  display:block !important;
+  width:7px !important;
+  height:7px !important;
+  border-radius:50% !important;
+  background:var(--multi-accent) !important;
+  box-shadow:0 0 0 2px rgba(255,255,255,.72) !important;
+}
+
+.multiday-sep{
+  flex:0 0 auto !important;
+  opacity:.48 !important;
+}
+
+.multiday-title{
+  min-width:0 !important;
+  overflow:hidden !important;
+  text-overflow:ellipsis !important;
+  white-space:nowrap !important;
+}
+
+/* Die Zwischenstücke bleiben sichtbar genug, damit wirklich eine Linie
+   über mehrere Tage gelesen wird, ohne wieder wie eine dicke Karte zu wirken. */
+.multiday-continuous-fill{
+  opacity:1 !important;
+}
+
