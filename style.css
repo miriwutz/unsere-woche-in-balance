@@ -24645,3 +24645,105 @@ button.day-meal-list-item:hover,a.day-meal-list-item:hover{background:rgba(164,1
   }
 }
 
+/* =========================================================
+   FINALER DESKTOP-FEINSCHLIFF – persönliche Wochenansichten
+   Lou/Fina: romantisch-edel, Papa: ruhig/archaisch.
+   Keine Mini-Felder, aber weniger Leerhöhe.
+   ========================================================= */
+
+/* Lou & Fina: Tagesblöcke etwas kompakter, Karten weiterhin großzügig */
+.child-week-list{
+  gap:8px !important;
+}
+.child-week-day{
+  grid-template-columns:112px minmax(0,1fr) !important;
+  gap:10px !important;
+  padding:9px 10px !important;
+  border-radius:17px !important;
+}
+.child-week-day-head{
+  padding:5px 4px !important;
+}
+.child-week-items{
+  gap:5px !important;
+}
+.child-week-item{
+  grid-template-columns:34px minmax(0,1fr) !important;
+  gap:8px !important;
+  min-height:0 !important;
+  padding:8px 10px !important;
+  border-radius:13px !important;
+}
+.child-week-item-symbol{
+  width:30px !important;
+  height:30px !important;
+  border-radius:10px !important;
+  font-size:.92rem !important;
+}
+.child-week-item-meta{
+  font-size:.61rem !important;
+  letter-spacing:.075em !important;
+}
+.child-week-item-copy strong{
+  margin-top:1px !important;
+  font-size:.9rem !important;
+  line-height:1.16 !important;
+}
+.child-week-item-copy small{
+  margin-top:1px !important;
+  font-size:.7rem !important;
+}
+/* Termine bleiben sichtbar wertiger als reine Listenzeilen */
+.child-week-item.kind-event{
+  min-height:48px !important;
+  background:linear-gradient(100deg,#fff7ed,#fffaf3) !important;
+}
+
+/* Papa: gleiche Informationsdichte, aber markanter und weniger pastellig */
+.papa-overview-day{
+  margin:0 0 7px !important;
+  padding:9px 12px !important;
+  border-radius:13px !important;
+  background:rgba(255,252,246,.84) !important;
+}
+.papa-overview-day.is-today{
+  background:linear-gradient(100deg,rgba(214,196,157,.22),rgba(255,252,246,.90)) !important;
+  border-color:rgba(126,101,67,.28) !important;
+}
+.papa-overview-day-head{
+  margin:0 0 6px !important;
+  padding:0 0 5px !important;
+}
+.papa-overview-day-title strong{
+  color:#463a32 !important;
+  font-size:1.02rem !important;
+}
+.papa-overview-day-entries{
+  gap:3px !important;
+}
+.papa-overview-entry{
+  grid-template-columns:18px minmax(0,1fr) !important;
+  gap:6px !important;
+  padding:2px 0 !important;
+  line-height:1.28 !important;
+}
+.papa-overview-symbol{
+  width:18px !important;
+  color:#806d55 !important;
+  line-height:1.28 !important;
+}
+.papa-overview-entry-text{
+  gap:4px 6px !important;
+}
+.papa-overview-time{
+  color:#3f342e !important;
+}
+
+/* Heute soll in allen persönlichen Ansichten klar, aber dezent erkennbar bleiben. */
+.child-week-day.is-today{
+  box-shadow:inset 3px 0 0 rgba(150,124,180,.22) !important;
+}
+.child-week-dialog[data-child="2"] .child-week-day.is-today{
+  box-shadow:inset 3px 0 0 rgba(218,145,158,.22) !important;
+}
+
