@@ -2153,6 +2153,35 @@
     </div>
   </dialog>
 
+  <dialog id="recipePlanDialog" class="recipe-plan-dialog">
+    <div class="dialog-card recipe-plan-card">
+      <div class="dialog-head">
+        <div><p class="small-label">ESSENSPLAN</p><h2>Rezept einplanen</h2></div>
+        <button id="closeRecipePlanDialogBtn" class="icon-btn" type="button" aria-label="Schließen">×</button>
+      </div>
+      <p id="recipePlanRecipeName" class="recipe-plan-name"></p>
+      <div class="recipe-plan-fields">
+        <label>Woche
+          <select id="recipePlanWeek">
+            <option value="0">Diese Woche</option><option value="1">Nächste Woche</option>
+            <option value="2">In 2 Wochen</option><option value="3">In 3 Wochen</option><option value="4">In 4 Wochen</option>
+          </select>
+        </label>
+        <label>Wochentag
+          <select id="recipePlanDay">
+            <option>Montag</option><option>Dienstag</option><option>Mittwoch</option><option>Donnerstag</option>
+            <option>Freitag</option><option>Samstag</option><option>Sonntag</option>
+          </select>
+        </label>
+      </div>
+      <p class="recipe-plan-hint">Das Rezept wird zusätzlich eingetragen. Bereits geplante Gerichte bleiben erhalten.</p>
+      <div class="dialog-actions">
+        <button id="cancelRecipePlanBtn" type="button" class="secondary-btn">Abbrechen</button>
+        <button id="confirmRecipePlanBtn" type="button" class="primary-btn">In den Essensplan</button>
+      </div>
+    </div>
+  </dialog>
+
   <dialog id="replanDialog">
     <div class="dialog-card">
       <div class="dialog-head">
