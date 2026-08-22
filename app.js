@@ -12976,11 +12976,11 @@ function schoolChildDefaultIcon(id){
 function schoolTimetableSubjectIcon(subject){
   const s=String(subject||"").trim().toLowerCase();
   if(!s) return "";
-  if(s==="rel" || s.includes("relig")) return `<span class="tt-subject-symbol tt-symbol-rel" aria-hidden="true">✝</span>`;
-  if(s.includes("turn") || s.includes("sport") || s==="bu" || s==="bsp") return `<span class="tt-subject-symbol tt-symbol-sport" aria-hidden="true">♟</span>`;
-  if(s.includes("werk") || s==="tec" || s==="tex") return `<span class="tt-subject-symbol tt-symbol-werken" aria-hidden="true">⌁</span>`;
-  if(s==="gu" || s.includes("grund")) return `<span class="tt-subject-symbol tt-symbol-gu" aria-hidden="true"><i></i></span>`;
-  return `<span class="tt-subject-symbol tt-symbol-default" aria-hidden="true">·</span>`;
+  if(s==="gu" || s.includes("grund")) return `<span class="tt-subject-symbol tt-symbol-gu" aria-hidden="true">📖</span>`;
+  if(s==="rel" || s.includes("relig")) return `<span class="tt-subject-symbol tt-symbol-rel" aria-hidden="true">🕊️</span>`;
+  if(s.includes("turn") || s.includes("sport") || s==="bu" || s==="bsp") return `<span class="tt-subject-symbol tt-symbol-sport" aria-hidden="true">🤸</span>`;
+  if(s.includes("werk") || s==="tec" || s==="tex") return `<span class="tt-subject-symbol tt-symbol-werken" aria-hidden="true">✂️</span>`;
+  return `<span class="tt-subject-symbol tt-symbol-default" aria-hidden="true">•</span>`;
 }
 
 function schoolTaskDefaultIcon(id){
@@ -12988,8 +12988,14 @@ function schoolTaskDefaultIcon(id){
   return state.familySettings[key]?.taskIcon || (id === "1" ? "🌙" : "⭐");
 }
 
+function schoolTaskLegacyIcon(childId){
+  return childId === "1" ? "🌙" : "⭐";
+}
+
 function schoolTaskIcon(task, childId){
-  return task?.icon || schoolTaskDefaultIcon(childId);
+  // Bereits vorhandene Aufgaben ohne eigenes gespeichertes Zeichen bleiben stabil.
+  // Die untere Auswahl bestimmt nur das Standardzeichen für NEU angelegte Aufgaben.
+  return task?.icon || schoolTaskLegacyIcon(childId);
 }
 
 function schoolTaskIconOptions(selected){
