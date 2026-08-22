@@ -1684,7 +1684,7 @@ function todoGroupKey(todo) {
 function todoGroupLabel(key) {
   if (["a","b","c","d"].includes(key)) return familyName(key);
   return {
-    shared:"Gemeinsam",
+    shared:"Alle",
     general:"Allgemein"
   }[key] || "Allgemein";
 }
@@ -1872,7 +1872,7 @@ function renderWeek() {
 
     const person =
       groupKey === "shared"
-        ? "Gemeinsam"
+        ? "Alle"
         : (groupKey === "general" ? "" : (familyName(groupKey) || ""));
 
     const visibleStart = item.date < weekStartKey ? weekStartKey : item.date;
@@ -2120,24 +2120,38 @@ const multiDayLaneHtml = multiDayTrackCount
 
         const personLabel =
           groupKey === "shared"
-            ? "Gemeinsam"
+            ? "Alle"
             : (groupKey === "general" ? "" : (familyName(groupKey) || ""));
 
-        const startTime = isStart && item.time ? `${escapeHtml(item.time)} ` : "";
-        const endTime = isEnd && item.endTime ? ` · bis ${escapeHtml(item.endTime)}` : "";
+        const visibleStartIndex = weekDates.findIndex(d => dateKey(d) === visibleStart);
+        const visibleEndIndex = weekDates.findIndex(d => dateKey(d) === visibleEnd);
+        const visibleSpan = Math.max(1, visibleEndIndex - visibleStartIndex + 1);
+
+        // Der Text wird nur am ersten sichtbaren Tag erzeugt, spannt sich aber
+        // optisch über die gesamte sichtbare Dauer. So sitzt er mittig auf dem Band.
+        const showLabel = index === visibleStartIndex;
+
+        // Uhrzeit nur dort zeigen, wo der echte Start in dieser Woche liegt.
+        // Bei Sa–Di steht 16:00 also in der Sa–So-Woche, nicht nochmals am Montag.
+        const startTime = item.date >= weekStartKey && item.date <= weekEndKey && item.time
+          ? `${escapeHtml(item.time)} `
+          : "";
+        const endTime = (item.endDate || item.date) >= weekStartKey &&
+                        (item.endDate || item.date) <= weekEndKey &&
+                        item.endTime
+          ? ` · bis ${escapeHtml(item.endTime)}`
+          : "";
 
         return `<div class="multiday-event-lane" data-track="${track}">
           <div
             class="multiday-continuous-segment ${isStart ? "is-start" : ""} ${isEnd ? "is-end" : ""}"
-            style="--multi-accent:${accent};--multi-bg:${multiBackground};--multi-person-bg:${personBackground}">
-            ${isStart
-              ? `<span class="multiday-continuous-label">
+            style="--multi-accent:${accent};--multi-bg:${multiBackground};--multi-person-bg:${personBackground};--multi-span:${visibleSpan}">
+            ${showLabel
+              ? `<span class="multiday-continuous-label multiday-span-label">
                    ${personLabel ? `<span class="multiday-person"><i></i>${escapeHtml(personLabel)}</span><span class="multiday-sep">·</span>` : ""}
                    <span class="multiday-title">${startTime}${item.superImportant ? "★ " : ""}${escapeHtml(item.text)}${endTime}</span>
                  </span>`
-              : (isEnd && item.endTime
-                  ? `<span class="multiday-continuous-end">${endTime}</span>`
-                  : `<span class="multiday-continuous-fill" aria-hidden="true"></span>`)}
+              : `<span class="multiday-continuous-fill" aria-hidden="true"></span>`}
           </div>
         </div>`;
       }).join("")}
