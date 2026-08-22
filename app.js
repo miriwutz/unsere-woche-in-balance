@@ -11140,7 +11140,10 @@ function renderMealPlan() {
       </div>
       <div class="meal-plan-entries">${rows || `<div class="meal-plan-empty">Noch nichts geplant</div>`}</div>
       <div class="meal-plan-add-wrap">
-        <input type="text" class="meal-plan-add-input" data-date="${key}" autocomplete="off" placeholder="+ Gericht oder Rezept hinzufügen">
+        <div class="meal-plan-add-row">
+          <input type="text" class="meal-plan-add-input" data-date="${key}" autocomplete="off" placeholder="Gericht oder Rezept …">
+          <button type="button" class="meal-plan-add-btn" data-date="${key}" title="Zum Essensplan hinzufügen">＋</button>
+        </div>
         <div class="meal-plan-autocomplete hidden" data-date="${key}"></div>
       </div>
     </div>`;
@@ -11191,12 +11194,7 @@ function renderMealPlan() {
       });
     };
 
-    input.addEventListener("input",showSuggestions);
-    input.addEventListener("focus",showSuggestions);
-    input.addEventListener("blur",()=>setTimeout(()=>popup?.classList.add("hidden"),160));
-    input.addEventListener("keydown",e=>{
-      if(e.key!=="Enter") return;
-      e.preventDefault();
+    const commitMealInput = () => {
       const value=input.value.trim();
       if(!value) return;
       const recipe=recipeByTitle(value);
@@ -11207,7 +11205,19 @@ function renderMealPlan() {
           ? (recipe.webUrl||recipe.youtubeUrl||"")
           : (/^https?:\/\//i.test(value) ? value : "")
       });
+    };
+
+    input.addEventListener("input",showSuggestions);
+    input.addEventListener("focus",showSuggestions);
+    input.addEventListener("blur",()=>setTimeout(()=>popup?.classList.add("hidden"),160));
+    input.addEventListener("keydown",e=>{
+      if(e.key!=="Enter") return;
+      e.preventDefault();
+      commitMealInput();
     });
+
+    host.querySelector(`.meal-plan-add-btn[data-date="${CSS.escape(input.dataset.date)}"]`)
+      ?.addEventListener("click", commitMealInput);
   });
 
   host.querySelectorAll(".meal-plan-open[data-recipe-id]").forEach(btn=>btn.addEventListener("click",()=>{
