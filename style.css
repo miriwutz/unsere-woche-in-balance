@@ -22400,3 +22400,117 @@ body:has(#workroomLinkSortSelect option:checked:not([value="manual"])) .workroom
   }
 }
 
+/* =========================================================
+   PUNKT 2C – Tablet: Links wieder 2-spaltig und lesbar
+   ========================================================= */
+
+/* Der vorige Tablet-Fix wurde bewusst korrigiert:
+   auf normalen Tablets bleiben zwei Spalten erhalten. */
+@media (min-width:700px) and (max-width:1400px){
+  #workroomLinkList{
+    display:grid !important;
+    grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+    grid-template-rows:repeat(10,auto) !important;
+    grid-auto-flow:column !important;
+    gap:8px !important;
+  }
+
+  #workroomLinkList .workroom-link-item{
+    grid-template-columns:minmax(0,1fr) auto !important;
+    gap:5px !important;
+    min-width:0 !important;
+  }
+
+  #workroomLinkList .workroom-link-drag-handle{
+    display:none !important;
+  }
+
+  #workroomLinkList .workroom-link-main{
+    min-width:0 !important;
+    width:100% !important;
+  }
+
+  #workroomLinkList .workroom-link-texts{
+    display:grid !important;
+    grid-template-columns:1fr !important;
+    gap:1px !important;
+    min-width:0 !important;
+    width:100% !important;
+  }
+
+  #workroomLinkList .workroom-link-title,
+  #workroomLinkList .workroom-link-note{
+    min-width:0 !important;
+    max-width:100% !important;
+    overflow:hidden !important;
+    text-overflow:ellipsis !important;
+    white-space:nowrap !important;
+  }
+
+  #workroomLinkList .workroom-link-note{
+    font-size:.64rem !important;
+    opacity:.82 !important;
+  }
+
+  #workroomLinkList .workroom-link-actions{
+    display:flex !important;
+    align-items:center !important;
+    justify-content:flex-end !important;
+    gap:1px !important;
+    margin-left:auto !important;
+    white-space:nowrap !important;
+  }
+
+  #workroomLinkList .workroom-link-actions .workroom-link-use{
+    margin-right:2px !important;
+    font-size:.61rem !important;
+    padding:3px 6px !important;
+  }
+
+  #workroomLinkList .workroom-link-edit,
+  #workroomLinkList .workroom-link-delete,
+  #workroomLinkList .workroom-link-move-up,
+  #workroomLinkList .workroom-link-move-down{
+    width:24px !important;
+    min-width:24px !important;
+    height:28px !important;
+    min-height:28px !important;
+    padding:0 !important;
+  }
+}
+
+/* Erst auf Handybreite wird wirklich einspaltig. */
+@media (max-width:699px){
+  #workroomLinkList{
+    grid-template-columns:1fr !important;
+    grid-template-rows:none !important;
+    grid-auto-flow:row !important;
+  }
+  #workroomLinkList .workroom-link-item{
+    grid-column:1 !important;
+    grid-row:auto !important;
+  }
+}
+
+/* =========================================================
+   Routinen – Bearbeiten/Löschen wie bei Videokarten rechts
+   ========================================================= */
+.routine-week-plan-actions{
+  display:flex !important;
+  flex-direction:row !important;
+  align-items:center !important;
+  justify-content:flex-end !important;
+  gap:2px !important;
+  margin-left:auto !important;
+}
+.routine-week-plan-actions button{
+  width:24px !important;
+  min-width:24px !important;
+  height:24px !important;
+  min-height:24px !important;
+  display:inline-flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  touch-action:manipulation !important;
+}
+
