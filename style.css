@@ -22885,3 +22885,89 @@ body:has(#workroomLinkSortSelect option:checked:not([value="manual"])) .workroom
   opacity:1 !important;
 }
 
+/* =========================================================
+   MEHRTAGE – Feinschliff Höhe + Handy-Hochformat
+   ========================================================= */
+
+/* PC / Tablet quer: nur etwas höher, weiterhin schmal. */
+.week-band-events .multiday-event-lane,
+.week-band-events .multiday-event-placeholder{
+  height:35px !important;
+  min-height:35px !important;
+}
+.multiday-continuous-segment{
+  height:31px !important;
+  min-height:31px !important;
+}
+.day .multiday-event-lane,
+.day .multiday-event-placeholder{
+  height:35px !important;
+  min-height:35px !important;
+}
+
+/* Mobile Summary wird am Desktop/Tablet nicht gezeigt. */
+.mobile-multiday-summary{
+  display:none;
+}
+
+/* Handy hochkant:
+   Mehrtagestermine NICHT in jedem Tageskästchen wiederholen.
+   Stattdessen einmal kompakt oberhalb der gestapelten Tage zeigen. */
+@media (max-width:700px){
+  .mobile-multiday-summary{
+    display:grid;
+    gap:7px;
+    margin:0 0 12px;
+  }
+
+  .mobile-multiday-item{
+    display:flex;
+    align-items:center;
+    gap:7px;
+    min-width:0;
+    padding:8px 10px;
+    border:1px solid color-mix(in srgb, var(--mobile-multi-accent) 45%, transparent);
+    border-radius:11px;
+    background:color-mix(in srgb, var(--mobile-multi-accent) 14%, rgba(255,253,251,.92));
+    color:#5d5552;
+    font-size:.78rem;
+    line-height:1.3;
+  }
+
+  .mobile-multiday-dot{
+    width:8px;
+    height:8px;
+    flex:0 0 8px;
+    border-radius:50%;
+    background:var(--mobile-multi-accent);
+    box-shadow:0 0 0 2px rgba(255,255,255,.72);
+  }
+
+  .mobile-multiday-person{
+    flex:0 0 auto;
+    font-weight:700;
+    color:color-mix(in srgb, var(--mobile-multi-accent) 72%, #4f4a48);
+  }
+
+  .mobile-multiday-title{
+    min-width:0;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+    font-weight:600;
+  }
+
+  .mobile-multiday-range{
+    margin-left:auto;
+    flex:0 0 auto;
+    color:#877d77;
+    font-size:.7rem;
+    white-space:nowrap;
+  }
+
+  /* Die per-Tag-Mehrtagsleisten sind am Handy überflüssig. */
+  .week-band-events .multiday-event-lanes{
+    display:none !important;
+  }
+}
+
