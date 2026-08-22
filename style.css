@@ -23271,3 +23271,34 @@ body:has(#workroomLinkSortSelect option:checked:not([value="manual"])) .workroom
   }
 }
 
+/* =========================================================
+   ESSENSPLAN – mehrere Gerichte + elegante Wochenplan-Anzeige
+   ========================================================= */
+.meal-plan-entries{display:grid;gap:5px;margin:6px 0}
+.meal-plan-empty{font-size:.68rem;color:var(--muted);opacity:.72;padding:4px 2px}
+.meal-plan-entry-main{display:flex;align-items:center;gap:6px;padding:6px 7px;border:1px solid rgba(174,157,146,.18);border-radius:9px;background:rgba(255,253,250,.62)}
+.meal-plan-entry-mark{width:7px;height:7px;border-radius:50%;background:#a99184;opacity:.55;flex:0 0 auto}
+.meal-plan-entry-title{min-width:0;flex:1;font-size:.72rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.meal-plan-open,.meal-plan-remove{border:0;background:transparent;padding:2px 4px;color:#87786f;font-size:.78rem}
+.meal-plan-add-wrap{position:relative}
+.meal-plan-add-input{width:100%;min-height:31px;font-size:.7rem!important;background:rgba(255,255,255,.5)!important}
+
+.day-meal-compact{position:relative;margin:0 0 5px;z-index:8}
+.day-meal-vintage-toggle{list-style:none;display:inline-flex;align-items:center;gap:3px;cursor:pointer;padding:1px 4px;border-radius:8px;color:#8f786c}
+.day-meal-vintage-toggle::-webkit-details-marker{display:none}
+.day-meal-vintage-toggle:hover{background:rgba(166,139,125,.07)}
+.vintage-cloche{position:relative;display:inline-block;width:24px;height:16px;opacity:.78}
+.vintage-cloche:before{content:"";position:absolute;left:4px;right:4px;bottom:3px;height:9px;border:1.25px solid currentColor;border-bottom:0;border-radius:12px 12px 0 0}
+.vintage-cloche:after{content:"";position:absolute;left:1px;right:1px;bottom:1px;border-top:1.25px solid currentColor}
+.vintage-cloche i:before{content:"";position:absolute;width:4px;height:3px;left:10px;top:1px;border:1.1px solid currentColor;border-bottom:0;border-radius:4px 4px 0 0}
+.day-meal-count{display:grid;place-items:center;min-width:15px;height:15px;padding:0 3px;border-radius:999px;background:rgba(159,132,119,.12);font-size:.57rem;font-weight:700}
+.day-meal-popover{display:grid;gap:4px;margin-top:3px;padding:6px;border:1px solid rgba(174,157,146,.16);border-radius:9px;background:rgba(255,253,250,.86)}
+.day-meal-list-item{display:block;width:100%;text-align:left;border:0;background:transparent;padding:4px 5px;border-radius:6px;color:#5f5651;font-size:.68rem;text-decoration:none}
+button.day-meal-list-item:hover,a.day-meal-list-item:hover{background:rgba(164,139,126,.08)}
+
+@media(max-width:700px){
+  .day-meal-compact{margin-bottom:4px}
+  .day-meal-popover{padding:7px}
+  .day-meal-list-item{font-size:.76rem;padding:6px}
+}
+
