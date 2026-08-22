@@ -22713,3 +22713,114 @@ body:has(#workroomLinkSortSelect option:checked:not([value="manual"])) .workroom
   box-sizing:border-box !important;
 }
 
+/* =========================================================
+   TERMINE – Mehrtagestermine als ruhige durchgehende Leisten
+   längster oben, danach absteigend
+   ========================================================= */
+.week-band-events .multiday-event-lanes{
+  display:flex !important;
+  flex-direction:column !important;
+  gap:5px !important;
+  overflow:visible !important;
+}
+
+.week-band-events .multiday-event-lane,
+.week-band-events .multiday-event-placeholder{
+  height:31px !important;
+  min-height:31px !important;
+  box-sizing:border-box !important;
+  overflow:visible !important;
+}
+
+.week-band-events .multiday-event-placeholder{
+  visibility:hidden !important;
+  pointer-events:none !important;
+}
+
+.multiday-continuous-segment{
+  position:relative;
+  z-index:2;
+  display:flex;
+  align-items:center;
+  min-width:0;
+  height:27px;
+  margin-top:2px;
+  margin-left:-16px;
+  margin-right:-16px;
+  padding:0 8px;
+  border-top:1px solid color-mix(in srgb, var(--multi-accent) 35%, transparent);
+  border-bottom:1px solid color-mix(in srgb, var(--multi-accent) 25%, transparent);
+  border-left:0;
+  border-right:0;
+  border-radius:0;
+  background:color-mix(in srgb, var(--multi-accent) 10%, rgba(255,255,255,.76));
+  color:#665f59;
+  box-shadow:none;
+  overflow:visible;
+}
+
+.multiday-continuous-segment::before,
+.multiday-continuous-segment::after{
+  content:"";
+  position:absolute;
+  top:-1px;
+  bottom:-1px;
+  width:11px;
+  background:inherit;
+  border-top:inherit;
+  border-bottom:inherit;
+  pointer-events:none;
+}
+
+.multiday-continuous-segment::before{ left:-10px; }
+.multiday-continuous-segment::after{ right:-10px; }
+
+.multiday-continuous-segment.is-start{
+  margin-left:0;
+  border-left:1px solid color-mix(in srgb, var(--multi-accent) 35%, transparent);
+  border-radius:9px 0 0 9px;
+}
+.multiday-continuous-segment.is-start::before{ display:none; }
+
+.multiday-continuous-segment.is-end{
+  margin-right:0;
+  border-right:1px solid color-mix(in srgb, var(--multi-accent) 35%, transparent);
+  border-radius:0 9px 9px 0;
+}
+.multiday-continuous-segment.is-end::after{ display:none; }
+
+.multiday-continuous-segment.is-start.is-end{
+  border-radius:9px;
+}
+
+.multiday-continuous-label,
+.multiday-continuous-end{
+  position:relative;
+  z-index:3;
+  min-width:0;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  font-size:.72rem;
+  font-weight:650;
+}
+
+.multiday-continuous-fill{
+  display:block;
+  width:100%;
+  height:1px;
+}
+
+/* Einzeltagestermine weiterhin als normale Karten darunter. */
+.week-band-events .single-event-lane{
+  margin-top:7px !important;
+}
+
+/* Alte große Mehrtagesspur-Höhen neutralisieren. */
+.day .multiday-event-lane,
+.day .multiday-event-placeholder,
+.day .multiday-event-lane .event-person-block{
+  min-height:31px !important;
+  height:31px !important;
+}
+
