@@ -22669,3 +22669,27 @@ body:has(#workroomLinkSortSelect option:checked:not([value="manual"])) .workroom
   }
 }
 
+/* =========================================================
+   TERMINE – feste horizontale Spuren für Mehrtagestermine
+   ========================================================= */
+.day .multiday-event-lanes{
+  display:flex !important;
+  flex-direction:column !important;
+  gap:8px !important;
+}
+.day .multiday-event-lane{
+  min-height:0 !important;
+}
+.day .multiday-event-placeholder{
+  visibility:hidden !important;
+  pointer-events:none !important;
+  min-height:0 !important;
+}
+.day .multiday-event-lane .event-person-block,
+.day .single-event-lane .event-person-block{
+  margin-top:0 !important;
+}
+.day .single-event-lane + .single-event-lane{
+  margin-top:8px !important;
+}
+
