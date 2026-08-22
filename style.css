@@ -23973,3 +23973,96 @@ button.day-meal-list-item:hover,a.day-meal-list-item:hover{background:rgba(164,1
   background:rgba(255,253,250,.98) !important;
 }
 
+/* =========================================================
+   MEHRTAG – Spuren exakt auf gleicher Höhe halten
+   ========================================================= */
+.day .multiday-event-lanes{
+  display:grid !important;
+  grid-auto-rows:30px !important;
+  gap:4px !important;
+}
+
+.day .multiday-event-lane,
+.day .multiday-event-placeholder{
+  position:relative !important;
+  display:block !important;
+  height:30px !important;
+  min-height:30px !important;
+  max-height:30px !important;
+  margin:0 !important;
+  padding:0 !important;
+  box-sizing:border-box !important;
+}
+
+.day .multiday-event-placeholder{
+  visibility:hidden !important;
+  pointer-events:none !important;
+}
+
+.day .multiday-continuous-segment{
+  position:absolute !important;
+  top:2px !important;
+  right:0 !important;
+  bottom:2px !important;
+  left:0 !important;
+  height:auto !important;
+  min-height:0 !important;
+  margin:0 !important;
+  box-sizing:border-box !important;
+}
+
+/* =========================================================
+   REZEPTFORMULAR – Kartenzeichen direkt in der oberen Zeile
+   ========================================================= */
+.recipes-section #recipeForm .recipe-v17-main-grid{
+  display:grid !important;
+  grid-template-columns:minmax(0,2fr) minmax(220px,.85fr) minmax(135px,165px) !important;
+  gap:10px !important;
+  align-items:end !important;
+}
+
+.recipes-section #recipeForm .recipe-v17-main-grid .recipe-card-mark-field{
+  grid-column:auto !important;
+  max-width:165px !important;
+  min-width:0 !important;
+}
+
+.recipes-section #recipeForm .recipe-v17-main-grid .recipe-card-mark-field select{
+  width:100% !important;
+  height:36px !important;
+  min-height:36px !important;
+}
+
+/* Meta-Zeile hat jetzt kein Kartenzeichen mehr. */
+.recipes-section #recipeForm .recipe-v19-meta-grid{
+  grid-template-columns:
+    minmax(120px,150px)
+    minmax(145px,175px)
+    minmax(72px,84px)
+    minmax(82px,96px)
+    minmax(82px,96px)
+    minmax(76px,88px)
+  !important;
+}
+
+@media(max-width:900px){
+  .recipes-section #recipeForm .recipe-v17-main-grid{
+    grid-template-columns:minmax(0,1fr) minmax(135px,165px) !important;
+  }
+  .recipes-section #recipeForm .recipe-v17-title{
+    grid-column:1 / -1 !important;
+  }
+  .recipes-section #recipeForm .recipe-v17-category{
+    min-width:0 !important;
+  }
+}
+
+@media(max-width:560px){
+  .recipes-section #recipeForm .recipe-v17-main-grid{
+    grid-template-columns:1fr !important;
+  }
+  .recipes-section #recipeForm .recipe-v17-main-grid .recipe-card-mark-field{
+    max-width:none !important;
+  }
+}
+
