@@ -2143,9 +2143,28 @@ const eventHtml = (multiDayLaneHtml || singleEventHtml) ? `
             <strong>${escapeHtml(mealRecipe.title || mealLabel)}</strong>
           </button>
         ` : mealUrl ? `
-          <a class="day-meal day-meal-link" href="${escapeHtml(mealUrl)}" target="_blank" rel="noopener">
-            <span>🔗</span><strong>${escapeHtml(mealLabel || "Rezept öffnen")}</strong>
-          </a>
+          <div class="day-meal-link-wrap">
+            <a class="day-meal day-meal-link" href="${escapeHtml(mealUrl)}" target="_blank" rel="noopener">
+              <span>🔗</span><strong>${escapeHtml(mealLabel || "Rezept öffnen")}</strong>
+            </a>
+            <div class="day-meal-link-rating" aria-label="Internetrezept bewerten">
+              <button type="button"
+                      class="day-meal-rate ${state.recipeLinkFeedback?.[mealUrl]?.rating === "love" ? "active" : ""}"
+                      data-url="${escapeHtml(mealUrl)}"
+                      data-rating="love"
+                      title="Sehr gern wieder">💛</button>
+              <button type="button"
+                      class="day-meal-rate ${state.recipeLinkFeedback?.[mealUrl]?.rating === "okay" ? "active" : ""}"
+                      data-url="${escapeHtml(mealUrl)}"
+                      data-rating="okay"
+                      title="Passt gut">🙂</button>
+              <button type="button"
+                      class="day-meal-rate ${state.recipeLinkFeedback?.[mealUrl]?.rating === "no" ? "active" : ""}"
+                      data-url="${escapeHtml(mealUrl)}"
+                      data-rating="no"
+                      title="Eher nicht nochmal">🌿</button>
+            </div>
+          </div>
         ` : `
           <div class="day-meal day-meal-free"><span>🍽</span><strong>${escapeHtml(mealLabel)}</strong></div>
         `}
@@ -2259,6 +2278,27 @@ const eventHtml = (multiDayLaneHtml || singleEventHtml) ? `
       return;
     }
     showRecipeDetail(recipe);
+  }));
+
+  document.querySelectorAll(".day-meal-rate").forEach(btn => btn.addEventListener("click", e => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const url = btn.dataset.url || "";
+    if (!url) return;
+
+    const current = state.recipeLinkFeedback[url] || {};
+    const next = btn.dataset.rating || "";
+    state.recipeLinkFeedback[url] = {
+      ...current,
+      rating: current.rating === next ? "" : next,
+      timesUsed: Number(current.timesUsed || 0),
+      updatedAt: Date.now()
+    };
+
+    save();
+    renderWeek();
+    renderRecipeLinkTracker();
   }));
 
   document.querySelectorAll(".video-check").forEach(el => el.addEventListener("change", e => {
@@ -11460,6 +11500,7 @@ function collectInternetRecipeLinks() {
         label:recipe.title || "Rezept",
         source:"Rezeptkarte",
         recipeId:recipe.id || "",
+        category:recipe.category || "other",
         sourceUpdatedAt:Number(recipe.updatedAt || recipe.createdAt || 0)
       };
 
@@ -11475,12 +11516,17 @@ function collectInternetRecipeLinks() {
     const key = String(meal.url).trim();
     if (!key) return;
 
+    const linkedRecipe = meal.recipeId
+      ? (state.recipes || []).find(r => r.id === meal.recipeId)
+      : null;
+
     const candidate = {
       url:key,
-      label:meal.label || "Rezeptlink",
+      label:meal.label || linkedRecipe?.title || "Rezeptlink",
       source:"Essensplan",
       recipeId:meal.recipeId || "",
-      sourceUpdatedAt:Number(meal.updatedAt || 0)
+      category:linkedRecipe?.category || "other",
+      sourceUpdatedAt:Number(meal.updatedAt || linkedRecipe?.updatedAt || linkedRecipe?.createdAt || 0)
     };
 
     const previous = map.get(key);
@@ -11848,25 +11894,87 @@ function recipeFeedbackLabel(value) {
 }
 
 
+
+let onlineRecipeCategoryFilter = "all";
+
+const onlineRecipeCategoryMeta = [
+  ["breakfast","🥣 Frühstück & Morgenideen"],
+  ["spread","🥖 Aufstriche & Dips"],
+  ["soup","🍲 Suppen & Eintöpfe"],
+  ["main","🍝 Hauptgerichte"],
+  ["small","🥙 Kleine Sachen & Jause"],
+  ["salad","🥗 Salate & Frisches"],
+  ["sweet","🍓 Süßes & Backen"],
+  ["drink","🥤 Getränke & Smoothies"],
+  ["other","✨ Sonstiges"]
+];
+
+function onlineRecipeCategoryKey(link) {
+  const feedback = state.recipeLinkFeedback?.[link.url] || {};
+  const key = feedback.category || link.category || "other";
+  return onlineRecipeCategoryMeta.some(([value]) => value === key) ? key : "other";
+}
+
 function renderRecipeLinkTracker() {
   const host = document.querySelector("#recipeLinkTrackerList");
   if (!host) return;
 
-  const links = collectInternetRecipeLinks();
+  const allLinks = collectInternetRecipeLinks();
+  const links = onlineRecipeCategoryFilter === "all"
+    ? allLinks
+    : allLinks.filter(link => onlineRecipeCategoryKey(link) === onlineRecipeCategoryFilter);
 
-  if (!links.length) {
+  if (!allLinks.length) {
     host.innerHTML = `<div class="overview-empty">Noch keine Internetrezepte hinterlegt. Sobald eine Rezeptkarte oder ein Essensplan-Eintrag einen Web-/YouTube-Link hat, erscheint er hier zum Bewerten.</div>`;
     return;
   }
 
-  host.innerHTML = links.map(link => {
+  const groups = [
+    {key:"love", title:"💛 Sehr gern wieder", hint:"Favoriten für den Essensplan"},
+    {key:"okay", title:"🙂 Passt gut", hint:"Kann gern wiederkommen"},
+    {key:"unrated", title:"○ Noch nicht bewertet", hint:"Erst noch ausprobieren"},
+    {key:"no", title:"🌿 Eher nicht nochmal", hint:"Bleibt der Vollständigkeit halber hier"}
+  ];
+
+  const grouped = {
+    love:[],
+    okay:[],
+    unrated:[],
+    no:[]
+  };
+
+  links.forEach(link => {
+    const feedback = state.recipeLinkFeedback[link.url] || {};
+    const rating = ["love","okay","no"].includes(feedback.rating) ? feedback.rating : "unrated";
+    grouped[rating].push(link);
+  });
+
+  Object.values(grouped).forEach(list => {
+    list.sort((a,b) => {
+      const aFeedback = state.recipeLinkFeedback[a.url] || {};
+      const bFeedback = state.recipeLinkFeedback[b.url] || {};
+      return Number(bFeedback.timesUsed || 0) - Number(aFeedback.timesUsed || 0) ||
+        String(a.label || "").localeCompare(String(b.label || ""), "de", {sensitivity:"base"});
+    });
+  });
+
+  const rowHtml = link => {
     const feedback = state.recipeLinkFeedback[link.url] || {};
     return `
       <article class="recipe-link-track-row">
         <div class="recipe-link-track-main">
           <a href="${escapeHtml(link.url)}" target="_blank" rel="noopener">${escapeHtml(link.label)}</a>
-          <span>${escapeHtml(link.source)}</span>
+          <span>${escapeHtml(link.source)}${feedback.timesUsed ? ` · ${feedback.timesUsed}× gekocht` : ""}</span>
         </div>
+
+        <label class="recipe-link-category-wrap">
+          <span>Kategorie</span>
+          <select class="recipe-link-category" data-url="${escapeHtml(link.url)}">
+            ${onlineRecipeCategoryMeta.map(([value,label]) =>
+              `<option value="${value}"${onlineRecipeCategoryKey(link) === value ? " selected" : ""}>${label}</option>`
+            ).join("")}
+          </select>
+        </label>
 
         <div class="recipe-link-times">
           <button type="button" class="recipe-link-used" data-url="${escapeHtml(link.url)}">
@@ -11889,7 +11997,66 @@ function renderRecipeLinkTracker() {
         </div>
       </article>
     `;
+  };
+
+  const filterBar = `
+    <div class="online-recipe-filterbar">
+      <label>
+        <span>Kategorie</span>
+        <select id="onlineRecipeCategoryFilter">
+          <option value="all"${onlineRecipeCategoryFilter === "all" ? " selected" : ""}>Alle Rezeptideen</option>
+          ${onlineRecipeCategoryMeta.map(([value,label]) =>
+            `<option value="${value}"${onlineRecipeCategoryFilter === value ? " selected" : ""}>${label}</option>`
+          ).join("")}
+        </select>
+      </label>
+      <span class="online-recipe-filter-count">${links.length} von ${allLinks.length}</span>
+    </div>`;
+
+  const groupHtml = groups.map(group => {
+    const items = grouped[group.key];
+    if (!items.length) return "";
+
+    return `
+      <section class="online-recipe-group" data-group="${group.key}">
+        <div class="online-recipe-group-head">
+          <div>
+            <strong>${group.title}</strong>
+            <span>${group.hint}</span>
+          </div>
+          <b>${items.length}</b>
+        </div>
+        <div class="online-recipe-group-list">
+          ${items.map(rowHtml).join("")}
+        </div>
+      </section>
+    `;
   }).join("");
+
+  host.innerHTML = filterBar + (
+    groupHtml ||
+    `<div class="overview-empty">In dieser Kategorie sind noch keine Internetrezepte gespeichert.</div>`
+  );
+
+  host.querySelector("#onlineRecipeCategoryFilter")?.addEventListener("change", e => {
+    onlineRecipeCategoryFilter = e.currentTarget.value || "all";
+    renderRecipeLinkTracker();
+  });
+
+  host.querySelectorAll(".recipe-link-category").forEach(select => {
+    select.addEventListener("change", e => {
+      const url = e.currentTarget.dataset.url || "";
+      if (!url) return;
+      const current = state.recipeLinkFeedback[url] || {};
+      state.recipeLinkFeedback[url] = {
+        ...current,
+        category:e.currentTarget.value || "other",
+        updatedAt:Date.now()
+      };
+      save();
+      renderRecipeLinkTracker();
+    });
+  });
 
   host.querySelectorAll(".recipe-link-used").forEach(btn => {
     btn.addEventListener("click", () => {
@@ -11917,6 +12084,7 @@ function renderRecipeLinkTracker() {
       };
       save();
       renderRecipeLinkTracker();
+      renderWeek();
     });
   });
 
