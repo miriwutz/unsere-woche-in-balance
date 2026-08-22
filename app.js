@@ -1828,6 +1828,50 @@ function renderWeek() {
   );
   const multiDayTrackCount = multiDayEventsThisWeek.length;
 
+  // Handy-Hochformat: Mehrtagestermine nur EINMAL oberhalb der gestapelten Tage.
+  // Die normalen Desktop-/Tablet-Leisten bleiben davon unberührt.
+  let mobileMultiSummary = document.querySelector("#mobileMultidaySummary");
+  if (!mobileMultiSummary) {
+    mobileMultiSummary = document.createElement("div");
+    mobileMultiSummary.id = "mobileMultidaySummary";
+    mobileMultiSummary.className = "mobile-multiday-summary";
+    grid.parentElement?.insertBefore(mobileMultiSummary, grid);
+  }
+
+  const mobileDayShort = iso => {
+    const d = parseLocalDate(iso);
+    if (!d) return "";
+    return ["So","Mo","Di","Mi","Do","Fr","Sa"][d.getDay()];
+  };
+
+  mobileMultiSummary.innerHTML = multiDayEventsThisWeek.map(item => {
+    const groupKey = todoGroupKey(item);
+    const accent = groupKey === "shared"
+      ? "#b58fa7"
+      : (groupKey === "general" ? "#aaa77f" : (familyColor(groupKey) || "#a99f99"));
+
+    const person =
+      groupKey === "shared"
+        ? "Gemeinsam"
+        : (groupKey === "general" ? "" : (familyName(groupKey) || ""));
+
+    const visibleStart = item.date < weekStartKey ? weekStartKey : item.date;
+    const visibleEnd = (item.endDate || item.date) > weekEndKey
+      ? weekEndKey
+      : (item.endDate || item.date);
+
+    const range = visibleStart === visibleEnd
+      ? mobileDayShort(visibleStart)
+      : `${mobileDayShort(visibleStart)}–${mobileDayShort(visibleEnd)}`;
+
+    return `<div class="mobile-multiday-item" style="--mobile-multi-accent:${accent}">
+      <span class="mobile-multiday-dot" aria-hidden="true"></span>
+      ${person ? `<span class="mobile-multiday-person">${escapeHtml(person)}</span>` : ""}
+      <span class="mobile-multiday-title">${item.superImportant ? "★ " : ""}${escapeHtml(item.text || "")}</span>
+      <span class="mobile-multiday-range">${range}</span>
+    </div>`;
+  }).join("");
+
   days.forEach((day, index) => {
     const dayEl = document.createElement("article");
     dayEl.className = "day";
