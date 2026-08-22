@@ -6793,6 +6793,7 @@ function renderSchoolPrints() {
             state.workroom.prints.filter(p => p.id !== id);
 
           save();
+          persistWorkroomListDeletionImmediately("prints", id);
           renderSchoolPrints();
         }, 60000);
       }
@@ -6821,6 +6822,7 @@ function renderSchoolPrints() {
       state.workroom.printTombstones[id] = Date.now();
       state.workroom.prints = state.workroom.prints.filter(p => p.id !== id);
       save();
+      persistWorkroomListDeletionImmediately("prints", id);
       renderSchoolPrints();
     });
   });
@@ -7223,6 +7225,7 @@ function renderWorkroomLinks() {
           link.updatedAt=Date.now();
         });
       save();
+      persistWorkroomListDeletionImmediately("links", id);
       renderWorkroomLinks();
       renderRoutines();
     });
@@ -8288,6 +8291,30 @@ function mergeWorkroomRoutinesSafely(localValue, remoteValue) {
   };
 }
 
+async function persistWorkroomListDeletionImmediately(kind, id) {
+  if (!id || !cloudReady || cloudApplying || !window.firebase?.firestore) return;
+
+  const configs = {
+    prints: { listKey: "prints", tombstoneKey: "printTombstones" },
+    links: { listKey: "links", tombstoneKey: "linkTombstones" },
+    substitutions: { listKey: "substitutions", tombstoneKey: "substitutionTombstones" }
+  };
+  const cfg = configs[kind];
+  if (!cfg) return;
+
+  try {
+    const syncToken = `${Date.now()}-${getDeviceId()}-${Math.random().toString(36).slice(2,8)}`;
+    await firebase.firestore().collection("families").doc("shared").update({
+      [`workroom.${cfg.listKey}`]: state.workroom[cfg.listKey] || [],
+      [`workroom.${cfg.tombstoneKey}`]: state.workroom[cfg.tombstoneKey] || {},
+      syncToken,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+  } catch (err) {
+    console.error(`Werkraum-${kind}-Löschung konnte nicht sofort synchronisiert werden:`, err);
+  }
+}
+
 function mergeWorkroomListWithTombstones(localValue, remoteValue, tombstones) {
   const local = Array.isArray(localValue) ? localValue : [];
   const remote = Array.isArray(remoteValue) ? remoteValue : [];
@@ -8327,6 +8354,10 @@ function guardedWorkroomMerge(localValue, cloudValue) {
     local.linkTombstones,
     remote.linkTombstones
   );
+  const substitutionTombstones = mergeWorkroomTodoTombstones(
+    local.substitutionTombstones,
+    remote.substitutionTombstones
+  );
 
   return {
     ...local,
@@ -8334,10 +8365,11 @@ function guardedWorkroomMerge(localValue, cloudValue) {
     todoTombstones,
     printTombstones,
     linkTombstones,
+    substitutionTombstones,
     todos: mergeWorkroomTodosSafely(local.todos, remote.todos, todoTombstones),
     prints: mergeWorkroomListWithTombstones(local.prints, remote.prints, printTombstones),
     links: mergeWorkroomListWithTombstones(local.links, remote.links, linkTombstones),
-    substitutions: guardedMergeById(local.substitutions, remote.substitutions, "Supplierungen"),
+    substitutions: mergeWorkroomListWithTombstones(local.substitutions, remote.substitutions, substitutionTombstones),
     routines: mergeWorkroomRoutinesSafely(local.routines, remote.routines),
     plans: {
       ...(local.plans || {}),
@@ -11356,6 +11388,9 @@ function normalizeWorkroom(w) {
     linkTombstones: src.linkTombstones && typeof src.linkTombstones === "object"
       ? src.linkTombstones
       : {},
+    substitutionTombstones: src.substitutionTombstones && typeof src.substitutionTombstones === "object"
+      ? src.substitutionTombstones
+      : {},
     prints: Array.isArray(src.prints) ? src.prints : [],
     links: Array.isArray(src.links) ? src.links : [],
     interestLinks: Array.isArray(src.interestLinks) ? src.interestLinks : [],
@@ -11629,9 +11664,13 @@ function renderSubstitutions() {
 
   host.querySelectorAll(".substitution-delete").forEach(btn => {
     btn.addEventListener("click", () => {
+      const id = btn.dataset.id;
+      state.workroom.substitutionTombstones = state.workroom.substitutionTombstones || {};
+      state.workroom.substitutionTombstones[id] = Date.now();
       state.workroom.substitutions = state.workroom.substitutions
-        .filter(item => item.id !== btn.dataset.id);
+        .filter(item => item.id !== id);
       save();
+      persistWorkroomListDeletionImmediately("substitutions", id);
       renderSubstitutions();
     });
   });
