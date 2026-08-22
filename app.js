@@ -696,9 +696,34 @@ function handleIncomingPinboard(cloudMessages) {
       .sort((a,b) => Number(b.createdAt || 0) - Number(a.createdAt || 0))[0];
 
     if (pinboardDeviceEnabled()) {
+      const messageText = String(newest?.text || "").trim();
+      const shortText = messageText.length > 110
+        ? `${messageText.slice(0, 107)}…`
+        : messageText;
+
       setTimeout(() => {
         playPinboardSound(newest?.sound || "letter");
       }, 80);
+
+      // Sichtbarer Hinweis innerhalb der App: Quelle und Inhalt sind sofort klar.
+      showMotivation(
+        shortText
+          ? `💌 Pinnwand-Nachricht: ${shortText}`
+          : "💌 Neue Nachricht auf der Pinnwand"
+      );
+
+      // Solange die Seite geöffnet ist, zusätzlich eine normale Systemmeldung.
+      // Echte Push-Nachrichten bei geschlossener App kommen später mit dem Service Worker.
+      if ("Notification" in window && Notification.permission === "granted") {
+        try {
+          new Notification("💌 Pinnwand-Nachricht", {
+            body: shortText || "Neue Nachricht auf der Pinnwand",
+            tag: `pinboard-${newest?.id || Date.now()}`
+          });
+        } catch (err) {
+          console.warn("Pinnwand-Systembenachrichtigung:", err);
+        }
+      }
     }
   }
 }
@@ -12123,14 +12148,19 @@ function renderAll() {
     // In-App-Ton als Ergänzung.
     await playPling();
 
-    const body = `${item.text} · in ${minutes} Minuten`;
+    const whenText =
+      minutes === 60 ? "in 1 Stunde" :
+      minutes === 90 ? "in 1½ Stunden" :
+      minutes === 120 ? "in 2 Stunden" :
+      `in ${minutes} Minuten`;
+    const body = `${item.text} · ${whenText}`;
 
-    // Sichtbarer Hinweis innerhalb der App.
-    showMotivation(`🔔 ${body}`);
+    // Sichtbarer Hinweis innerhalb der App: Quelle sofort erkennbar.
+    showMotivation(`⏰ Terminerinnerung: ${body}`);
 
     // System-Benachrichtigung für dieses freigegebene Gerät.
     await showSystemNotification(
-      "Unsere Woche in Balance",
+      "⏰ Terminerinnerung",
       body,
       `pling-${key}`
     );
@@ -12143,8 +12173,9 @@ function renderAll() {
       const start = eventStartForOccurrence(item, now);
       if (!start) continue;
 
-      const minutes = [5,15,30].includes(Number(item.plingMinutes))
-        ? Number(item.plingMinutes)
+      const configuredMinutes = Number(item.plingMinutes);
+      const minutes = [5,10,15,20,30,45,60,90,120].includes(configuredMinutes)
+        ? configuredMinutes
         : 15;
 
       const remindAt = new Date(start.getTime() - minutes * 60000);
@@ -13062,7 +13093,7 @@ function renderSchoolChildDashboard(id){
     host.addEventListener("pointermove",e=>{
       if(!down) return;
       const dx=e.clientX-startX;
-      if(Math.abs(dx)>3) moved=true;
+      if(Math.abs(dx)>10) moved=true;
       host.scrollLeft=startScroll-dx;
     });
     const stop=e=>{
@@ -13074,8 +13105,26 @@ function renderSchoolChildDashboard(id){
     host.addEventListener("pointerup",stop);
     host.addEventListener("pointercancel",stop);
     host.addEventListener("click",e=>{
-      if(moved){e.preventDefault();e.stopPropagation();moved=false;}
-    },true);
+      const choice=e.target.closest(".school-icon-choice");
+
+      // Nur ein echtes Ziehen der horizontalen Leiste unterdrückt die Auswahl.
+      if(moved){
+        e.preventDefault();
+        e.stopPropagation();
+        moved=false;
+        return;
+      }
+
+      if(!choice || !activeSchoolChild) return;
+
+      const childId=activeSchoolChild;
+      const key=schoolMemberKey(childId);
+
+      // Persönliches Zeichen: nur Banner/Stundenplan-Link.
+      state.familySettings[key].icon=choice.dataset.icon;
+      save();
+      renderSchoolChildDashboard(childId);
+    });
   }
 
   // Aufgaben-Zeichen ist unabhängig vom persönlichen Header-Zeichen.
@@ -13176,19 +13225,6 @@ document.querySelectorAll("[data-school-open-week]").forEach(btn => {
     const id=btn.dataset.schoolOpenWeek;
     openChildWeekOverview(id);
   });
-});
-
-document.querySelector("#schoolIconChoices")?.addEventListener("click",e=>{
-  const b=e.target.closest(".school-icon-choice");
-  if(!b || !activeSchoolChild) return;
-
-  // Persönliches Zeichen: NUR Banner/Stundenplan-Link ändern.
-  // Schul-To-dos werden hier bewusst nicht neu gerendert oder verändert.
-  const childId = activeSchoolChild;
-  const key = schoolMemberKey(childId);
-  state.familySettings[key].icon = b.dataset.icon;
-  save();
-  renderSchoolChildDashboard(childId);
 });
 
 // Wenn "Schule" in der Hauptnavigation angeklickt wird, immer auf die
