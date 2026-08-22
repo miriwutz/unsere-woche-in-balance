@@ -307,6 +307,17 @@
             </select>
           </label>
 
+          <label id="eventCategoryTopField" class="event-category-top-field hidden">
+            Terminart
+            <select id="eventCategory">
+              <option value="normal">Termin</option>
+              <option value="birthday">🎂 Geburtstag</option>
+              <option value="nameday">🌷 Namenstag</option>
+              <option value="anniversary">♡ Jahrestag</option>
+              <option value="holiday">✦ Feiertag / besonderer Tag</option>
+            </select>
+          </label>
+
           <label class="super-important-control">
             <input id="superImportant" type="checkbox">
             <span>⭐ Superwichtig</span>
@@ -353,15 +364,9 @@
               </select>
             </label>
 
-            <label>
-              Zeitraum
-              <select id="todoPeriod">
-                <option value="today">Heute</option>
-                <option value="week" selected>Woche</option>
-                <option value="month">Diesen Monat</option>
-                <option value="later">Irgendwann</option>
-              </select>
-            </label>
+            <select id="todoPeriod" class="todo-period-hidden" aria-hidden="true" tabindex="-1">
+              <option value="week" selected>Woche</option>
+            </select>
           </div>
         </div>
 
@@ -423,17 +428,6 @@
     <div class="date-control-wrap">
       <input id="eventEndTime" type="time">
     </div>
-  </label>
-
-  <label>
-    Terminart
-    <select id="eventCategory">
-      <option value="normal">Termin</option>
-      <option value="birthday">🎂 Geburtstag</option>
-      <option value="nameday">🌷 Namenstag</option>
-      <option value="anniversary">♡ Jahrestag</option>
-      <option value="holiday">✦ Feiertag / besonderer Tag</option>
-    </select>
   </label>
 
 <div class="pling-field" style="grid-column:1 / -1">
