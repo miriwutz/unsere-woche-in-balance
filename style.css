@@ -24797,3 +24797,33 @@ button.day-meal-list-item:hover,a.day-meal-list-item:hover{background:rgba(164,1
   }
 }
 
+/* =========================================================
+   MEIN PLAN – gleiche Breite wie Papa, Lou und Fina
+   ========================================================= */
+.mama-overview-dialog,
+.mama-week-dialog,
+.my-week-dialog{
+  width:min(620px,calc(100vw - 32px)) !important;
+  max-width:min(620px,calc(100vw - 32px)) !important;
+}
+
+/* Falls "Mein Plan" über das allgemeine Wochenmodal läuft */
+#mamaOverviewDialog .dialog-card,
+#mamaWeekDialog .dialog-card,
+#myWeekDialog .dialog-card{
+  width:min(620px,calc(100vw - 32px)) !important;
+  max-width:min(620px,calc(100vw - 32px)) !important;
+}
+
+@media(max-width:700px){
+  .mama-overview-dialog,
+  .mama-week-dialog,
+  .my-week-dialog,
+  #mamaOverviewDialog .dialog-card,
+  #mamaWeekDialog .dialog-card,
+  #myWeekDialog .dialog-card{
+    width:calc(100vw - 18px) !important;
+    max-width:calc(100vw - 18px) !important;
+  }
+}
+
