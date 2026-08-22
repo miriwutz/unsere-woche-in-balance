@@ -22327,3 +22327,76 @@ body:has(#workroomLinkSortSelect option:checked:not([value="manual"])) .workroom
   }
 }
 
+/* =========================================================
+   PUNKT 2B – Linksammlung Tablet: zuverlässiger Breakpoint
+   ========================================================= */
+
+/* Android-/Firefox-Tablets melden hover/pointer nicht immer so, wie man erwartet.
+   Deshalb hängt die Tablet-Darstellung jetzt nur noch von der verfügbaren Breite ab. */
+@media (max-width:1400px){
+  #workroomLinkList{
+    grid-template-columns:1fr !important;
+    grid-template-rows:none !important;
+    grid-auto-flow:row !important;
+  }
+
+  #workroomLinkList .workroom-link-item{
+    grid-column:1 !important;
+    grid-row:auto !important;
+    grid-template-columns:minmax(0,1fr) auto !important;
+    gap:8px !important;
+  }
+
+  #workroomLinkList .workroom-link-drag-handle{
+    display:none !important;
+  }
+
+  #workroomLinkList .workroom-link-main,
+  #workroomLinkList .workroom-link-texts{
+    min-width:0 !important;
+    width:100% !important;
+  }
+
+  #workroomLinkList .workroom-link-texts{
+    display:grid !important;
+    grid-template-columns:minmax(150px,1fr) minmax(0,.55fr) !important;
+    gap:10px !important;
+    align-items:center !important;
+  }
+
+  #workroomLinkList .workroom-link-title{
+    min-width:0 !important;
+    max-width:none !important;
+    width:auto !important;
+    overflow:hidden !important;
+    text-overflow:ellipsis !important;
+    white-space:nowrap !important;
+  }
+
+  #workroomLinkList .workroom-link-note{
+    min-width:0 !important;
+    max-width:none !important;
+    overflow:hidden !important;
+    text-overflow:ellipsis !important;
+    white-space:nowrap !important;
+  }
+
+  #workroomLinkList .workroom-link-actions{
+    gap:2px !important;
+    flex-wrap:nowrap !important;
+  }
+}
+
+/* Auf wirklich schmalen Geräten bekommt der Titel die ganze Zeile,
+   die Notiz rutscht klein darunter. */
+@media (max-width:760px){
+  #workroomLinkList .workroom-link-texts{
+    grid-template-columns:1fr !important;
+    gap:2px !important;
+  }
+
+  #workroomLinkList .workroom-link-note{
+    font-size:.64rem !important;
+  }
+}
+
