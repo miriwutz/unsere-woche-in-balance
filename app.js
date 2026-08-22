@@ -1796,11 +1796,35 @@ function renderWeek() {
   const weekKey = currentWeekKey();
 
   const weekDates = days.map((_, i) => dayDate(currentWeekMonday, i));
-  // V32: Keine globalen Mehrtagestermin-Lanes mehr.
-  // Jeder Tag zeigt nur die Einträge, die an diesem Datum wirklich vorkommen.
-  // Dadurch verschwinden keine Personen-/Termin-Karten wegen einer Lane-Berechnung
-  // und es entstehen keine künstlichen Höhenunterschiede zwischen den Tagen.
 
+  // Mehrtägige Termine bekommen innerhalb der sichtbaren Woche feste Spuren.
+  // Dadurch bleibt derselbe Termin von Montag bis Sonntag immer auf derselben Höhe.
+  const weekStartKey = dateKey(weekDates[0]);
+  const weekEndKey = dateKey(weekDates[weekDates.length - 1]);
+  const multiDayEventsThisWeek = (state.todos || [])
+    .filter(t => {
+      if (!t || t.type !== "event" || (t.recurrence || "none") !== "none") return false;
+      const start = t.date || "";
+      const end = t.endDate || start;
+      return start && end > start && start <= weekEndKey && end >= weekStartKey;
+    })
+    .slice()
+    .sort((a,b) =>
+      String(a.date || "").localeCompare(String(b.date || "")) ||
+      String(a.endDate || a.date || "").localeCompare(String(b.endDate || b.date || "")) ||
+      String(a.id || "").localeCompare(String(b.id || ""))
+    );
+
+  const multiDayTrackById = new Map();
+  const multiDayTrackEnds = [];
+  multiDayEventsThisWeek.forEach(t => {
+    const start = t.date || "";
+    let track = 0;
+    while (multiDayTrackEnds[track] && multiDayTrackEnds[track] >= start) track++;
+    multiDayTrackEnds[track] = t.endDate || start;
+    multiDayTrackById.set(t.id, track);
+  });
+  const multiDayTrackCount = multiDayTrackEnds.length;
 
   days.forEach((day, index) => {
     const dayEl = document.createElement("article");
@@ -1973,9 +1997,32 @@ const orderedEvents = [...visibleEvents].sort((a,b) => {
     String(a.id).localeCompare(String(b.id));
 });
 
-const eventHtml = orderedEvents.length ? `
+const multiDayEvents = orderedEvents.filter(t => {
+  const start = t.date || "";
+  const end = t.endDate || start;
+  return (t.recurrence || "none") === "none" && end > start;
+});
+const singleDayEvents = orderedEvents.filter(t => !multiDayEvents.includes(t));
+
+const multiDayLaneHtml = multiDayTrackCount
+  ? `<div class="multiday-event-lanes">
+      ${Array.from({length:multiDayTrackCount}, (_,track) => {
+        const item = multiDayEvents.find(t => multiDayTrackById.get(t.id) === track);
+        return item
+          ? `<div class="multiday-event-lane" data-track="${track}">${renderEventCard(item)}</div>`
+          : `<div class="multiday-event-lane multiday-event-placeholder" data-track="${track}" aria-hidden="true"></div>`;
+      }).join("")}
+    </div>`
+  : "";
+
+const singleEventHtml = singleDayEvents
+  .map(t => `<div class="single-event-lane">${renderEventCard(t)}</div>`)
+  .join("");
+
+const eventHtml = (multiDayLaneHtml || singleEventHtml) ? `
   <div class="day-events">
-    ${orderedEvents.map(t => `<div class="event-lane">${renderEventCard(t)}</div>`).join("")}
+    ${multiDayLaneHtml}
+    ${singleEventHtml}
   </div>
 ` : "";
 
@@ -7808,6 +7855,28 @@ function updateSchoolyearNoeUI() {
   }
 }
 
+
+function updateWeeklyEventDateHint() {
+  const recurrence = document.querySelector("#recurrence");
+  const type = document.querySelector("#entryType");
+  const input = document.querySelector("#eventDate");
+  if (!recurrence || !type || !input) return;
+
+  const weeklyEvent = type.value === "event" && recurrence.value === "weekly";
+  const field = input.closest("label, .field, .form-field");
+  if (field) {
+    const ownTextNodes = [...field.childNodes].filter(n => n.nodeType === Node.TEXT_NODE);
+    if (ownTextNodes.length) {
+      ownTextNodes[0].nodeValue = weeklyEvent
+        ? "Startdatum (bestimmt den Wochentag) "
+        : "Startdatum ";
+    }
+  }
+  input.title = weeklyEvent
+    ? "Das Datum legt fest, an welchem Wochentag der Termin wöchentlich wiederholt wird und ab wann er beginnt."
+    : "";
+}
+
 function updateEntryTypeUI() {
   const type = document.querySelector("#entryType").value;
   const isEvent = type === "event";
@@ -7872,6 +7941,7 @@ const recurrence = document.querySelector("#recurrence").value;
   }
 
   updateSchoolyearNoeUI();
+  updateWeeklyEventDateHint();
 }
 
 document.querySelector("#entryType").addEventListener("change", updateEntryTypeUI);
