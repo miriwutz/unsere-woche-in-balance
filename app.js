@@ -2078,7 +2078,7 @@ const renderEventCard = (t) => {
            ? `--group-border:${sharedGroupGradient([t])}`
            : `--group-border:${groupKey === "general" ? "#b8b58d" : (familyColor(groupKey) || "#c8c0ba")}`}">
       <div class="person-todo-group-title">
-        <span>${todoGroupLabel(groupKey)}</span>
+        <span>${familySelectionLabel(t)}</span>
         ${isNewEntry(t) ? `<span class="new-entry-badge group-new-badge">NEU</span>` : ""}
       </div>
       <div class="event-mini event-display grouped-todo-row ${t.superImportant ? "super-important" : ""}">
