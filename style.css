@@ -24747,3 +24747,53 @@ button.day-meal-list-item:hover,a.day-meal-list-item:hover{background:rgba(164,1
   box-shadow:inset 3px 0 0 rgba(218,145,158,.22) !important;
 }
 
+/* =========================================================
+   MEINE WOCHE – Lou/Fina jetzt exakt so breit wie Papa
+   ========================================================= */
+.child-week-dialog{
+  width:min(620px,calc(100vw - 32px)) !important;
+  max-width:min(620px,calc(100vw - 32px)) !important;
+}
+
+/* Der romantische Header bleibt erhalten, wird für 620 px nur sauber proportioniert. */
+.child-week-hero{
+  grid-template-columns:minmax(0,1fr) 155px !important;
+  height:145px !important;
+  min-height:145px !important;
+  padding:16px 54px 12px 18px !important;
+}
+.child-week-hero>img{
+  width:150px !important;
+  height:130px !important;
+}
+.child-week-hero-copy h2{
+  font-size:1.55rem !important;
+}
+
+/* Tabs folgen dem schmaleren Dialog. */
+.child-week-tabs{
+  top:145px !important;
+}
+
+/* Nicht mini: Tagesblöcke und Einträge bleiben klar, nur kompakter gestaffelt. */
+.child-week-day{
+  grid-template-columns:96px minmax(0,1fr) !important;
+  gap:9px !important;
+  padding:9px 10px !important;
+}
+.child-week-item{
+  min-height:46px !important;
+  padding:7px 9px !important;
+}
+.child-week-item-copy strong{
+  font-size:.9rem !important;
+}
+
+/* Bei kleineren Tablets/Handy greift später ohnehin die mobile Logik. */
+@media(max-width:700px){
+  .child-week-dialog{
+    width:calc(100vw - 18px) !important;
+    max-width:calc(100vw - 18px) !important;
+  }
+}
+
