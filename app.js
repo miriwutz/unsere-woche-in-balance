@@ -1822,17 +1822,11 @@ function renderWeek() {
       const end = t.endDate || start;
       if (!start || end <= start || start > weekEndKey || end < weekStartKey) return false;
 
-      const visibleStart = start < weekStartKey ? weekStartKey : start;
-      const visibleEnd = end > weekEndKey ? weekEndKey : end;
-      const visibleStartDate = parseLocalDate(visibleStart);
-      const visibleEndDate = parseLocalDate(visibleEnd);
-      const visibleDays = visibleStartDate && visibleEndDate
-        ? Math.round((visibleEndDate - visibleStartDate) / 86400000) + 1
-        : 1;
-
-      // Wenn in dieser Woche nur EIN Tag sichtbar ist, ist eine schmale
-      // Mehrtagsleiste irreführend. Dann bleibt der Termin eine normale Karte.
-      return visibleDays >= 2;
+      // Ein echter Mehrtagestermin bleibt in jeder Woche ein Band.
+      // Beispiel Sa–Di:
+      // - erste Woche: Sa–So als Band
+      // - nächste Woche: Mo–Di als Band
+      return true;
     })
     .slice()
     .sort((a,b) => {
@@ -2040,10 +2034,10 @@ const renderEventCard = (t) => {
       <div class="event-mini event-display grouped-todo-row ${t.superImportant ? "super-important" : ""}">
         <span class="event-symbol">${eventMeta.icon}</span>
         <span class="event-copy">
-          ${displayTime ? `<strong>${escapeHtml(displayTime)}</strong>` : ""}
+          ${displayTime ? `<strong class="event-time">${escapeHtml(displayTime)}</strong>` : ""}
           ${eventMeta.label ? `<span class="event-kind">${eventMeta.label}</span>` : ""}
           ${t.superImportant ? `<span class="tiny-star">★</span>` : ""}
-          ${escapeHtml(t.text)}
+          <span class="event-title">${escapeHtml(t.text)}</span>
         </span>
       </div>
     </div>`;
@@ -2107,12 +2101,13 @@ const multiDayLaneHtml = multiDayTrackCount
 
         // Bei mehreren Personen bleibt die frühere Farbmischung erhalten,
         // nur bewusst etwas heller und ruhiger als bei den normalen Karten.
+        const singleStrength = members.length === 1 && members[0] === "c" ? 32 : 22;
         const softStops = memberColors.length > 1
           ? memberColors.map((color, i) => {
               const pos = Math.round((i / (memberColors.length - 1)) * 100);
-              return `color-mix(in srgb, ${color} 24%, #fffdfb) ${pos}%`;
+              return `color-mix(in srgb, ${color} 18%, #fffdfb) ${pos}%`;
             }).join(", ")
-          : `color-mix(in srgb, ${accent} 22%, #fffdfb) 0%, color-mix(in srgb, ${accent} 22%, #fffdfb) 100%`;
+          : `color-mix(in srgb, ${accent} ${singleStrength}%, #fffdfb) 0%, color-mix(in srgb, ${accent} ${singleStrength}%, #fffdfb) 100%`;
 
         const personBackground = memberColors.length > 1
           ? `linear-gradient(110deg, ${memberColors.map((color, i) => {
@@ -11125,6 +11120,160 @@ function mergeMeals(localMeals, cloudMeals) {
   return merged;
 }
 
+
+let editingMealRef = null;
+
+function ensureMealEditDialog() {
+  let dialog = document.querySelector("#mealEditDialog");
+  if (dialog) return dialog;
+
+  dialog = document.createElement("dialog");
+  dialog.id = "mealEditDialog";
+  dialog.className = "meal-edit-dialog";
+  dialog.innerHTML = `
+    <div class="dialog-card meal-edit-card">
+      <div class="dialog-head">
+        <div>
+          <p class="small-label">ESSENSPLAN</p>
+          <h2>Gericht bearbeiten</h2>
+        </div>
+        <button type="button" class="icon-btn" id="closeMealEditDialogBtn" aria-label="Schließen">×</button>
+      </div>
+
+      <div class="meal-edit-fields">
+        <label>
+          <span>Name</span>
+          <input id="mealEditLabel" type="text" autocomplete="on">
+        </label>
+
+        <label>
+          <span>Link – optional</span>
+          <input id="mealEditUrl" type="url" autocomplete="url" placeholder="https://…">
+        </label>
+
+        <label>
+          <span>Kategorie</span>
+          <select id="mealEditCategory">
+            ${onlineRecipeCategoryMeta.map(([value,label]) => `<option value="${value}">${label}</option>`).join("")}
+          </select>
+        </label>
+
+        <label>
+          <span>Nach dem Kochen bewerten</span>
+          <select id="mealEditRating">
+            <option value="">Noch nicht bewertet</option>
+            <option value="love">💛 Sehr gern wieder</option>
+            <option value="okay">🙂 Passt gut</option>
+            <option value="no">🌿 Eher nicht nochmal</option>
+          </select>
+        </label>
+      </div>
+
+      <p class="meal-edit-hint">Die Bewertung kannst du jederzeit später ergänzen. Mit einem Link erscheint das Rezept auch im Online-Rezeptbuch unter „Unser Überblick“.</p>
+
+      <div class="dialog-actions">
+        <button type="button" class="secondary-btn" id="cancelMealEditBtn">Abbrechen</button>
+        <button type="button" class="primary-btn" id="saveMealEditBtn">Speichern</button>
+      </div>
+    </div>`;
+
+  document.body.appendChild(dialog);
+
+  const close = () => {
+    editingMealRef = null;
+    if (dialog.open) dialog.close();
+  };
+
+  dialog.querySelector("#closeMealEditDialogBtn")?.addEventListener("click", close);
+  dialog.querySelector("#cancelMealEditBtn")?.addEventListener("click", close);
+  dialog.addEventListener("click", e => {
+    if (e.target === dialog) close();
+  });
+
+  dialog.querySelector("#saveMealEditBtn")?.addEventListener("click", () => {
+    if (!editingMealRef) return close();
+
+    const {dateKey: key, mealId} = editingMealRef;
+    const list = normalizeMealEntries(state.meals?.[key]);
+    const meal = list.find(x => x.id === mealId);
+    if (!meal) return close();
+
+    const oldUrl = String(meal.url || "").trim();
+    const label = document.querySelector("#mealEditLabel")?.value.trim() || "";
+    const url = normalizeExternalUrl(document.querySelector("#mealEditUrl")?.value || "");
+    const category = document.querySelector("#mealEditCategory")?.value || "other";
+    const rating = document.querySelector("#mealEditRating")?.value || "";
+
+    if (!label && !url) return;
+
+    meal.label = label || "Rezept";
+    meal.url = url;
+    meal.updatedAt = Date.now();
+
+    const linkedRecipe = meal.recipeId
+      ? (state.recipes || []).find(r => r.id === meal.recipeId)
+      : null;
+
+    if (linkedRecipe) {
+      linkedRecipe.title = meal.label;
+      linkedRecipe.category = category;
+      if (url) linkedRecipe.webUrl = url;
+      linkedRecipe.updatedAt = Date.now();
+    }
+
+    if (oldUrl && oldUrl !== url && state.recipeLinkFeedback?.[oldUrl]) {
+      const oldFeedback = state.recipeLinkFeedback[oldUrl];
+      if (url) state.recipeLinkFeedback[url] = {...oldFeedback};
+      delete state.recipeLinkFeedback[oldUrl];
+    }
+
+    if (url) {
+      const current = state.recipeLinkFeedback[url] || {};
+      state.recipeLinkFeedback[url] = {
+        ...current,
+        category,
+        rating,
+        hidden:false,
+        hiddenAt:0,
+        updatedAt:Date.now()
+      };
+    }
+
+    state.meals[key] = list;
+    save();
+    close();
+    renderMealPlan();
+    renderWeek();
+    renderRecipeLinkTracker();
+  });
+
+  return dialog;
+}
+
+function openMealEditDialog(key, mealId) {
+  const list = normalizeMealEntries(state.meals?.[key]);
+  const meal = list.find(x => x.id === mealId);
+  if (!meal) return;
+
+  const linkedRecipe = meal.recipeId
+    ? (state.recipes || []).find(r => r.id === meal.recipeId)
+    : null;
+
+  const currentUrl = String(meal.url || linkedRecipe?.webUrl || linkedRecipe?.youtubeUrl || "").trim();
+  const feedback = currentUrl ? (state.recipeLinkFeedback?.[currentUrl] || {}) : {};
+
+  editingMealRef = {dateKey:key, mealId};
+
+  const dialog = ensureMealEditDialog();
+  dialog.querySelector("#mealEditLabel").value = linkedRecipe?.title || meal.label || "";
+  dialog.querySelector("#mealEditUrl").value = currentUrl;
+  dialog.querySelector("#mealEditCategory").value =
+    feedback.category || linkedRecipe?.category || "other";
+  dialog.querySelector("#mealEditRating").value = feedback.rating || "";
+
+  dialog.showModal();
+}
+
 function renderMealPlan() {
   const host = document.querySelector("#mealPlanGrid");
   if (!host) return;
@@ -11148,6 +11297,7 @@ function renderMealPlan() {
           <span class="meal-plan-entry-title">${escapeHtml(matched?.title || meal.label || "Rezept")}</span>
           ${matched ? `<button type="button" class="meal-plan-open" data-recipe-id="${matched.id}" title="Rezept öffnen">↗</button>`
             : meal.url ? `<a class="meal-plan-open" href="${escapeHtml(meal.url)}" target="_blank" rel="noopener" title="Link öffnen">↗</a>` : ""}
+          <button type="button" class="meal-plan-edit" data-date="${key}" data-meal-id="${escapeHtml(meal.id)}" title="Gericht bearbeiten">✎</button>
           <button type="button" class="meal-plan-remove" data-date="${key}" data-meal-id="${escapeHtml(meal.id)}" title="Aus diesem Tag entfernen">×</button>
         </div>
       </div>`;
@@ -11243,6 +11393,10 @@ function renderMealPlan() {
   host.querySelectorAll(".meal-plan-open[data-recipe-id]").forEach(btn=>btn.addEventListener("click",()=>{
     const recipe=state.recipes.find(r=>r.id===btn.dataset.recipeId);
     if(recipe) showRecipeDetail(recipe);
+  }));
+
+  host.querySelectorAll(".meal-plan-edit").forEach(btn=>btn.addEventListener("click",()=>{
+    openMealEditDialog(btn.dataset.date, btn.dataset.mealId);
   }));
 
   host.querySelectorAll(".meal-plan-remove").forEach(btn=>btn.addEventListener("click",()=>{
