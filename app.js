@@ -13007,11 +13007,37 @@ function schoolChildDefaultIcon(id){
 function schoolTimetableSubjectIcon(subject){
   const s=String(subject||"").trim().toLowerCase();
   if(!s) return "";
-  if(s==="gu" || s.includes("grund")) return `<span class="tt-subject-symbol tt-symbol-gu" aria-hidden="true">📘</span>`;
-  if(s==="rel" || s.includes("relig")) return `<span class="tt-subject-symbol tt-symbol-rel" aria-hidden="true">✝️</span>`;
-  if(s.includes("turn") || s.includes("sport") || s==="bu" || s==="bsp") return `<span class="tt-subject-symbol tt-symbol-sport" aria-hidden="true">🏃</span>`;
-  if(s.includes("werk") || s==="tec" || s==="tex") return `<span class="tt-subject-symbol tt-symbol-werken" aria-hidden="true">🔨</span>`;
-  return `<span class="tt-subject-symbol tt-symbol-default" aria-hidden="true">•</span>`;
+
+  const svg=(cls,body)=>`
+    <span class="tt-subject-symbol ${cls}" aria-hidden="true">
+      <svg viewBox="0 0 24 24" focusable="false">${body}</svg>
+    </span>`;
+
+  if(s==="gu" || s.includes("grund")) return svg("tt-symbol-gu",`
+    <path d="M4.5 5.5h5.1c1.5 0 2.4.6 2.4 1.9v11c0-1.2-.9-1.9-2.4-1.9H4.5z"/>
+    <path d="M19.5 5.5h-5.1c-1.5 0-2.4.6-2.4 1.9v11c0-1.2.9-1.9 2.4-1.9h5.1z"/>
+  `);
+
+  if(s==="rel" || s.includes("relig")) return svg("tt-symbol-rel",`
+    <path d="M12 3.8v16.4"/>
+    <path d="M7.8 8.2h8.4"/>
+  `);
+
+  if(s.includes("turn") || s.includes("sport") || s==="bu" || s==="bsp") return svg("tt-symbol-sport",`
+    <circle cx="13.8" cy="4.9" r="1.8"/>
+    <path d="M11.8 8.1l-2.6 3.6 3.2 2.2 1.7 5.2"/>
+    <path d="M11.8 8.1l4.1 2.1 2.7-.8"/>
+    <path d="M12.4 13.9l-4.7 4.6"/>
+  `);
+
+  if(s.includes("werk") || s==="tec" || s==="tex") return svg("tt-symbol-werken",`
+    <path d="M14.6 5.1l4.3 4.3"/>
+    <path d="M13.2 6.5l2.8-2.8 4.3 4.3-2.8 2.8"/>
+    <path d="M14.8 9.2L6.2 17.8"/>
+    <path d="M5.1 16.7l2.2 2.2"/>
+  `);
+
+  return svg("tt-symbol-default",`<circle cx="12" cy="12" r="2.2"/>`);
 }
 
 function schoolTaskDefaultIcon(id){
