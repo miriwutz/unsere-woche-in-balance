@@ -5931,6 +5931,18 @@ function workroomDragEnabled() {
   }
 }
 
+function touchWorkroomTodo(item) {
+  if (!item) return;
+  item.updatedAt = Date.now();
+}
+
+function tombstoneWorkroomTodo(id) {
+  if (!id) return;
+  state.workroom = normalizeWorkroom(state.workroom);
+  state.workroom.todoTombstones = state.workroom.todoTombstones || {};
+  state.workroom.todoTombstones[id] = Date.now();
+}
+
 function renderSchoolWorkTodos() {
   // Datensicherheits-Hydration: vorhandene lokale Werkraumdaten haben Vorrang,
   // falls der In-Memory-State durch einen unvollständigen Cloudstand leerer ist.
@@ -6000,6 +6012,7 @@ document.querySelectorAll(".workroom-archive-delete").forEach(btn => {
   btn.addEventListener("click", e => {
     const id = e.currentTarget.dataset.id;
 
+    tombstoneWorkroomTodo(id);
     state.workroom.todos =
       state.workroom.todos.filter(t => t.id !== id);
 
@@ -6105,6 +6118,7 @@ document.querySelectorAll(".workroom-todo-check").forEach(box => {
     } else {
       item.completedAt = null;
     }
+    touchWorkroomTodo(item);
 
     save();
     renderSchoolWorkTodos();
@@ -6133,8 +6147,10 @@ document.querySelectorAll(".workroom-todo-check").forEach(box => {
   const [moved] = sorted.splice(index, 1);
   sorted.splice(newIndex, 0, moved);
 
+  const reorderAt = Date.now();
   sorted.forEach((todo, i) => {
     todo.order = i;
+    todo.updatedAt = reorderAt;
   });
 
   state.workroom.todos = sorted;
@@ -6148,6 +6164,7 @@ document.querySelectorAll(".workroom-todo-check").forEach(box => {
   btn.addEventListener("click", e => {
     const id = e.currentTarget.dataset.id;
 
+    tombstoneWorkroomTodo(id);
     state.workroom.todos = state.workroom.todos.filter(t => t.id !== id);
 
     save();
@@ -6162,6 +6179,7 @@ document.querySelectorAll(".workroom-important-btn").forEach(btn => {
     if (!item) return;
 
     item.important = !item.important;
+    touchWorkroomTodo(item);
     save();
     renderSchoolWorkTodos();
   });
@@ -6199,9 +6217,13 @@ if (todoList && typeof Sortable !== "undefined" && workroomDragEnabled()) {
       const ids = [...todoList.querySelectorAll(".workroom-todo-row")]
         .map(row => row.dataset.id);
 
+      const reorderAt = Date.now();
       ids.forEach((id, index) => {
         const todo = state.workroom.todos.find(t => t.id === id);
-        if (todo) todo.order = index;
+        if (todo) {
+          todo.order = index;
+          todo.updatedAt = reorderAt;
+        }
       });
 
       save();
@@ -6244,8 +6266,10 @@ document.addEventListener("click", e => {
   const [moved] = sorted.splice(index, 1);
   sorted.splice(newIndex, 0, moved);
 
+  const reorderAt = Date.now();
   sorted.forEach((todo, i) => {
     todo.order = i;
+    todo.updatedAt = reorderAt;
   });
 
   state.workroom.todos = sorted;
@@ -6273,6 +6297,7 @@ document.querySelector("#addSchoolWorkTodoBtn")?.addEventListener("click", () =>
       item.text = text;
       item.type = typeInput.value || "";
       item.url = url;
+      touchWorkroomTodo(item);
     }
 
     delete button.dataset.editId;
@@ -6289,7 +6314,8 @@ document.querySelector("#addSchoolWorkTodoBtn")?.addEventListener("click", () =>
       important: false,
       order: state.workroom.todos.length,
       done: false,
-      createdAt: Date.now()
+      createdAt: Date.now(),
+      updatedAt: Date.now()
     });
 
     showMotivation("Schul-To-do hinzugefügt ✓");
@@ -8145,14 +8171,64 @@ function guardedMergeById(localValue, cloudValue, sectionName = "Daten") {
   return result;
 }
 
+function mergeWorkroomTodoTombstones(localValue, remoteValue) {
+  const local = localValue && typeof localValue === "object" ? localValue : {};
+  const remote = remoteValue && typeof remoteValue === "object" ? remoteValue : {};
+  const merged = {...local};
+
+  Object.entries(remote).forEach(([id, ts]) => {
+    const remoteTs = Number(ts || 0);
+    const localTs = Number(merged[id] || 0);
+    if (remoteTs > localTs) merged[id] = remoteTs;
+  });
+
+  return merged;
+}
+
+function mergeWorkroomTodosSafely(localValue, remoteValue, tombstones) {
+  const local = Array.isArray(localValue) ? localValue : [];
+  const remote = Array.isArray(remoteValue) ? remoteValue : [];
+  const merged = new Map();
+
+  local.forEach(item => {
+    if (item?.id) merged.set(item.id, item);
+  });
+
+  remote.forEach(remoteItem => {
+    if (!remoteItem?.id) return;
+    const localItem = merged.get(remoteItem.id);
+
+    if (!localItem) {
+      merged.set(remoteItem.id, remoteItem);
+      return;
+    }
+
+    const localTs = itemTimestamp(localItem);
+    const remoteTs = itemTimestamp(remoteItem);
+
+    if (remoteTs >= localTs) merged.set(remoteItem.id, remoteItem);
+  });
+
+  return [...merged.values()].filter(item => {
+    const deletedAt = Number(tombstones?.[item.id] || 0);
+    return !deletedAt || itemTimestamp(item) > deletedAt;
+  });
+}
+
 function guardedWorkroomMerge(localValue, cloudValue) {
   const local = normalizeWorkroom(localValue);
   const remote = normalizeWorkroom(cloudValue);
 
+  const todoTombstones = mergeWorkroomTodoTombstones(
+    local.todoTombstones,
+    remote.todoTombstones
+  );
+
   return {
     ...local,
     ...remote,
-    todos: guardedMergeById(local.todos, remote.todos, "Werkraum-To-dos"),
+    todoTombstones,
+    todos: mergeWorkroomTodosSafely(local.todos, remote.todos, todoTombstones),
     prints: guardedMergeById(local.prints, remote.prints, "Druckliste"),
     links: guardedMergeById(local.links, remote.links, "Werkraum-Links"),
     substitutions: guardedMergeById(local.substitutions, remote.substitutions, "Supplierungen"),
@@ -8285,45 +8361,6 @@ function startCloudSync() {
     }
 
     cloudReady = true;
-
-    // Einmalige Sicherheits-Nachlieferung für bereits vorhandene Rabatte/Pickerl:
-    // Frühere App-Versionen speicherten sie lokal, übernahmen sie aber nicht
-    // zuverlässig zwischen Geräten. Wenn nach dem sicheren Merge lokal Einträge
-    // vorhanden sind, die in der Cloud noch fehlen, werden NUR diese Promodaten
-    // nachgeliefert. Ein leeres Gerät kann dadurch nichts überschreiben.
-    if (firstSnapshot) {
-      const remotePromos = Array.isArray(cloudData?.shoppingPromos)
-        ? cloudData.shoppingPromos
-        : [];
-      const mergedPromos = Array.isArray(state.shoppingPromos)
-        ? state.shoppingPromos
-        : [];
-
-      const remoteById = new Map(
-        remotePromos.filter(x => x?.id).map(x => [x.id, x])
-      );
-
-      const promoBackfillNeeded = mergedPromos.some(localPromo => {
-        if (!localPromo?.id) return false;
-        const remotePromo = remoteById.get(localPromo.id);
-        if (!remotePromo) return true;
-        return itemTimestamp(localPromo) > itemTimestamp(remotePromo);
-      });
-
-      if (promoBackfillNeeded) {
-        const promoSyncToken =
-          `${Date.now()}-${getDeviceId()}-promo-${Math.random().toString(36).slice(2,8)}`;
-
-        ref.set({
-          shoppingPromos: JSON.parse(JSON.stringify(mergedPromos)),
-          syncToken: promoSyncToken,
-          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-        }, { merge: true }).catch(err => {
-          console.error("Rabatte/Pickerl Nachlieferung fehlgeschlagen:", err);
-        });
-      }
-    }
-
     updateSyncStatus(navigator.onLine ? "synced" : "offline");
     renderDeviceAcks(cloudData);
     acknowledgeCloudSnapshot(cloudData, snap.metadata);
@@ -11203,6 +11240,9 @@ function normalizeWorkroom(w) {
   const src = w && typeof w === "object" ? w : {};
   return {
     todos: Array.isArray(src.todos) ? src.todos : [],
+    todoTombstones: src.todoTombstones && typeof src.todoTombstones === "object"
+      ? src.todoTombstones
+      : {},
     prints: Array.isArray(src.prints) ? src.prints : [],
     links: Array.isArray(src.links) ? src.links : [],
     interestLinks: Array.isArray(src.interestLinks) ? src.interestLinks : [],
@@ -11679,15 +11719,6 @@ function applyCloudData(data) {
     state.archive = guardedMergeById(state.archive, data.archive, "Übungsarchiv");
     state.shopping = guardedMergeById(state.shopping, data.shopping, "Einkauf");
     shoppingItems = state.shopping;
-
-    // Rabatte & Pickerl waren zwar im Cloud-Payload enthalten,
-    // wurden beim Empfang auf einem anderen Gerät aber bisher nicht übernommen.
-    state.shoppingPromos = guardedMergeById(
-      state.shoppingPromos,
-      data.shoppingPromos,
-      "Rabatte & Pickerl"
-    );
-
     state.recipes = guardedMergeById(state.recipes, data.recipes, "Rezepte");
 
     if (data.meals && typeof data.meals === "object") {
