@@ -24102,3 +24102,193 @@ button.day-meal-list-item:hover,a.day-meal-list-item:hover{background:rgba(164,1
   }
 }
 
+/* =========================================================
+   ESSENSPLAN – kompakter auf Tablet, nichts überlappt
+   ========================================================= */
+.meal-plan-grid{
+  grid-template-columns:repeat(7,minmax(0,1fr)) !important;
+  gap:5px !important;
+}
+
+.meal-plan-day{
+  min-width:0 !important;
+  padding:7px !important;
+  border-radius:11px !important;
+}
+
+.meal-plan-entries{
+  min-width:0 !important;
+}
+
+.meal-plan-entry{
+  min-width:0 !important;
+}
+
+.meal-plan-entry-main{
+  min-width:0 !important;
+  width:100% !important;
+  gap:3px !important;
+  padding:5px 6px !important;
+  overflow:hidden !important;
+}
+
+.meal-plan-entry-title{
+  min-width:0 !important;
+  flex:1 1 auto !important;
+  overflow:hidden !important;
+  text-overflow:ellipsis !important;
+  white-space:nowrap !important;
+  font-size:.68rem !important;
+}
+
+.meal-plan-edit,
+.meal-plan-open,
+.meal-plan-remove{
+  flex:0 0 auto !important;
+  padding:1px 2px !important;
+  font-size:.68rem !important;
+}
+
+.meal-plan-add-row{
+  grid-template-columns:minmax(0,1fr) 30px !important;
+  gap:4px !important;
+}
+
+.meal-plan-add-input{
+  min-width:0 !important;
+  width:100% !important;
+  font-size:.65rem !important;
+  padding:5px 6px !important;
+}
+
+.meal-plan-add-btn{
+  width:30px !important;
+  height:30px !important;
+  font-size:.9rem !important;
+}
+
+@media(max-width:1180px){
+  .meal-plan-card{
+    padding:12px !important;
+  }
+  .meal-plan-grid{
+    grid-template-columns:repeat(7,minmax(0,1fr)) !important;
+    gap:4px !important;
+  }
+  .meal-plan-day{
+    padding:5px !important;
+  }
+  .meal-plan-day-name{
+    font-size:.71rem !important;
+  }
+  .meal-plan-date{
+    font-size:.57rem !important;
+  }
+  .meal-plan-entry-main{
+    padding:4px 5px !important;
+  }
+  .meal-plan-entry-title{
+    font-size:.62rem !important;
+  }
+}
+
+@media(max-width:760px){
+  .meal-plan-grid{
+    grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+    gap:7px !important;
+  }
+  .meal-plan-day{
+    padding:8px !important;
+  }
+  .meal-plan-entry-title{
+    font-size:.72rem !important;
+  }
+}
+
+
+/* =========================================================
+   TODO – "Weitere Angaben" endgültig weg
+   ========================================================= */
+.todo-more-settings{
+  display:none !important;
+}
+
+.todo-quick-meta-row{
+  display:grid !important;
+  grid-template-columns:repeat(3,minmax(120px,170px)) !important;
+  gap:9px !important;
+  align-items:end !important;
+  margin-top:8px !important;
+  padding-top:0 !important;
+  border-top:0 !important;
+}
+
+.todo-quick-meta-row label{
+  display:grid !important;
+  gap:4px !important;
+  min-width:0 !important;
+}
+
+.todo-quick-meta-row select{
+  min-width:0 !important;
+  width:100% !important;
+}
+
+@media(max-width:760px){
+  .todo-quick-meta-row{
+    grid-template-columns:repeat(3,minmax(0,1fr)) !important;
+  }
+}
+
+@media(max-width:520px){
+  .todo-quick-meta-row{
+    grid-template-columns:1fr !important;
+  }
+}
+
+
+/* =========================================================
+   REZEPT – Kartenzeichen bei Grad in derselben Meta-Zeile
+   ========================================================= */
+.recipes-section #recipeForm .recipe-v17-main-grid{
+  grid-template-columns:minmax(0,2fr) minmax(220px,.85fr) !important;
+}
+
+.recipes-section #recipeForm .recipe-v19-meta-grid{
+  display:grid !important;
+  grid-template-columns:
+    minmax(115px,145px)
+    minmax(135px,165px)
+    minmax(68px,80px)
+    minmax(78px,92px)
+    minmax(78px,92px)
+    minmax(72px,86px)
+    minmax(125px,155px)
+  !important;
+  gap:8px !important;
+  align-items:end !important;
+}
+
+.recipes-section #recipeForm .recipe-v19-meta-grid .recipe-card-mark-field{
+  grid-column:auto !important;
+  max-width:155px !important;
+  min-width:0 !important;
+}
+
+.recipes-section #recipeForm .recipe-v19-meta-grid .recipe-card-mark-field select{
+  width:100% !important;
+  min-width:0 !important;
+}
+
+@media(max-width:1050px){
+  .recipes-section #recipeForm .recipe-v19-meta-grid{
+    grid-template-columns:repeat(4,minmax(0,1fr)) !important;
+  }
+}
+
+@media(max-width:700px){
+  .recipes-section #recipeForm .recipe-v19-meta-grid{
+    grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+  }
+}
+
