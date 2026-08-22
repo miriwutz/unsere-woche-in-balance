@@ -3232,11 +3232,11 @@ function subjectOptionsFor(id){
   if(id==="mama"){
     return [
       "",
+      "TW",
       "GU",
       "Deutsch",
       "Mathematik",
       "Sachunterricht",
-      "TW",
       "GLZ",
       "Anderes"
     ];
