@@ -3818,8 +3818,8 @@ function renderRoutineAreaTasks(){
             </div>
             <div class="routine-area-task-actions">
               ${item.url?`<a href="${escapeHtml(item.url)}" target="_blank" rel="noopener">Video</a>`:""}
-              <button class="routine-area-edit" data-id="${item.id}" type="button" title="Bearbeiten" aria-label="Bearbeiten">✎</button>
-              <button class="routine-area-delete" data-id="${item.id}" type="button" title="Löschen" aria-label="Löschen">×</button>
+              <button class="routine-area-edit" data-id="${item.id}" type="button" title="Bearbeiten" aria-label="Bearbeiten"><svg class="routine-action-svg" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 19l3.5-.8L18 8.7a1.7 1.7 0 0 0 0-2.4l-.3-.3a1.7 1.7 0 0 0-2.4 0L5.8 15.5z"/><path d="M13.8 7.5l2.7 2.7"/></svg></button>
+              <button class="routine-area-delete" data-id="${item.id}" type="button" title="Löschen" aria-label="Löschen"><svg class="routine-action-svg" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 7h12"/><path d="M9.2 7V5h5.6v2"/><path d="M7.5 7l.8 11h7.4l.8-11"/><path d="M10.3 10.2v4.9M13.7 10.2v4.9"/></svg></button>
             </div>
             ${awaiting?`<div class="routine-area-rating">
               <span class="routine-rating-label">Wie war es?</span>
@@ -3977,8 +3977,8 @@ function renderRoutines(){
         <small>${partLabel[item.part||"morning"]}${item.url?` · ${cat[1]}`:""}${item.sticky?" · jede Woche":""}${completion?.done?" · heute erledigt":""}</small>
       </div>
       <div class="routine-week-plan-actions">
-        <button class="routine-edit-btn" data-id="${item.id}" type="button" title="Bearbeiten" aria-label="Bearbeiten">✎</button>
-        <button class="routine-delete-btn" data-id="${item.id}" type="button" title="Aus Planung entfernen" aria-label="Entfernen">×</button>
+        <button class="routine-edit-btn" data-id="${item.id}" type="button" title="Bearbeiten" aria-label="Bearbeiten"><svg class="routine-action-svg" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 19l3.5-.8L18 8.7a1.7 1.7 0 0 0 0-2.4l-.3-.3a1.7 1.7 0 0 0-2.4 0L5.8 15.5z"/><path d="M13.8 7.5l2.7 2.7"/></svg></button>
+        <button class="routine-delete-btn" data-id="${item.id}" type="button" title="Aus Planung entfernen" aria-label="Aus Planung entfernen"><svg class="routine-action-svg" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 7h12"/><path d="M9.2 7V5h5.6v2"/><path d="M7.5 7l.8 11h7.4l.8-11"/><path d="M10.3 10.2v4.9M13.7 10.2v4.9"/></svg></button>
       </div>
     </div>`;
   };
@@ -4008,7 +4008,9 @@ function renderRoutines(){
       }).join("")}
     </div>`;
 
-  document.querySelectorAll("#routineList .routine-edit-btn").forEach(btn=>btn.addEventListener("click",()=>{
+  document.querySelectorAll("#routineList .routine-edit-btn").forEach(btn=>btn.addEventListener("click",(e)=>{
+    e.preventDefault();
+    e.stopPropagation();
     const item=routines.items.find(x=>x.id===btn.dataset.id);
     if(!item) return;
     editingRoutineId=item.id;
@@ -4025,7 +4027,9 @@ function renderRoutines(){
     document.querySelector("#routineTitle")?.focus();
   }));
 
-  document.querySelectorAll("#routineList .routine-delete-btn").forEach(btn=>btn.addEventListener("click",()=>{
+  document.querySelectorAll("#routineList .routine-delete-btn").forEach(btn=>btn.addEventListener("click",(e)=>{
+    e.preventDefault();
+    e.stopPropagation();
     const doomed=routines.items.find(x=>x.id===btn.dataset.id);
     if(!doomed) return;
 
