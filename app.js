@@ -3476,7 +3476,13 @@ document.querySelectorAll(".toggle-manual-timetable").forEach(btn => btn.addEven
 }));
 
 document.querySelectorAll(".close-manual-timetable").forEach(btn => btn.addEventListener("click", e => {
-  closeManualTimetableEditor(e.currentTarget.dataset.child);
+  const id = e.currentTarget.dataset.child;
+  closeManualTimetableEditor(id);
+
+  if (id === "mama") {
+    document.querySelector("#familyTimetableDialog .family-timetable-buttons")?.classList.remove("hidden");
+    closeDialogCompat(familyTimetableDialog);
+  }
 }));
 
 
@@ -4025,14 +4031,18 @@ function renderRoutines(){
     document.querySelector("#routineTitle")?.focus();
   }));
 
-  document.querySelectorAll("#routineList .routine-delete-btn").forEach(btn=>btn.addEventListener("click",()=>{
-    const doomed=routines.items.find(x=>x.id===btn.dataset.id);
+  document.querySelectorAll("#routineList .routine-delete-btn").forEach(btn=>btn.addEventListener("click",e=>{
+    e.preventDefault();
+    e.stopPropagation();
+
+    const id=e.currentTarget.dataset.id;
+    const doomed=routines.items.find(x=>x.id===id);
     if(!doomed) return;
 
     // Nur die Planung entfernen. Ein Archivvideo bleibt im Überblick erhalten.
-    routines.items=routines.items.filter(x=>x.id!==btn.dataset.id);
+    routines.items=routines.items.filter(x=>x.id!==id);
     Object.keys(routines.completions||{}).forEach(key=>{
-      if(key.startsWith(`${btn.dataset.id}__`)) delete routines.completions[key];
+      if(key.startsWith(`${id}__`)) delete routines.completions[key];
     });
 
     save();
@@ -5944,23 +5954,6 @@ function tombstoneWorkroomTodo(id) {
 }
 
 function renderSchoolWorkTodos() {
-  // Datensicherheits-Hydration: vorhandene lokale Werkraumdaten haben Vorrang,
-  // falls der In-Memory-State durch einen unvollständigen Cloudstand leerer ist.
-  try {
-    const localWorkroom = JSON.parse(localStorage.getItem("balanceProd.workroom") || "null");
-    if (localWorkroom && typeof localWorkroom === "object") {
-      const localNorm = normalizeWorkroom(localWorkroom);
-      const stateNorm = normalizeWorkroom(state.workroom);
-      const localCount =
-        localNorm.todos.length + localNorm.prints.length + localNorm.links.length + localNorm.shopping.length;
-      const stateCount =
-        stateNorm.todos.length + stateNorm.prints.length + stateNorm.links.length + stateNorm.shopping.length;
-      if (localCount > stateCount) state.workroom = localNorm;
-    }
-  } catch (err) {
-    console.warn("Werkraum-Lokaldaten konnten nicht gelesen werden:", err);
-  }
-
    const list = document.querySelector("#schoolWorkTodoList");
   if (!list) return;
 
@@ -6641,24 +6634,29 @@ function showSchoolPrintEmail(){
   setSchoolPrintEmailPanel(true);
 }
 
-function renderSchoolPrints() {
-  // Datensicherheits-Hydration: vorhandene lokale Werkraumdaten haben Vorrang,
-  // falls der In-Memory-State durch einen unvollständigen Cloudstand leerer ist.
-  try {
-    const localWorkroom = JSON.parse(localStorage.getItem("balanceProd.workroom") || "null");
-    if (localWorkroom && typeof localWorkroom === "object") {
-      const localNorm = normalizeWorkroom(localWorkroom);
-      const stateNorm = normalizeWorkroom(state.workroom);
-      const localCount =
-        localNorm.todos.length + localNorm.prints.length + localNorm.links.length + localNorm.shopping.length;
-      const stateCount =
-        stateNorm.todos.length + stateNorm.prints.length + stateNorm.links.length + stateNorm.shopping.length;
-      if (localCount > stateCount) state.workroom = localNorm;
-    }
-  } catch (err) {
-    console.warn("Werkraum-Lokaldaten konnten nicht gelesen werden:", err);
-  }
+function touchWorkroomPrint(item) {
+  if (item) item.updatedAt = Date.now();
+}
 
+function tombstoneWorkroomPrint(id) {
+  if (!id) return;
+  state.workroom = normalizeWorkroom(state.workroom);
+  state.workroom.printTombstones = state.workroom.printTombstones || {};
+  state.workroom.printTombstones[id] = Date.now();
+}
+
+function touchWorkroomLink(item) {
+  if (item) item.updatedAt = Date.now();
+}
+
+function tombstoneWorkroomLink(id) {
+  if (!id) return;
+  state.workroom = normalizeWorkroom(state.workroom);
+  state.workroom.linkTombstones = state.workroom.linkTombstones || {};
+  state.workroom.linkTombstones[id] = Date.now();
+}
+
+function renderSchoolPrints() {
   const list = document.querySelector("#schoolPrintList");
   if (!list) return;
 
@@ -6761,6 +6759,7 @@ function renderSchoolPrints() {
 
       item.done = e.currentTarget.checked;
       item.completedAt = item.done ? Date.now() : null;
+      touchWorkroomPrint(item);
 
       save();
       renderSchoolPrints();
@@ -6770,6 +6769,7 @@ function renderSchoolPrints() {
           const currentItem = state.workroom.prints.find(p => p.id === id);
           if (!currentItem || !currentItem.done) return;
 
+          tombstoneWorkroomPrint(id);
           state.workroom.prints =
             state.workroom.prints.filter(p => p.id !== id);
 
@@ -6789,6 +6789,7 @@ function renderSchoolPrints() {
       if (!item) return;
 
       item.mailOrder = !item.mailOrder;
+      touchWorkroomPrint(item);
       save();
       renderSchoolPrints();
     });
@@ -6797,6 +6798,7 @@ function renderSchoolPrints() {
   document.querySelectorAll(".workroom-print-delete").forEach(btn => {
     btn.addEventListener("click", e => {
       const id = e.currentTarget.dataset.id;
+      tombstoneWorkroomPrint(id);
       state.workroom.prints = state.workroom.prints.filter(p => p.id !== id);
       save();
       renderSchoolPrints();
@@ -6825,7 +6827,11 @@ function renderSchoolPrints() {
     if(index<0 || target<0 || target>=ordered.length) return;
 
     [ordered[index],ordered[target]]=[ordered[target],ordered[index]];
-    ordered.forEach((item,order)=>item.order=order);
+    const reorderAt = Date.now();
+    ordered.forEach((item,order)=>{
+      item.order=order;
+      item.updatedAt=reorderAt;
+    });
     state.workroom.prints=ordered;
     save();
     renderSchoolPrints();
@@ -6860,7 +6866,10 @@ function renderSchoolPrints() {
 
           ids.forEach((id, index) => {
             const item = state.workroom.prints.find(p => p.id === id);
-            if (item) item.order = index;
+            if (item) {
+              item.order = index;
+              item.updatedAt = Date.now();
+            }
           });
 
           save();
@@ -6890,6 +6899,7 @@ document.querySelector("#addSchoolPrintBtn")?.addEventListener("click", () => {
     if (item) {
       item.text = text;
       item.url = url;
+      touchWorkroomPrint(item);
     }
 
     delete button.dataset.editId;
@@ -6904,7 +6914,8 @@ document.querySelector("#addSchoolPrintBtn")?.addEventListener("click", () => {
       completedAt: null,
       mailOrder: false,
       order: state.workroom.prints.length,
-      createdAt: Date.now()
+      createdAt: Date.now(),
+      updatedAt: Date.now()
     });
   }
 
@@ -7025,21 +7036,6 @@ function workroomLinkMatchesSort(link, sortKey){
 }
 
 function renderWorkroomLinks() {
-  try {
-    const localWorkroom = JSON.parse(localStorage.getItem("balanceProd.workroom") || "null");
-    if (localWorkroom && typeof localWorkroom === "object") {
-      const localNorm = normalizeWorkroom(localWorkroom);
-      const stateNorm = normalizeWorkroom(state.workroom);
-      const localCount =
-        localNorm.todos.length + localNorm.prints.length + localNorm.links.length + localNorm.shopping.length;
-      const stateCount =
-        stateNorm.todos.length + stateNorm.prints.length + stateNorm.links.length + stateNorm.shopping.length;
-      if (localCount > stateCount) state.workroom = localNorm;
-    }
-  } catch (err) {
-    console.warn("Werkraum-Lokaldaten konnten nicht gelesen werden:", err);
-  }
-
   const list = document.querySelector("#workroomLinkList");
   const pager = document.querySelector("#workroomLinkPager");
   const pageLabel = document.querySelector("#workroomLinkPageLabel");
@@ -7186,6 +7182,7 @@ function renderWorkroomLinks() {
   list.querySelectorAll(".workroom-link-delete").forEach(btn => {
     btn.addEventListener("click", e => {
       const id = e.currentTarget.dataset.id;
+      tombstoneWorkroomLink(id);
       state.workroom.links = state.workroom.links.filter(link => link.id !== id);
       [...state.workroom.links]
         .sort((a,b)=>Number(a.order??999999)-Number(b.order??999999))
@@ -7232,7 +7229,11 @@ function renderWorkroomLinks() {
     if(index<0 || target<0 || target>=all.length) return;
 
     [all[index],all[target]]=[all[target],all[index]];
-    all.forEach((link,order)=>link.order=order);
+    const reorderAt=Date.now();
+    all.forEach((link,order)=>{
+      link.order=order;
+      link.updatedAt=reorderAt;
+    });
     state.workroom.links=all;
     save();
     renderWorkroomLinks();
@@ -7279,7 +7280,11 @@ function renderWorkroomLinks() {
           if(replacement && slots[i]!==undefined) all[slots[i]]=replacement;
         });
 
-        all.forEach((link,index)=>link.order=index);
+        const reorderAt=Date.now();
+        all.forEach((link,index)=>{
+          link.order=index;
+          link.updatedAt=reorderAt;
+        });
         state.workroom.links=all;
         save();
         renderWorkroomLinks();
@@ -7339,8 +7344,10 @@ document.querySelector("#addWorkroomLinkBtn")?.addEventListener("click", () => {
     }
 
     // New links always go to the top.
+    const reorderAt=Date.now();
     state.workroom.links.forEach(link=>{
       link.order=(Number(link.order)||0)+1;
+      link.updatedAt=reorderAt;
     });
 
     state.workroom.links.unshift({
@@ -8215,6 +8222,44 @@ function mergeWorkroomTodosSafely(localValue, remoteValue, tombstones) {
   });
 }
 
+function mergeWorkroomTombstones(localValue, remoteValue) {
+  const local = localValue && typeof localValue === "object" ? localValue : {};
+  const remote = remoteValue && typeof remoteValue === "object" ? remoteValue : {};
+  const merged = {...local};
+
+  Object.entries(remote).forEach(([id, ts]) => {
+    const remoteTs = Number(ts || 0);
+    const localTs = Number(merged[id] || 0);
+    if (remoteTs > localTs) merged[id] = remoteTs;
+  });
+
+  return merged;
+}
+
+function mergeWorkroomListByTimestamp(localValue, remoteValue, tombstones) {
+  const local = Array.isArray(localValue) ? localValue : [];
+  const remote = Array.isArray(remoteValue) ? remoteValue : [];
+  const merged = new Map();
+
+  local.forEach(item => {
+    if (item?.id) merged.set(item.id, item);
+  });
+
+  remote.forEach(remoteItem => {
+    if (!remoteItem?.id) return;
+    const localItem = merged.get(remoteItem.id);
+
+    if (!localItem || itemTimestamp(remoteItem) >= itemTimestamp(localItem)) {
+      merged.set(remoteItem.id, remoteItem);
+    }
+  });
+
+  return [...merged.values()].filter(item => {
+    const deletedAt = Number(tombstones?.[item.id] || 0);
+    return !deletedAt || itemTimestamp(item) > deletedAt;
+  });
+}
+
 function guardedWorkroomMerge(localValue, cloudValue) {
   const local = normalizeWorkroom(localValue);
   const remote = normalizeWorkroom(cloudValue);
@@ -8223,14 +8268,24 @@ function guardedWorkroomMerge(localValue, cloudValue) {
     local.todoTombstones,
     remote.todoTombstones
   );
+  const printTombstones = mergeWorkroomTombstones(
+    local.printTombstones,
+    remote.printTombstones
+  );
+  const linkTombstones = mergeWorkroomTombstones(
+    local.linkTombstones,
+    remote.linkTombstones
+  );
 
   return {
     ...local,
     ...remote,
     todoTombstones,
+    printTombstones,
+    linkTombstones,
     todos: mergeWorkroomTodosSafely(local.todos, remote.todos, todoTombstones),
-    prints: guardedMergeById(local.prints, remote.prints, "Druckliste"),
-    links: guardedMergeById(local.links, remote.links, "Werkraum-Links"),
+    prints: mergeWorkroomListByTimestamp(local.prints, remote.prints, printTombstones),
+    links: mergeWorkroomListByTimestamp(local.links, remote.links, linkTombstones),
     substitutions: guardedMergeById(local.substitutions, remote.substitutions, "Supplierungen"),
     plans: {
       ...(local.plans || {}),
@@ -11243,6 +11298,12 @@ function normalizeWorkroom(w) {
     todoTombstones: src.todoTombstones && typeof src.todoTombstones === "object"
       ? src.todoTombstones
       : {},
+    printTombstones: src.printTombstones && typeof src.printTombstones === "object"
+      ? src.printTombstones
+      : {},
+    linkTombstones: src.linkTombstones && typeof src.linkTombstones === "object"
+      ? src.linkTombstones
+      : {},
     prints: Array.isArray(src.prints) ? src.prints : [],
     links: Array.isArray(src.links) ? src.links : [],
     interestLinks: Array.isArray(src.interestLinks) ? src.interestLinks : [],
@@ -11767,15 +11828,44 @@ function applyCloudData(data) {
   }
 }
 
+function openDialogCompat(dialog) {
+  if (!dialog) return false;
+  try {
+    if (!dialog.open && typeof dialog.showModal === "function") dialog.showModal();
+    else if (!dialog.open) dialog.setAttribute("open", "");
+    return true;
+  } catch (err) {
+    console.warn("Dialog konnte nicht modal geöffnet werden:", err);
+    try {
+      dialog.setAttribute("open", "");
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+}
+
+function closeDialogCompat(dialog) {
+  if (!dialog) return;
+  try {
+    if (typeof dialog.close === "function") dialog.close();
+    else dialog.removeAttribute("open");
+  } catch (_) {
+    dialog.removeAttribute("open");
+  }
+}
+
 const substitutionDialogRestored = document.querySelector("#substitutionDialog");
-document.querySelector("#openSubstitutionBtn")?.addEventListener("click", () => {
+document.querySelector("#openSubstitutionBtn")?.addEventListener("click", e => {
+  e.preventDefault();
+  e.stopPropagation();
   const dateInput = document.querySelector("#substitutionDate");
   if (dateInput && !dateInput.value) dateInput.value = dateKey(new Date());
-  substitutionDialogRestored?.showModal();
-  setTimeout(() => dateInput?.showPicker?.(), 80);
+  openDialogCompat(substitutionDialogRestored);
 });
-document.querySelector("#closeSubstitutionDialogBtn")?.addEventListener("click", () => {
-  substitutionDialogRestored?.close();
+document.querySelector("#closeSubstitutionDialogBtn")?.addEventListener("click", e => {
+  e.preventDefault();
+  closeDialogCompat(substitutionDialogRestored);
 });
 document.querySelector("#saveSubstitutionBtn")?.addEventListener("click", () => {
   const date = document.querySelector("#substitutionDate")?.value || "";
@@ -11790,19 +11880,39 @@ document.querySelector("#saveSubstitutionBtn")?.addEventListener("click", () => 
   state.workroom.substitutions.push({id:uid(), date, className, subject, forWhom, note, hours, createdAt:Date.now(), updatedAt:Date.now()});
   save();
   renderSubstitutions();
-  substitutionDialogRestored?.close();
+  closeDialogCompat(substitutionDialogRestored);
 });
 
 function openMamaTimetableEditorDirectRestored() {
+  familyTimetableMode = "edit";
+
   const title = document.querySelector("#familyTimetableDialogTitle");
-  if (title) title.textContent = "Mama – Stundenplan bearbeiten";
   const chooserButtons = document.querySelector("#familyTimetableDialog .family-timetable-buttons");
-  if (chooserButtons) chooserButtons.classList.add("hidden");
-  familyTimetableDialog?.showModal();
-  renderTTMatrix("mama");
-  document.querySelector("#manualTimetableWrapmama")?.classList.remove("hidden");
+  const wrap = document.querySelector("#manualTimetableWrapmama");
+
+  if (title) title.textContent = "Mama – Stundenplan bearbeiten";
+  chooserButtons?.classList.add("hidden");
+
+  try {
+    renderTTMatrix("mama");
+    wrap?.classList.remove("hidden");
+    if (!openDialogCompat(familyTimetableDialog)) {
+      showMotivation("Der Stundenplan konnte nicht geöffnet werden.");
+    }
+  } catch (err) {
+    console.error("Mama-Stundenplan konnte nicht geöffnet werden:", err);
+    chooserButtons?.classList.remove("hidden");
+    wrap?.classList.add("hidden");
+    closeDialogCompat(familyTimetableDialog);
+    showMotivation("Der Stundenplan konnte nicht geöffnet werden.");
+  }
 }
-document.querySelector("#openWorkTimetableBtn")?.addEventListener("click", openMamaTimetableEditorDirectRestored);
+
+document.querySelector("#openWorkTimetableBtn")?.addEventListener("click", e => {
+  e.preventDefault();
+  e.stopPropagation();
+  openMamaTimetableEditorDirectRestored();
+});
 
 function renderAll() {
   pruneTrash();
