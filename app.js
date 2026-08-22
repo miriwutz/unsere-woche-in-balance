@@ -13083,47 +13083,74 @@ function renderSchoolChildDashboard(id){
 
   if(host && host.dataset.dragScrollBound!=="1"){
     host.dataset.dragScrollBound="1";
-    let down=false,startX=0,startScroll=0,moved=false;
+
+    let down=false;
+    let startX=0;
+    let startScroll=0;
+    let moved=false;
+    let pressedChoice=null;
+
     host.addEventListener("pointerdown",e=>{
       if(e.button!==0) return;
-      down=true; moved=false; startX=e.clientX; startScroll=host.scrollLeft;
+
+      down=true;
+      moved=false;
+      startX=e.clientX;
+      startScroll=host.scrollLeft;
+
+      // Das beim Drücken gewählte Zeichen merken.
+      // Pointer-Capture kann später e.target auf den Container umleiten.
+      pressedChoice=e.target.closest(".school-icon-choice");
+
       host.setPointerCapture?.(e.pointerId);
       host.classList.add("is-dragging");
     });
+
     host.addEventListener("pointermove",e=>{
       if(!down) return;
       const dx=e.clientX-startX;
+
       if(Math.abs(dx)>10) moved=true;
       host.scrollLeft=startScroll-dx;
     });
-    const stop=e=>{
+
+    host.addEventListener("pointerup",e=>{
       if(!down) return;
+
+      const wasMoved=moved;
+      const choice=pressedChoice;
+
       down=false;
+      moved=false;
+      pressedChoice=null;
+
       host.releasePointerCapture?.(e.pointerId);
       host.classList.remove("is-dragging");
-    };
-    host.addEventListener("pointerup",stop);
-    host.addEventListener("pointercancel",stop);
-    host.addEventListener("click",e=>{
-      const choice=e.target.closest(".school-icon-choice");
 
-      // Nur ein echtes Ziehen der horizontalen Leiste unterdrückt die Auswahl.
-      if(moved){
-        e.preventDefault();
-        e.stopPropagation();
-        moved=false;
-        return;
-      }
-
-      if(!choice || !activeSchoolChild) return;
+      // Nur ein echtes Antippen/Klicken wählt ein Zeichen.
+      if(wasMoved || !choice || !activeSchoolChild) return;
 
       const childId=activeSchoolChild;
       const key=schoolMemberKey(childId);
 
-      // Persönliches Zeichen: nur Banner/Stundenplan-Link.
+      // Persönliches Zeichen: ausschließlich Banner/Stundenplan-Link.
       state.familySettings[key].icon=choice.dataset.icon;
       save();
       renderSchoolChildDashboard(childId);
+    });
+
+    host.addEventListener("pointercancel",e=>{
+      if(!down) return;
+      down=false;
+      moved=false;
+      pressedChoice=null;
+      host.releasePointerCapture?.(e.pointerId);
+      host.classList.remove("is-dragging");
+    });
+
+    // Nach pointerup nichts ein zweites Mal über einen Click-Handler ausführen.
+    host.addEventListener("click",e=>{
+      if(e.target.closest(".school-icon-choice")) e.preventDefault();
     });
   }
 
@@ -13226,6 +13253,8 @@ document.querySelectorAll("[data-school-open-week]").forEach(btn => {
     openChildWeekOverview(id);
   });
 });
+
+
 
 // Wenn "Schule" in der Hauptnavigation angeklickt wird, immer auf die
 // Kinder-Auswahlseite zurückkehren. So ist die Navigation jederzeit klar.
