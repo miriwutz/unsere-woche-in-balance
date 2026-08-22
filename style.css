@@ -22971,3 +22971,240 @@ body:has(#workroomLinkSortSelect option:checked:not([value="manual"])) .workroom
   }
 }
 
+/* =========================================================
+   MEHRTAGE – noch schmaler
+   ========================================================= */
+.week-band-events .multiday-event-lane,
+.week-band-events .multiday-event-placeholder,
+.day .multiday-event-lane,
+.day .multiday-event-placeholder{
+  height:28px !important;
+  min-height:28px !important;
+}
+
+.multiday-continuous-segment{
+  height:24px !important;
+  min-height:24px !important;
+  padding-inline:7px !important;
+}
+
+.multiday-continuous-label,
+.multiday-continuous-end{
+  font-size:.68rem !important;
+}
+
+.multiday-person{
+  font-size:.64rem !important;
+}
+
+.multiday-person i{
+  width:6px !important;
+  height:6px !important;
+}
+
+/* =========================================================
+   ESSENSPLAN – Internetrezept direkt bewerten
+   ========================================================= */
+.day-meal-link-wrap{
+  display:grid;
+  gap:4px;
+  margin:10px 0 8px;
+}
+
+.day-meal-link-wrap .day-meal{
+  margin:0 !important;
+}
+
+.day-meal-link-rating{
+  display:flex;
+  align-items:center;
+  gap:4px;
+  padding-left:4px;
+}
+
+.day-meal-rate{
+  width:24px;
+  height:22px;
+  display:grid;
+  place-items:center;
+  padding:0;
+  border:1px solid rgba(170,160,150,.18);
+  border-radius:999px;
+  background:rgba(255,253,251,.76);
+  font-size:.72rem;
+  line-height:1;
+  opacity:.62;
+}
+
+.day-meal-rate:hover,
+.day-meal-rate.active{
+  opacity:1;
+  background:#eef3ed;
+  border-color:#bfcfc0;
+}
+
+.day-meal-rate.active{
+  box-shadow:inset 0 0 0 1px rgba(111,140,107,.12);
+}
+
+
+/* =========================================================
+   UNSER ÜBERBLICK – Online-Rezeptbuch
+   ========================================================= */
+.recipe-link-tracker-list{
+  display:grid;
+  gap:13px !important;
+}
+
+.online-recipe-group{
+  display:grid;
+  gap:7px;
+}
+
+.online-recipe-group-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:12px;
+  padding:7px 9px;
+  border-radius:11px;
+  background:rgba(247,244,239,.72);
+  border:1px solid rgba(180,190,185,.16);
+}
+
+.online-recipe-group-head > div{
+  display:grid;
+  gap:1px;
+}
+
+.online-recipe-group-head strong{
+  font-family:"Playfair Display",serif;
+  font-size:.91rem;
+  font-weight:500;
+  color:#5d5552;
+}
+
+.online-recipe-group-head span{
+  font-size:.62rem;
+  color:var(--muted);
+}
+
+.online-recipe-group-head b{
+  min-width:24px;
+  height:24px;
+  display:grid;
+  place-items:center;
+  border-radius:999px;
+  background:#fffdfb;
+  color:#807771;
+  font-size:.65rem;
+  font-weight:600;
+}
+
+.online-recipe-group[data-group="love"] .online-recipe-group-head{
+  background:rgba(246,239,210,.56);
+}
+
+.online-recipe-group[data-group="okay"] .online-recipe-group-head{
+  background:rgba(226,238,228,.58);
+}
+
+.online-recipe-group[data-group="no"]{
+  opacity:.72;
+}
+
+.online-recipe-group-list{
+  display:grid;
+  gap:6px;
+}
+
+@media(max-width:700px){
+  .day-meal-link-rating{
+    padding-left:2px;
+  }
+
+  .online-recipe-group-head{
+    align-items:flex-start;
+  }
+}
+
+/* =========================================================
+   ONLINE-REZEPTBUCH – Kategorien + Filter
+   ========================================================= */
+.online-recipe-filterbar{
+  display:flex;
+  align-items:flex-end;
+  gap:10px;
+  margin:0 0 12px;
+  padding:8px 9px;
+  border:1px solid rgba(185,176,168,.18);
+  border-radius:12px;
+  background:rgba(255,253,251,.62);
+}
+
+.online-recipe-filterbar label{
+  display:grid;
+  gap:3px;
+  min-width:min(290px,100%);
+}
+
+.online-recipe-filterbar label > span,
+.recipe-link-category-wrap > span{
+  font-size:.59rem;
+  color:var(--muted);
+  letter-spacing:.04em;
+}
+
+.online-recipe-filterbar select,
+.recipe-link-category{
+  min-height:32px;
+  padding:5px 9px;
+  border-radius:9px;
+  font-size:.72rem;
+}
+
+.online-recipe-filter-count{
+  margin-left:auto;
+  padding-bottom:7px;
+  color:var(--muted);
+  font-size:.64rem;
+  white-space:nowrap;
+}
+
+.recipe-link-category-wrap{
+  display:grid;
+  gap:2px;
+  min-width:175px;
+}
+
+.recipe-link-track-row{
+  grid-template-columns:minmax(180px,1.3fr) minmax(165px,.8fr) auto auto !important;
+  align-items:center !important;
+}
+
+@media(max-width:900px){
+  .recipe-link-track-row{
+    grid-template-columns:1fr 1fr !important;
+  }
+  .recipe-link-rating{
+    grid-column:1/-1;
+  }
+}
+
+@media(max-width:600px){
+  .online-recipe-filterbar{
+    align-items:stretch;
+    flex-direction:column;
+  }
+  .online-recipe-filter-count{
+    margin-left:0;
+    padding-bottom:0;
+  }
+  .recipe-link-track-row{
+    grid-template-columns:1fr !important;
+  }
+  .recipe-link-category-wrap{
+    min-width:0;
+  }
+}
+
