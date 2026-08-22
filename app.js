@@ -2858,44 +2858,34 @@ function timetablePerson(id) {
   return state.school.children[id];
 }
 function ensureManualTimetable(c){
-  if (!c || typeof c !== "object") return {
-    times: defaultLessonTimes.map(x => ({from:x[0], to:x[1]})),
-    subjects: Object.fromEntries(manualTimetableDayKeys.map(d => [d, []])),
-    homeBy: Object.fromEntries(manualTimetableDayKeys.map(d => [d, ""]))
-  };
-
-  c.timetableByYear = c.timetableByYear && typeof c.timetableByYear === "object"
-    ? c.timetableByYear
-    : {};
-
+  c.timetableByYear = c.timetableByYear || {};
   const y = state.settings?.schoolYear || "2026-27";
-  const fallbackTimes = defaultLessonTimes.map(x => ({from:x[0], to:x[1]}));
 
-  if (!c.timetableByYear[y] || typeof c.timetableByYear[y] !== "object") {
-    c.timetableByYear[y] = {};
+  if (!c.timetableByYear[y]) {
+    const times = defaultLessonTimes.map(x => ({
+      from: x[0],
+      to: x[1]
+    }));
+
+    c.timetableByYear[y] = {
+      times,
+      subjects: Object.fromEntries(
+        manualTimetableDayKeys.map(d => [d, Array(times.length).fill("")])
+      ),
+      homeBy: Object.fromEntries(
+        manualTimetableDayKeys.map(d => [d, ""])
+      )
+    };
   }
 
   const t = c.timetableByYear[y];
 
-  // Ältere gespeicherte Stundenpläne dürfen unvollständig sein.
-  t.times = Array.isArray(t.times) && t.times.length
-    ? t.times.map((tm, i) => ({
-        from: String(tm?.from ?? fallbackTimes[i]?.from ?? ""),
-        to: String(tm?.to ?? fallbackTimes[i]?.to ?? "")
-      }))
-    : fallbackTimes;
-
-  t.subjects = t.subjects && typeof t.subjects === "object"
-    ? t.subjects
-    : {};
-
-  t.homeBy = t.homeBy && typeof t.homeBy === "object"
-    ? t.homeBy
-    : {};
-
+  // Falls später Stunden hinzugefügt oder entfernt werden,
+  // die Fächerlisten automatisch auf dieselbe Länge bringen.
   manualTimetableDayKeys.forEach(day => {
-    if (!Array.isArray(t.subjects[day])) t.subjects[day] = [];
-    if (typeof t.homeBy[day] !== "string") t.homeBy[day] = String(t.homeBy[day] || "");
+    if (!Array.isArray(t.subjects[day])) {
+      t.subjects[day] = [];
+    }
 
     while (t.subjects[day].length < t.times.length) {
       t.subjects[day].push("");
@@ -3486,13 +3476,7 @@ document.querySelectorAll(".toggle-manual-timetable").forEach(btn => btn.addEven
 }));
 
 document.querySelectorAll(".close-manual-timetable").forEach(btn => btn.addEventListener("click", e => {
-  const id = e.currentTarget.dataset.child;
-  closeManualTimetableEditor(id);
-
-  if (id === "mama") {
-    document.querySelector("#familyTimetableDialog .family-timetable-buttons")?.classList.remove("hidden");
-    closeDialogCompat(familyTimetableDialog);
-  }
+  closeManualTimetableEditor(e.currentTarget.dataset.child);
 }));
 
 
@@ -3508,7 +3492,6 @@ document.querySelectorAll(".timetable-switch").forEach(btn => {
   });
 });
 // Stundenplan-Auswahl auf der Wochenplan-Seite
-let familyTimetableMode = "view";
 const familyTimetableDialog = document.querySelector("#familyTimetableDialog");
 
 document.querySelector("#openFamilyTimetableBtn")?.addEventListener("click", () => {
@@ -3835,8 +3818,8 @@ function renderRoutineAreaTasks(){
             </div>
             <div class="routine-area-task-actions">
               ${item.url?`<a href="${escapeHtml(item.url)}" target="_blank" rel="noopener">Video</a>`:""}
-              <button class="routine-area-edit" data-id="${item.id}" type="button" title="Bearbeiten" aria-label="Bearbeiten">✎</button>
-              <button class="routine-area-delete" data-id="${item.id}" type="button" title="Löschen" aria-label="Löschen">×</button>
+              <button class="routine-area-edit routine-icon-btn" data-id="${item.id}" type="button" title="Bearbeiten" aria-label="Bearbeiten"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.8 19.2l3.9-.8L18.4 8.7a1.7 1.7 0 0 0 0-2.4l-.7-.7a1.7 1.7 0 0 0-2.4 0L5.6 15.3z"/><path d="M13.8 7.1l3.1 3.1"/><path d="M4.8 19.2l.8-3.9"/></svg></button>
+              <button class="routine-area-delete routine-icon-btn routine-delete-icon" data-id="${item.id}" type="button" title="Löschen" aria-label="Löschen"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5.5 7.3h13"/><path d="M9.2 7.3V5.4h5.6v1.9"/><path d="M7.4 7.3l.8 11.1h7.6l.8-11.1"/><path d="M10 10.2v5.4M14 10.2v5.4"/></svg></button>
             </div>
             ${awaiting?`<div class="routine-area-rating">
               <span class="routine-rating-label">Wie war es?</span>
@@ -3884,6 +3867,7 @@ function renderRoutineAreaTasks(){
   // Bearbeiten muss direkt hier gebunden werden, weil die alte untere
   // Routinenliste bei normalen Bereichen leer ist.
   document.querySelectorAll(".routine-area-edit").forEach(btn=>btn.addEventListener("click",e=>{
+    e.__routineActionHandled=true;
     e.preventDefault();
     e.stopPropagation();
 
@@ -3908,6 +3892,7 @@ function renderRoutineAreaTasks(){
   // Löschen direkt im Bereich; bei aus dem Überblick eingeplanten Videos
   // wird der Archiv-Eintrag wieder freigegeben.
   document.querySelectorAll(".routine-area-delete").forEach(btn=>btn.addEventListener("click",e=>{
+    e.__routineActionHandled=true;
     e.preventDefault();
     e.stopPropagation();
 
@@ -3994,8 +3979,8 @@ function renderRoutines(){
         <small>${partLabel[item.part||"morning"]}${item.url?` · ${cat[1]}`:""}${item.sticky?" · jede Woche":""}${completion?.done?" · heute erledigt":""}</small>
       </div>
       <div class="routine-week-plan-actions">
-        <button class="routine-edit-btn" data-id="${item.id}" type="button" title="Bearbeiten" aria-label="Bearbeiten">✎</button>
-        <button class="routine-delete-btn" data-id="${item.id}" type="button" title="Aus Planung entfernen" aria-label="Entfernen">×</button>
+        <button class="routine-edit-btn routine-icon-btn" data-id="${item.id}" type="button" title="Bearbeiten" aria-label="Bearbeiten"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.8 19.2l3.9-.8L18.4 8.7a1.7 1.7 0 0 0 0-2.4l-.7-.7a1.7 1.7 0 0 0-2.4 0L5.6 15.3z"/><path d="M13.8 7.1l3.1 3.1"/><path d="M4.8 19.2l.8-3.9"/></svg></button>
+        <button class="routine-delete-btn routine-icon-btn routine-delete-icon" data-id="${item.id}" type="button" title="Aus Planung entfernen" aria-label="Aus Planung entfernen"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5.5 7.3h13"/><path d="M9.2 7.3V5.4h5.6v1.9"/><path d="M7.4 7.3l.8 11.1h7.6l.8-11.1"/><path d="M10 10.2v5.4M14 10.2v5.4"/></svg></button>
       </div>
     </div>`;
   };
@@ -4025,7 +4010,10 @@ function renderRoutines(){
       }).join("")}
     </div>`;
 
-  document.querySelectorAll("#routineList .routine-edit-btn").forEach(btn=>btn.addEventListener("click",()=>{
+  document.querySelectorAll("#routineList .routine-edit-btn").forEach(btn=>btn.addEventListener("click",(e)=>{
+    e.__routineActionHandled=true;
+    e.preventDefault();
+    e.stopPropagation();
     const item=routines.items.find(x=>x.id===btn.dataset.id);
     if(!item) return;
     editingRoutineId=item.id;
@@ -4042,18 +4030,17 @@ function renderRoutines(){
     document.querySelector("#routineTitle")?.focus();
   }));
 
-  document.querySelectorAll("#routineList .routine-delete-btn").forEach(btn=>btn.addEventListener("click",e=>{
+  document.querySelectorAll("#routineList .routine-delete-btn").forEach(btn=>btn.addEventListener("click",(e)=>{
+    e.__routineActionHandled=true;
     e.preventDefault();
     e.stopPropagation();
-
-    const id=e.currentTarget.dataset.id;
-    const doomed=routines.items.find(x=>x.id===id);
+    const doomed=routines.items.find(x=>x.id===btn.dataset.id);
     if(!doomed) return;
 
     // Nur die Planung entfernen. Ein Archivvideo bleibt im Überblick erhalten.
-    routines.items=routines.items.filter(x=>x.id!==id);
+    routines.items=routines.items.filter(x=>x.id!==btn.dataset.id);
     Object.keys(routines.completions||{}).forEach(key=>{
-      if(key.startsWith(`${id}__`)) delete routines.completions[key];
+      if(key.startsWith(`${btn.dataset.id}__`)) delete routines.completions[key];
     });
 
     save();
@@ -4062,6 +4049,75 @@ function renderRoutines(){
     renderArchive();
   }));
 }
+
+
+// V55 – Sicherheitsnetz für Routine-Aktionen.
+// Falls ein späterer Render einen direkt gebundenen Button ersetzt, bleiben
+// Bearbeiten und Löschen trotzdem zuverlässig funktionsfähig.
+document.addEventListener("click",e=>{
+  if(e.__routineActionHandled) return;
+
+  const editBtn=e.target.closest?.(".routine-edit-btn,.routine-area-edit");
+  const deleteBtn=e.target.closest?.(".routine-delete-btn,.routine-area-delete");
+  if(!editBtn && !deleteBtn) return;
+
+  e.preventDefault();
+  e.stopPropagation();
+
+  const id=(editBtn||deleteBtn)?.dataset?.id;
+  if(!id) return;
+
+  const routines=ensureWorkroomRoutines();
+  const item=routines.items.find(x=>x.id===id);
+  if(!item) return;
+
+  if(editBtn){
+    editingRoutineId=item.id;
+    document.querySelector("#routinePart").value=item.part||"morning";
+    document.querySelector("#routineTitle").value=item.title||"";
+    document.querySelector("#routineUrl").value=item.url||"";
+    document.querySelector("#routineCategory").value=item.category||"none";
+    document.querySelector("#routineDay").value=item.day||"daily";
+    document.querySelector("#routineSticky").checked=!!item.sticky;
+
+    const saveBtn=document.querySelector("#saveRoutineBtn");
+    if(saveBtn) saveBtn.textContent="Änderung speichern";
+
+    document.querySelector("#cancelRoutineEditBtn")?.classList.remove("hidden");
+    document.querySelector(".routine-add-grid")?.scrollIntoView({behavior:"smooth",block:"center"});
+    document.querySelector("#routineTitle")?.focus();
+    return;
+  }
+
+  if(item.sourceArchiveId){
+    const archived=state.archive.find(x=>x.id===item.sourceArchiveId);
+    if(archived){
+      archived.planned=false;
+      archived.updatedAt=Date.now();
+    }
+  }else if(item.url){
+    const archived=state.archive.find(x=>{
+      try{return normalizeUrl(x.url)===normalizeUrl(item.url);}
+      catch{return String(x.url||"").trim()===String(item.url||"").trim();}
+    });
+    if(archived){
+      archived.planned=false;
+      archived.updatedAt=Date.now();
+    }
+  }
+
+  routines.items=routines.items.filter(x=>x.id!==id);
+  Object.keys(routines.completions||{}).forEach(key=>{
+    if(key.startsWith(`${id}__`)) delete routines.completions[key];
+  });
+
+  save();
+  renderRoutines();
+  renderRoutineAreaTasks();
+  renderWorkroomWeekOverview(activeWorkroomWeekOffset);
+  renderArchive();
+},true);
+
 
 function saveRoutineFromForm(){
   const routines=ensureWorkroomRoutines();
@@ -5965,6 +6021,23 @@ function tombstoneWorkroomTodo(id) {
 }
 
 function renderSchoolWorkTodos() {
+  // Datensicherheits-Hydration: vorhandene lokale Werkraumdaten haben Vorrang,
+  // falls der In-Memory-State durch einen unvollständigen Cloudstand leerer ist.
+  try {
+    const localWorkroom = JSON.parse(localStorage.getItem("balanceProd.workroom") || "null");
+    if (localWorkroom && typeof localWorkroom === "object") {
+      const localNorm = normalizeWorkroom(localWorkroom);
+      const stateNorm = normalizeWorkroom(state.workroom);
+      const localCount =
+        localNorm.todos.length + localNorm.prints.length + localNorm.links.length + localNorm.shopping.length;
+      const stateCount =
+        stateNorm.todos.length + stateNorm.prints.length + stateNorm.links.length + stateNorm.shopping.length;
+      if (localCount > stateCount) state.workroom = localNorm;
+    }
+  } catch (err) {
+    console.warn("Werkraum-Lokaldaten konnten nicht gelesen werden:", err);
+  }
+
    const list = document.querySelector("#schoolWorkTodoList");
   if (!list) return;
 
@@ -6645,29 +6718,24 @@ function showSchoolPrintEmail(){
   setSchoolPrintEmailPanel(true);
 }
 
-function touchWorkroomPrint(item) {
-  if (item) item.updatedAt = Date.now();
-}
-
-function tombstoneWorkroomPrint(id) {
-  if (!id) return;
-  state.workroom = normalizeWorkroom(state.workroom);
-  state.workroom.printTombstones = state.workroom.printTombstones || {};
-  state.workroom.printTombstones[id] = Date.now();
-}
-
-function touchWorkroomLink(item) {
-  if (item) item.updatedAt = Date.now();
-}
-
-function tombstoneWorkroomLink(id) {
-  if (!id) return;
-  state.workroom = normalizeWorkroom(state.workroom);
-  state.workroom.linkTombstones = state.workroom.linkTombstones || {};
-  state.workroom.linkTombstones[id] = Date.now();
-}
-
 function renderSchoolPrints() {
+  // Datensicherheits-Hydration: vorhandene lokale Werkraumdaten haben Vorrang,
+  // falls der In-Memory-State durch einen unvollständigen Cloudstand leerer ist.
+  try {
+    const localWorkroom = JSON.parse(localStorage.getItem("balanceProd.workroom") || "null");
+    if (localWorkroom && typeof localWorkroom === "object") {
+      const localNorm = normalizeWorkroom(localWorkroom);
+      const stateNorm = normalizeWorkroom(state.workroom);
+      const localCount =
+        localNorm.todos.length + localNorm.prints.length + localNorm.links.length + localNorm.shopping.length;
+      const stateCount =
+        stateNorm.todos.length + stateNorm.prints.length + stateNorm.links.length + stateNorm.shopping.length;
+      if (localCount > stateCount) state.workroom = localNorm;
+    }
+  } catch (err) {
+    console.warn("Werkraum-Lokaldaten konnten nicht gelesen werden:", err);
+  }
+
   const list = document.querySelector("#schoolPrintList");
   if (!list) return;
 
@@ -6770,7 +6838,6 @@ function renderSchoolPrints() {
 
       item.done = e.currentTarget.checked;
       item.completedAt = item.done ? Date.now() : null;
-      touchWorkroomPrint(item);
 
       save();
       renderSchoolPrints();
@@ -6780,7 +6847,6 @@ function renderSchoolPrints() {
           const currentItem = state.workroom.prints.find(p => p.id === id);
           if (!currentItem || !currentItem.done) return;
 
-          tombstoneWorkroomPrint(id);
           state.workroom.prints =
             state.workroom.prints.filter(p => p.id !== id);
 
@@ -6800,7 +6866,6 @@ function renderSchoolPrints() {
       if (!item) return;
 
       item.mailOrder = !item.mailOrder;
-      touchWorkroomPrint(item);
       save();
       renderSchoolPrints();
     });
@@ -6809,7 +6874,6 @@ function renderSchoolPrints() {
   document.querySelectorAll(".workroom-print-delete").forEach(btn => {
     btn.addEventListener("click", e => {
       const id = e.currentTarget.dataset.id;
-      tombstoneWorkroomPrint(id);
       state.workroom.prints = state.workroom.prints.filter(p => p.id !== id);
       save();
       renderSchoolPrints();
@@ -6838,11 +6902,7 @@ function renderSchoolPrints() {
     if(index<0 || target<0 || target>=ordered.length) return;
 
     [ordered[index],ordered[target]]=[ordered[target],ordered[index]];
-    const reorderAt = Date.now();
-    ordered.forEach((item,order)=>{
-      item.order=order;
-      item.updatedAt=reorderAt;
-    });
+    ordered.forEach((item,order)=>item.order=order);
     state.workroom.prints=ordered;
     save();
     renderSchoolPrints();
@@ -6877,10 +6937,7 @@ function renderSchoolPrints() {
 
           ids.forEach((id, index) => {
             const item = state.workroom.prints.find(p => p.id === id);
-            if (item) {
-              item.order = index;
-              item.updatedAt = Date.now();
-            }
+            if (item) item.order = index;
           });
 
           save();
@@ -6910,7 +6967,6 @@ document.querySelector("#addSchoolPrintBtn")?.addEventListener("click", () => {
     if (item) {
       item.text = text;
       item.url = url;
-      touchWorkroomPrint(item);
     }
 
     delete button.dataset.editId;
@@ -6925,8 +6981,7 @@ document.querySelector("#addSchoolPrintBtn")?.addEventListener("click", () => {
       completedAt: null,
       mailOrder: false,
       order: state.workroom.prints.length,
-      createdAt: Date.now(),
-      updatedAt: Date.now()
+      createdAt: Date.now()
     });
   }
 
@@ -7047,6 +7102,21 @@ function workroomLinkMatchesSort(link, sortKey){
 }
 
 function renderWorkroomLinks() {
+  try {
+    const localWorkroom = JSON.parse(localStorage.getItem("balanceProd.workroom") || "null");
+    if (localWorkroom && typeof localWorkroom === "object") {
+      const localNorm = normalizeWorkroom(localWorkroom);
+      const stateNorm = normalizeWorkroom(state.workroom);
+      const localCount =
+        localNorm.todos.length + localNorm.prints.length + localNorm.links.length + localNorm.shopping.length;
+      const stateCount =
+        stateNorm.todos.length + stateNorm.prints.length + stateNorm.links.length + stateNorm.shopping.length;
+      if (localCount > stateCount) state.workroom = localNorm;
+    }
+  } catch (err) {
+    console.warn("Werkraum-Lokaldaten konnten nicht gelesen werden:", err);
+  }
+
   const list = document.querySelector("#workroomLinkList");
   const pager = document.querySelector("#workroomLinkPager");
   const pageLabel = document.querySelector("#workroomLinkPageLabel");
@@ -7193,7 +7263,6 @@ function renderWorkroomLinks() {
   list.querySelectorAll(".workroom-link-delete").forEach(btn => {
     btn.addEventListener("click", e => {
       const id = e.currentTarget.dataset.id;
-      tombstoneWorkroomLink(id);
       state.workroom.links = state.workroom.links.filter(link => link.id !== id);
       [...state.workroom.links]
         .sort((a,b)=>Number(a.order??999999)-Number(b.order??999999))
@@ -7240,11 +7309,7 @@ function renderWorkroomLinks() {
     if(index<0 || target<0 || target>=all.length) return;
 
     [all[index],all[target]]=[all[target],all[index]];
-    const reorderAt=Date.now();
-    all.forEach((link,order)=>{
-      link.order=order;
-      link.updatedAt=reorderAt;
-    });
+    all.forEach((link,order)=>link.order=order);
     state.workroom.links=all;
     save();
     renderWorkroomLinks();
@@ -7291,11 +7356,7 @@ function renderWorkroomLinks() {
           if(replacement && slots[i]!==undefined) all[slots[i]]=replacement;
         });
 
-        const reorderAt=Date.now();
-        all.forEach((link,index)=>{
-          link.order=index;
-          link.updatedAt=reorderAt;
-        });
+        all.forEach((link,index)=>link.order=index);
         state.workroom.links=all;
         save();
         renderWorkroomLinks();
@@ -7355,10 +7416,8 @@ document.querySelector("#addWorkroomLinkBtn")?.addEventListener("click", () => {
     }
 
     // New links always go to the top.
-    const reorderAt=Date.now();
     state.workroom.links.forEach(link=>{
       link.order=(Number(link.order)||0)+1;
-      link.updatedAt=reorderAt;
     });
 
     state.workroom.links.unshift({
@@ -8233,44 +8292,6 @@ function mergeWorkroomTodosSafely(localValue, remoteValue, tombstones) {
   });
 }
 
-function mergeWorkroomTombstones(localValue, remoteValue) {
-  const local = localValue && typeof localValue === "object" ? localValue : {};
-  const remote = remoteValue && typeof remoteValue === "object" ? remoteValue : {};
-  const merged = {...local};
-
-  Object.entries(remote).forEach(([id, ts]) => {
-    const remoteTs = Number(ts || 0);
-    const localTs = Number(merged[id] || 0);
-    if (remoteTs > localTs) merged[id] = remoteTs;
-  });
-
-  return merged;
-}
-
-function mergeWorkroomListByTimestamp(localValue, remoteValue, tombstones) {
-  const local = Array.isArray(localValue) ? localValue : [];
-  const remote = Array.isArray(remoteValue) ? remoteValue : [];
-  const merged = new Map();
-
-  local.forEach(item => {
-    if (item?.id) merged.set(item.id, item);
-  });
-
-  remote.forEach(remoteItem => {
-    if (!remoteItem?.id) return;
-    const localItem = merged.get(remoteItem.id);
-
-    if (!localItem || itemTimestamp(remoteItem) >= itemTimestamp(localItem)) {
-      merged.set(remoteItem.id, remoteItem);
-    }
-  });
-
-  return [...merged.values()].filter(item => {
-    const deletedAt = Number(tombstones?.[item.id] || 0);
-    return !deletedAt || itemTimestamp(item) > deletedAt;
-  });
-}
-
 function guardedWorkroomMerge(localValue, cloudValue) {
   const local = normalizeWorkroom(localValue);
   const remote = normalizeWorkroom(cloudValue);
@@ -8279,24 +8300,14 @@ function guardedWorkroomMerge(localValue, cloudValue) {
     local.todoTombstones,
     remote.todoTombstones
   );
-  const printTombstones = mergeWorkroomTombstones(
-    local.printTombstones,
-    remote.printTombstones
-  );
-  const linkTombstones = mergeWorkroomTombstones(
-    local.linkTombstones,
-    remote.linkTombstones
-  );
 
   return {
     ...local,
     ...remote,
     todoTombstones,
-    printTombstones,
-    linkTombstones,
     todos: mergeWorkroomTodosSafely(local.todos, remote.todos, todoTombstones),
-    prints: mergeWorkroomListByTimestamp(local.prints, remote.prints, printTombstones),
-    links: mergeWorkroomListByTimestamp(local.links, remote.links, linkTombstones),
+    prints: guardedMergeById(local.prints, remote.prints, "Druckliste"),
+    links: guardedMergeById(local.links, remote.links, "Werkraum-Links"),
     substitutions: guardedMergeById(local.substitutions, remote.substitutions, "Supplierungen"),
     plans: {
       ...(local.plans || {}),
@@ -11309,12 +11320,6 @@ function normalizeWorkroom(w) {
     todoTombstones: src.todoTombstones && typeof src.todoTombstones === "object"
       ? src.todoTombstones
       : {},
-    printTombstones: src.printTombstones && typeof src.printTombstones === "object"
-      ? src.printTombstones
-      : {},
-    linkTombstones: src.linkTombstones && typeof src.linkTombstones === "object"
-      ? src.linkTombstones
-      : {},
     prints: Array.isArray(src.prints) ? src.prints : [],
     links: Array.isArray(src.links) ? src.links : [],
     interestLinks: Array.isArray(src.interestLinks) ? src.interestLinks : [],
@@ -11839,44 +11844,15 @@ function applyCloudData(data) {
   }
 }
 
-function openDialogCompat(dialog) {
-  if (!dialog) return false;
-  try {
-    if (!dialog.open && typeof dialog.showModal === "function") dialog.showModal();
-    else if (!dialog.open) dialog.setAttribute("open", "");
-    return true;
-  } catch (err) {
-    console.warn("Dialog konnte nicht modal geöffnet werden:", err);
-    try {
-      dialog.setAttribute("open", "");
-      return true;
-    } catch (_) {
-      return false;
-    }
-  }
-}
-
-function closeDialogCompat(dialog) {
-  if (!dialog) return;
-  try {
-    if (typeof dialog.close === "function") dialog.close();
-    else dialog.removeAttribute("open");
-  } catch (_) {
-    dialog.removeAttribute("open");
-  }
-}
-
 const substitutionDialogRestored = document.querySelector("#substitutionDialog");
-document.querySelector("#openSubstitutionBtn")?.addEventListener("click", e => {
-  e.preventDefault();
-  e.stopPropagation();
+document.querySelector("#openSubstitutionBtn")?.addEventListener("click", () => {
   const dateInput = document.querySelector("#substitutionDate");
   if (dateInput && !dateInput.value) dateInput.value = dateKey(new Date());
-  openDialogCompat(substitutionDialogRestored);
+  substitutionDialogRestored?.showModal();
+  setTimeout(() => dateInput?.showPicker?.(), 80);
 });
-document.querySelector("#closeSubstitutionDialogBtn")?.addEventListener("click", e => {
-  e.preventDefault();
-  closeDialogCompat(substitutionDialogRestored);
+document.querySelector("#closeSubstitutionDialogBtn")?.addEventListener("click", () => {
+  substitutionDialogRestored?.close();
 });
 document.querySelector("#saveSubstitutionBtn")?.addEventListener("click", () => {
   const date = document.querySelector("#substitutionDate")?.value || "";
@@ -11891,88 +11867,19 @@ document.querySelector("#saveSubstitutionBtn")?.addEventListener("click", () => 
   state.workroom.substitutions.push({id:uid(), date, className, subject, forWhom, note, hours, createdAt:Date.now(), updatedAt:Date.now()});
   save();
   renderSubstitutions();
-  closeDialogCompat(substitutionDialogRestored);
+  substitutionDialogRestored?.close();
 });
 
 function openMamaTimetableEditorDirectRestored() {
-  const dialog = document.querySelector("#familyTimetableDialog");
   const title = document.querySelector("#familyTimetableDialogTitle");
-  const chooserButtons = document.querySelector("#familyTimetableDialog .family-timetable-buttons");
-  const wrap = document.querySelector("#manualTimetableWrapmama");
-  const host = document.querySelector("#ttMatrixmama");
-
-  if (!dialog || !wrap || !host) {
-    console.error("Mama-Stundenplan: benötigte Dialogelemente fehlen.");
-    showMotivation("Der Stundenplan-Editor konnte nicht gefunden werden.");
-    return;
-  }
-
-  familyTimetableMode = "edit";
   if (title) title.textContent = "Mama – Stundenplan bearbeiten";
-  chooserButtons?.classList.add("hidden");
-  wrap.classList.remove("hidden");
-
-  try {
-    // Dialog ZUERST sichtbar machen. So kann Firefox/Tablet die enthaltene
-    // Tabelle zuverlässig aufbauen und vermessen.
-    if (!dialog.open) {
-      try {
-        dialog.showModal();
-      } catch (_) {
-        dialog.setAttribute("open", "");
-      }
-    }
-
-    const mama = timetablePerson("mama");
-    const timetable = ensureManualTimetable(mama);
-
-    // Editor anschließend vollständig zeichnen.
-    renderTTMatrix("mama");
-
-    // Sicherheitsnetz: Wenn ein älterer Browser den Host nicht neu zeichnet,
-    // nochmals im nächsten Frame rendern.
-    requestAnimationFrame(() => {
-      try {
-        if (dialog.open && host && !host.children.length) {
-          renderTTMatrix("mama");
-        }
-      } catch (err) {
-        console.warn("Mama-Stundenplan Nachrendern:", err);
-      }
-    });
-
-  } catch (err) {
-    console.error("Mama-Stundenplan konnte nicht geöffnet werden:", err);
-    chooserButtons?.classList.remove("hidden");
-    wrap.classList.add("hidden");
-    closeDialogCompat(dialog);
-    showMotivation("Der Stundenplan konnte nicht geöffnet werden.");
-  }
+  const chooserButtons = document.querySelector("#familyTimetableDialog .family-timetable-buttons");
+  if (chooserButtons) chooserButtons.classList.add("hidden");
+  familyTimetableDialog?.showModal();
+  renderTTMatrix("mama");
+  document.querySelector("#manualTimetableWrapmama")?.classList.remove("hidden");
 }
-
-// ===== Werkraum: robuste Button-Fallbacks =====
-document.addEventListener("click", e => {
-  const substitutionBtn = e.target.closest?.("#openSubstitutionBtn");
-  if (substitutionBtn) {
-    e.preventDefault();
-    e.stopPropagation();
-
-    const dialog = document.querySelector("#substitutionDialog");
-    const dateInput = document.querySelector("#substitutionDate");
-    if (dateInput && !dateInput.value) dateInput.value = dateKey(new Date());
-
-    openDialogCompat(dialog);
-    return;
-  }
-
-  const timetableBtn = e.target.closest?.("#openWorkTimetableBtn");
-  if (timetableBtn) {
-    e.preventDefault();
-    e.stopPropagation();
-
-    openMamaTimetableEditorDirectRestored();
-  }
-}, true);
+document.querySelector("#openWorkTimetableBtn")?.addEventListener("click", openMamaTimetableEditorDirectRestored);
 
 function renderAll() {
   pruneTrash();
