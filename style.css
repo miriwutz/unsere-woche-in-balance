@@ -22206,3 +22206,48 @@ body:has(#workroomLinkSortSelect option:checked:not([value="manual"])) .workroom
   }
 }
 
+/* =========================================================
+   V54 – Stundenplanzeichen: ruhige Linienicons statt Emojis
+   ========================================================= */
+.tt-subject-symbol{
+  display:inline-flex !important;
+  flex:0 0 21px !important;
+  width:21px !important;
+  min-width:21px !important;
+  height:21px !important;
+  margin-right:5px !important;
+  align-items:center !important;
+  justify-content:center !important;
+  vertical-align:middle !important;
+  color:#7f746f !important;
+}
+.tt-subject-symbol svg{
+  display:block !important;
+  width:18px !important;
+  height:18px !important;
+  overflow:visible !important;
+  fill:none !important;
+  stroke:currentColor !important;
+  stroke-width:1.65 !important;
+  stroke-linecap:round !important;
+  stroke-linejoin:round !important;
+}
+.tt-symbol-gu{color:#6f9290 !important;}
+.tt-symbol-rel{color:#8c759f !important;}
+.tt-symbol-sport{color:#b78652 !important;}
+.tt-symbol-werken{color:#8e6d76 !important;}
+
+@media (max-width:900px){
+  .tt-subject-symbol{
+    flex-basis:20px !important;
+    width:20px !important;
+    min-width:20px !important;
+    height:20px !important;
+    margin-right:4px !important;
+  }
+  .tt-subject-symbol svg{
+    width:17px !important;
+    height:17px !important;
+  }
+}
+
