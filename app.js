@@ -3818,8 +3818,8 @@ function renderRoutineAreaTasks(){
             </div>
             <div class="routine-area-task-actions">
               ${item.url?`<a href="${escapeHtml(item.url)}" target="_blank" rel="noopener">Video</a>`:""}
-              <button class="routine-area-edit routine-icon-btn" data-id="${item.id}" type="button" title="Bearbeiten" aria-label="Bearbeiten"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.8 19.2l3.9-.8L18.4 8.7a1.7 1.7 0 0 0 0-2.4l-.7-.7a1.7 1.7 0 0 0-2.4 0L5.6 15.3z"/><path d="M13.8 7.1l3.1 3.1"/><path d="M4.8 19.2l.8-3.9"/></svg></button>
-              <button class="routine-area-delete routine-icon-btn routine-delete-icon" data-id="${item.id}" type="button" title="Löschen" aria-label="Löschen"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5.5 7.3h13"/><path d="M9.2 7.3V5.4h5.6v1.9"/><path d="M7.4 7.3l.8 11.1h7.6l.8-11.1"/><path d="M10 10.2v5.4M14 10.2v5.4"/></svg></button>
+              <button class="routine-area-edit" data-id="${item.id}" type="button" title="Bearbeiten" aria-label="Bearbeiten">✎</button>
+              <button class="routine-area-delete" data-id="${item.id}" type="button" title="Löschen" aria-label="Löschen">×</button>
             </div>
             ${awaiting?`<div class="routine-area-rating">
               <span class="routine-rating-label">Wie war es?</span>
@@ -3867,7 +3867,6 @@ function renderRoutineAreaTasks(){
   // Bearbeiten muss direkt hier gebunden werden, weil die alte untere
   // Routinenliste bei normalen Bereichen leer ist.
   document.querySelectorAll(".routine-area-edit").forEach(btn=>btn.addEventListener("click",e=>{
-    e.__routineActionHandled=true;
     e.preventDefault();
     e.stopPropagation();
 
@@ -3892,7 +3891,6 @@ function renderRoutineAreaTasks(){
   // Löschen direkt im Bereich; bei aus dem Überblick eingeplanten Videos
   // wird der Archiv-Eintrag wieder freigegeben.
   document.querySelectorAll(".routine-area-delete").forEach(btn=>btn.addEventListener("click",e=>{
-    e.__routineActionHandled=true;
     e.preventDefault();
     e.stopPropagation();
 
@@ -3979,8 +3977,8 @@ function renderRoutines(){
         <small>${partLabel[item.part||"morning"]}${item.url?` · ${cat[1]}`:""}${item.sticky?" · jede Woche":""}${completion?.done?" · heute erledigt":""}</small>
       </div>
       <div class="routine-week-plan-actions">
-        <button class="routine-edit-btn routine-icon-btn" data-id="${item.id}" type="button" title="Bearbeiten" aria-label="Bearbeiten"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.8 19.2l3.9-.8L18.4 8.7a1.7 1.7 0 0 0 0-2.4l-.7-.7a1.7 1.7 0 0 0-2.4 0L5.6 15.3z"/><path d="M13.8 7.1l3.1 3.1"/><path d="M4.8 19.2l.8-3.9"/></svg></button>
-        <button class="routine-delete-btn routine-icon-btn routine-delete-icon" data-id="${item.id}" type="button" title="Aus Planung entfernen" aria-label="Aus Planung entfernen"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5.5 7.3h13"/><path d="M9.2 7.3V5.4h5.6v1.9"/><path d="M7.4 7.3l.8 11.1h7.6l.8-11.1"/><path d="M10 10.2v5.4M14 10.2v5.4"/></svg></button>
+        <button class="routine-edit-btn" data-id="${item.id}" type="button" title="Bearbeiten" aria-label="Bearbeiten">✎</button>
+        <button class="routine-delete-btn" data-id="${item.id}" type="button" title="Aus Planung entfernen" aria-label="Entfernen">×</button>
       </div>
     </div>`;
   };
@@ -4010,10 +4008,7 @@ function renderRoutines(){
       }).join("")}
     </div>`;
 
-  document.querySelectorAll("#routineList .routine-edit-btn").forEach(btn=>btn.addEventListener("click",(e)=>{
-    e.__routineActionHandled=true;
-    e.preventDefault();
-    e.stopPropagation();
+  document.querySelectorAll("#routineList .routine-edit-btn").forEach(btn=>btn.addEventListener("click",()=>{
     const item=routines.items.find(x=>x.id===btn.dataset.id);
     if(!item) return;
     editingRoutineId=item.id;
@@ -4030,10 +4025,7 @@ function renderRoutines(){
     document.querySelector("#routineTitle")?.focus();
   }));
 
-  document.querySelectorAll("#routineList .routine-delete-btn").forEach(btn=>btn.addEventListener("click",(e)=>{
-    e.__routineActionHandled=true;
-    e.preventDefault();
-    e.stopPropagation();
+  document.querySelectorAll("#routineList .routine-delete-btn").forEach(btn=>btn.addEventListener("click",()=>{
     const doomed=routines.items.find(x=>x.id===btn.dataset.id);
     if(!doomed) return;
 
@@ -4049,75 +4041,6 @@ function renderRoutines(){
     renderArchive();
   }));
 }
-
-
-// V55 – Sicherheitsnetz für Routine-Aktionen.
-// Falls ein späterer Render einen direkt gebundenen Button ersetzt, bleiben
-// Bearbeiten und Löschen trotzdem zuverlässig funktionsfähig.
-document.addEventListener("click",e=>{
-  if(e.__routineActionHandled) return;
-
-  const editBtn=e.target.closest?.(".routine-edit-btn,.routine-area-edit");
-  const deleteBtn=e.target.closest?.(".routine-delete-btn,.routine-area-delete");
-  if(!editBtn && !deleteBtn) return;
-
-  e.preventDefault();
-  e.stopPropagation();
-
-  const id=(editBtn||deleteBtn)?.dataset?.id;
-  if(!id) return;
-
-  const routines=ensureWorkroomRoutines();
-  const item=routines.items.find(x=>x.id===id);
-  if(!item) return;
-
-  if(editBtn){
-    editingRoutineId=item.id;
-    document.querySelector("#routinePart").value=item.part||"morning";
-    document.querySelector("#routineTitle").value=item.title||"";
-    document.querySelector("#routineUrl").value=item.url||"";
-    document.querySelector("#routineCategory").value=item.category||"none";
-    document.querySelector("#routineDay").value=item.day||"daily";
-    document.querySelector("#routineSticky").checked=!!item.sticky;
-
-    const saveBtn=document.querySelector("#saveRoutineBtn");
-    if(saveBtn) saveBtn.textContent="Änderung speichern";
-
-    document.querySelector("#cancelRoutineEditBtn")?.classList.remove("hidden");
-    document.querySelector(".routine-add-grid")?.scrollIntoView({behavior:"smooth",block:"center"});
-    document.querySelector("#routineTitle")?.focus();
-    return;
-  }
-
-  if(item.sourceArchiveId){
-    const archived=state.archive.find(x=>x.id===item.sourceArchiveId);
-    if(archived){
-      archived.planned=false;
-      archived.updatedAt=Date.now();
-    }
-  }else if(item.url){
-    const archived=state.archive.find(x=>{
-      try{return normalizeUrl(x.url)===normalizeUrl(item.url);}
-      catch{return String(x.url||"").trim()===String(item.url||"").trim();}
-    });
-    if(archived){
-      archived.planned=false;
-      archived.updatedAt=Date.now();
-    }
-  }
-
-  routines.items=routines.items.filter(x=>x.id!==id);
-  Object.keys(routines.completions||{}).forEach(key=>{
-    if(key.startsWith(`${id}__`)) delete routines.completions[key];
-  });
-
-  save();
-  renderRoutines();
-  renderRoutineAreaTasks();
-  renderWorkroomWeekOverview(activeWorkroomWeekOffset);
-  renderArchive();
-},true);
-
 
 function saveRoutineFromForm(){
   const routines=ensureWorkroomRoutines();
