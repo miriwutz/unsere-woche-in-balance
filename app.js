@@ -3602,7 +3602,17 @@ function ensureWorkroomRoutines(){
   state.workroom.routines.inspirationChecks = state.workroom.routines.inspirationChecks && typeof state.workroom.routines.inspirationChecks==="object"
     ? state.workroom.routines.inspirationChecks
     : {};
+  state.workroom.routines.tombstones = state.workroom.routines.tombstones && typeof state.workroom.routines.tombstones==="object"
+    ? state.workroom.routines.tombstones
+    : {};
   return state.workroom.routines;
+}
+
+function tombstoneRoutineItem(id){
+  if(!id) return;
+  const routines=ensureWorkroomRoutines();
+  routines.tombstones=routines.tombstones||{};
+  routines.tombstones[id]=Date.now();
 }
 
 function routineWeekKey(offset=0){
@@ -3915,6 +3925,7 @@ function renderRoutineAreaTasks(){
       }
     }
 
+    tombstoneRoutineItem(item.id);
     routines.items=routines.items.filter(x=>x.id!==item.id);
     Object.keys(routines.completions||{}).forEach(key=>{
       if(key.startsWith(`${item.id}__`)) delete routines.completions[key];
@@ -4034,6 +4045,7 @@ function renderRoutines(){
     if(!doomed) return;
 
     // Nur die Planung entfernen. Ein Archivvideo bleibt im Überblick erhalten.
+    tombstoneRoutineItem(btn.dataset.id);
     routines.items=routines.items.filter(x=>x.id!==btn.dataset.id);
     Object.keys(routines.completions||{}).forEach(key=>{
       if(key.startsWith(`${btn.dataset.id}__`)) delete routines.completions[key];
@@ -8219,6 +8231,47 @@ function mergeWorkroomTodosSafely(localValue, remoteValue, tombstones) {
   });
 }
 
+function mergeRoutineObjectMaps(localValue, remoteValue) {
+  return {
+    ...(localValue && typeof localValue === "object" ? localValue : {}),
+    ...(remoteValue && typeof remoteValue === "object" ? remoteValue : {})
+  };
+}
+
+function mergeWorkroomRoutinesSafely(localValue, remoteValue) {
+  const local = localValue && typeof localValue === "object" ? localValue : {};
+  const remote = remoteValue && typeof remoteValue === "object" ? remoteValue : {};
+
+  const tombstones = mergeWorkroomTodoTombstones(local.tombstones, remote.tombstones);
+  const byId = new Map();
+
+  (Array.isArray(local.items) ? local.items : []).forEach(item=>{
+    if(item?.id) byId.set(item.id,item);
+  });
+
+  (Array.isArray(remote.items) ? remote.items : []).forEach(remoteItem=>{
+    if(!remoteItem?.id) return;
+    const localItem=byId.get(remoteItem.id);
+    if(!localItem || itemTimestamp(remoteItem)>=itemTimestamp(localItem)){
+      byId.set(remoteItem.id,remoteItem);
+    }
+  });
+
+  const items=[...byId.values()].filter(item=>{
+    const deletedAt=Number(tombstones[item.id]||0);
+    return !deletedAt || itemTimestamp(item)>deletedAt;
+  });
+
+  return {
+    ...local,
+    ...remote,
+    items,
+    tombstones,
+    completions:mergeRoutineObjectMaps(local.completions,remote.completions),
+    inspirationChecks:mergeRoutineObjectMaps(local.inspirationChecks,remote.inspirationChecks)
+  };
+}
+
 function guardedWorkroomMerge(localValue, cloudValue) {
   const local = normalizeWorkroom(localValue);
   const remote = normalizeWorkroom(cloudValue);
@@ -8236,6 +8289,7 @@ function guardedWorkroomMerge(localValue, cloudValue) {
     prints: guardedMergeById(local.prints, remote.prints, "Druckliste"),
     links: guardedMergeById(local.links, remote.links, "Werkraum-Links"),
     substitutions: guardedMergeById(local.substitutions, remote.substitutions, "Supplierungen"),
+    routines: mergeWorkroomRoutinesSafely(local.routines, remote.routines),
     plans: {
       ...(local.plans || {}),
       ...(remote.plans || {}),
