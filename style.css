@@ -22594,3 +22594,78 @@ body:has(#workroomLinkSortSelect option:checked:not([value="manual"])) .workroom
   }
 }
 
+/* =========================================================
+   ROUTINEN – klare Bearbeiten-/Löschen-Buttons, PC + Tablet
+   Nur Optik/Klickfläche dieser vier Routinen-Buttons.
+   ========================================================= */
+.routine-edit-btn,
+.routine-delete-btn,
+.routine-area-edit,
+.routine-area-delete{
+  width:30px !important;
+  min-width:30px !important;
+  height:30px !important;
+  min-height:30px !important;
+  padding:0 !important;
+  display:inline-flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  border:1px solid rgba(128,108,91,.13) !important;
+  border-radius:9px !important;
+  background:rgba(255,253,249,.72) !important;
+  color:#8d7969 !important;
+  opacity:1 !important;
+  cursor:pointer !important;
+  touch-action:manipulation !important;
+}
+.routine-delete-btn,
+.routine-area-delete{
+  color:#956d68 !important;
+}
+.routine-action-svg{
+  display:block !important;
+  width:16px !important;
+  height:16px !important;
+  fill:none !important;
+  stroke:currentColor !important;
+  stroke-width:1.6 !important;
+  stroke-linecap:round !important;
+  stroke-linejoin:round !important;
+  pointer-events:none !important;
+}
+.routine-edit-btn:hover,
+.routine-area-edit:hover{
+  background:#f3eee6 !important;
+  border-color:rgba(128,108,91,.22) !important;
+}
+.routine-delete-btn:hover,
+.routine-area-delete:hover{
+  background:#f7ece9 !important;
+  border-color:rgba(149,109,104,.22) !important;
+}
+
+.routine-week-plan-actions{
+  display:flex !important;
+  flex-direction:row !important;
+  align-items:center !important;
+  justify-content:flex-end !important;
+  gap:4px !important;
+  margin-left:auto !important;
+}
+
+@media (hover:none), (pointer:coarse){
+  .routine-edit-btn,
+  .routine-delete-btn,
+  .routine-area-edit,
+  .routine-area-delete{
+    width:34px !important;
+    min-width:34px !important;
+    height:34px !important;
+    min-height:34px !important;
+  }
+  .routine-action-svg{
+    width:17px !important;
+    height:17px !important;
+  }
+}
+
