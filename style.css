@@ -24827,3 +24827,40 @@ button.day-meal-list-item:hover,a.day-meal-list-item:hover{background:rgba(164,1
   }
 }
 
+/* =========================================================
+   WOCHENPLAN – Schrift in den schmalen Terminbalken lesbarer
+   ========================================================= */
+
+/* Mehrtägige Balken: dunkle, klar lesbare Schrift */
+.week-span,
+.week-span *,
+.week-span-label,
+.week-span-text,
+.multi-day-event,
+.multi-day-event *,
+.multi-day-label,
+.multi-day-text{
+  color:#403a36 !important;
+  opacity:1 !important;
+  text-shadow:none !important;
+}
+
+/* Text etwas größer und kräftiger, ohne die Balken höher zu machen */
+.week-span-label,
+.week-span-text,
+.multi-day-label,
+.multi-day-text{
+  font-size:11px !important;
+  font-weight:600 !important;
+  line-height:1.15 !important;
+}
+
+/* Auch vergangene Tage: Balken dürfen verblassen, Schrift bleibt lesbar */
+.is-past .week-span *,
+.past .week-span *,
+.is-past .multi-day-event *,
+.past .multi-day-event *{
+  color:#403a36 !important;
+  opacity:1 !important;
+}
+
