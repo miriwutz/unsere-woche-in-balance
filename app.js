@@ -2159,11 +2159,9 @@ const multiDayLaneHtml = multiDayTrackCount
         const visibleStartIndex = weekDates.findIndex(d => dateKey(d) === visibleStart);
         const visibleEndIndex = weekDates.findIndex(d => dateKey(d) === visibleEnd);
         const visibleSpan = Math.max(1, visibleEndIndex - visibleStartIndex + 1);
-        const visibleCenterIndex = Math.floor((visibleStartIndex + visibleEndIndex) / 2);
-
-        // Stabiler als ein über mehrere Tagescontainer gespanntes Element:
-        // Text nur auf dem mittleren sichtbaren Segment ausgeben.
-        // So springt keine Zeile und der Text bleibt auch bei Wochenwechseln sichtbar.
+        const visibleCenter = (visibleStartIndex + visibleEndIndex) / 2;
+        const visibleCenterIndex = Math.floor(visibleCenter);
+        const centerOffset = visibleCenter - visibleCenterIndex;
         const showLabel = index === visibleCenterIndex;
 
         // Uhrzeit nur dort zeigen, wo der echte Start in dieser Woche liegt.
@@ -2180,7 +2178,7 @@ const multiDayLaneHtml = multiDayTrackCount
         return `<div class="multiday-event-lane" data-track="${track}">
           <div
             class="multiday-continuous-segment ${isStart ? "is-start" : ""} ${isEnd ? "is-end" : ""}"
-            style="--multi-accent:${accent};--multi-bg:${multiBackground};--multi-person-bg:${personBackground};--multi-span:${visibleSpan}">
+            style="--multi-accent:${accent};--multi-bg:${multiBackground};--multi-person-bg:${personBackground};--multi-span:${visibleSpan};--multi-center-offset:${centerOffset}">
             ${showLabel
               ? `<span class="multiday-continuous-label multiday-center-label">
                    ${personLabel ? `<span class="multiday-person"><i></i>${escapeHtml(personLabel)}</span><span class="multiday-sep">·</span>` : ""}
@@ -8095,6 +8093,7 @@ if (
   recurrenceSelect.value = "yearly";
 }
   document.querySelector("#eventFields").classList.toggle("hidden", !isEvent);
+  document.querySelector("#eventCategoryTopField")?.classList.toggle("hidden", !isEvent);
   document.querySelector("#entryTextLabel").textContent = isEvent ? "Termin" : "Aufgabe";
   document.querySelector("#todoText").placeholder = isEvent
     ? "z. B. Musikschule, Elternabend, Training"
@@ -14363,16 +14362,15 @@ window.addEventListener("beforeunload", persistFamilyQuestionsNow);
 function normalizePlanningFormLayout() {
   const priority = document.querySelector("#todoPriority")?.closest("label");
   const area = document.querySelector("#todoArea")?.closest("label");
-  const period = document.querySelector("#todoPeriod")?.closest("label");
 
-  if (priority && area && period) {
+  if (priority && area) {
     let quickRow = document.querySelector(".todo-quick-meta-row");
     if (!quickRow) {
       quickRow = document.createElement("div");
       quickRow.className = "todo-quick-meta-row";
     }
 
-    [priority, area, period].forEach(label => quickRow.appendChild(label));
+    [priority, area].forEach(label => quickRow.appendChild(label));
 
     const oldDetails = document.querySelector(".todo-more-settings");
     const topRow = document.querySelector(".entry-top-row");
