@@ -1674,27 +1674,48 @@ function ratingFor(url) {
 
 
 
+function normalizedFamilyMembers(todo) {
+  const order = ["a","b","c","d"];
+  return [...new Set(
+    (Array.isArray(todo?.family) ? todo.family : [])
+      .filter(x => state.familySettings?.[x])
+  )].sort((x,y) => order.indexOf(x) - order.indexOf(y));
+}
+
 function todoGroupKey(todo) {
-  const members = Array.isArray(todo.family) ? todo.family.filter(x => state.familySettings[x]) : [];
+  const members = normalizedFamilyMembers(todo);
   if (members.length === 0) return "general";
   if (members.length === 1) return members[0];
-  return "shared";
+  return `shared:${members.join("+")}`;
+}
+
+function isSharedGroupKey(key) {
+  return String(key || "").startsWith("shared:");
+}
+
+function membersFromGroupKey(key) {
+  if (!isSharedGroupKey(key)) return [];
+  return String(key).slice(7).split("+").filter(Boolean);
 }
 
 function todoGroupLabel(key) {
   if (["a","b","c","d"].includes(key)) return familyName(key);
-  return {
-    shared:"Alle",
-    general:"Allgemein"
-  }[key] || "Allgemein";
+  if (key === "general") return "Allgemein";
+
+  if (isSharedGroupKey(key)) {
+    const members = membersFromGroupKey(key);
+    const all = ["a","b","c","d"].filter(k => state.familySettings?.[k]);
+
+    if (members.length === all.length && all.every(k => members.includes(k))) return "Alle";
+    return members.map(k => familyName(k) || k).join(" + ");
+  }
+
+  return "Allgemein";
 }
 
 
 function familySelectionLabel(todo) {
-  const members = [...new Set(
-    (Array.isArray(todo?.family) ? todo.family : [])
-      .filter(member => state.familySettings?.[member])
-  )];
+  const members = normalizedFamilyMembers(todo);
 
   if (!members.length) return "Allgemein";
   if (members.length === 1) return familyName(members[0]) || "";
@@ -1708,7 +1729,10 @@ function familySelectionLabel(todo) {
 }
 
 function todoGroupOrder(key) {
-  return {a:1,b:2,c:3,d:4,shared:5,general:6}[key] || 9;
+  if (["a","b","c","d"].includes(key)) return {a:1,b:2,c:3,d:4}[key];
+  if (isSharedGroupKey(key)) return 5;
+  if (key === "general") return 6;
+  return 9;
 }
 
 function groupTodosByPerson(todos) {
@@ -1722,7 +1746,7 @@ function groupTodosByPerson(todos) {
 }
 
 function groupAccentClass(key) {
-  return `person-group-${key}`;
+  return isSharedGroupKey(key) ? "person-group-shared" : `person-group-${key}`;
 }
 
 function sharedGroupGradient(items = []) {
@@ -1916,7 +1940,7 @@ function renderWeek() {
 
   mobileMultiSummary.innerHTML = multiDayEventsThisWeek.map(item => {
     const groupKey = todoGroupKey(item);
-    const accent = groupKey === "shared"
+    const accent = isSharedGroupKey(groupKey)
       ? "#b58fa7"
       : (groupKey === "general" ? "#aaa77f" : (familyColor(groupKey) || "#a99f99"));
 
@@ -2012,7 +2036,7 @@ function renderWeek() {
       <div class="day-todos">
         ${groupTodosByPerson(visibleTodos).map(([groupKey, groupItems]) => `
           <div class="person-todo-group grouped-family-block ${groupAccentClass(groupKey)}"
-               style="${groupKey === "shared"
+               style="${isSharedGroupKey(groupKey)
                  ? `--group-border:${sharedGroupGradient(groupItems)}`
                  : `--group-border:${groupKey === "general" ? "#b8b58d" : (familyColor(groupKey) || "#c8c0ba")}`}">
             <div class="person-todo-group-title">
@@ -2074,7 +2098,7 @@ const renderEventCard = (t) => {
   const groupKey = todoGroupKey(t);
   return `
     <div class="person-todo-group grouped-family-block event-person-block ${groupAccentClass(groupKey)}"
-         style="${groupKey === "shared"
+         style="${isSharedGroupKey(groupKey)
            ? `--group-border:${sharedGroupGradient([t])}`
            : `--group-border:${groupKey === "general" ? "#b8b58d" : (familyColor(groupKey) || "#c8c0ba")}`}">
       <div class="person-todo-group-title">
@@ -2896,7 +2920,7 @@ todos.sort((a, b) => {
   const grouped = groupTodosByPerson(todos);
   list.innerHTML = grouped.map(([groupKey, groupItems]) => `
     <section class="todo-person-section grouped-family-section ${groupAccentClass(groupKey)}"
-      style="${groupKey === "shared"
+      style="${isSharedGroupKey(groupKey)
         ? `--group-border:${sharedGroupGradient(groupItems)}`
         : `--group-border:${groupKey === "general" ? "#b8b58d" : (familyColor(groupKey) || "#c8c0ba")}`}">
       <div class="todo-person-heading">
@@ -14437,4 +14461,20 @@ function normalizePlanningFormLayout() {
 }
 
 normalizePlanningFormLayout();
+
+function debugFamilyCombinationLabels() {
+  return [
+    ["Mama + Papa", familySelectionLabel({family:["a","b"]})],
+    ["Mama + Lou", familySelectionLabel({family:["a","c"]})],
+    ["Mama + Fina", familySelectionLabel({family:["a","d"]})],
+    ["Papa + Lou", familySelectionLabel({family:["b","c"]})],
+    ["Papa + Fina", familySelectionLabel({family:["b","d"]})],
+    ["Lou + Fina", familySelectionLabel({family:["c","d"]})],
+    ["Mama + Papa + Lou", familySelectionLabel({family:["a","b","c"]})],
+    ["Mama + Papa + Fina", familySelectionLabel({family:["a","b","d"]})],
+    ["Mama + Lou + Fina", familySelectionLabel({family:["a","c","d"]})],
+    ["Papa + Lou + Fina", familySelectionLabel({family:["b","c","d"]})],
+    ["Alle", familySelectionLabel({family:["a","b","c","d"]})]
+  ];
+}
 
