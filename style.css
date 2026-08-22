@@ -11433,13 +11433,9 @@ button.day-meal{cursor:pointer}
    V53 – Stundenplan exakt als eine durchgehende schöne Ansicht
    ========================================================= */
 
-/* Der Familien-Stundenplan-Dialog wird im Werkraum als Editor benötigt.
-   Deshalb darf er nicht global ausgeblendet werden. */
+/* Chooser wird im Wochenplan nicht mehr benötigt. */
 #familyTimetableDialog{
-  display:none;
-}
-#familyTimetableDialog[open]{
-  display:block !important;
+  display:none !important;
 }
 
 /* Modal */
@@ -22332,265 +22328,80 @@ body:has(#workroomLinkSortSelect option:checked:not([value="manual"])) .workroom
 }
 
 /* =========================================================
-   PUNKT 2B – Linksammlung Tablet: zuverlässiger Breakpoint
+   V55 – Routinen: Bearbeiten/Löschen klar & tabletfreundlich
    ========================================================= */
-
-/* Android-/Firefox-Tablets melden hover/pointer nicht immer so, wie man erwartet.
-   Deshalb hängt die Tablet-Darstellung jetzt nur noch von der verfügbaren Breite ab. */
-@media (max-width:1400px){
-  #workroomLinkList{
-    grid-template-columns:1fr !important;
-    grid-template-rows:none !important;
-    grid-auto-flow:row !important;
-  }
-
-  #workroomLinkList .workroom-link-item{
-    grid-column:1 !important;
-    grid-row:auto !important;
-    grid-template-columns:minmax(0,1fr) auto !important;
-    gap:8px !important;
-  }
-
-  #workroomLinkList .workroom-link-drag-handle{
-    display:none !important;
-  }
-
-  #workroomLinkList .workroom-link-main,
-  #workroomLinkList .workroom-link-texts{
-    min-width:0 !important;
-    width:100% !important;
-  }
-
-  #workroomLinkList .workroom-link-texts{
-    display:grid !important;
-    grid-template-columns:minmax(150px,1fr) minmax(0,.55fr) !important;
-    gap:10px !important;
-    align-items:center !important;
-  }
-
-  #workroomLinkList .workroom-link-title{
-    min-width:0 !important;
-    max-width:none !important;
-    width:auto !important;
-    overflow:hidden !important;
-    text-overflow:ellipsis !important;
-    white-space:nowrap !important;
-  }
-
-  #workroomLinkList .workroom-link-note{
-    min-width:0 !important;
-    max-width:none !important;
-    overflow:hidden !important;
-    text-overflow:ellipsis !important;
-    white-space:nowrap !important;
-  }
-
-  #workroomLinkList .workroom-link-actions{
-    gap:2px !important;
-    flex-wrap:nowrap !important;
-  }
+.routine-icon-btn{
+  width:30px !important;
+  min-width:30px !important;
+  height:30px !important;
+  min-height:30px !important;
+  padding:0 !important;
+  display:inline-flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  border:1px solid rgba(126,111,94,.13) !important;
+  border-radius:9px !important;
+  background:rgba(255,253,249,.72) !important;
+  color:#8b7a6d !important;
+  cursor:pointer !important;
+  opacity:.92 !important;
+}
+.routine-icon-btn svg{
+  display:block !important;
+  width:16px !important;
+  height:16px !important;
+  fill:none !important;
+  stroke:currentColor !important;
+  stroke-width:1.55 !important;
+  stroke-linecap:round !important;
+  stroke-linejoin:round !important;
+  pointer-events:none !important;
+}
+.routine-delete-icon{
+  color:#9a716b !important;
+}
+.routine-icon-btn:hover{
+  background:#f4eee6 !important;
+  border-color:rgba(126,105,83,.24) !important;
+  opacity:1 !important;
+}
+.routine-delete-icon:hover{
+  background:#f7ebe8 !important;
+  color:#865d58 !important;
 }
 
-/* Auf wirklich schmalen Geräten bekommt der Titel die ganze Zeile,
-   die Notiz rutscht klein darunter. */
-@media (max-width:760px){
-  #workroomLinkList .workroom-link-texts{
-    grid-template-columns:1fr !important;
-    gap:2px !important;
-  }
-
-  #workroomLinkList .workroom-link-note{
-    font-size:.64rem !important;
-  }
-}
-
-/* =========================================================
-   PUNKT 2C – Tablet: Links wieder 2-spaltig und lesbar
-   ========================================================= */
-
-/* Der vorige Tablet-Fix wurde bewusst korrigiert:
-   auf normalen Tablets bleiben zwei Spalten erhalten. */
-@media (min-width:700px) and (max-width:1400px){
-  #workroomLinkList{
-    display:grid !important;
-    grid-template-columns:repeat(2,minmax(0,1fr)) !important;
-    grid-template-rows:repeat(10,auto) !important;
-    grid-auto-flow:column !important;
-    gap:8px !important;
-  }
-
-  #workroomLinkList .workroom-link-item{
-    grid-template-columns:minmax(0,1fr) auto !important;
-    gap:5px !important;
-    min-width:0 !important;
-  }
-
-  #workroomLinkList .workroom-link-drag-handle{
-    display:none !important;
-  }
-
-  #workroomLinkList .workroom-link-main{
-    min-width:0 !important;
-    width:100% !important;
-  }
-
-  #workroomLinkList .workroom-link-texts{
-    display:grid !important;
-    grid-template-columns:1fr !important;
-    gap:1px !important;
-    min-width:0 !important;
-    width:100% !important;
-  }
-
-  #workroomLinkList .workroom-link-title,
-  #workroomLinkList .workroom-link-note{
-    min-width:0 !important;
-    max-width:100% !important;
-    overflow:hidden !important;
-    text-overflow:ellipsis !important;
-    white-space:nowrap !important;
-  }
-
-  #workroomLinkList .workroom-link-note{
-    font-size:.64rem !important;
-    opacity:.82 !important;
-  }
-
-  #workroomLinkList .workroom-link-actions{
-    display:flex !important;
-    align-items:center !important;
-    justify-content:flex-end !important;
-    gap:1px !important;
-    margin-left:auto !important;
-    white-space:nowrap !important;
-  }
-
-  #workroomLinkList .workroom-link-actions .workroom-link-use{
-    margin-right:2px !important;
-    font-size:.61rem !important;
-    padding:3px 6px !important;
-  }
-
-  #workroomLinkList .workroom-link-edit,
-  #workroomLinkList .workroom-link-delete,
-  #workroomLinkList .workroom-link-move-up,
-  #workroomLinkList .workroom-link-move-down{
-    width:24px !important;
-    min-width:24px !important;
-    height:28px !important;
-    min-height:28px !important;
-    padding:0 !important;
-  }
-}
-
-/* Erst auf Handybreite wird wirklich einspaltig. */
-@media (max-width:699px){
-  #workroomLinkList{
-    grid-template-columns:1fr !important;
-    grid-template-rows:none !important;
-    grid-auto-flow:row !important;
-  }
-  #workroomLinkList .workroom-link-item{
-    grid-column:1 !important;
-    grid-row:auto !important;
-  }
-}
-
-/* =========================================================
-   Routinen – Bearbeiten/Löschen wie bei Videokarten rechts
-   ========================================================= */
+/* Wochenkarten: Aktionen nebeneinander statt winzig übereinander. */
 .routine-week-plan-actions{
   display:flex !important;
   flex-direction:row !important;
   align-items:center !important;
-  justify-content:flex-end !important;
-  gap:2px !important;
-  margin-left:auto !important;
+  gap:3px !important;
+  flex:0 0 auto !important;
 }
 .routine-week-plan-actions button{
-  width:24px !important;
-  min-width:24px !important;
-  height:24px !important;
-  min-height:24px !important;
-  display:inline-flex !important;
-  align-items:center !important;
-  justify-content:center !important;
-  touch-action:manipulation !important;
+  width:27px !important;
+  min-width:27px !important;
+  height:27px !important;
+  min-height:27px !important;
 }
 
-/* =========================================================
-   FIX 04 – Linksammlung: Tablet zuverlässig 2-spaltig
-   ========================================================= */
-
-/* Alle Ansichten ab 700 CSS-px bleiben zweispaltig.
-   Dadurch kann Firefox/Android die Darstellung nicht mehr über
-   Touch-/Hover-Merkmale auf eine Spalte zurücksetzen. */
-@media (min-width:700px){
-  body #workroomLinkList{
-    display:grid !important;
-    grid-template-columns:repeat(2,minmax(0,1fr)) !important;
-    grid-template-rows:repeat(10,auto) !important;
-    grid-auto-flow:column !important;
-    gap:8px !important;
+/* Tablet / Touch: ausreichend große Klickfläche, aber weiterhin ruhig. */
+@media (hover:none), (pointer:coarse){
+  .routine-icon-btn{
+    width:34px !important;
+    min-width:34px !important;
+    height:34px !important;
+    min-height:34px !important;
   }
-
-  body #workroomLinkList > .workroom-link-item{
-    grid-column:auto !important;
-    grid-row:auto !important;
-    min-width:0 !important;
-    grid-template-columns:minmax(0,1fr) auto !important;
+  .routine-icon-btn svg{
+    width:17px !important;
+    height:17px !important;
   }
-
-  body #workroomLinkList .workroom-link-drag-handle{
-    display:none !important;
+  .routine-week-plan-actions{
+    gap:4px !important;
   }
-
-  body #workroomLinkList .workroom-link-main,
-  body #workroomLinkList .workroom-link-texts{
-    min-width:0 !important;
-    width:100% !important;
-  }
-
-  body #workroomLinkList .workroom-link-texts{
-    display:block !important;
-  }
-
-  body #workroomLinkList .workroom-link-title{
-    display:block !important;
-    min-width:0 !important;
-    width:100% !important;
-    max-width:100% !important;
-    overflow:hidden !important;
-    text-overflow:ellipsis !important;
-    white-space:nowrap !important;
-  }
-
-  body #workroomLinkList .workroom-link-note{
-    display:block !important;
-    min-width:0 !important;
-    max-width:100% !important;
-    margin-top:1px !important;
-    font-size:.64rem !important;
-    overflow:hidden !important;
-    text-overflow:ellipsis !important;
-    white-space:nowrap !important;
-  }
-
-  body #workroomLinkList .workroom-link-actions{
-    display:flex !important;
-    align-items:center !important;
-    justify-content:flex-end !important;
-    gap:1px !important;
-    margin-left:auto !important;
-    white-space:nowrap !important;
-  }
-}
-
-@media (max-width:699px){
-  body #workroomLinkList{
-    grid-template-columns:1fr !important;
-    grid-template-rows:none !important;
-    grid-auto-flow:row !important;
+  .routine-week-plan-card{
+    grid-template-columns:auto minmax(0,1fr) auto !important;
   }
 }
 
