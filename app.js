@@ -2028,9 +2028,20 @@ const multiDayLaneHtml = multiDayTrackCount
         const isStart = currentKey === visibleStart;
         const isEnd = currentKey === visibleEnd;
         const groupKey = todoGroupKey(item);
+
+        // WICHTIG: --multi-accent muss eine echte Farbe sein.
+        // Für "Gemeinsam" wurde zuvor sharedGroupGradient() eingesetzt.
+        // Ein Gradient ist in color-mix() ungültig – deshalb waren gemeinsame
+        // Mehrtagestermine praktisch unsichtbar und nur ihr Text blieb stehen.
         const accent = groupKey === "shared"
-          ? sharedGroupGradient([item])
-          : (groupKey === "general" ? "#b8b58d" : (familyColor(groupKey) || "#c8c0ba"));
+          ? "#b58fa7"
+          : (groupKey === "general" ? "#aaa77f" : (familyColor(groupKey) || "#a99f99"));
+
+        const personLabel =
+          groupKey === "shared"
+            ? "Gemeinsam"
+            : (groupKey === "general" ? "" : (familyName(groupKey) || ""));
+
         const startTime = isStart && item.time ? `${escapeHtml(item.time)} ` : "";
         const endTime = isEnd && item.endTime ? ` · bis ${escapeHtml(item.endTime)}` : "";
 
@@ -2039,7 +2050,10 @@ const multiDayLaneHtml = multiDayTrackCount
             class="multiday-continuous-segment ${isStart ? "is-start" : ""} ${isEnd ? "is-end" : ""}"
             style="--multi-accent:${accent}">
             ${isStart
-              ? `<span class="multiday-continuous-label">${startTime}${item.superImportant ? "★ " : ""}${escapeHtml(item.text)}${endTime}</span>`
+              ? `<span class="multiday-continuous-label">
+                   ${personLabel ? `<span class="multiday-person"><i></i>${escapeHtml(personLabel)}</span><span class="multiday-sep">·</span>` : ""}
+                   <span class="multiday-title">${startTime}${item.superImportant ? "★ " : ""}${escapeHtml(item.text)}${endTime}</span>
+                 </span>`
               : (isEnd && item.endTime
                   ? `<span class="multiday-continuous-end">${endTime}</span>`
                   : `<span class="multiday-continuous-fill" aria-hidden="true"></span>`)}
