@@ -95,55 +95,8 @@ let cloudApplying = false;
 let cloudSaveTimer = null;
 let cloudUnsubscribe = null;
 
-function saveLocal() {
-  try { makeLocalSafetySnapshot("vor-lokal-speichern"); } catch (_) {}
-  try {
-    if (typeof makeLocalSafetyBackup === "function") makeLocalSafetyBackup();
-  } catch (_) {}
-
-  localStorage.setItem("balanceProd.videos", JSON.stringify(state.videos));
-  localStorage.setItem("balanceProd.todos", JSON.stringify(state.todos));
-  localStorage.setItem("balanceProd.archive", JSON.stringify(state.archive));
-  localStorage.setItem("balanceProd.shopping", JSON.stringify(state.shopping));
-  localStorage.setItem("balanceProd.shoppingPromos", JSON.stringify(state.shoppingPromos || []));
-  localStorage.setItem("balanceProd.recipes", JSON.stringify(state.recipes));
-  localStorage.setItem("balanceProd.meals", JSON.stringify(state.meals));
-  localStorage.setItem("balanceProd.pinboard", JSON.stringify(state.pinboard));
-  persistFamilyQuestionsNow();
-  persistFamilyQuestionsNow();
-  localStorage.setItem("balanceProd.recipeLinkFeedback", JSON.stringify(state.recipeLinkFeedback));
-  localStorage.setItem("balanceProd.timeTracking", JSON.stringify(state.timeTracking));
-  localStorage.setItem("balanceProd.trash", JSON.stringify(state.trash || []));
-  localStorage.setItem("balanceProd.todoTombstones", JSON.stringify(state.todoTombstones || {}));
-  localStorage.setItem("balanceProd.workroom", JSON.stringify(state.workroom));
-  localStorage.setItem("balanceProd.school", JSON.stringify(state.school));
-  localStorage.setItem("balanceProd.familySettings", JSON.stringify(state.familySettings));
-  localStorage.setItem("balanceProd.schoolYear", state.settings?.schoolYear || "2026-27");
-  localStorage.setItem("balanceProd.familyBorderWidth", state.settings?.familyBorderWidth || "3");
-}
-
-function cloudPayload() {
-  // JSON round-trip removes values Firestore cannot store (e.g. undefined).
-  return JSON.parse(JSON.stringify({
-    videos: state.videos,
-    todos: state.todos,
-    trash: state.trash || [],
-    todoTombstones: state.todoTombstones || {},
-    archive: state.archive,
-    shopping: state.shopping,
-    shoppingPromos: state.shoppingPromos || [],
-    recipes: state.recipes,
-    meals: state.meals,
-    pinboard: state.pinboard,
-    familyQuestions: state.familyQuestions || [],
-    recipeLinkFeedback: state.recipeLinkFeedback,
-    workroom: state.workroom,
-    school: state.school,
-    familySettings: state.familySettings,
-    settings: state.settings || {}
-  }));
-}
-
+/* CODE-AUDIT: frühere, überschriebene Definition von saveLocal entfernt. */
+/* CODE-AUDIT: frühere, überschriebene Definition von cloudPayload entfernt. */
 // ===== EINKAUF – eigener Firestore-Bereich =====
 
 function shoppingCollection() {
@@ -3506,28 +3459,7 @@ document.querySelectorAll(".save-timetable").forEach(b=>b.addEventListener("clic
   save();renderSchool();
 }));
 
-
-function bindSchoolYearSetting(){
-  const select = document.querySelector("#schoolYearSelect");
-  if (!select) return;
-  if (document.activeElement !== select) select.value = state.settings.schoolYear || "2026-27";
-  if (!select.dataset.bound) {
-    select.dataset.bound = "1";
-    select.addEventListener("change", () => {
-      state.settings.schoolYear = select.value;
-      localStorage.setItem("balanceProd.schoolYear", select.value);
-      renderAll();
-
-      const sy = activeSchoolYear();
-      if (!sy.start) {
-        showMotivation("Für dieses Schuljahr sind die NÖ-Ferien noch nicht hinterlegt.");
-      } else {
-        showMotivation(`Schuljahr ${sy.label} ist jetzt ausgewählt.`);
-      }
-    });
-  }
-}
-
+/* CODE-AUDIT: frühere, überschriebene Definition von bindSchoolYearSetting entfernt. */
 
 document.querySelectorAll(".toggle-manual-timetable").forEach(btn => btn.addEventListener("click", e => {
   openManualTimetableEditor(e.currentTarget.dataset.child);
@@ -5905,30 +5837,7 @@ document.querySelector("#familyQuestionText")?.addEventListener("keydown", e => 
   }
 });
 
-function renderAll() {
-  pruneTrash();
-  bindManualTimetableControls();
-  bindSchoolYearSetting();
-  applyFamilyVisuals();
-  bindFamilySettings();
-  renderWeek();
-  renderTodos();
-  renderArchive();
-  renderTimeTracking();
-  renderSchool();
-  renderSchoolWorkTodos();
-  renderSchoolPrints();
-  renderWorkroomShopping();
-  renderWorkroomLinks();
-  renderRoutines();
-  renderShopping();
-  renderRecipes();
-  renderMealPlan();
-  renderPinboard();
-  renderFamilyQuestions();
-  renderQuickLinks();
-}
-
+/* CODE-AUDIT: frühere, überschriebene Definition von renderAll entfernt. */
 async function updateVideoPreview() {
   const urlInput = document.querySelector("#videoUrl");
   const preview = document.querySelector("#videoPreview");
@@ -8281,73 +8190,7 @@ function mergeSchoolSafely(localSchool, cloudSchool) {
   };
 }
 
-function applyCloudData(data) {
-  cloudApplying = true;
-  try {
-    makeLocalSafetySnapshot("vor-cloud-apply", true);
-
-    state.todoTombstones = mergeTodoTombstones(
-      state.todoTombstones,
-      data.todoTombstones
-    );
-
-    state.videos = guardedMergeById(state.videos, data.videos, "Videos");
-
-    state.todos = mergeTodosByRevision(state.todos, data.todos)
-      .filter(item => !isTodoTombstoned(item?.id));
-
-    state.trash = guardedMergeById(state.trash, data.trash, "Papierkorb");
-    state.archive = guardedMergeById(state.archive, data.archive, "Übungsarchiv");
-    state.shopping = guardedMergeById(state.shopping, data.shopping, "Einkauf");
-    shoppingItems = state.shopping;
-    state.recipes = guardedMergeById(state.recipes, data.recipes, "Rezepte");
-
-    if (data.meals && typeof data.meals === "object") {
-      state.meals = mergeMeals(state.meals, data.meals);
-    }
-
-    if (Array.isArray(data.pinboard)) {
-      handleIncomingPinboard(data.pinboard);
-      state.pinboard = guardedMergeById(state.pinboard, data.pinboard, "Pinnwand");
-    }
-
-    if (Array.isArray(data.familyQuestions)) {
-      state.familyQuestions = guardedMergeById(
-        state.familyQuestions,
-        data.familyQuestions,
-        "Familienfragen"
-      );
-      persistFamilyQuestionsNow();
-    }
-
-    if (data.recipeLinkFeedback && typeof data.recipeLinkFeedback === "object") {
-      state.recipeLinkFeedback = {
-        ...(data.recipeLinkFeedback || {}),
-        ...(state.recipeLinkFeedback || {})
-      };
-    }
-
-    state.workroom = guardedWorkroomMerge(state.workroom, data.workroom);
-    state.school = mergeSchoolSafely(state.school, data.school);
-
-    state.familySettings = {
-      ...(data.familySettings || {}),
-      ...(state.familySettings || {})
-    };
-
-    state.settings = {
-      ...(data.settings || {}),
-      ...(state.settings || {})
-    };
-
-    refreshTodoSyncFingerprints();
-    saveLocal();
-    renderAll();
-  } finally {
-    cloudApplying = false;
-  }
-}
-
+/* CODE-AUDIT: frühere, überschriebene Definition von applyCloudData entfernt. */
 // ===== EINKAUF – eigene Live-Synchronisation =====
 
 let shoppingUnsubscribe = null;
@@ -11120,123 +10963,7 @@ function easterSunday(year) {
   return new Date(year, month, day, 12, 0, 0, 0);
 }
 
-
-function ensureMobileWeekActionCircleStyles() {
-  if (document.querySelector("#mobileWeekActionCircleFix")) return;
-
-  const style = document.createElement("style");
-  style.id = "mobileWeekActionCircleFix";
-  style.textContent = `
-    @media (max-width:600px){
-      .week-head-actions{
-        display:flex !important;
-        flex-wrap:nowrap !important;
-        justify-content:flex-end !important;
-        align-items:center !important;
-        gap:7px !important;
-      }
-
-      #openPinboardBtn,
-      #openPapaOverviewBtn,
-      #addVideoBtn,
-      #openFamilyTimetableBtn,
-      #printWeekBtn{
-        box-sizing:border-box !important;
-        flex:0 0 42px !important;
-        width:42px !important;
-        min-width:42px !important;
-        max-width:42px !important;
-        height:42px !important;
-        min-height:42px !important;
-        max-height:42px !important;
-        padding:0 !important;
-        margin:0 !important;
-        border-radius:50% !important;
-        display:grid !important;
-        place-items:center !important;
-        align-items:center !important;
-        justify-content:center !important;
-        line-height:1 !important;
-        overflow:visible !important;
-        white-space:nowrap !important;
-      }
-
-      #openPinboardBtn .pinboard-label{
-        display:none !important;
-      }
-
-      #openPinboardBtn{
-        font-size:0 !important;
-      }
-      #openPinboardBtn .pinboard-icon{
-        display:block !important;
-        width:auto !important;
-        height:auto !important;
-        margin:0 !important;
-        padding:0 !important;
-        font-size:1rem !important;
-        line-height:1 !important;
-        transform:none !important;
-      }
-
-      #openPapaOverviewBtn{
-        font-size:0 !important;
-      }
-      #openPapaOverviewBtn::before{
-        content:"♡";
-        display:block;
-        font-size:1rem !important;
-        line-height:1 !important;
-      }
-
-      #addVideoBtn{
-        font-size:0 !important;
-      }
-      #addVideoBtn::before{
-        content:"+";
-        display:block;
-        font-size:1.15rem !important;
-        line-height:1 !important;
-      }
-
-      #openFamilyTimetableBtn,
-      #printWeekBtn{
-        font-size:.9rem !important;
-        line-height:1 !important;
-      }
-
-      #openPinboardBtn .pinboard-badge{
-        position:absolute !important;
-        top:-3px !important;
-        right:-3px !important;
-        margin:0 !important;
-      }
-    }
-
-    .recipe-link-times{
-      display:flex;
-      align-items:center;
-      gap:6px;
-      flex-wrap:wrap;
-    }
-
-    .recipe-link-reuse{
-      border:1px solid rgba(143,165,157,.26);
-      border-radius:999px;
-      background:#edf4f1;
-      color:#506963;
-      padding:6px 9px;
-      cursor:pointer;
-      font-size:.66rem;
-    }
-
-    .recipe-link-reuse:hover{
-      background:#dfece8;
-    }
-  `;
-  document.head.appendChild(style);
-}
-
+/* CODE-AUDIT: frühere, überschriebene Definition von ensureMobileWeekActionCircleStyles entfernt. */
 
 function ensureRecipeCardMarkPicker() {
   if (document.querySelector("#recipeCardMark")) return;
@@ -11331,253 +11058,7 @@ function ensureRecipeCardMarkStyles() {
   document.head.appendChild(style);
 }
 
-
-function ensureRecipeFormAndMobileActionStyles() {
-  if (document.querySelector("#recipeFormAndMobileActionStyles")) return;
-
-  const style = document.createElement("style");
-  style.id = "recipeFormAndMobileActionStyles";
-  style.textContent = `
-    /* =========================================================
-       REZEPTFORMULAR – klarere Gruppen
-       ========================================================= */
-    #recipeForm{
-      display:grid !important;
-      grid-template-columns:1.2fr .75fr .75fr;
-      gap:10px 12px !important;
-      align-items:start !important;
-    }
-
-    #recipeTitle{
-      grid-column:1 !important;
-    }
-
-    #recipeCategory{
-      grid-column:2 !important;
-    }
-
-    #recipeDifficulty{
-      grid-column:3 !important;
-    }
-
-    /* Kinder + Gesund sauber in einer gemeinsamen Zeile */
-    #recipeKids,
-    #recipeHealthy{
-      width:auto !important;
-      margin:0 !important;
-    }
-
-    #recipeKidsLabel,
-    #recipeHealthyLabel{
-      display:inline-flex !important;
-      align-items:center !important;
-      gap:7px !important;
-      min-height:38px;
-      padding:8px 10px;
-      border:1px solid rgba(216,205,198,.55);
-      border-radius:12px;
-      background:#fffdfb;
-      white-space:nowrap;
-    }
-
-    .recipe-flags-row{
-      grid-column:1 / -1;
-      display:flex;
-      gap:8px;
-      flex-wrap:wrap;
-      align-items:center;
-    }
-
-    #recipeTime{
-      grid-column:2 !important;
-    }
-
-    #recipeIngredients{
-      grid-column:3 !important;
-      min-height:108px !important;
-    }
-
-    #recipeSteps{
-      grid-column:1 / 3 !important;
-      min-height:108px !important;
-    }
-
-    #recipeWebUrl{
-      grid-column:3 !important;
-    }
-
-    #recipeYoutubeUrl{
-      grid-column:3 !important;
-    }
-
-    .recipe-card-mark-field{
-      grid-column:1 / 3 !important;
-      min-width:0 !important;
-      align-self:end;
-    }
-
-    #saveRecipeBtn{
-      grid-column:3 !important;
-      justify-self:end;
-      align-self:end;
-    }
-
-    /* =========================================================
-       MOBILE WOCHENPLAN-AKTIONEN – wirklich schön rund und mittig
-       ========================================================= */
-    @media(max-width:600px){
-      .week-head-actions{
-        width:100% !important;
-        display:flex !important;
-        justify-content:center !important;
-        align-items:center !important;
-        gap:10px !important;
-        flex-wrap:nowrap !important;
-        margin-top:10px !important;
-      }
-
-      #openPinboardBtn,
-      #openPapaOverviewBtn,
-      #addVideoBtn,
-      #openFamilyTimetableBtn,
-      #printWeekBtn{
-        position:relative !important;
-        flex:0 0 44px !important;
-        width:44px !important;
-        min-width:44px !important;
-        max-width:44px !important;
-        height:44px !important;
-        min-height:44px !important;
-        max-height:44px !important;
-        aspect-ratio:1/1 !important;
-        border-radius:999px !important;
-        padding:0 !important;
-        margin:0 !important;
-        display:flex !important;
-        align-items:center !important;
-        justify-content:center !important;
-        line-height:1 !important;
-        overflow:visible !important;
-        box-sizing:border-box !important;
-      }
-
-      #openPinboardBtn{
-        font-size:0 !important;
-      }
-      #openPinboardBtn .pinboard-label{
-        display:none !important;
-      }
-      #openPinboardBtn .pinboard-icon{
-        font-size:1rem !important;
-        line-height:1 !important;
-        width:auto !important;
-        height:auto !important;
-        margin:0 !important;
-        padding:0 !important;
-        transform:none !important;
-      }
-
-      #openPapaOverviewBtn{
-        font-size:0 !important;
-      }
-      #openPapaOverviewBtn::before{
-        content:"♡";
-        font-size:1.05rem !important;
-        line-height:1 !important;
-        display:block;
-      }
-
-      #addVideoBtn{
-        font-size:0 !important;
-      }
-      #addVideoBtn::before{
-        content:"+";
-        font-size:1.2rem !important;
-        line-height:1 !important;
-        display:block;
-      }
-
-      #openFamilyTimetableBtn,
-      #printWeekBtn{
-        font-size:.95rem !important;
-        line-height:1 !important;
-      }
-
-      #openPinboardBtn .pinboard-badge{
-        position:absolute !important;
-        top:-4px !important;
-        right:-4px !important;
-      }
-    }
-
-    @media(max-width:850px){
-      #recipeForm{
-        grid-template-columns:1fr 1fr !important;
-      }
-
-      #recipeTitle,
-      #recipeSteps,
-      .recipe-card-mark-field{
-        grid-column:1 / -1 !important;
-      }
-
-      #recipeCategory{
-        grid-column:1 !important;
-      }
-
-      #recipeDifficulty{
-        grid-column:2 !important;
-      }
-
-      #recipeTime{
-        grid-column:1 !important;
-      }
-
-      #recipeIngredients{
-        grid-column:2 !important;
-      }
-
-      #recipeWebUrl,
-      #recipeYoutubeUrl{
-        grid-column:auto !important;
-      }
-
-      #saveRecipeBtn{
-        grid-column:1 / -1 !important;
-        justify-self:end;
-      }
-    }
-
-    @media(max-width:560px){
-      #recipeForm{
-        grid-template-columns:1fr !important;
-      }
-
-      #recipeTitle,
-      #recipeCategory,
-      #recipeDifficulty,
-      #recipeTime,
-      #recipeIngredients,
-      #recipeSteps,
-      #recipeWebUrl,
-      #recipeYoutubeUrl,
-      .recipe-card-mark-field,
-      #saveRecipeBtn{
-        grid-column:1 !important;
-      }
-
-      .recipe-flags-row{
-        grid-column:1 !important;
-      }
-
-      #saveRecipeBtn{
-        width:100%;
-      }
-    }
-  `;
-  document.head.appendChild(style);
-}
-
+/* CODE-AUDIT: frühere, überschriebene Definition von ensureRecipeFormAndMobileActionStyles entfernt. */
 
 function firstWeekdayOfMonth(year, monthIndex, weekday) {
   const d = new Date(year, monthIndex, 1, 12, 0, 0, 0);
@@ -11615,21 +11096,7 @@ function generatedNoeSchoolYear(startYear) {
   };
 }
 
-
-function makeLocalSafetyBackup() {
-  try {
-    const current = JSON.stringify(snapshotPersistentState());
-    const last = localStorage.getItem("balanceProd.safetyBackup.1");
-    if (last !== current) {
-      localStorage.setItem("balanceProd.safetyBackup.3", localStorage.getItem("balanceProd.safetyBackup.2") || "");
-      localStorage.setItem("balanceProd.safetyBackup.2", localStorage.getItem("balanceProd.safetyBackup.1") || "");
-      localStorage.setItem("balanceProd.safetyBackup.1", current);
-    }
-  } catch (err) {
-    console.warn("Lokales Sicherheitsbackup fehlgeschlagen:", err);
-  }
-}
-
+/* CODE-AUDIT: frühere, überschriebene Definition von makeLocalSafetyBackup entfernt. */
 
 function mergeSchool(localSchool, cloudSchool) {
   if (!localSchool?.children) return cloudSchool?.children ? cloudSchool : localSchool;
@@ -11682,37 +11149,7 @@ function nonEmptyWorkroomScore(w) {
   );
 }
 
-
-function normalizeRecipeFlagLayout() {
-  const kids = document.querySelector("#recipeKids");
-  const selfCook = document.querySelector("#recipeSelfCook");
-  const beakerKitchen = document.querySelector("#recipeBeakerKitchen");
-  const healthy = document.querySelector("#recipeHealthy");
-  const favorite = document.querySelector("#recipeFavorite");
-  if (!kids || !selfCook || !beakerKitchen || !healthy || !favorite) return;
-
-  const kidsLabel = kids.closest("label");
-  const selfCookLabel = selfCook.closest("label");
-  const beakerLabel = beakerKitchen.closest("label");
-  const healthyLabel = healthy.closest("label");
-  const favoriteLabel = favorite.closest("label");
-  if (!kidsLabel || !selfCookLabel || !beakerLabel || !healthyLabel || !favoriteLabel) return;
-
-  kidsLabel.id = "recipeKidsLabel";
-  healthyLabel.id = "recipeHealthyLabel";
-
-  if (kidsLabel.parentElement?.classList.contains("recipe-flags-row")) return;
-
-  const row = document.createElement("div");
-  row.className = "recipe-flags-row";
-  kidsLabel.parentElement.insertBefore(row, kidsLabel);
-  row.appendChild(kidsLabel);
-  row.appendChild(selfCookLabel);
-  row.appendChild(beakerLabel);
-  row.appendChild(healthyLabel);
-  row.appendChild(favoriteLabel);
-}
-
+/* CODE-AUDIT: frühere, überschriebene Definition von normalizeRecipeFlagLayout entfernt. */
 
 function normalizeWorkroom(w) {
   const src = w && typeof w === "object" ? w : {};
@@ -12052,28 +11489,7 @@ function schoolYearKey(startYear) {
   return `${startYear}-${String((startYear + 1) % 100).padStart(2, "0")}`;
 }
 
-
-function snapshotPersistentState() {
-  return {
-    savedAt: Date.now(),
-    videos: state.videos,
-    todos: state.todos,
-    archive: state.archive,
-    shopping: state.shopping,
-    shoppingPromos: state.shoppingPromos || [],
-    recipes: state.recipes,
-    meals: state.meals,
-    pinboard: state.pinboard,
-    familyQuestions: state.familyQuestions || [],
-    timeTracking: state.timeTracking,
-    recipeLinkFeedback: state.recipeLinkFeedback,
-    workroom: state.workroom,
-    school: state.school,
-    familySettings: state.familySettings,
-    settings: state.settings || {}
-  };
-}
-
+/* CODE-AUDIT: frühere, überschriebene Definition von snapshotPersistentState entfernt. */
 
 function updateSchoolYearTexts() {
   const sy = activeSchoolYear();
