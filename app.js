@@ -1689,6 +1689,24 @@ function todoGroupLabel(key) {
   }[key] || "Allgemein";
 }
 
+
+function familySelectionLabel(todo) {
+  const members = [...new Set(
+    (Array.isArray(todo?.family) ? todo.family : [])
+      .filter(member => state.familySettings?.[member])
+  )];
+
+  if (!members.length) return "Allgemein";
+  if (members.length === 1) return familyName(members[0]) || "";
+
+  const allFamilyKeys = ["a","b","c","d"].filter(key => state.familySettings?.[key]);
+  if (members.length === allFamilyKeys.length && allFamilyKeys.every(key => members.includes(key))) {
+    return "Alle";
+  }
+
+  return members.map(member => familyName(member) || member).join(" + ");
+}
+
 function todoGroupOrder(key) {
   return {a:1,b:2,c:3,d:4,shared:5,general:6}[key] || 9;
 }
@@ -1903,9 +1921,9 @@ function renderWeek() {
       : (groupKey === "general" ? "#aaa77f" : (familyColor(groupKey) || "#a99f99"));
 
     const person =
-      groupKey === "shared"
-        ? "Alle"
-        : (groupKey === "general" ? "" : (familyName(groupKey) || ""));
+      groupKey === "general"
+        ? ""
+        : familySelectionLabel(item);
 
     const visibleStart = item.date < weekStartKey ? weekStartKey : item.date;
     const visibleEnd = (item.endDate || item.date) > weekEndKey
@@ -2152,9 +2170,9 @@ const multiDayLaneHtml = multiDayTrackCount
         const multiBackground = `linear-gradient(110deg, ${softStops})`;
 
         const personLabel =
-          groupKey === "shared"
-            ? "Alle"
-            : (groupKey === "general" ? "" : (familyName(groupKey) || ""));
+          groupKey === "general"
+            ? ""
+            : familySelectionLabel(item);
 
         const visibleStartIndex = weekDates.findIndex(d => dateKey(d) === visibleStart);
         const visibleEndIndex = weekDates.findIndex(d => dateKey(d) === visibleEnd);
@@ -3190,6 +3208,10 @@ function subjectOptionsFor(id){
   if(id==="mama"){
     return [
       "",
+      "GU",
+      "Deutsch",
+      "Mathematik",
+      "Sachunterricht",
       "TW",
       "GLZ",
       "Anderes"
@@ -3197,7 +3219,17 @@ function subjectOptionsFor(id){
   }
 
   if(id==="2"){
-    return ["","GU","REL","Bewegung & Sport","Werken","Anderes"];
+    return [
+      "",
+      "GU",
+      "Deutsch",
+      "Mathematik",
+      "Sachunterricht",
+      "REL",
+      "Bewegung & Sport",
+      "Werken",
+      "Anderes"
+    ];
   }
 
   const sel=document.querySelector("#schoolSubject1");
