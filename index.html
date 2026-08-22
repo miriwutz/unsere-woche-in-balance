@@ -468,14 +468,42 @@
         
 </div>
   
-        <details class="todo-more-settings">
-          <summary>Weitere Angaben</summary>
-          <div class="todo-more-settings-body">
+        <div class="todo-quick-meta-row">
+          <label>
+            Priorität
+            <select id="todoPriority">
+              <option value="important">Wichtig</option>
+              <option value="medium" selected>Mittel</option>
+              <option value="low">Kann warten</option>
+              <option value="weekplan">Wochenplan</option>
+            </select>
+          </label>
+
+          <label>
+            Bereich
+            <select id="todoArea">
+              <option value="work">Arbeit</option>
+              <option value="private">Privat</option>
+            </select>
+          </label>
+
+          <label>
+            Zeitraum
+            <select id="todoPeriod">
+              <option value="today">Heute</option>
+              <option value="week" selected>Woche</option>
+              <option value="month">Diesen Monat</option>
+              <option value="later">Irgendwann</option>
+            </select>
+          </label>
+        </div>
+
         <div class="recurrence-row">
           <div id="schoolHolidayHint" class="school-holiday-hint hidden">
             🎒 Wöchentlich im gewählten Schuljahr NÖ – Ferien und offizielle schulfreie Tage werden ausgelassen.
           </div>
         </div>
+
         <div id="schoolyearScheduleFields" class="schoolyear-schedule-fields hidden">
           <label>
             Wochentag
@@ -488,38 +516,6 @@
           <label>Von <input id="schoolyearTime" type="time"></label>
           <label>Bis <input id="schoolyearEndTime" type="time"></label>
         </div>
-
-
-        <div class="form-row">
-          <label>
-            Priorität
-            <select id="todoPriority">
-              <option value="important">Wichtig</option>
-              <option value="medium" selected>Mittel</option>
-              <option value="low">Kann warten</option>
-              <option value="weekplan">Wochenplan</option>
-            </select>
-          </label>
-          <label>
-            Bereich
-            <select id="todoArea">
-              <option value="work">Arbeit</option>
-              <option value="private">Privat</option>
-            </select>
-          </label>
-          <label>
-            Zeitraum
-            <select id="todoPeriod">
-              <option value="today">Heute</option>
-              <option value="week" selected>Woche</option>
-              <option value="month">Diesen Monat</option>
-              <option value="later">Irgendwann</option>
-            </select>
-          </label>
-
-        </div>
-          </div>
-        </details>
         <div class="todo-form-actions">
           <button id="cancelTodoEditBtn" class="secondary-btn hidden" type="button">Bearbeiten abbrechen</button>
           <button id="addTodoBtn" class="primary-btn" type="button">To-do hinzufügen</button>
@@ -724,6 +720,7 @@
               <option value="other">✨ Sonstiges</option>
             </select>
           </label>
+
         </div>
 
         <div class="recipe-v19-meta-grid">
@@ -745,6 +742,26 @@
               <option value="medium">🙂 Mittel</option>
               <option value="bad">😕 Schlecht</option>
             </select>
+          </label>
+
+          <label class="recipe-field recipe-meta-servings recipe-internal-only">
+            <span>Für wie viele?</span>
+            <input id="recipeServings" type="number" inputmode="numeric" min="1" max="30" step="1" placeholder="4">
+          </label>
+
+          <label class="recipe-field recipe-meta-time recipe-internal-only">
+            <span>Zeit</span>
+            <input id="recipeTime" type="text" placeholder="20 Min.">
+          </label>
+
+          <label class="recipe-field recipe-meta-bake recipe-internal-only">
+            <span>Backzeit</span>
+            <input id="recipeBakeTime" type="text" inputmode="numeric" placeholder="35 Min.">
+          </label>
+
+          <label class="recipe-field recipe-meta-temp recipe-internal-only">
+            <span>Grad</span>
+            <input id="recipeTemperature" type="text" inputmode="numeric" placeholder="180 °C">
           </label>
 
           <label class="recipe-field recipe-card-mark-field recipe-meta-mark">
@@ -769,26 +786,6 @@
                 <option value="✪">✪ Cool Star</option>
               </optgroup>
             </select>
-          </label>
-
-          <label class="recipe-field recipe-meta-servings recipe-internal-only">
-            <span>Für wie viele?</span>
-            <input id="recipeServings" type="number" inputmode="numeric" min="1" max="30" step="1" placeholder="4">
-          </label>
-
-          <label class="recipe-field recipe-meta-time recipe-internal-only">
-            <span>Zeit</span>
-            <input id="recipeTime" type="text" placeholder="20 Min.">
-          </label>
-
-          <label class="recipe-field recipe-meta-bake recipe-internal-only">
-            <span>Backzeit</span>
-            <input id="recipeBakeTime" type="text" inputmode="numeric" placeholder="35 Min.">
-          </label>
-
-          <label class="recipe-field recipe-meta-temp recipe-internal-only">
-            <span>Grad</span>
-            <input id="recipeTemperature" type="text" inputmode="numeric" placeholder="180 °C">
           </label>
         </div>
       </section>
