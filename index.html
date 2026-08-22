@@ -737,6 +737,40 @@
             </select>
           </label>
 
+          <label class="recipe-field recipe-meta-rating">
+            <span>Bewertung</span>
+            <select id="recipeRating" title="Wie war es?">
+              <option value="">Noch nicht bewertet</option>
+              <option value="good">😊 Gut</option>
+              <option value="medium">🙂 Mittel</option>
+              <option value="bad">😕 Schlecht</option>
+            </select>
+          </label>
+
+          <label class="recipe-field recipe-card-mark-field recipe-meta-mark">
+            <span>Kartenzeichen</span>
+            <select id="recipeCardMark">
+              <optgroup label="Ruhig & geschmackvoll">
+                <option value="⌁">⌁ Feine Linie</option>
+                <option value="✦">✦ Stern</option>
+                <option value="☾">☾ Mond</option>
+                <option value="♡">♡ Herz</option>
+                <option value="❋">❋ Blüte</option>
+                <option value="◌">◌ Kreis</option>
+                <option value="≈">≈ Welle</option>
+                <option value="∞">∞ Unendlich</option>
+              </optgroup>
+              <optgroup label="Cool">
+                <option value="⚡︎">⚡ Blitz</option>
+                <option value="★">★ Star</option>
+                <option value="☻">☻ Smiley</option>
+                <option value="♬">♬ Musik</option>
+                <option value="✌︎">✌ Peace</option>
+                <option value="✪">✪ Cool Star</option>
+              </optgroup>
+            </select>
+          </label>
+
           <label class="recipe-field recipe-meta-servings recipe-internal-only">
             <span>Für wie viele?</span>
             <input id="recipeServings" type="number" inputmode="numeric" min="1" max="30" step="1" placeholder="4">
@@ -861,49 +895,7 @@
 
 
 
-      <!-- SELTEN BENÖTIGT -->
-      <details class="recipe-entry-more recipe-v17-more">
-        <summary>
-          <span>Feineinstellungen</span>
-          <small>Bewertung und Kartenzeichen</small>
-        </summary>
 
-        <div class="recipe-v19-more-grid">
-          <label class="recipe-field">
-            <span>Bewertung</span>
-            <select id="recipeRating" title="Wie war es?">
-              <option value="">Noch nicht bewertet</option>
-              <option value="good">😊 Gut</option>
-              <option value="medium">🙂 Mittel</option>
-              <option value="bad">😕 Schlecht</option>
-            </select>
-          </label>
-
-          <label class="recipe-field recipe-card-mark-field">
-            <span>Kartenzeichen</span>
-            <select id="recipeCardMark">
-              <optgroup label="Ruhig & geschmackvoll">
-                <option value="⌁">⌁ Feine Linie</option>
-                <option value="✦">✦ Stern</option>
-                <option value="☾">☾ Mond</option>
-                <option value="♡">♡ Herz</option>
-                <option value="❋">❋ Blüte</option>
-                <option value="◌">◌ Kreis</option>
-                <option value="≈">≈ Welle</option>
-                <option value="∞">∞ Unendlich</option>
-              </optgroup>
-              <optgroup label="Cool">
-                <option value="⚡︎">⚡ Blitz</option>
-                <option value="★">★ Star</option>
-                <option value="☻">☻ Smiley</option>
-                <option value="♬">♬ Musik</option>
-                <option value="✌︎">✌ Peace</option>
-                <option value="✪">✪ Cool Star</option>
-              </optgroup>
-            </select>
-          </label>
-        </div>
-      </details>
 
       <div class="recipe-form-actions recipe-form-actions-v17">
         <button id="cancelRecipeEditBtn" class="secondary-btn hidden" type="button">Bearbeiten abbrechen</button>
