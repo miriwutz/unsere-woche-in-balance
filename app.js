@@ -2858,34 +2858,44 @@ function timetablePerson(id) {
   return state.school.children[id];
 }
 function ensureManualTimetable(c){
-  c.timetableByYear = c.timetableByYear || {};
+  if (!c || typeof c !== "object") return {
+    times: defaultLessonTimes.map(x => ({from:x[0], to:x[1]})),
+    subjects: Object.fromEntries(manualTimetableDayKeys.map(d => [d, []])),
+    homeBy: Object.fromEntries(manualTimetableDayKeys.map(d => [d, ""]))
+  };
+
+  c.timetableByYear = c.timetableByYear && typeof c.timetableByYear === "object"
+    ? c.timetableByYear
+    : {};
+
   const y = state.settings?.schoolYear || "2026-27";
+  const fallbackTimes = defaultLessonTimes.map(x => ({from:x[0], to:x[1]}));
 
-  if (!c.timetableByYear[y]) {
-    const times = defaultLessonTimes.map(x => ({
-      from: x[0],
-      to: x[1]
-    }));
-
-    c.timetableByYear[y] = {
-      times,
-      subjects: Object.fromEntries(
-        manualTimetableDayKeys.map(d => [d, Array(times.length).fill("")])
-      ),
-      homeBy: Object.fromEntries(
-        manualTimetableDayKeys.map(d => [d, ""])
-      )
-    };
+  if (!c.timetableByYear[y] || typeof c.timetableByYear[y] !== "object") {
+    c.timetableByYear[y] = {};
   }
 
   const t = c.timetableByYear[y];
 
-  // Falls später Stunden hinzugefügt oder entfernt werden,
-  // die Fächerlisten automatisch auf dieselbe Länge bringen.
+  // Ältere gespeicherte Stundenpläne dürfen unvollständig sein.
+  t.times = Array.isArray(t.times) && t.times.length
+    ? t.times.map((tm, i) => ({
+        from: String(tm?.from ?? fallbackTimes[i]?.from ?? ""),
+        to: String(tm?.to ?? fallbackTimes[i]?.to ?? "")
+      }))
+    : fallbackTimes;
+
+  t.subjects = t.subjects && typeof t.subjects === "object"
+    ? t.subjects
+    : {};
+
+  t.homeBy = t.homeBy && typeof t.homeBy === "object"
+    ? t.homeBy
+    : {};
+
   manualTimetableDayKeys.forEach(day => {
-    if (!Array.isArray(t.subjects[day])) {
-      t.subjects[day] = [];
-    }
+    if (!Array.isArray(t.subjects[day])) t.subjects[day] = [];
+    if (typeof t.homeBy[day] !== "string") t.homeBy[day] = String(t.homeBy[day] || "");
 
     while (t.subjects[day].length < t.times.length) {
       t.subjects[day].push("");
@@ -11886,6 +11896,7 @@ document.querySelector("#saveSubstitutionBtn")?.addEventListener("click", () => 
 function openMamaTimetableEditorDirectRestored() {
   familyTimetableMode = "edit";
 
+  const dialog = document.querySelector("#familyTimetableDialog");
   const title = document.querySelector("#familyTimetableDialogTitle");
   const chooserButtons = document.querySelector("#familyTimetableDialog .family-timetable-buttons");
   const wrap = document.querySelector("#manualTimetableWrapmama");
@@ -11894,16 +11905,21 @@ function openMamaTimetableEditorDirectRestored() {
   chooserButtons?.classList.add("hidden");
 
   try {
+    // Erst Datenstruktur reparieren, dann Matrix zeichnen.
+    const mama = timetablePerson("mama");
+    ensureManualTimetable(mama);
     renderTTMatrix("mama");
+
     wrap?.classList.remove("hidden");
-    if (!openDialogCompat(familyTimetableDialog)) {
-      showMotivation("Der Stundenplan konnte nicht geöffnet werden.");
+
+    if (!openDialogCompat(dialog)) {
+      throw new Error("Dialog konnte nicht geöffnet werden");
     }
   } catch (err) {
     console.error("Mama-Stundenplan konnte nicht geöffnet werden:", err);
     chooserButtons?.classList.remove("hidden");
     wrap?.classList.add("hidden");
-    closeDialogCompat(familyTimetableDialog);
+    closeDialogCompat(dialog);
     showMotivation("Der Stundenplan konnte nicht geöffnet werden.");
   }
 }
@@ -11913,6 +11929,30 @@ document.querySelector("#openWorkTimetableBtn")?.addEventListener("click", e => 
   e.stopPropagation();
   openMamaTimetableEditorDirectRestored();
 });
+
+// ===== Werkraum: robuste Button-Fallbacks =====
+document.addEventListener("click", e => {
+  const substitutionBtn = e.target.closest?.("#openSubstitutionBtn");
+  if (substitutionBtn) {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const dialog = document.querySelector("#substitutionDialog");
+    const dateInput = document.querySelector("#substitutionDate");
+    if (dateInput && !dateInput.value) dateInput.value = dateKey(new Date());
+
+    openDialogCompat(dialog);
+    return;
+  }
+
+  const timetableBtn = e.target.closest?.("#openWorkTimetableBtn");
+  if (timetableBtn) {
+    e.preventDefault();
+    e.stopPropagation();
+
+    openMamaTimetableEditorDirectRestored();
+  }
+}, true);
 
 function renderAll() {
   pruneTrash();
