@@ -11314,9 +11314,12 @@ function normalizeWorkroom(w) {
             : {},
           inspirationChecks: src.routines.inspirationChecks && typeof src.routines.inspirationChecks === "object"
             ? src.routines.inspirationChecks
+            : {},
+          tombstones: src.routines.tombstones && typeof src.routines.tombstones === "object"
+            ? src.routines.tombstones
             : {}
         }
-      : {items:[], completions:{}, inspirationChecks:{}},
+      : {items:[], completions:{}, inspirationChecks:{}, tombstones:{}},
     plans: src.plans && typeof src.plans === "object"
       ? src.plans
       : {week:[], year:[]}
