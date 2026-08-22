@@ -24491,3 +24491,60 @@ button.day-meal-list-item:hover,a.day-meal-list-item:hover{background:rgba(164,1
   padding-right:18px !important;
 }
 
+/* =========================================================
+   NOTFIX REZEPTFORMULAR – Breite sicher begrenzen
+   ========================================================= */
+.recipes-section,
+.recipes-section #recipeForm,
+.recipes-section #recipeForm .recipe-v19-meta-grid{
+  width:100% !important;
+  max-width:100% !important;
+  min-width:0 !important;
+  box-sizing:border-box !important;
+  overflow:hidden !important;
+}
+
+.recipes-section #recipeForm .recipe-v19-meta-grid{
+  display:grid !important;
+  grid-template-columns:
+    minmax(120px,145px)
+    minmax(145px,165px)
+    minmax(72px,80px)
+    minmax(82px,92px)
+    minmax(82px,92px)
+    minmax(76px,86px)
+    minmax(125px,155px)
+  !important;
+  gap:8px !important;
+  justify-content:start !important;
+  align-items:end !important;
+}
+
+.recipes-section #recipeForm .recipe-v19-meta-grid > .recipe-field{
+  width:auto !important;
+  min-width:0 !important;
+  max-width:none !important;
+  flex:none !important;
+  grid-column:auto !important;
+}
+
+.recipes-section #recipeForm .recipe-v19-meta-grid input,
+.recipes-section #recipeForm .recipe-v19-meta-grid select{
+  width:100% !important;
+  min-width:0 !important;
+  max-width:100% !important;
+  box-sizing:border-box !important;
+}
+
+@media(max-width:1050px){
+  .recipes-section #recipeForm .recipe-v19-meta-grid{
+    grid-template-columns:repeat(4,minmax(0,1fr)) !important;
+  }
+}
+
+@media(max-width:700px){
+  .recipes-section #recipeForm .recipe-v19-meta-grid{
+    grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+  }
+}
+
