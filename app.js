@@ -8125,10 +8125,18 @@ document.querySelector("#todoPriority")?.addEventListener("change",()=>{if(docum
 document.querySelector("#cancelTodoEditBtn").addEventListener("click", resetTodoEditor);
 
 document.querySelector("#addTodoBtn").addEventListener("click", () => {
-  const text = document.querySelector("#todoText").value.trim();
-  if (!text) return;
-
+  const textInput = document.querySelector("#todoText");
+  const text = textInput.value.trim();
   const type = document.querySelector("#entryType").value;
+
+  if (!text) {
+    alert(type === "event"
+      ? "Bitte zuerst den Termin eintragen."
+      : "Bitte zuerst die Aufgabe eintragen.");
+    textInput.focus();
+    return;
+  }
+
   const period = document.querySelector("#todoPeriod").value;
   const todayDate = new Date();
   const selectedDay = period === "today"
