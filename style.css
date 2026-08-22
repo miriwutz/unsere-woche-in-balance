@@ -23310,3 +23310,66 @@ button.day-meal-list-item:hover,a.day-meal-list-item:hover{background:rgba(164,1
 .recipe-plan-fields label{display:grid;gap:6px}
 .recipe-plan-hint{margin:12px 0 0;color:var(--muted);font-size:.78rem;line-height:1.45}
 @media(max-width:560px){.recipe-plan-fields{grid-template-columns:1fr}}
+
+/* =========================================================
+   ESSENSPLAN – Eingabe klar als Eingabe + eigener Plus-Button
+   ========================================================= */
+.meal-plan-add-row{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) 34px;
+  gap:5px;
+  align-items:center;
+}
+.meal-plan-add-input{
+  min-height:32px !important;
+  padding:6px 8px !important;
+  border-radius:8px !important;
+  border:1px solid rgba(174,157,146,.22) !important;
+  background:#fffdfb !important;
+  font-size:.69rem !important;
+  color:#5f5651 !important;
+}
+.meal-plan-add-input::placeholder{
+  color:#a59a93 !important;
+}
+.meal-plan-add-btn{
+  width:34px;
+  height:32px;
+  display:grid;
+  place-items:center;
+  padding:0;
+  border:1px solid rgba(160,134,119,.24);
+  border-radius:8px;
+  background:rgba(255,253,250,.82);
+  color:#8d766a;
+  font-size:1rem;
+  line-height:1;
+}
+.meal-plan-add-btn:hover{
+  background:rgba(164,139,126,.09);
+}
+
+/* =========================================================
+   WOCHENPLAN – Essensliste schwebt, reißt den Tagesinhalt nicht auf
+   ========================================================= */
+.day-meal-compact{
+  position:relative !important;
+  display:inline-block !important;
+  z-index:30 !important;
+}
+.day-meal-popover{
+  position:absolute !important;
+  top:calc(100% + 4px) !important;
+  left:0 !important;
+  z-index:80 !important;
+  width:max-content !important;
+  min-width:160px !important;
+  max-width:min(240px,70vw) !important;
+  margin:0 !important;
+  box-shadow:0 8px 22px rgba(90,75,66,.10) !important;
+  backdrop-filter:blur(6px);
+}
+.day-meal-compact[open]{
+  z-index:100 !important;
+}
+
