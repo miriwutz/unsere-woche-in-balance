@@ -22514,3 +22514,79 @@ body:has(#workroomLinkSortSelect option:checked:not([value="manual"])) .workroom
   touch-action:manipulation !important;
 }
 
+/* =========================================================
+   FIX 04 – Linksammlung: Tablet zuverlässig 2-spaltig
+   ========================================================= */
+
+/* Alle Ansichten ab 700 CSS-px bleiben zweispaltig.
+   Dadurch kann Firefox/Android die Darstellung nicht mehr über
+   Touch-/Hover-Merkmale auf eine Spalte zurücksetzen. */
+@media (min-width:700px){
+  body #workroomLinkList{
+    display:grid !important;
+    grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+    grid-template-rows:repeat(10,auto) !important;
+    grid-auto-flow:column !important;
+    gap:8px !important;
+  }
+
+  body #workroomLinkList > .workroom-link-item{
+    grid-column:auto !important;
+    grid-row:auto !important;
+    min-width:0 !important;
+    grid-template-columns:minmax(0,1fr) auto !important;
+  }
+
+  body #workroomLinkList .workroom-link-drag-handle{
+    display:none !important;
+  }
+
+  body #workroomLinkList .workroom-link-main,
+  body #workroomLinkList .workroom-link-texts{
+    min-width:0 !important;
+    width:100% !important;
+  }
+
+  body #workroomLinkList .workroom-link-texts{
+    display:block !important;
+  }
+
+  body #workroomLinkList .workroom-link-title{
+    display:block !important;
+    min-width:0 !important;
+    width:100% !important;
+    max-width:100% !important;
+    overflow:hidden !important;
+    text-overflow:ellipsis !important;
+    white-space:nowrap !important;
+  }
+
+  body #workroomLinkList .workroom-link-note{
+    display:block !important;
+    min-width:0 !important;
+    max-width:100% !important;
+    margin-top:1px !important;
+    font-size:.64rem !important;
+    overflow:hidden !important;
+    text-overflow:ellipsis !important;
+    white-space:nowrap !important;
+  }
+
+  body #workroomLinkList .workroom-link-actions{
+    display:flex !important;
+    align-items:center !important;
+    justify-content:flex-end !important;
+    gap:1px !important;
+    margin-left:auto !important;
+    white-space:nowrap !important;
+  }
+}
+
+@media (max-width:699px){
+  body #workroomLinkList{
+    grid-template-columns:1fr !important;
+    grid-template-rows:none !important;
+    grid-auto-flow:row !important;
+  }
+}
+
