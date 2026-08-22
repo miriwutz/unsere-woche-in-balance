@@ -1841,12 +1841,44 @@ function renderWeek() {
         String(a.id || "").localeCompare(String(b.id || ""));
     });
 
-  // Gewünschte Reihenfolge: längster Mehrtagestermin ganz oben,
-  // zweitlängster darunter usw. – unabhängig davon, ob sie sich überschneiden.
-  const multiDayTrackById = new Map(
-    multiDayEventsThisWeek.map((t,index) => [t.id,index])
-  );
-  const multiDayTrackCount = multiDayEventsThisWeek.length;
+  // Längere Termine bleiben bevorzugt oben.
+  // Nicht überlappende Mehrtagestermine dürfen aber dieselbe Spur teilen.
+  // Beispiel: Twingo Mo–Di und Fina Mi–Sa können in derselben Zeile stehen.
+  const multiDayTracks = [];
+  const multiDayTrackById = new Map();
+
+  const visibleRangeFor = item => ({
+    start: item.date < weekStartKey ? weekStartKey : item.date,
+    end: (item.endDate || item.date) > weekEndKey
+      ? weekEndKey
+      : (item.endDate || item.date)
+  });
+
+  multiDayEventsThisWeek.forEach(item => {
+    const range = visibleRangeFor(item);
+    let targetTrack = -1;
+
+    for (let track = 0; track < multiDayTracks.length; track++) {
+      const overlaps = multiDayTracks[track].some(existing => {
+        const other = visibleRangeFor(existing);
+        return !(range.end < other.start || range.start > other.end);
+      });
+      if (!overlaps) {
+        targetTrack = track;
+        break;
+      }
+    }
+
+    if (targetTrack < 0) {
+      targetTrack = multiDayTracks.length;
+      multiDayTracks.push([]);
+    }
+
+    multiDayTracks[targetTrack].push(item);
+    multiDayTrackById.set(item.id, targetTrack);
+  });
+
+  const multiDayTrackCount = multiDayTracks.length;
 
   // Handy-Hochformat: Mehrtagestermine nur EINMAL oberhalb der gestapelten Tage.
   // Die normalen Desktop-/Tablet-Leisten bleiben davon unberührt.
@@ -2069,21 +2101,22 @@ const singleDayEvents = orderedEvents.filter(t => !multiDayTrackById.has(t.id));
 const multiDayLaneHtml = multiDayTrackCount
   ? `<div class="multiday-event-lanes">
       ${Array.from({length:multiDayTrackCount}, (_,track) => {
-        const item = multiDayEventsThisWeek[track];
+        const currentKey = dateKey(date);
+        const item = (multiDayTracks[track] || []).find(candidate => {
+          const range = visibleRangeFor(candidate);
+          return currentKey >= range.start && currentKey <= range.end;
+        });
+
         if (!item) {
           return `<div class="multiday-event-lane multiday-event-placeholder" data-track="${track}" aria-hidden="true"></div>`;
         }
 
-        const currentKey = dateKey(date);
         const visibleStart = item.date < weekStartKey ? weekStartKey : item.date;
         const visibleEnd = (item.endDate || item.date) > weekEndKey
           ? weekEndKey
           : (item.endDate || item.date);
-        const activeToday = currentKey >= visibleStart && currentKey <= visibleEnd;
 
-        if (!activeToday) {
-          return `<div class="multiday-event-lane multiday-event-placeholder" data-track="${track}" aria-hidden="true"></div>`;
-        }
+        const activeToday = true;
 
         const isStart = currentKey === visibleStart;
         const isEnd = currentKey === visibleEnd;
