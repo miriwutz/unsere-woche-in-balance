@@ -24451,3 +24451,43 @@ button.day-meal-list-item:hover,a.day-meal-list-item:hover{background:rgba(164,1
   }
 }
 
+/* =========================================================
+   TERMINFORMULAR – kompakter + Zeitraum weg
+   ========================================================= */
+.todo-period-hidden{display:none !important;}
+
+.event-category-top-field{
+  flex:0 0 138px !important;
+  min-width:128px !important;
+  max-width:145px !important;
+}
+.event-category-top-field select{
+  width:100% !important;
+  min-width:0 !important;
+}
+
+.entry-top-row .recurrence-top-field{
+  flex:0 0 195px !important;
+}
+
+.entry-top-row .todo-quick-meta-row{
+  flex:0 1 250px !important;
+  min-width:220px !important;
+}
+.entry-top-row .todo-quick-meta-row label{
+  flex:1 1 108px !important;
+  min-width:98px !important;
+  max-width:125px !important;
+}
+
+/* Twingo / Mehrtagstext bei gerader Tagesanzahl wirklich mittig */
+.multiday-center-label{
+  left:calc(50% + (var(--multi-center-offset,0) * 100%)) !important;
+}
+
+/* Rezept-einplanen-Dialog innen etwas weniger nach rechts gedrückt */
+#recipePlanDialog .recipe-plan-card{
+  padding-left:18px !important;
+  padding-right:18px !important;
+}
+
