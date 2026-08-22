@@ -22,6 +22,11 @@ const state = {
   timeTracking: JSON.parse(localStorage.getItem("balanceProd.timeTracking") || '{"entries":[],"active":[],"stopped":{},"deletedEntries":{}}'),
   trash: JSON.parse(localStorage.getItem("balanceProd.trash") || "[]"),
   todoTombstones: JSON.parse(localStorage.getItem("balanceProd.todoTombstones") || "{}"),
+  videoTombstones: JSON.parse(localStorage.getItem("balanceProd.videoTombstones") || "{}"),
+  archiveTombstones: JSON.parse(localStorage.getItem("balanceProd.archiveTombstones") || "{}"),
+  recipeTombstones: JSON.parse(localStorage.getItem("balanceProd.recipeTombstones") || "{}"),
+  pinboardTombstones: JSON.parse(localStorage.getItem("balanceProd.pinboardTombstones") || "{}"),
+  trashTombstones: JSON.parse(localStorage.getItem("balanceProd.trashTombstones") || "{}"),
 
   workroom: JSON.parse(
     localStorage.getItem("balanceProd.workroom") ||
@@ -48,6 +53,10 @@ state.timeTracking.deletedEntries =
   state.timeTracking.deletedEntries && typeof state.timeTracking.deletedEntries === "object"
     ? state.timeTracking.deletedEntries : {};
 
+
+["videoTombstones","archiveTombstones","recipeTombstones","pinboardTombstones","trashTombstones"].forEach(key => {
+  state[key] = state[key] && typeof state[key] === "object" ? state[key] : {};
+});
 
 state.shoppingPromos = Array.isArray(state.shoppingPromos) ? state.shoppingPromos : [];
 state.recipes = Array.isArray(state.recipes) ? state.recipes : [];
@@ -668,8 +677,11 @@ function renderPinboard() {
 
   list.querySelectorAll(".pinboard-read-delete, .pinboard-note-x").forEach(btn => {
     btn.addEventListener("click", () => {
-      state.pinboard = state.pinboard.filter(message => message.id !== btn.dataset.id);
+      const id = btn.dataset.id;
+      markListItemDeleted("pinboardTombstones", id);
+      state.pinboard = state.pinboard.filter(message => message.id !== id);
       save();
+      persistTopLevelDeletionImmediately("pinboard");
       renderPinboard();
     });
   });
@@ -879,6 +891,103 @@ function isTodoTombstoned(id) {
 }
 
 
+function mergeSimpleTombstones(localValue, remoteValue) {
+  const local = localValue && typeof localValue === "object" ? localValue : {};
+  const remote = remoteValue && typeof remoteValue === "object" ? remoteValue : {};
+  const merged = {...local};
+  Object.entries(remote).forEach(([id, ts]) => {
+    if (Number(ts || 0) > Number(merged[id] || 0)) merged[id] = Number(ts || 0);
+  });
+  return merged;
+}
+
+function persistentItemTimestamp(item) {
+  if (!item || typeof item !== "object") return 0;
+  const lastDone = item.lastDone ? Date.parse(item.lastDone) : 0;
+  return Number(item.updatedAt || item.completedAt || item.createdAt || item.deletedAt || lastDone || 0) || 0;
+}
+
+function mergePersistentListWithTombstones(localValue, remoteValue, tombstones, idKey = "id") {
+  const local = Array.isArray(localValue) ? localValue : [];
+  const remote = Array.isArray(remoteValue) ? remoteValue : [];
+  const byId = new Map();
+
+  local.forEach(item => {
+    const id = item?.[idKey];
+    if (id) byId.set(id, item);
+  });
+
+  remote.forEach(remoteItem => {
+    const id = remoteItem?.[idKey];
+    if (!id) return;
+    const localItem = byId.get(id);
+    if (!localItem || persistentItemTimestamp(remoteItem) >= persistentItemTimestamp(localItem)) {
+      byId.set(id, remoteItem);
+    }
+  });
+
+  return [...byId.values()].filter(item => {
+    const id = item?.[idKey];
+    if (!id) return true;
+    const deletedAt = Number(tombstones?.[id] || 0);
+    return !deletedAt || persistentItemTimestamp(item) > deletedAt;
+  });
+}
+
+function markListItemDeleted(tombstoneKey, id) {
+  if (!id) return;
+  state[tombstoneKey] = state[tombstoneKey] && typeof state[tombstoneKey] === "object" ? state[tombstoneKey] : {};
+  state[tombstoneKey][id] = Date.now();
+}
+
+async function persistTopLevelDeletionImmediately(kind) {
+  if (!cloudReady || cloudApplying || !window.firebase?.firestore) return;
+  const cfg = {
+    videos: {listKey:"videos", tombstoneKey:"videoTombstones"},
+    archive: {listKey:"archive", tombstoneKey:"archiveTombstones"},
+    recipes: {listKey:"recipes", tombstoneKey:"recipeTombstones"},
+    pinboard: {listKey:"pinboard", tombstoneKey:"pinboardTombstones"},
+    trash: {listKey:"trash", tombstoneKey:"trashTombstones"}
+  }[kind];
+  if (!cfg) return;
+
+  try {
+    const syncToken = `${Date.now()}-${getDeviceId()}-${Math.random().toString(36).slice(2,8)}`;
+    await firebase.firestore().collection("families").doc("shared").update({
+      [cfg.listKey]: state[cfg.listKey] || [],
+      [cfg.tombstoneKey]: state[cfg.tombstoneKey] || {},
+      syncToken,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+  } catch (err) {
+    console.error(`${kind}-Löschung konnte nicht sofort synchronisiert werden:`, err);
+  }
+}
+
+function ensureQuickLinkTombstones() {
+  state.familySettings = state.familySettings || {};
+  state.familySettings.quickLinkTombstones =
+    state.familySettings.quickLinkTombstones && typeof state.familySettings.quickLinkTombstones === "object"
+      ? state.familySettings.quickLinkTombstones
+      : {};
+  return state.familySettings.quickLinkTombstones;
+}
+
+async function persistQuickLinksDeletionImmediately() {
+  if (!cloudReady || cloudApplying || !window.firebase?.firestore) return;
+  try {
+    const syncToken = `${Date.now()}-${getDeviceId()}-${Math.random().toString(36).slice(2,8)}`;
+    await firebase.firestore().collection("families").doc("shared").update({
+      "familySettings.quickLinks": state.familySettings.quickLinks || [],
+      "familySettings.quickLinkTombstones": ensureQuickLinkTombstones(),
+      syncToken,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+  } catch (err) {
+    console.error("Schnellzugriff-Löschung konnte nicht sofort synchronisiert werden:", err);
+  }
+}
+
 function uid() {
   return crypto.randomUUID ? crypto.randomUUID() : String(Date.now() + Math.random());
 }
@@ -914,6 +1023,7 @@ const defaultQuickLinks=[
 {id:"ql-schoolfox2",label:"SchoolFox 2",url:"https://my.schoolfox.app/#/home"},
 {id:"ql-teams",label:"Teams",url:"https://teams.microsoft.com"}];
 if(!Array.isArray(state.familySettings.quickLinks)) state.familySettings.quickLinks=defaultQuickLinks.map(x=>({...x}));
+ensureQuickLinkTombstones();
 let editingQuickLinkId=null;
 function normalizeExternalUrl(v){const s=String(v||"").trim();return !s?"":(/^https?:\/\//i.test(s)?s:`https://${s}`);}
 function resetQuickLinkEditor(){
@@ -945,12 +1055,15 @@ function renderQuickLinks(){
    const link=links.find(v=>v.id===btn.dataset.id);
    if(!link)return;
    if(!window.confirm(`"${link.label || "Link"}" wirklich aus dem Schnellzugriff löschen?`))return;
-   state.familySettings.quickLinks=links.filter(v=>v.id!==btn.dataset.id);
+   const id=btn.dataset.id;
+   ensureQuickLinkTombstones()[id]=Date.now();
+   state.familySettings.quickLinks=links.filter(v=>v.id!==id);
    save();
+   persistQuickLinksDeletionImmediately();
    renderQuickLinks();
  });
 }
-document.querySelector("#saveQuickLinkBtn")?.addEventListener("click",()=>{const label=document.querySelector("#quickLinkLabel")?.value.trim()||"";const url=normalizeExternalUrl(document.querySelector("#quickLinkUrl")?.value||"");if(!label||!url)return;if(editingQuickLinkId){const x=state.familySettings.quickLinks.find(v=>v.id===editingQuickLinkId);if(x){x.label=label;x.url=url;}}else state.familySettings.quickLinks.push({id:uid(),label,url});save();resetQuickLinkEditor();renderQuickLinks();});
+document.querySelector("#saveQuickLinkBtn")?.addEventListener("click",()=>{const label=document.querySelector("#quickLinkLabel")?.value.trim()||"";const url=normalizeExternalUrl(document.querySelector("#quickLinkUrl")?.value||"");if(!label||!url)return;if(editingQuickLinkId){const x=state.familySettings.quickLinks.find(v=>v.id===editingQuickLinkId);if(x){x.label=label;x.url=url;x.updatedAt=Date.now();}}else state.familySettings.quickLinks.push({id:uid(),label,url,createdAt:Date.now(),updatedAt:Date.now()});save();resetQuickLinkEditor();renderQuickLinks();});
 document.querySelector("#cancelQuickLinkEditBtn")?.addEventListener("click",resetQuickLinkEditor);
 
 
@@ -2118,8 +2231,10 @@ const eventHtml = orderedEvents.length ? `
 
   document.querySelectorAll(".remove-week-video").forEach(btn => btn.addEventListener("click", e => {
     const id = e.currentTarget.dataset.id;
+    markListItemDeleted("videoTombstones", id);
     state.videos = state.videos.filter(v => v.id !== id);
     save();
+    persistTopLevelDeletionImmediately("videos");
     renderAll();
   }));
 
@@ -2273,8 +2388,11 @@ function renderTodoTrash() {
 
   host.querySelectorAll(".todo-trash-delete").forEach(btn => {
     btn.addEventListener("click", () => {
-      state.trash = (state.trash || []).filter(x => x.trashId !== btn.dataset.id);
+      const id = btn.dataset.id;
+      markListItemDeleted("trashTombstones", id);
+      state.trash = (state.trash || []).filter(x => x.trashId !== id);
       save();
+      persistTopLevelDeletionImmediately("trash");
       renderTodoTrash();
     });
   });
@@ -2787,8 +2905,10 @@ function bindArchiveButtons() {
     const shouldDelete = confirm(`„${item.title}“ wirklich aus Meine Übungen löschen?`);
     if (!shouldDelete) return;
 
+    markListItemDeleted("archiveTombstones", id);
     state.archive = state.archive.filter(a => a.id !== id);
     save();
+    persistTopLevelDeletionImmediately("archive");
     renderAll();
   }));
 }
@@ -5623,7 +5743,10 @@ let undoTimer = null, lastUndoAction = null;
 
 function pruneTrash(){
   const cutoff=Date.now()-TRASH_KEEP_MS;
-  state.trash=(state.trash||[]).filter(x=>Number(x.deletedAt||0)>=cutoff);
+  const before=state.trash||[];
+  const removed=before.filter(x=>Number(x.deletedAt||0)<cutoff);
+  removed.forEach(x=>x?.trashId && markListItemDeleted("trashTombstones",x.trashId));
+  state.trash=before.filter(x=>Number(x.deletedAt||0)>=cutoff);
 }
 function trashItem(kind,item){
   if(!item)return null; pruneTrash();
@@ -5664,7 +5787,14 @@ function renderTrash(){
     return `<div class="trash-row"><span><strong>${escapeHtml(label)}</strong><small>noch ${days} Tag${days===1?"":"e"}</small></span><button class="trash-restore" data-id="${rec.trashId}" title="Wiederherstellen">↩</button><button class="trash-delete" data-id="${rec.trashId}" title="Endgültig löschen">×</button></div>`;
   }).join(""):`<div class="overview-empty">Papierkorb ist leer.</div>`;
   host.querySelectorAll(".trash-restore").forEach(b=>b.onclick=()=>restoreTrashEntry(b.dataset.id));
-  host.querySelectorAll(".trash-delete").forEach(b=>b.onclick=()=>{state.trash=state.trash.filter(x=>x.trashId!==b.dataset.id);save();renderTrash();});
+  host.querySelectorAll(".trash-delete").forEach(b=>b.onclick=()=>{
+    const id=b.dataset.id;
+    markListItemDeleted("trashTombstones",id);
+    state.trash=state.trash.filter(x=>x.trashId!==id);
+    save();
+    persistTopLevelDeletionImmediately("trash");
+    renderTrash();
+  });
   const empty=document.querySelector("#emptyTrashBtn"); if(empty)empty.disabled=!rows.length;
 }
 
@@ -6494,8 +6624,12 @@ function renderWorkroomShopping() {
 
   document.querySelectorAll(".workroom-shopping-delete").forEach(btn => {
     btn.addEventListener("click", e => {
-      state.workroom.shopping = state.workroom.shopping.filter(x => x.id !== e.currentTarget.dataset.id);
+      const id = e.currentTarget.dataset.id;
+      state.workroom.shoppingTombstones = state.workroom.shoppingTombstones || {};
+      state.workroom.shoppingTombstones[id] = Date.now();
+      state.workroom.shopping = state.workroom.shopping.filter(x => x.id !== id);
       save();
+      persistWorkroomListDeletionImmediately("shopping", id);
       renderWorkroomShopping();
     });
   });
@@ -6541,8 +6675,12 @@ function renderWorkroomShopping() {
 
   document.querySelectorAll(".workroom-shopping-archive-delete").forEach(btn => {
     btn.addEventListener("click", e => {
-      state.workroom.shopping = state.workroom.shopping.filter(x => x.id !== e.currentTarget.dataset.id);
+      const id = e.currentTarget.dataset.id;
+      state.workroom.shoppingTombstones = state.workroom.shoppingTombstones || {};
+      state.workroom.shoppingTombstones[id] = Date.now();
+      state.workroom.shopping = state.workroom.shopping.filter(x => x.id !== id);
       save();
+      persistWorkroomListDeletionImmediately("shopping", id);
       renderWorkroomShopping();
     });
   });
@@ -8143,6 +8281,12 @@ function makeLocalSafetySnapshot(reason = "auto", force = false) {
       videos: state.videos,
       todos: state.todos,
       trash: state.trash || [],
+      todoTombstones: state.todoTombstones || {},
+      videoTombstones: state.videoTombstones || {},
+      archiveTombstones: state.archiveTombstones || {},
+      recipeTombstones: state.recipeTombstones || {},
+      pinboardTombstones: state.pinboardTombstones || {},
+      trashTombstones: state.trashTombstones || {},
       archive: state.archive,
       shopping: state.shopping,
       recipes: state.recipes,
@@ -8297,7 +8441,8 @@ async function persistWorkroomListDeletionImmediately(kind, id) {
   const configs = {
     prints: { listKey: "prints", tombstoneKey: "printTombstones" },
     links: { listKey: "links", tombstoneKey: "linkTombstones" },
-    substitutions: { listKey: "substitutions", tombstoneKey: "substitutionTombstones" }
+    substitutions: { listKey: "substitutions", tombstoneKey: "substitutionTombstones" },
+    shopping: { listKey: "shopping", tombstoneKey: "shoppingTombstones" }
   };
   const cfg = configs[kind];
   if (!cfg) return;
@@ -8358,6 +8503,10 @@ function guardedWorkroomMerge(localValue, cloudValue) {
     local.substitutionTombstones,
     remote.substitutionTombstones
   );
+  const shoppingTombstones = mergeWorkroomTodoTombstones(
+    local.shoppingTombstones,
+    remote.shoppingTombstones
+  );
 
   return {
     ...local,
@@ -8366,10 +8515,12 @@ function guardedWorkroomMerge(localValue, cloudValue) {
     printTombstones,
     linkTombstones,
     substitutionTombstones,
+    shoppingTombstones,
     todos: mergeWorkroomTodosSafely(local.todos, remote.todos, todoTombstones),
     prints: mergeWorkroomListWithTombstones(local.prints, remote.prints, printTombstones),
     links: mergeWorkroomListWithTombstones(local.links, remote.links, linkTombstones),
     substitutions: mergeWorkroomListWithTombstones(local.substitutions, remote.substitutions, substitutionTombstones),
+    shopping: mergeWorkroomListWithTombstones(local.shopping, remote.shopping, shoppingTombstones),
     routines: mergeWorkroomRoutinesSafely(local.routines, remote.routines),
     plans: {
       ...(local.plans || {}),
@@ -10920,9 +11071,12 @@ document.querySelector("#cancelRecipeDeleteBtn")?.addEventListener("click", () =
 
 document.querySelector("#confirmRecipeDeleteBtn")?.addEventListener("click", () => {
   if (!pendingRecipeDeleteId) return;
-  state.recipes = state.recipes.filter(r => r.id !== pendingRecipeDeleteId);
+  const id = pendingRecipeDeleteId;
+  markListItemDeleted("recipeTombstones", id);
+  state.recipes = state.recipes.filter(r => r.id !== id);
   pendingRecipeDeleteId = null;
   save();
+  persistTopLevelDeletionImmediately("recipes");
   renderRecipes();
   renderMealPlan();
   document.querySelector("#recipeDeleteDialog")?.close();
@@ -11391,6 +11545,9 @@ function normalizeWorkroom(w) {
     substitutionTombstones: src.substitutionTombstones && typeof src.substitutionTombstones === "object"
       ? src.substitutionTombstones
       : {},
+    shoppingTombstones: src.shoppingTombstones && typeof src.shoppingTombstones === "object"
+      ? src.shoppingTombstones
+      : {},
     prints: Array.isArray(src.prints) ? src.prints : [],
     links: Array.isArray(src.links) ? src.links : [],
     interestLinks: Array.isArray(src.interestLinks) ? src.interestLinks : [],
@@ -11788,6 +11945,12 @@ function snapshotPersistentState() {
     familyQuestions: state.familyQuestions || [],
     timeTracking: state.timeTracking,
     trash: state.trash || [],
+    todoTombstones: state.todoTombstones || {},
+    videoTombstones: state.videoTombstones || {},
+    archiveTombstones: state.archiveTombstones || {},
+    recipeTombstones: state.recipeTombstones || {},
+    pinboardTombstones: state.pinboardTombstones || {},
+    trashTombstones: state.trashTombstones || {},
     recipeLinkFeedback: state.recipeLinkFeedback,
     workroom: state.workroom,
     school: state.school,
@@ -11827,6 +11990,11 @@ function saveLocal() {
   localStorage.setItem("balanceProd.timeTracking", JSON.stringify(state.timeTracking));
   localStorage.setItem("balanceProd.trash", JSON.stringify(state.trash || []));
   localStorage.setItem("balanceProd.todoTombstones", JSON.stringify(state.todoTombstones || {}));
+  localStorage.setItem("balanceProd.videoTombstones", JSON.stringify(state.videoTombstones || {}));
+  localStorage.setItem("balanceProd.archiveTombstones", JSON.stringify(state.archiveTombstones || {}));
+  localStorage.setItem("balanceProd.recipeTombstones", JSON.stringify(state.recipeTombstones || {}));
+  localStorage.setItem("balanceProd.pinboardTombstones", JSON.stringify(state.pinboardTombstones || {}));
+  localStorage.setItem("balanceProd.trashTombstones", JSON.stringify(state.trashTombstones || {}));
   localStorage.setItem("balanceProd.workroom", JSON.stringify(state.workroom));
   localStorage.setItem("balanceProd.school", JSON.stringify(state.school));
   localStorage.setItem("balanceProd.familySettings", JSON.stringify(state.familySettings));
@@ -11840,6 +12008,11 @@ function cloudPayload() {
     todos: state.todos,
     trash: state.trash || [],
     todoTombstones: state.todoTombstones || {},
+    videoTombstones: state.videoTombstones || {},
+    archiveTombstones: state.archiveTombstones || {},
+    recipeTombstones: state.recipeTombstones || {},
+    pinboardTombstones: state.pinboardTombstones || {},
+    trashTombstones: state.trashTombstones || {},
     archive: state.archive,
     shopping: state.shopping,
     shoppingPromos: state.shoppingPromos || [],
@@ -11865,24 +12038,41 @@ function applyCloudData(data) {
       data.todoTombstones
     );
 
-    state.videos = guardedMergeById(state.videos, data.videos, "Videos");
+    state.videoTombstones = mergeSimpleTombstones(state.videoTombstones, data.videoTombstones);
+    state.archiveTombstones = mergeSimpleTombstones(state.archiveTombstones, data.archiveTombstones);
+    state.recipeTombstones = mergeSimpleTombstones(state.recipeTombstones, data.recipeTombstones);
+    state.pinboardTombstones = mergeSimpleTombstones(state.pinboardTombstones, data.pinboardTombstones);
+    state.trashTombstones = mergeSimpleTombstones(state.trashTombstones, data.trashTombstones);
+
+    state.videos = mergePersistentListWithTombstones(
+      state.videos, data.videos, state.videoTombstones
+    );
 
     state.todos = mergeTodosByRevision(state.todos, data.todos)
       .filter(item => !isTodoTombstoned(item?.id));
 
-    state.trash = guardedMergeById(state.trash, data.trash, "Papierkorb");
-    state.archive = guardedMergeById(state.archive, data.archive, "Übungsarchiv");
+    state.trash = mergePersistentListWithTombstones(
+      state.trash, data.trash, state.trashTombstones, "trashId"
+    );
+    state.archive = mergePersistentListWithTombstones(
+      state.archive, data.archive, state.archiveTombstones
+    );
     state.shopping = guardedMergeById(state.shopping, data.shopping, "Einkauf");
     shoppingItems = state.shopping;
-    state.recipes = guardedMergeById(state.recipes, data.recipes, "Rezepte");
+    state.recipes = mergePersistentListWithTombstones(
+      state.recipes, data.recipes, state.recipeTombstones
+    );
 
     if (data.meals && typeof data.meals === "object") {
       state.meals = mergeMeals(state.meals, data.meals);
     }
 
     if (Array.isArray(data.pinboard)) {
-      handleIncomingPinboard(data.pinboard);
-      state.pinboard = guardedMergeById(state.pinboard, data.pinboard, "Pinnwand");
+      const mergedPinboard = mergePersistentListWithTombstones(
+        state.pinboard, data.pinboard, state.pinboardTombstones
+      );
+      handleIncomingPinboard(mergedPinboard);
+      state.pinboard = mergedPinboard;
     }
 
     if (Array.isArray(data.familyQuestions)) {
@@ -11904,9 +12094,23 @@ function applyCloudData(data) {
     state.workroom = guardedWorkroomMerge(state.workroom, data.workroom);
     state.school = mergeSchoolSafely(state.school, data.school);
 
+    const localFamilySettings = state.familySettings || {};
+    const cloudFamilySettings = data.familySettings || {};
+    const quickLinkTombstones = mergeSimpleTombstones(
+      localFamilySettings.quickLinkTombstones,
+      cloudFamilySettings.quickLinkTombstones
+    );
+    const quickLinks = mergePersistentListWithTombstones(
+      localFamilySettings.quickLinks,
+      cloudFamilySettings.quickLinks,
+      quickLinkTombstones
+    );
+
     state.familySettings = {
-      ...(data.familySettings || {}),
-      ...(state.familySettings || {})
+      ...cloudFamilySettings,
+      ...localFamilySettings,
+      quickLinks,
+      quickLinkTombstones
     };
 
     state.settings = {
