@@ -2151,46 +2151,23 @@ const eventHtml = (multiDayLaneHtml || singleEventHtml) ? `
       });
     });
 
-    const mealRawStored = normalizeMealEntry ? normalizeMealEntry(state.meals?.[dateKey(date)]) : state.meals?.[dateKey(date)];
-    const mealStored = mealRawStored?.deleted ? null : mealRawStored;
-    const mealLabel = typeof mealStored === "string" ? mealStored : (mealStored?.label || "");
-    const mealRecipeId = typeof mealStored === "object" ? (mealStored?.recipeId || "") : "";
-    const mealUrl = typeof mealStored === "object" ? (mealStored?.url || "") : "";
-    const mealRecipe = resolveMealRecipe(mealRecipeId, mealLabel);
-    const mealHtml = mealLabel || mealUrl ? `
-      <div class="day-meal-section">
-        ${mealRecipe ? `
-          <button type="button" class="day-meal day-meal-recipe" data-recipe-id="${mealRecipe.id}">
-            <span>${normalizedRecipeSource(mealRecipe) === "external" ? "🔗" : "📖"}</span>
-            <strong>${escapeHtml(mealRecipe.title || mealLabel)}</strong>
-          </button>
-        ` : mealUrl ? `
-          <div class="day-meal-link-wrap">
-            <a class="day-meal day-meal-link" href="${escapeHtml(mealUrl)}" target="_blank" rel="noopener">
-              <span>🔗</span><strong>${escapeHtml(mealLabel || "Rezept öffnen")}</strong>
-            </a>
-            <div class="day-meal-link-rating" aria-label="Internetrezept bewerten">
-              <button type="button"
-                      class="day-meal-rate ${state.recipeLinkFeedback?.[mealUrl]?.rating === "love" ? "active" : ""}"
-                      data-url="${escapeHtml(mealUrl)}"
-                      data-rating="love"
-                      title="Sehr gern wieder">💛</button>
-              <button type="button"
-                      class="day-meal-rate ${state.recipeLinkFeedback?.[mealUrl]?.rating === "okay" ? "active" : ""}"
-                      data-url="${escapeHtml(mealUrl)}"
-                      data-rating="okay"
-                      title="Passt gut">🙂</button>
-              <button type="button"
-                      class="day-meal-rate ${state.recipeLinkFeedback?.[mealUrl]?.rating === "no" ? "active" : ""}"
-                      data-url="${escapeHtml(mealUrl)}"
-                      data-rating="no"
-                      title="Eher nicht nochmal">🌿</button>
-            </div>
-          </div>
-        ` : `
-          <div class="day-meal day-meal-free"><span>🍽</span><strong>${escapeHtml(mealLabel)}</strong></div>
-        `}
-      </div>` : "";
+    const mealsForDay = activeMealsForDate(dateKey(date));
+    const mealHtml = mealsForDay.length ? `
+      <details class="day-meal-compact">
+        <summary class="day-meal-vintage-toggle" title="${mealsForDay.length} ${mealsForDay.length===1 ? "Gericht" : "Gerichte"} geplant">
+          <span class="vintage-cloche" aria-hidden="true"><i></i></span>
+          ${mealsForDay.length > 1 ? `<span class="day-meal-count">${mealsForDay.length}</span>` : ""}
+        </summary>
+        <div class="day-meal-popover">
+          ${mealsForDay.map(meal=>{
+            const recipe=resolveMealRecipe(meal.recipeId,meal.label);
+            const title=recipe?.title || meal.label || "Rezept";
+            if(recipe) return `<button type="button" class="day-meal-list-item day-meal-recipe" data-recipe-id="${recipe.id}">${escapeHtml(title)}</button>`;
+            if(meal.url) return `<a class="day-meal-list-item" href="${escapeHtml(meal.url)}" target="_blank" rel="noopener">${escapeHtml(title)}</a>`;
+            return `<span class="day-meal-list-item">${escapeHtml(title)}</span>`;
+          }).join("")}
+        </div>
+      </details>` : "";
 
     const schoolHtml = schoolTasksForDate.length ? `
       <div class="day-school">
@@ -8268,6 +8245,10 @@ const confirmReplanBtn = document.querySelector("#confirmReplanBtn");
 
 function closeReplanDialog() {
   replanArchiveId = null;
+  const part = document.querySelector("#replanPart");
+  part?.closest("label")?.classList.remove("hidden");
+  const hint = replanDialog?.querySelector(".replan-hint");
+  if (hint) hint.textContent = "Die Übung verschwindet während der Planung aus „Unser Überblick“ und kommt nach dem Erledigen und Bewerten wieder zurück.";
   if (replanDialog && replanDialog.open) replanDialog.close();
 }
 
@@ -8281,14 +8262,44 @@ if (replanDialog) {
 }
 
 if (confirmReplanBtn) confirmReplanBtn.addEventListener("click", () => {
+  const weeksAhead = Number(document.querySelector("#replanWeek").value || 0);
+  const day = document.querySelector("#replanDay").value;
+
+  if (replanMode === "recipe" && replanRecipeLink?.url) {
+    const monday = getMonday(new Date());
+    monday.setDate(monday.getDate() + weeksAhead * 7);
+    const dayIndex = WEEK_DAYS.indexOf(day);
+    const targetDate = new Date(monday);
+    targetDate.setDate(monday.getDate() + Math.max(0,dayIndex));
+    const key = dateKey(targetDate);
+
+    const list = normalizeMealEntries(state.meals?.[key]);
+    list.push({
+      id:uid(),
+      label:replanRecipeLink.label || "Rezept",
+      recipeId:replanRecipeLink.recipeId || "",
+      url:replanRecipeLink.url || "",
+      deleted:false,
+      updatedAt:Date.now()
+    });
+    state.meals[key]=list;
+
+    save();
+    closeReplanDialog();
+    renderMealPlan();
+    renderWeek();
+    showMotivation(`${replanRecipeLink.label || "Rezept"} ist am ${day} im Essensplan.`);
+    replanMode = "archive";
+    replanRecipeLink = null;
+    return;
+  }
+
   const item = state.archive.find(a => a.id === replanArchiveId);
   if (!item) {
     closeReplanDialog();
     return;
   }
 
-  const weeksAhead = Number(document.querySelector("#replanWeek").value || 0);
-  const day = document.querySelector("#replanDay").value;
   const monday = getMonday(new Date());
   monday.setDate(monday.getDate() + weeksAhead * 7);
 
@@ -11017,14 +11028,16 @@ function normalizeMealEntry(entry) {
 
   if (typeof entry === "string") {
     return {
+      id: "",
       label: /^https?:\/\//i.test(entry.trim()) ? "" : entry.trim(),
       recipeId: "",
       url: /^https?:\/\//i.test(entry.trim()) ? entry.trim() : "",
+      deleted: false,
       updatedAt: 0
     };
   }
 
-  if (typeof entry !== "object") return null;
+  if (typeof entry !== "object" || Array.isArray(entry)) return null;
 
   let label = String(entry.label || "").trim();
   let url = String(entry.url || "").trim();
@@ -11035,12 +11048,28 @@ function normalizeMealEntry(entry) {
   }
 
   return {
+    id: String(entry.id || ""),
     label,
     recipeId: String(entry.recipeId || ""),
     url,
     deleted: !!entry.deleted,
     updatedAt: Number(entry.updatedAt) || 0
   };
+}
+
+function normalizeMealEntries(value) {
+  const source = Array.isArray(value) ? value : (value ? [value] : []);
+  return source
+    .map(normalizeMealEntry)
+    .filter(Boolean)
+    .map((entry,index) => ({
+      ...entry,
+      id: entry.id || `legacy-${index}-${entry.recipeId || entry.url || entry.label || "meal"}`
+    }));
+}
+
+function activeMealsForDate(key) {
+  return normalizeMealEntries(state.meals?.[key]).filter(entry => !entry.deleted);
 }
 
 function mergeMeals(localMeals, cloudMeals) {
@@ -11050,23 +11079,19 @@ function mergeMeals(localMeals, cloudMeals) {
   const keys = new Set([...Object.keys(local), ...Object.keys(cloud)]);
 
   keys.forEach(key => {
-    const l = normalizeMealEntry(local[key]);
-    const c = normalizeMealEntry(cloud[key]);
+    const lList = normalizeMealEntries(local[key]);
+    const cList = normalizeMealEntries(cloud[key]);
+    const byId = new Map();
 
-    if (!l && !c) return;
-    if (!l) { merged[key] = c; return; }
-    if (!c) { merged[key] = l; return; }
+    [...cList, ...lList].forEach(entry => {
+      const identity = entry.id || `${entry.recipeId}|${entry.url}|${entry.label}`;
+      const prev = byId.get(identity);
+      if (!prev || Number(entry.updatedAt || 0) >= Number(prev.updatedAt || 0)) {
+        byId.set(identity, entry);
+      }
+    });
 
-    // Neue Einträge tragen updatedAt. Dann gewinnt immer die neuere Fassung.
-    if (l.updatedAt || c.updatedAt) {
-      merged[key] = l.updatedAt >= c.updatedAt ? l : c;
-      return;
-    }
-
-    // Migration alter Daten: die vollständigere Fassung behalten.
-    const localScore = Number(!!l.label) * 3 + Number(!!l.recipeId) * 2 + Number(!!l.url);
-    const cloudScore = Number(!!c.label) * 3 + Number(!!c.recipeId) * 2 + Number(!!c.url);
-    merged[key] = localScore >= cloudScore ? l : c;
+    merged[key] = [...byId.values()];
   });
 
   return merged;
@@ -11081,215 +11106,121 @@ function renderMealPlan() {
     .slice()
     .sort((a,b) => String(a.title || "").localeCompare(String(b.title || ""), "de"));
 
-  const isUrl = value => /^https?:\/\//i.test(String(value || "").trim());
-
-  host.innerHTML = WEEK_DAYS.map((dayName, index) => {
+  host.innerHTML = WEEK_DAYS.map((dayName,index) => {
     const date = new Date(monday);
-    date.setDate(monday.getDate() + index);
+    date.setDate(monday.getDate()+index);
     const key = dateKey(date);
+    const meals = activeMealsForDate(key);
 
-    const rawStored = normalizeMealEntry ? normalizeMealEntry(state.meals?.[key]) : state.meals?.[key];
-    const stored = rawStored?.deleted ? null : rawStored;
-    const value = typeof stored === "string" ? stored : (stored?.label || "");
-    const customUrl = typeof stored === "object" ? (stored?.url || "") : "";
-    const recipeId = typeof stored === "object" ? (stored?.recipeId || "") : "";
-
-    const matched = resolveMealRecipe(recipeId, value);
-
-    return `
-      <div class="meal-plan-day">
-        <div class="meal-plan-day-head">
-          <span class="meal-plan-day-name">${escapeHtml(dayName)}</span>
-          <span class="meal-plan-date">${String(date.getDate()).padStart(2,"0")}.${String(date.getMonth()+1).padStart(2,"0")}.</span>
+    const rows = meals.map(meal => {
+      const matched = resolveMealRecipe(meal.recipeId, meal.label);
+      return `<div class="meal-plan-entry" data-date="${key}" data-meal-id="${escapeHtml(meal.id)}">
+        <div class="meal-plan-entry-main">
+          <span class="meal-plan-entry-mark" aria-hidden="true"></span>
+          <span class="meal-plan-entry-title">${escapeHtml(matched?.title || meal.label || "Rezept")}</span>
+          ${matched ? `<button type="button" class="meal-plan-open" data-recipe-id="${matched.id}" title="Rezept öffnen">↗</button>`
+            : meal.url ? `<a class="meal-plan-open" href="${escapeHtml(meal.url)}" target="_blank" rel="noopener" title="Link öffnen">↗</a>` : ""}
+          <button type="button" class="meal-plan-remove" data-date="${key}" data-meal-id="${escapeHtml(meal.id)}" title="Aus diesem Tag entfernen">×</button>
         </div>
+      </div>`;
+    }).join("");
 
-        <div class="meal-plan-input-wrap">
-          <div class="meal-plan-name-wrap">
-            <input type="text"
-                   class="meal-plan-input"
-                   data-date="${key}"
-                   value="${escapeHtml(value)}"
-                   autocomplete="off"
-                   placeholder="Bezeichnung, z. B. Pommes">
-            <div class="meal-plan-autocomplete hidden" data-date="${key}"></div>
-          </div>
-
-          <button type="button"
-                  class="meal-plan-link-toggle ${customUrl ? "active" : ""}"
-                  data-date="${key}"
-                  title="Link hinterlegen">🔗</button>
-
-          ${matched ? `
-            <button type="button"
-                    class="meal-plan-recipe-btn"
-                    data-recipe-id="${matched.id}"
-                    title="Rezept öffnen">↗</button>
-          ` : customUrl ? `
-            <a class="meal-plan-recipe-btn"
-               href="${escapeHtml(customUrl)}"
-               target="_blank"
-               rel="noopener"
-               title="Link öffnen">↗</a>
-          ` : ""}
-        </div>
-
-        <div class="meal-plan-url-row ${customUrl ? "" : "hidden"}" data-date="${key}">
-          <input type="url"
-                 class="meal-plan-url-input"
-                 data-date="${key}"
-                 value="${escapeHtml(customUrl)}"
-                 placeholder="Link einfügen, z. B. https://…">
-        </div>
+    return `<div class="meal-plan-day">
+      <div class="meal-plan-day-head">
+        <span class="meal-plan-day-name">${escapeHtml(dayName)}</span>
+        <span class="meal-plan-date">${String(date.getDate()).padStart(2,"0")}.${String(date.getMonth()+1).padStart(2,"0")}.</span>
       </div>
-    `;
+      <div class="meal-plan-entries">${rows || `<div class="meal-plan-empty">Noch nichts geplant</div>`}</div>
+      <div class="meal-plan-add-wrap">
+        <input type="text" class="meal-plan-add-input" data-date="${key}" autocomplete="off" placeholder="+ Gericht oder Rezept hinzufügen">
+        <div class="meal-plan-autocomplete hidden" data-date="${key}"></div>
+      </div>
+    </div>`;
   }).join("");
 
-  function persistMealForDate(key, {refresh = false, cloud = true} = {}) {
-    const esc = CSS.escape(key);
-    const labelInput = host.querySelector(`.meal-plan-input[data-date="${esc}"]`);
-    const urlInput = host.querySelector(`.meal-plan-url-input[data-date="${esc}"]`);
-
-    let label = labelInput?.value.trim() || "";
-    let url = urlInput?.value.trim() || "";
-
-    if (isUrl(label) && !url) {
-      url = label;
-      label = "";
-      if (labelInput) labelInput.value = "";
-      if (urlInput) urlInput.value = url;
-    }
-
-    const matched = recipeByTitle(label);
-    state.meals = state.meals && typeof state.meals === "object" ? state.meals : {};
-
-    if (!label && !url) {
-      state.meals[key] = {
-        label: "",
-        recipeId: "",
-        url: "",
-        deleted: true,
-        updatedAt: Date.now()
-      };
-    } else {
-      state.meals[key] = {
-        label: matched ? matched.title : label,
-        recipeId: matched ? matched.id : "",
-        url,
-        deleted: false,
-        updatedAt: Date.now()
-      };
-    }
-
-    // Beim Tippen NICHT in die Cloud schreiben:
-    // der Firestore-Rückkanal würde renderAll() auslösen und dem Textfeld
-    // nach jedem Buchstaben den Fokus nehmen.
-    if (cloud) {
-      save();
-    } else {
-      saveLocal();
-    }
-
+  function addMeal(key, data) {
+    const list=normalizeMealEntries(state.meals?.[key]);
+    const now=Date.now();
+    const entry={
+      id:uid(),
+      label:String(data.label||"").trim(),
+      recipeId:String(data.recipeId||""),
+      url:String(data.url||"").trim(),
+      deleted:false,
+      updatedAt:now
+    };
+    if(!entry.label && !entry.url) return;
+    list.push(entry);
+    state.meals[key]=list;
+    save();
+    renderMealPlan();
     renderWeek();
-    if (refresh) renderMealPlan();
   }
 
-  function showMealSuggestions(input) {
-    const key = input.dataset.date;
-    const popup = host.querySelector(`.meal-plan-autocomplete[data-date="${CSS.escape(key)}"]`);
-    if (!popup) return;
+  host.querySelectorAll(".meal-plan-add-input").forEach(input=>{
+    const popup=host.querySelector(`.meal-plan-autocomplete[data-date="${CSS.escape(input.dataset.date)}"]`);
 
-    const q = input.value.trim().toLowerCase();
-    if (!q) {
-      popup.innerHTML = "";
-      popup.classList.add("hidden");
-      return;
-    }
+    const showSuggestions=()=>{
+      const q=input.value.trim().toLowerCase();
+      if(!q){ popup?.classList.add("hidden"); if(popup) popup.innerHTML=""; return; }
+      const matches=recipes.filter(r=>String(r.title||"").toLowerCase().includes(q)).slice(0,6);
+      if(!matches.length){ popup?.classList.add("hidden"); if(popup) popup.innerHTML=""; return; }
+      popup.innerHTML=matches.map(r=>`<button type="button" class="meal-plan-autocomplete-item" data-id="${r.id}">
+        <strong>${escapeHtml(r.title||"")}</strong><span>${escapeHtml(recipeCategoryLabel(r.category||"main"))}</span>
+      </button>`).join("");
+      popup.classList.remove("hidden");
+      popup.querySelectorAll(".meal-plan-autocomplete-item").forEach(btn=>{
+        btn.addEventListener("mousedown",e=>e.preventDefault());
+        btn.addEventListener("click",()=>{
+          const recipe=state.recipes.find(r=>r.id===btn.dataset.id);
+          if(!recipe) return;
+          addMeal(input.dataset.date,{
+            label:recipe.title,
+            recipeId:recipe.id,
+            url:normalizedRecipeSource(recipe)==="external" ? (recipe.webUrl||recipe.youtubeUrl||"") : ""
+          });
+        });
+      });
+    };
 
-    const matches = recipes
-      .filter(r => String(r.title || "").toLowerCase().includes(q))
-      .slice(0, 6);
-
-    if (!matches.length) {
-      popup.innerHTML = "";
-      popup.classList.add("hidden");
-      return;
-    }
-
-    popup.innerHTML = matches.map(r => `
-      <button type="button"
-              class="meal-plan-autocomplete-item"
-              data-title="${escapeHtml(r.title || "")}"
-              data-recipe-id="${r.id}">
-        <strong>${escapeHtml(r.title || "")}</strong>
-        <span>${escapeHtml(recipeCategoryLabel(r.category || "main"))}</span>
-      </button>
-    `).join("");
-    popup.classList.remove("hidden");
-
-    popup.querySelectorAll(".meal-plan-autocomplete-item").forEach(btn => {
-      btn.addEventListener("mousedown", e => e.preventDefault());
-      btn.addEventListener("click", () => {
-        input.value = btn.dataset.title || "";
-        popup.classList.add("hidden");
-        persistMealForDate(key, {refresh:true, cloud:true});
+    input.addEventListener("input",showSuggestions);
+    input.addEventListener("focus",showSuggestions);
+    input.addEventListener("blur",()=>setTimeout(()=>popup?.classList.add("hidden"),160));
+    input.addEventListener("keydown",e=>{
+      if(e.key!=="Enter") return;
+      e.preventDefault();
+      const value=input.value.trim();
+      if(!value) return;
+      const recipe=recipeByTitle(value);
+      addMeal(input.dataset.date,{
+        label:recipe?.title || (/^https?:\/\//i.test(value) ? "Rezeptlink" : value),
+        recipeId:recipe?.id || "",
+        url:recipe && normalizedRecipeSource(recipe)==="external"
+          ? (recipe.webUrl||recipe.youtubeUrl||"")
+          : (/^https?:\/\//i.test(value) ? value : "")
       });
     });
-  }
-
-  host.querySelectorAll(".meal-plan-input").forEach(input => {
-    input.addEventListener("input", () => {
-      // lokal sichern, Fokus behalten, Vorschläge offen lassen
-      persistMealForDate(input.dataset.date, {cloud:false});
-      showMealSuggestions(input);
-    });
-
-    input.addEventListener("focus", () => showMealSuggestions(input));
-
-    input.addEventListener("blur", () => {
-      // Beim Verlassen erst gemeinsam synchronisieren.
-      persistMealForDate(input.dataset.date, {cloud:true});
-      setTimeout(() => {
-        const popup = host.querySelector(`.meal-plan-autocomplete[data-date="${CSS.escape(input.dataset.date)}"]`);
-        popup?.classList.add("hidden");
-      }, 160);
-    });
-
-    input.addEventListener("change", () => {
-      persistMealForDate(input.dataset.date, {cloud:true});
-    });
   });
 
-  host.querySelectorAll(".meal-plan-url-input").forEach(input => {
-    input.addEventListener("input", () => {
-      persistMealForDate(input.dataset.date, {cloud:false});
-    });
-    input.addEventListener("blur", () => {
-      persistMealForDate(input.dataset.date, {cloud:true});
-    });
-    input.addEventListener("change", () => {
-      persistMealForDate(input.dataset.date, {cloud:true});
-    });
-  });
+  host.querySelectorAll(".meal-plan-open[data-recipe-id]").forEach(btn=>btn.addEventListener("click",()=>{
+    const recipe=state.recipes.find(r=>r.id===btn.dataset.recipeId);
+    if(recipe) showRecipeDetail(recipe);
+  }));
 
-  host.querySelectorAll(".meal-plan-link-toggle").forEach(btn => {
-    btn.addEventListener("mousedown", e => e.preventDefault());
-    btn.addEventListener("click", () => {
-      const row = host.querySelector(`.meal-plan-url-row[data-date="${CSS.escape(btn.dataset.date)}"]`);
-      row?.classList.toggle("hidden");
-      if (row && !row.classList.contains("hidden")) row.querySelector("input")?.focus();
-    });
-  });
+  host.querySelectorAll(".meal-plan-remove").forEach(btn=>btn.addEventListener("click",()=>{
+    const key=btn.dataset.date;
+    const id=btn.dataset.mealId;
+    const list=normalizeMealEntries(state.meals?.[key]);
+    const item=list.find(x=>x.id===id);
+    if(item){ item.deleted=true; item.updatedAt=Date.now(); }
+    state.meals[key]=list;
+    save();
+    renderMealPlan();
+    renderWeek();
+  }));
 
-  host.querySelectorAll(".meal-plan-recipe-btn[data-recipe-id]").forEach(btn => {
-    btn.addEventListener("click", e => {
-      e.preventDefault();
-      const recipe = state.recipes.find(r => r.id === btn.dataset.recipeId);
-      if (recipe) showRecipeDetail(recipe);
-    });
-  });
-
-  document.querySelector("#mealPlanThisWeekBtn")?.classList.toggle("active", mealPlanWeekOffset === 0);
-  document.querySelector("#mealPlanNextWeekBtn")?.classList.toggle("active", mealPlanWeekOffset === 1);
+  document.querySelector("#mealPlanThisWeekBtn")?.classList.toggle("active", mealPlanWeekOffset===0);
+  document.querySelector("#mealPlanNextWeekBtn")?.classList.toggle("active", mealPlanWeekOffset===1);
 }
 
 function closeRecipeDetailDialog() {
@@ -11432,10 +11363,14 @@ document.querySelector("#saveRecipeBtn")?.addEventListener("click", () => {
       // Bereits verknüpfte Essensplan-Einträge behalten die Verbindung,
       // bekommen aber automatisch den neuen Rezeptnamen.
       Object.keys(state.meals || {}).forEach(key => {
-        const meal = state.meals[key];
-        if (meal && typeof meal === "object" && meal.recipeId === recipe.id) {
-          meal.label = recipe.title;
-        }
+        const meals = normalizeMealEntries(state.meals[key]);
+        meals.forEach(meal => {
+          if (meal.recipeId === recipe.id) {
+            meal.label = recipe.title;
+            meal.updatedAt = Date.now();
+          }
+        });
+        state.meals[key] = meals;
       });
     }
   } else {
@@ -11535,28 +11470,28 @@ function collectInternetRecipeLinks() {
     });
   });
 
-  Object.values(state.meals || {}).forEach(meal => {
-    if (!meal || typeof meal !== "object" || !meal.url) return;
-    const key = String(meal.url).trim();
-    if (!key) return;
+  Object.values(state.meals || {}).forEach(dayValue => {
+    normalizeMealEntries(dayValue).filter(meal => !meal.deleted).forEach(meal => {
+      if (!meal.url) return;
+      const key = String(meal.url).trim();
+      if (!key) return;
 
-    const linkedRecipe = meal.recipeId
-      ? (state.recipes || []).find(r => r.id === meal.recipeId)
-      : null;
+      const linkedRecipe = meal.recipeId
+        ? (state.recipes || []).find(r => r.id === meal.recipeId)
+        : null;
 
-    const candidate = {
-      url:key,
-      label:meal.label || linkedRecipe?.title || "Rezeptlink",
-      source:"Essensplan",
-      recipeId:meal.recipeId || "",
-      category:linkedRecipe?.category || "other",
-      sourceUpdatedAt:Number(meal.updatedAt || linkedRecipe?.updatedAt || linkedRecipe?.createdAt || 0)
-    };
+      const candidate = {
+        url:key,
+        label:meal.label || linkedRecipe?.title || "Rezeptlink",
+        source:"Essensplan",
+        recipeId:meal.recipeId || "",
+        category:linkedRecipe?.category || "other",
+        sourceUpdatedAt:Number(meal.updatedAt || linkedRecipe?.updatedAt || linkedRecipe?.createdAt || 0)
+      };
 
-    const previous = map.get(key);
-    if (!previous || candidate.sourceUpdatedAt >= Number(previous.sourceUpdatedAt || 0)) {
-      map.set(key, candidate);
-    }
+      const previous = map.get(key);
+      if (!previous || candidate.sourceUpdatedAt >= Number(previous.sourceUpdatedAt || 0)) map.set(key,candidate);
+    });
   });
 
   return [...map.values()]
@@ -11886,6 +11821,11 @@ function openRecipeReuseDialog(link) {
   const day = document.querySelector("#replanDay");
   if (week) week.value = "0";
   if (day) day.value = "Montag";
+
+  const part = document.querySelector("#replanPart");
+  part?.closest("label")?.classList.add("hidden");
+  const hint = dialog.querySelector(".replan-hint");
+  if (hint) hint.textContent = "Das Rezept wird zusätzlich im Essensplan des gewählten Tages eingetragen. Bereits geplante Gerichte bleiben erhalten.";
 
   dialog.showModal();
 }
