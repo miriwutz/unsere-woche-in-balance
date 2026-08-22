@@ -24627,3 +24627,21 @@ button.day-meal-list-item:hover,a.day-meal-list-item:hover{background:rgba(164,1
   }
 }
 
+/* =========================================================
+   TERMINE – echte Personen statt pauschal "Alle"
+   ========================================================= */
+.multiday-center-label .multiday-person,
+.mobile-multiday-person{
+  max-width:190px !important;
+  overflow:hidden !important;
+  text-overflow:ellipsis !important;
+  white-space:nowrap !important;
+}
+
+@media(max-width:1050px){
+  .multiday-center-label .multiday-person,
+  .mobile-multiday-person{
+    max-width:145px !important;
+  }
+}
+
