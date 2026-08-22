@@ -11640,6 +11640,15 @@ function applyCloudData(data) {
     state.archive = guardedMergeById(state.archive, data.archive, "Übungsarchiv");
     state.shopping = guardedMergeById(state.shopping, data.shopping, "Einkauf");
     shoppingItems = state.shopping;
+
+    // Rabatte & Pickerl waren zwar im Cloud-Payload enthalten,
+    // wurden beim Empfang auf einem anderen Gerät aber bisher nicht übernommen.
+    state.shoppingPromos = guardedMergeById(
+      state.shoppingPromos,
+      data.shoppingPromos,
+      "Rabatte & Pickerl"
+    );
+
     state.recipes = guardedMergeById(state.recipes, data.recipes, "Rezepte");
 
     if (data.meals && typeof data.meals === "object") {
