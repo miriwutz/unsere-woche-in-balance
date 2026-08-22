@@ -14358,3 +14358,53 @@ document.addEventListener("click", e => {
 
 window.addEventListener("pagehide", persistFamilyQuestionsNow);
 window.addEventListener("beforeunload", persistFamilyQuestionsNow);
+
+/* ===== Layout-Korrektur: To-do-Felder + Rezept-Kartenzeichen ===== */
+function normalizePlanningFormLayout() {
+  const priority = document.querySelector("#todoPriority")?.closest("label");
+  const area = document.querySelector("#todoArea")?.closest("label");
+  const period = document.querySelector("#todoPeriod")?.closest("label");
+
+  if (priority && area && period) {
+    let quickRow = document.querySelector(".todo-quick-meta-row");
+    if (!quickRow) {
+      quickRow = document.createElement("div");
+      quickRow.className = "todo-quick-meta-row";
+    }
+
+    [priority, area, period].forEach(label => quickRow.appendChild(label));
+
+    const oldDetails = document.querySelector(".todo-more-settings");
+    if (oldDetails) {
+      oldDetails.parentElement?.insertBefore(quickRow, oldDetails);
+
+      const hint = oldDetails.querySelector("#schoolHolidayHint")?.closest(".recurrence-row")
+        || oldDetails.querySelector("#schoolHolidayHint");
+      const schoolFields = oldDetails.querySelector("#schoolyearScheduleFields");
+
+      if (hint) oldDetails.parentElement?.insertBefore(hint, oldDetails);
+      if (schoolFields) oldDetails.parentElement?.insertBefore(schoolFields, oldDetails);
+
+      oldDetails.remove();
+    } else if (!quickRow.isConnected) {
+      const actions = document.querySelector(".todo-form-actions");
+      actions?.parentElement?.insertBefore(quickRow, actions);
+    }
+  }
+
+  const cardMark = document.querySelector("#recipeCardMark")?.closest("label");
+  const metaGrid = document.querySelector("#recipeForm .recipe-v19-meta-grid");
+  const tempLabel = document.querySelector("#recipeTemperature")?.closest("label");
+
+  if (cardMark && metaGrid) {
+    cardMark.classList.add("recipe-meta-mark");
+    if (tempLabel?.parentElement === metaGrid) {
+      tempLabel.insertAdjacentElement("afterend", cardMark);
+    } else {
+      metaGrid.appendChild(cardMark);
+    }
+  }
+}
+
+normalizePlanningFormLayout();
+
