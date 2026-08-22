@@ -1809,22 +1809,24 @@ function renderWeek() {
       return start && end > start && start <= weekEndKey && end >= weekStartKey;
     })
     .slice()
-    .sort((a,b) =>
-      String(a.date || "").localeCompare(String(b.date || "")) ||
-      String(a.endDate || a.date || "").localeCompare(String(b.endDate || b.date || "")) ||
-      String(a.id || "").localeCompare(String(b.id || ""))
-    );
+    .sort((a,b) => {
+      const aStart = parseLocalDate(a.date);
+      const aEnd = parseLocalDate(a.endDate || a.date);
+      const bStart = parseLocalDate(b.date);
+      const bEnd = parseLocalDate(b.endDate || b.date);
+      const aDays = aStart && aEnd ? Math.round((aEnd - aStart) / 86400000) + 1 : 1;
+      const bDays = bStart && bEnd ? Math.round((bEnd - bStart) / 86400000) + 1 : 1;
+      return bDays - aDays ||
+        String(a.date || "").localeCompare(String(b.date || "")) ||
+        String(a.id || "").localeCompare(String(b.id || ""));
+    });
 
-  const multiDayTrackById = new Map();
-  const multiDayTrackEnds = [];
-  multiDayEventsThisWeek.forEach(t => {
-    const start = t.date || "";
-    let track = 0;
-    while (multiDayTrackEnds[track] && multiDayTrackEnds[track] >= start) track++;
-    multiDayTrackEnds[track] = t.endDate || start;
-    multiDayTrackById.set(t.id, track);
-  });
-  const multiDayTrackCount = multiDayTrackEnds.length;
+  // Gewünschte Reihenfolge: längster Mehrtagestermin ganz oben,
+  // zweitlängster darunter usw. – unabhängig davon, ob sie sich überschneiden.
+  const multiDayTrackById = new Map(
+    multiDayEventsThisWeek.map((t,index) => [t.id,index])
+  );
+  const multiDayTrackCount = multiDayEventsThisWeek.length;
 
   days.forEach((day, index) => {
     const dayEl = document.createElement("article");
@@ -2007,10 +2009,42 @@ const singleDayEvents = orderedEvents.filter(t => !multiDayEvents.includes(t));
 const multiDayLaneHtml = multiDayTrackCount
   ? `<div class="multiday-event-lanes">
       ${Array.from({length:multiDayTrackCount}, (_,track) => {
-        const item = multiDayEvents.find(t => multiDayTrackById.get(t.id) === track);
-        return item
-          ? `<div class="multiday-event-lane" data-track="${track}">${renderEventCard(item)}</div>`
-          : `<div class="multiday-event-lane multiday-event-placeholder" data-track="${track}" aria-hidden="true"></div>`;
+        const item = multiDayEventsThisWeek[track];
+        if (!item) {
+          return `<div class="multiday-event-lane multiday-event-placeholder" data-track="${track}" aria-hidden="true"></div>`;
+        }
+
+        const currentKey = dateKey(date);
+        const visibleStart = item.date < weekStartKey ? weekStartKey : item.date;
+        const visibleEnd = (item.endDate || item.date) > weekEndKey
+          ? weekEndKey
+          : (item.endDate || item.date);
+        const activeToday = currentKey >= visibleStart && currentKey <= visibleEnd;
+
+        if (!activeToday) {
+          return `<div class="multiday-event-lane multiday-event-placeholder" data-track="${track}" aria-hidden="true"></div>`;
+        }
+
+        const isStart = currentKey === visibleStart;
+        const isEnd = currentKey === visibleEnd;
+        const groupKey = todoGroupKey(item);
+        const accent = groupKey === "shared"
+          ? sharedGroupGradient([item])
+          : (groupKey === "general" ? "#b8b58d" : (familyColor(groupKey) || "#c8c0ba"));
+        const startTime = isStart && item.time ? `${escapeHtml(item.time)} ` : "";
+        const endTime = isEnd && item.endTime ? ` · bis ${escapeHtml(item.endTime)}` : "";
+
+        return `<div class="multiday-event-lane" data-track="${track}">
+          <div
+            class="multiday-continuous-segment ${isStart ? "is-start" : ""} ${isEnd ? "is-end" : ""}"
+            style="--multi-accent:${accent}">
+            ${isStart
+              ? `<span class="multiday-continuous-label">${startTime}${item.superImportant ? "★ " : ""}${escapeHtml(item.text)}${endTime}</span>`
+              : (isEnd && item.endTime
+                  ? `<span class="multiday-continuous-end">${endTime}</span>`
+                  : `<span class="multiday-continuous-fill" aria-hidden="true"></span>`)}
+          </div>
+        </div>`;
       }).join("")}
     </div>`
   : "";
@@ -12352,9 +12386,17 @@ function renderAll() {
     enableBtn.disabled = false;
 
     if (permission === "granted" && enabled) {
-      status.textContent = "🔔 Dieses Gerät ist für Benachrichtigungen aktiviert.";
-      status.dataset.state = "granted";
-      enableBtn.textContent = "Benachrichtigungen aktiv";
+      if (audioUnlocked) {
+        status.textContent = "🔔 Benachrichtigung & Ton auf diesem Gerät bereit.";
+        status.dataset.state = "granted";
+        enableBtn.textContent = "Benachrichtigungen aktiv";
+      } else {
+        // Mobile Browser dürfen Audio nach Reload/Standby trotz gespeicherter
+        // Benachrichtigungsfreigabe bis zur nächsten Nutzeraktion blockieren.
+        status.textContent = "🔔 Benachrichtigungen erlaubt · Ton einmal aktivieren.";
+        status.dataset.state = "default";
+        enableBtn.textContent = "Ton aktivieren";
+      }
       return;
     }
 
@@ -12776,6 +12818,8 @@ function renderAll() {
   document.querySelector("#enablePlingNotifications")?.addEventListener("click", async () => {
     await unlockAudio();
     await enableNotificationsOnThisDevice();
+    updateDeviceStatus();
+    checkPlings();
   });
 
   document.querySelector("#testPlingBtn")?.addEventListener("click", async () => {
