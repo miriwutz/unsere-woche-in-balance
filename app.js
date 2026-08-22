@@ -13179,12 +13179,16 @@ document.querySelectorAll("[data-school-open-week]").forEach(btn => {
 });
 
 document.querySelector("#schoolIconChoices")?.addEventListener("click",e=>{
-  const b=e.target.closest(".school-icon-choice"); if(!b||!activeSchoolChild)return;
-  const key=schoolMemberKey(activeSchoolChild);
-  state.familySettings[key].icon=b.dataset.icon;
+  const b=e.target.closest(".school-icon-choice");
+  if(!b || !activeSchoolChild) return;
+
+  // Persönliches Zeichen: NUR Banner/Stundenplan-Link ändern.
+  // Schul-To-dos werden hier bewusst nicht neu gerendert oder verändert.
+  const childId = activeSchoolChild;
+  const key = schoolMemberKey(childId);
+  state.familySettings[key].icon = b.dataset.icon;
   save();
-  renderAll();
-  renderSchoolChildDashboard(activeSchoolChild);
+  renderSchoolChildDashboard(childId);
 });
 
 // Wenn "Schule" in der Hauptnavigation angeklickt wird, immer auf die
