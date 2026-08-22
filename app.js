@@ -2800,6 +2800,12 @@ document.querySelector("#eventEndDate").value = item.endDate || "";
 document.querySelector("#eventTime").value = item.time || "";
 document.querySelector("#eventEndTime").value = item.endTime || "";
 document.querySelector("#eventCategory").value = item.eventCategory || "normal";
+document.querySelector("#eventPlingEnabled").checked = !!item.plingEnabled;
+document.querySelector("#eventPlingMinutes").value = String(
+  [5,10,15,20,30,45,60,90,120].includes(Number(item.plingMinutes))
+    ? Number(item.plingMinutes)
+    : 15
+);
     
 document.querySelector("#recurrence").value = item.recurrence || "none";
     setSelectedFamilyMembers(item.family || []);
@@ -7724,6 +7730,8 @@ function resetTodoEditor() {
   document.querySelector("#eventTime").value = "";
   document.querySelector("#eventEndTime").value = "";
   document.querySelector("#eventCategory").value = "normal";
+  document.querySelector("#eventPlingEnabled").checked = false;
+  document.querySelector("#eventPlingMinutes").value = "15";
   document.querySelector("#recurrence").value = "none";
   setSelectedFamilyMembers([]);
   updateEntryTypeUI();
@@ -7971,6 +7979,13 @@ const eventEndDate = document.querySelector("#eventEndDate")?.value || "";
 const eventTime = document.querySelector("#eventTime").value;
 const eventEndTime = document.querySelector("#eventEndTime")?.value || "";
   const eventCategory = document.querySelector("#eventCategory")?.value || "normal";
+  const plingEnabled = type === "event"
+    ? !!document.querySelector("#eventPlingEnabled")?.checked
+    : false;
+  const plingMinutesRaw = Number(document.querySelector("#eventPlingMinutes")?.value || 15);
+  const plingMinutes = [5,10,15,20,30,45,60,90,120].includes(plingMinutesRaw)
+    ? plingMinutesRaw
+    : 15;
   const superImportant = document.querySelector("#superImportant").checked;
 
   const weekOffset = Number(document.querySelector("#todoWeekOffset")?.value || 0);
@@ -8023,6 +8038,8 @@ const eventEndTime = document.querySelector("#eventEndTime")?.value || "";
     item.endDate = type === "event" ? eventEndDate : null;
 item.endTime = type === "event" ? eventEndTime : "";
     item.eventCategory = type === "event" ? eventCategory : "normal";
+    item.plingEnabled = type === "event" ? plingEnabled : false;
+    item.plingMinutes = type === "event" ? plingMinutes : 15;
     item.recurrence = recurrence;
     item.anchorDate = anchorDate;
     item.completedOccurrences = Array.isArray(item.completedOccurrences) ? item.completedOccurrences : [];
@@ -8048,6 +8065,8 @@ item.endTime = type === "event" ? eventEndTime : "";
       endDate: type === "event" ? eventEndDate : null,
 endTime: type === "event" ? eventEndTime : "",
       eventCategory: type === "event" ? eventCategory : "normal",
+      plingEnabled: type === "event" ? plingEnabled : false,
+      plingMinutes: type === "event" ? plingMinutes : 15,
       recurrence,
       anchorDate,
       completedOccurrences: [],
