@@ -3508,6 +3508,7 @@ document.querySelectorAll(".timetable-switch").forEach(btn => {
   });
 });
 // Stundenplan-Auswahl auf der Wochenplan-Seite
+let familyTimetableMode = "view";
 const familyTimetableDialog = document.querySelector("#familyTimetableDialog");
 
 document.querySelector("#openFamilyTimetableBtn")?.addEventListener("click", () => {
@@ -11894,41 +11895,60 @@ document.querySelector("#saveSubstitutionBtn")?.addEventListener("click", () => 
 });
 
 function openMamaTimetableEditorDirectRestored() {
-  familyTimetableMode = "edit";
-
   const dialog = document.querySelector("#familyTimetableDialog");
   const title = document.querySelector("#familyTimetableDialogTitle");
   const chooserButtons = document.querySelector("#familyTimetableDialog .family-timetable-buttons");
   const wrap = document.querySelector("#manualTimetableWrapmama");
+  const host = document.querySelector("#ttMatrixmama");
 
+  if (!dialog || !wrap || !host) {
+    console.error("Mama-Stundenplan: benötigte Dialogelemente fehlen.");
+    showMotivation("Der Stundenplan-Editor konnte nicht gefunden werden.");
+    return;
+  }
+
+  familyTimetableMode = "edit";
   if (title) title.textContent = "Mama – Stundenplan bearbeiten";
   chooserButtons?.classList.add("hidden");
+  wrap.classList.remove("hidden");
 
   try {
-    // Erst Datenstruktur reparieren, dann Matrix zeichnen.
+    // Dialog ZUERST sichtbar machen. So kann Firefox/Tablet die enthaltene
+    // Tabelle zuverlässig aufbauen und vermessen.
+    if (!dialog.open) {
+      try {
+        dialog.showModal();
+      } catch (_) {
+        dialog.setAttribute("open", "");
+      }
+    }
+
     const mama = timetablePerson("mama");
-    ensureManualTimetable(mama);
+    const timetable = ensureManualTimetable(mama);
+
+    // Editor anschließend vollständig zeichnen.
     renderTTMatrix("mama");
 
-    wrap?.classList.remove("hidden");
+    // Sicherheitsnetz: Wenn ein älterer Browser den Host nicht neu zeichnet,
+    // nochmals im nächsten Frame rendern.
+    requestAnimationFrame(() => {
+      try {
+        if (dialog.open && host && !host.children.length) {
+          renderTTMatrix("mama");
+        }
+      } catch (err) {
+        console.warn("Mama-Stundenplan Nachrendern:", err);
+      }
+    });
 
-    if (!openDialogCompat(dialog)) {
-      throw new Error("Dialog konnte nicht geöffnet werden");
-    }
   } catch (err) {
     console.error("Mama-Stundenplan konnte nicht geöffnet werden:", err);
     chooserButtons?.classList.remove("hidden");
-    wrap?.classList.add("hidden");
+    wrap.classList.add("hidden");
     closeDialogCompat(dialog);
     showMotivation("Der Stundenplan konnte nicht geöffnet werden.");
   }
 }
-
-document.querySelector("#openWorkTimetableBtn")?.addEventListener("click", e => {
-  e.preventDefault();
-  e.stopPropagation();
-  openMamaTimetableEditorDirectRestored();
-});
 
 // ===== Werkraum: robuste Button-Fallbacks =====
 document.addEventListener("click", e => {
