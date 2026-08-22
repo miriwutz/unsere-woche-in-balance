@@ -22251,3 +22251,79 @@ body:has(#workroomLinkSortSelect option:checked:not([value="manual"])) .workroom
   }
 }
 
+/* =========================================================
+   PUNKT 2 – Linksammlung auf Tablet: Titel wieder lesbar
+   ========================================================= */
+
+/* Titel und Notiz bekommen einen echten Anteil der verfügbaren Textbreite.
+   Zuvor konnte flex-shrink den Titel auf wenige Buchstaben zusammendrücken. */
+.workroom-link-title{
+  flex:1 1 58% !important;
+  max-width:none !important;
+  width:auto !important;
+}
+.workroom-link-note{
+  flex:1 1 42% !important;
+  max-width:none !important;
+}
+
+/* Auf Touch-Geräten ist der Drag-Griff ausgeblendet.
+   Deshalb darf seine 24-px-Gridspalte dort ebenfalls verschwinden. */
+@media (hover:none), (pointer:coarse){
+  .workroom-link-item{
+    grid-template-columns:minmax(0,1fr) auto !important;
+    gap:6px !important;
+  }
+
+  .workroom-link-main{
+    min-width:0 !important;
+    width:100% !important;
+  }
+
+  .workroom-link-texts{
+    min-width:0 !important;
+    width:100% !important;
+    gap:6px !important;
+  }
+
+  .workroom-link-title{
+    flex:1 1 62% !important;
+    min-width:90px !important;
+  }
+
+  .workroom-link-note{
+    flex:0 1 38% !important;
+  }
+
+  .workroom-link-actions{
+    gap:1px !important;
+  }
+
+  .workroom-link-actions button,
+  .workroom-link-touch-move button{
+    width:25px !important;
+    min-width:25px !important;
+    height:27px !important;
+    min-height:27px !important;
+  }
+
+  .workroom-link-actions .workroom-link-use{
+    margin-right:2px !important;
+  }
+}
+
+/* Sehr schmale Tablets / große Handys: eine Spalte ist lesbarer als
+   zwei gequetschte Spalten. */
+@media (hover:none) and (max-width:1050px),
+       (pointer:coarse) and (max-width:1050px){
+  #workroomLinkList{
+    grid-template-columns:1fr !important;
+    grid-template-rows:none !important;
+    grid-auto-flow:row !important;
+  }
+  #workroomLinkList .workroom-link-item{
+    grid-column:1 !important;
+    grid-row:auto !important;
+  }
+}
+
