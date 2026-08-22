@@ -7056,10 +7056,6 @@ a.day-meal{
   color:#6f6662;
 }
 
-.day-video-details[open] > summary::first-letter{
-  /* only visual calm; content remains unchanged */
-}
-
 .day-video-details-content{
   display:grid;
   gap:7px;
@@ -13064,7 +13060,6 @@ button.day-meal{cursor:pointer}
 
 
 /* V9 – Kinderansicht oben aufräumen */
-.school-child-dashboard:not(.hidden) ~ * {}
 body:has(.school-child-dashboard:not(.hidden)) #backToSchoolChooser,
 body:has(.school-child-dashboard:not(.hidden)) #editTimetablesBtn{
   display:none !important;
