@@ -30975,3 +30975,68 @@ button.day-meal-list-item:hover,a.day-meal-list-item:hover{background:rgba(164,1
     max-height:146px !important;
   }
 }
+
+
+/* =========================================================
+   V113 – PC ONLY – ÜBERBLICK / ROUTINEN REIHENFOLGE
+   1) Schnellzugriff ganz nach oben – vor "Zeit im Blick"
+   2) Wochenplanung direkt über die Tageskarten
+   3) Handyansicht bleibt vollständig unverändert
+   ========================================================= */
+@media (min-width:701px){
+
+  /* UNSER ÜBERBLICK:
+     Die vorhandenen Elemente bleiben unverändert,
+     nur der Schnellzugriff wird als erstes Element einsortiert. */
+  #archive{
+    display:flex !important;
+    flex-direction:column !important;
+  }
+
+  #archive > .quick-links{
+    order:-1000 !important;
+    margin-top:0 !important;
+    margin-bottom:12px !important;
+  }
+
+  /* "Zeit im Blick" kommt unmittelbar danach.
+     Die übrigen Überblicksbereiche behalten ihre relative Reihenfolge. */
+  #archive > .time-tracker-card{
+    order:-900 !important;
+  }
+
+  /* ROUTINEN:
+     Tagesausrichtung / Morgen / Schulalltag / Nach der Schule / Abends
+     bleiben oben. Die Wochenplanung folgt danach unmittelbar. */
+  #settingsGroupRoutines .settings-main-body{
+    display:flex !important;
+    flex-direction:column !important;
+    gap:8px !important;
+  }
+
+  #settingsGroupRoutines #personalRoutineSentenceSettings{
+    order:10 !important;
+    margin:0 !important;
+  }
+
+  #settingsGroupRoutines #childRoutineOverviewEditor{
+    order:20 !important;
+    margin:0 !important;
+    padding-top:10px !important;
+    border-top:1px solid rgba(137,113,96,.12) !important;
+  }
+
+  /* Wochenplan-Steuerung optisch fest an die Tageskarten anbinden. */
+  #childRoutineOverviewEditor .child-routine-overview-week-preview{
+    margin-top:8px !important;
+    padding-top:8px !important;
+  }
+
+  #childRoutineOverviewEditor .child-routine-overview-week-preview-head{
+    margin-bottom:7px !important;
+  }
+
+  #childRoutineOverviewEditor .child-routine-overview-week-grid{
+    margin-top:0 !important;
+  }
+}
