@@ -14361,7 +14361,7 @@ const schoolPersonalIcons = [
   "🦋","🐞","🐝","🐾","🐈","🐕","🐇","🦊","🐼","🐨","🦄","🐴","🐎","🐬",
   "🐳","🦜","🦉","🐢","🐸","🐙","🐧","🦦","🦥","🦔","🐿️",
   "☾","✧","✦","❈","❉","✾","❀","⚘","☼","❂","⊙","∞","🪷",
-  "__flower_of_life__","__moon_stars__"
+  "__flower_of_life__","__moon_stars__","__meditation__"
 ];
 
 function schoolPersonalIconMarkup(icon){
@@ -14384,12 +14384,30 @@ function schoolPersonalIconMarkup(icon){
 
   if(icon==="__moon_stars__"){
     return `<span class="school-personal-svg-icon school-moon-stars" aria-hidden="true">
-      <svg viewBox="0 0 64 64" focusable="false">
-        <g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M29 12c-9 4-13 15-9 24s15 13 24 9c-10 1-18-6-19-16-1-7 1-12 4-17z"/>
-          <path d="M47 16v8M43 20h8"/>
-          <path d="M48 35v5M45.5 37.5h5"/>
-          <path d="M16 13v5M13.5 15.5h5"/>
+      <svg viewBox="0 0 64 64" preserveAspectRatio="xMidYMid meet" focusable="false">
+        <g fill="none" stroke="currentColor" stroke-width="1.45" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M31 13c-7.8 3.1-12.4 11-10.8 19.2 1.8 9.2 10.7 15.1 19.9 13.3 3.2-.6 6.1-2.1 8.4-4.2-8.6 1.1-16.6-4.7-18.2-13.2-1-5.2-.7-10.2.7-15.1z"/>
+          <path d="M48 13v9M43.5 17.5h9"/>
+          <path d="M49 33v6M46 36h6"/>
+          <path d="M15 18v5M12.5 20.5h5"/>
+          <path d="M13.5 40.5l1.6 3.2 3.4.5-2.5 2.4.6 3.4-3.1-1.6-3 1.6.6-3.4-2.5-2.4 3.4-.5z"/>
+        </g>
+      </svg>
+    </span>`;
+  }
+
+  if(icon==="__meditation__"){
+    return `<span class="school-personal-svg-icon school-meditation" aria-hidden="true">
+      <svg viewBox="0 0 64 64" preserveAspectRatio="xMidYMid meet" focusable="false">
+        <g fill="none" stroke="currentColor" stroke-width="1.55" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="32" cy="14" r="5.2"/>
+          <path d="M24.5 25c2.3-4.1 5-6.1 7.5-6.1s5.2 2 7.5 6.1"/>
+          <path d="M32 20v15"/>
+          <path d="M23 28l9 7 9-7"/>
+          <path d="M19 37c4.5-1 8.8.5 13 5.7 4.2-5.2 8.5-6.7 13-5.7"/>
+          <path d="M17 45c4.6 5 9.6 7.3 15 7.3S42.4 50 47 45"/>
+          <path d="M15 48c5.8 1.2 11.5.5 17-2.1 5.5 2.6 11.2 3.3 17 2.1"/>
+          <path d="M23 54h18"/>
         </g>
       </svg>
     </span>`;
@@ -14401,6 +14419,7 @@ function schoolPersonalIconMarkup(icon){
 function schoolPersonalIconLabel(icon){
   if(icon==="__flower_of_life__") return "Blume des Lebens";
   if(icon==="__moon_stars__") return "Mond und Sterne";
+  if(icon==="__meditation__") return "Meditation";
   return `Zeichen ${icon}`;
 }
 
@@ -17862,3 +17881,91 @@ setTimeout(()=>{
 
   renderChildRoutineOverviewEditor();
 })();
+
+/* =========================================================
+   V67 – Kinder-Routinen: Wochenplan-Zugang + Zeichen stabil
+   ========================================================= */
+(function(){
+  function v67CurrentChildIcon(id){
+    const key=schoolMemberKey(String(id));
+    return state.familySettings?.[key]?.icon || (String(id)==="1" ? "⭐" : "🌙");
+  }
+
+  function v67ApplyRoutineSigns(){
+    ["1","2"].forEach(id=>{
+      const icon=v67CurrentChildIcon(id);
+      const markup=schoolPersonalIconMarkup(icon);
+      const label=schoolPersonalIconLabel(icon);
+
+      document.querySelectorAll(`[data-school-open-routines="${id}"] .school-routine-symbol`).forEach(el=>{
+        el.innerHTML=markup;
+        el.title=label;
+      });
+      document.querySelectorAll(`[data-school-timetable-link="${id}"]`).forEach(el=>{
+        el.innerHTML=markup;
+        el.title=label;
+      });
+    });
+
+    const dialog=document.querySelector("#childRoutineDialog");
+    if(dialog?.open || dialog?.matches?.(":modal")){
+      const id=String(dialog.dataset.child || activeChildRoutineId || "1");
+      const mark=dialog.querySelector("#childRoutinePersonalSign");
+      if(mark){
+        const icon=v67CurrentChildIcon(id);
+        mark.innerHTML=schoolPersonalIconMarkup(icon);
+        mark.title=schoolPersonalIconLabel(icon);
+      }
+    }
+  }
+
+  const beforeV67=renderChildRoutineDialog;
+  renderChildRoutineDialog=function(){
+    beforeV67();
+    const dialog=ensureChildRoutineDialog();
+    if(!dialog) return;
+
+    requestAnimationFrame(v67ApplyRoutineSigns);
+
+    /* Der Wochenplan bleibt unten sichtbar; daneben gibt es wieder einen klaren
+       Zugang zur Eingabe im Überblick. */
+    const head=dialog.querySelector(".child-routine-week-plan-head");
+    if(head){
+      let action=head.querySelector("#openChildRoutinePlanningV67");
+      if(!action){
+        action=document.createElement("button");
+        action.type="button";
+        action.id="openChildRoutinePlanningV67";
+        action.className="child-routine-plan-link";
+        action.textContent="Wochenplanung bearbeiten";
+        head.appendChild(action);
+      }
+      action.onclick=()=>{
+        const id=String(activeChildRoutineId||"1");
+        const offset=Number(activeChildRoutineWeekOffset||0);
+        dialog.close();
+        document.querySelector('[data-view="archive"]')?.click();
+        setTimeout(()=>{
+          const details=document.querySelector("#personalRoutineSentenceSettings")?.closest("details");
+          if(details) details.open=true;
+          activeChildRoutineEditorId=id;
+          activeChildRoutineEditorWeekOffset=offset;
+          editingChildRoutineItemId=null;
+          renderChildRoutineOverviewEditor();
+          document.querySelector("#childRoutineOverviewEditor")?.scrollIntoView({behavior:"smooth",block:"center"});
+        },90);
+      };
+    }
+  };
+  window.renderChildRoutineDialog=renderChildRoutineDialog;
+
+  document.addEventListener("click",e=>{
+    if(e.target.closest?.(".school-icon-choice")){
+      requestAnimationFrame(v67ApplyRoutineSigns);
+      setTimeout(v67ApplyRoutineSigns,120);
+    }
+  },true);
+
+  requestAnimationFrame(v67ApplyRoutineSigns);
+})();
+
