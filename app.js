@@ -15656,3 +15656,432 @@ const myWeekAppearanceObserver=new MutationObserver(()=>{
 });
 myWeekAppearanceObserver.observe(document.body,{childList:true,subtree:true});
 
+/* =========================================================
+   V61 – Routinentexte individuell bearbeiten
+   Mama: wirkt sofort auf die vorhandenen vier Routinen.
+   Lou + Fina: gleiche Datenstruktur schon vorbereitet für ihre
+   späteren persönlichen Routinen.
+   ========================================================= */
+
+const personalRoutineAreaMeta = [
+  ["morning","Morgens"],
+  ["school","Schulalltag"],
+  ["afterschool","Nach der Schule"],
+  ["evening","Abends"]
+];
+
+const defaultPersonalRoutineSentences = {
+  morning: [
+    {step:"breath", text:"3 ruhige Atemzüge – Ausatmen länger als Einatmen."},
+    {step:"body", text:"Kurz in den Körper spüren: Wo halte ich gerade Spannung? → bewusst lösen."},
+    {step:"quote", text:"„Nicht alles muss heute genau geplant sein.“"},
+    {step:"orientation", text:"Was muss ich heute alles schaffen? → Wie möchte ich heute durch diesen Tag gehen?"}
+  ],
+  school: [
+    {step:"arrival", text:"Vor Schule / Klasse: bewusst einatmen · lang ausatmen · Schultern und Kiefer lösen."},
+    {step:"lesson", text:"Vor der nächsten Stunde: Füße spüren · ausatmen · „Wo ist gerade meine Aufmerksamkeit?“"},
+    {step:"focus", text:"Where focus goes, energy flows."},
+    {step:"stress", text:"Wenn etwas stresst: Daumen nacheinander an die Finger tippen: „Frieden beginnt in mir.“ Erst danach reagieren."},
+    {step:"decision", text:"Bei Entscheidungen: „Dient das meiner Vision von mir selbst?“"}
+  ],
+  afterschool: [
+    {step:"bodyscan", text:"Kurz hinsetzen oder hinlegen. Kleiner Bodyscan: Gesicht → Schultern → Bauch → Hände → Beine."},
+    {step:"release", text:"Spannung bewusst lockerlassen. 3–5 Atemzüge mit besonders langer Ausatmung."},
+    {step:"close", text:"„Der Schultag ist vorbei. Ich muss ihn nicht im Körper mit nach Hause nehmen.“"}
+  ],
+  evening: [
+    {step:"noeval", text:"Keine Tagesbewertung und keine lange Reflexion."},
+    {step:"enough", text:"Was darf für heute genug sein?"},
+    {step:"relax", text:"Den Körper Stück für Stück entspannen oder einen kurzen Bodyscan machen."},
+    {step:"close", text:"„Alles ist in mir.“"}
+  ]
+};
+
+function clonePersonalRoutineDefaults(){
+  return Object.fromEntries(
+    Object.entries(defaultPersonalRoutineSentences).map(([area,rows])=>[
+      area,
+      rows.map(row=>({...row}))
+    ])
+  );
+}
+
+function ensurePersonalRoutineSentences(){
+  state.familySettings = state.familySettings || {};
+  state.familySettings.personalRoutineSentences =
+    state.familySettings.personalRoutineSentences &&
+    typeof state.familySettings.personalRoutineSentences === "object"
+      ? state.familySettings.personalRoutineSentences
+      : {};
+
+  ["mama","1","2"].forEach(id=>{
+    const current=state.familySettings.personalRoutineSentences[id];
+
+    if(!current || typeof current!=="object"){
+      state.familySettings.personalRoutineSentences[id]=clonePersonalRoutineDefaults();
+      return;
+    }
+
+    personalRoutineAreaMeta.forEach(([area])=>{
+      const defaults=defaultPersonalRoutineSentences[area];
+      const existing=Array.isArray(current[area]) ? current[area] : [];
+
+      current[area]=defaults.map(def=>{
+        const found=existing.find(row=>String(row?.step||"")===def.step);
+        return {
+          step:def.step,
+          text:String(found?.text ?? def.text)
+        };
+      });
+
+      /* Eigene später zusätzlich ergänzte Sätze beibehalten. */
+      existing.forEach(row=>{
+        const step=String(row?.step||"").trim();
+        if(!step || current[area].some(x=>x.step===step)) return;
+        current[area].push({
+          step,
+          text:String(row?.text||"").trim()
+        });
+      });
+    });
+  });
+
+  return state.familySettings.personalRoutineSentences;
+}
+
+function personalRoutineSentencesFor(id){
+  return ensurePersonalRoutineSentences()[String(id)] || ensurePersonalRoutineSentences().mama;
+}
+
+function applyMamaRoutineSentences(){
+  const data=personalRoutineSentencesFor("mama");
+
+  Object.entries(data).forEach(([area,rows])=>{
+    rows.forEach(row=>{
+      const button=document.querySelector(
+        `.routine-step[data-routine-card="${CSS.escape(area)}"][data-routine-step="${CSS.escape(row.step)}"]`
+      );
+      if(!button) return;
+
+      const textSpan=button.querySelector(":scope > span:last-child");
+      if(!textSpan) return;
+
+      /* Nur Text ersetzen; Markierung links bleibt vollständig erhalten. */
+      textSpan.textContent=String(row.text||"").trim();
+    });
+  });
+}
+
+function renderPersonalRoutineSentenceSettings(){
+  ensurePersonalRoutineSentences();
+
+  const anchor=document.querySelector("#myWeekAppearanceSettings");
+  if(!anchor) return;
+
+  let section=document.querySelector("#personalRoutineSentenceSettings");
+  if(!section){
+    section=document.createElement("section");
+    section.id="personalRoutineSentenceSettings";
+    section.className="personal-routine-sentence-settings";
+    anchor.insertAdjacentElement("afterend",section);
+  }
+
+  section.innerHTML=`
+    <div class="personal-subject-settings-head">
+      <strong>Routinen</strong>
+      <small>Die Sätze deiner vier Routinen persönlich formulieren. Bei Mama werden Änderungen sofort in den vorhandenen Routinen sichtbar; Lou und Fina sind bereits für ihre späteren Routinen vorbereitet.</small>
+    </div>
+
+    <div class="personal-routine-person-tabs">
+      ${["mama","1","2"].map((id,index)=>`
+        <button type="button"
+                class="personal-routine-person-tab ${index===0?"active":""}"
+                data-routine-person="${id}">
+          ${escapeHtml(personalTimetablePersonLabel(id))}
+        </button>
+      `).join("")}
+    </div>
+
+    ${["mama","1","2"].map((id,index)=>{
+      const data=personalRoutineSentencesFor(id);
+
+      return `
+        <div class="personal-routine-person-panel ${index===0?"":"hidden"}"
+             data-routine-person-panel="${id}">
+          ${personalRoutineAreaMeta.map(([area,label])=>`
+            <details class="personal-routine-area" ${area==="morning"?"open":""}>
+              <summary>
+                <strong>${escapeHtml(label)}</strong>
+                <span>${data[area].length} ${data[area].length===1?"Satz":"Sätze"}</span>
+              </summary>
+
+              <div class="personal-routine-area-body">
+                ${data[area].map((row,rowIndex)=>`
+                  <div class="personal-routine-sentence-row"
+                       data-area="${area}"
+                       data-step="${escapeHtml(row.step)}">
+                    <span class="personal-routine-sentence-number">${rowIndex+1}</span>
+                    <textarea rows="2"
+                              class="personal-routine-sentence-input"
+                              aria-label="${escapeHtml(label)} – Satz ${rowIndex+1}">${escapeHtml(row.text)}</textarea>
+                    <button type="button"
+                            class="personal-routine-reset-one"
+                            title="Auf ursprünglichen Satz zurücksetzen">↶</button>
+                  </div>
+                `).join("")}
+              </div>
+            </details>
+          `).join("")}
+
+          <div class="personal-routine-panel-actions">
+            <button type="button"
+                    class="personal-routine-reset-all"
+                    data-person="${id}">
+              Ursprüngliche Sätze wiederherstellen
+            </button>
+          </div>
+        </div>
+      `;
+    }).join("")}
+  `;
+
+  section.querySelectorAll(".personal-routine-person-tab").forEach(btn=>{
+    btn.addEventListener("click",()=>{
+      const id=btn.dataset.routinePerson;
+      section.querySelectorAll(".personal-routine-person-tab").forEach(x=>
+        x.classList.toggle("active",x===btn)
+      );
+      section.querySelectorAll(".personal-routine-person-panel").forEach(panel=>
+        panel.classList.toggle("hidden",panel.dataset.routinePersonPanel!==id)
+      );
+    });
+  });
+
+  section.querySelectorAll(".personal-routine-sentence-input").forEach(input=>{
+    input.addEventListener("change",()=>{
+      const panel=input.closest("[data-routine-person-panel]");
+      const row=input.closest(".personal-routine-sentence-row");
+      const id=panel?.dataset.routinePersonPanel;
+      const area=row?.dataset.area;
+      const step=row?.dataset.step;
+      if(!id || !area || !step) return;
+
+      const target=personalRoutineSentencesFor(id)[area]
+        ?.find(x=>x.step===step);
+      if(!target) return;
+
+      const value=input.value.trim();
+      if(!value){
+        input.value=target.text;
+        return;
+      }
+
+      target.text=value;
+      save();
+
+      if(id==="mama") applyMamaRoutineSentences();
+    });
+  });
+
+  section.querySelectorAll(".personal-routine-reset-one").forEach(btn=>{
+    btn.addEventListener("click",()=>{
+      const panel=btn.closest("[data-routine-person-panel]");
+      const row=btn.closest(".personal-routine-sentence-row");
+      const id=panel?.dataset.routinePersonPanel;
+      const area=row?.dataset.area;
+      const step=row?.dataset.step;
+      if(!id || !area || !step) return;
+
+      const original=defaultPersonalRoutineSentences[area]
+        ?.find(x=>x.step===step);
+      const target=personalRoutineSentencesFor(id)[area]
+        ?.find(x=>x.step===step);
+      if(!original || !target) return;
+
+      target.text=original.text;
+      const input=row.querySelector(".personal-routine-sentence-input");
+      if(input) input.value=original.text;
+
+      save();
+      if(id==="mama") applyMamaRoutineSentences();
+    });
+  });
+
+  section.querySelectorAll(".personal-routine-reset-all").forEach(btn=>{
+    btn.addEventListener("click",()=>{
+      const id=btn.dataset.person;
+      if(!id) return;
+
+      if(!confirm(`Die Routinen-Sätze von ${personalTimetablePersonLabel(id)} auf die ursprüngliche Version zurücksetzen?`)) return;
+
+      ensurePersonalRoutineSentences()[id]=clonePersonalRoutineDefaults();
+      save();
+      renderPersonalRoutineSentenceSettings();
+      if(id==="mama") applyMamaRoutineSentences();
+
+      /* Nach Neurendern wieder dieselbe Person öffnen. */
+      const newSection=document.querySelector("#personalRoutineSentenceSettings");
+      newSection?.querySelectorAll(".personal-routine-person-tab").forEach(tab=>
+        tab.classList.toggle("active",tab.dataset.routinePerson===id)
+      );
+      newSection?.querySelectorAll(".personal-routine-person-panel").forEach(panel=>
+        panel.classList.toggle("hidden",panel.dataset.routinePersonPanel!==id)
+      );
+    });
+  });
+}
+
+function ensurePersonalRoutineSentenceStyle(){
+  if(document.querySelector("#personalRoutineSentenceStyle")) return;
+
+  const style=document.createElement("style");
+  style.id="personalRoutineSentenceStyle";
+  style.textContent=`
+    .personal-routine-sentence-settings{
+      margin:12px 14px 14px;
+      padding:14px;
+      border:1px solid rgba(119,103,91,.16);
+      border-radius:16px;
+      background:rgba(255,253,249,.72);
+    }
+    .personal-routine-person-tabs{
+      display:flex;
+      flex-wrap:wrap;
+      gap:6px;
+      margin:10px 0 12px;
+    }
+    .personal-routine-person-tab{
+      border:1px solid rgba(120,105,92,.18);
+      background:#fffdf9;
+      border-radius:999px;
+      padding:6px 12px;
+      color:#65564e;
+      cursor:pointer;
+    }
+    .personal-routine-person-tab.active{
+      background:#f1eee6;
+      border-color:#c9bea8;
+      font-weight:600;
+    }
+    .personal-routine-person-panel.hidden{display:none!important;}
+
+    .personal-routine-area{
+      border:1px solid rgba(120,105,92,.14);
+      border-radius:12px;
+      background:#fffdfa;
+      overflow:hidden;
+      margin-bottom:7px;
+    }
+    .personal-routine-area summary{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+      padding:9px 11px;
+      cursor:pointer;
+      color:#5e5048;
+    }
+    .personal-routine-area summary strong{
+      font-family:Georgia,serif;
+      font-size:.9rem;
+    }
+    .personal-routine-area summary span{
+      color:#9a8a80;
+      font-size:.68rem;
+    }
+    .personal-routine-area-body{
+      display:grid;
+      gap:6px;
+      padding:0 9px 9px;
+    }
+    .personal-routine-sentence-row{
+      display:grid;
+      grid-template-columns:24px minmax(0,1fr) 34px;
+      gap:6px;
+      align-items:center;
+    }
+    .personal-routine-sentence-number{
+      display:grid;
+      place-items:center;
+      width:22px;
+      height:22px;
+      border-radius:50%;
+      background:#f2eee4;
+      color:#8c7a6e;
+      font-size:.65rem;
+    }
+    .personal-routine-sentence-input{
+      width:100%;
+      min-height:46px;
+      resize:vertical;
+      box-sizing:border-box;
+      border:1px solid rgba(120,105,92,.15);
+      border-radius:9px;
+      background:#fff;
+      color:#554942;
+      padding:7px 9px;
+      font:inherit;
+      font-size:.75rem;
+      line-height:1.35;
+    }
+    .personal-routine-reset-one{
+      width:32px;
+      height:32px;
+      border:1px solid rgba(120,105,92,.14);
+      border-radius:50%;
+      background:#faf7f0;
+      color:#927d70;
+      cursor:pointer;
+    }
+    .personal-routine-panel-actions{
+      display:flex;
+      justify-content:flex-end;
+      margin-top:9px;
+    }
+    .personal-routine-reset-all{
+      border:1px solid rgba(145,120,105,.20);
+      border-radius:999px;
+      background:#faf6ef;
+      color:#7b665b;
+      padding:7px 11px;
+      font-size:.7rem;
+      cursor:pointer;
+    }
+
+    @media(max-width:700px){
+      .personal-routine-sentence-settings{
+        margin:8px;
+        padding:10px;
+      }
+      .personal-routine-sentence-row{
+        grid-template-columns:22px minmax(0,1fr) 32px;
+      }
+    }
+  `;
+  document.head.appendChild(style);
+}
+
+ensurePersonalRoutineSentenceStyle();
+ensurePersonalRoutineSentences();
+renderPersonalRoutineSentenceSettings();
+applyMamaRoutineSentences();
+
+requestAnimationFrame(()=>{
+  renderPersonalRoutineSentenceSettings();
+  applyMamaRoutineSentences();
+});
+
+setTimeout(()=>{
+  renderPersonalRoutineSentenceSettings();
+  applyMamaRoutineSentences();
+},220);
+
+/* Falls Routinen später neu gerendert werden: individuelle Mama-Sätze wieder anwenden. */
+const personalRoutineSentenceObserver=new MutationObserver(()=>{
+  if(document.querySelector('.routine-step[data-routine-card]')){
+    requestAnimationFrame(applyMamaRoutineSentences);
+  }
+});
+personalRoutineSentenceObserver.observe(document.body,{childList:true,subtree:true});
+
+
