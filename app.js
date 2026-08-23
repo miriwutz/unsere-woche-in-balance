@@ -22,29 +22,87 @@ const onlineRecipeCategoryMeta = [
   ["other","✨ Sonstiges"]
 ];
 
-const state = {
-  videos: JSON.parse(localStorage.getItem("balanceProd.videos") || "[]"),
-  todos: JSON.parse(localStorage.getItem("balanceProd.todos") || "[]"),
-  archive: JSON.parse(localStorage.getItem("balanceProd.archive") || "[]"),
-  shopping: JSON.parse(localStorage.getItem("balanceProd.shopping") || "[]"),
-  shoppingPromos: JSON.parse(localStorage.getItem("balanceProd.shoppingPromos") || "[]"),
-  recipes: JSON.parse(localStorage.getItem("balanceProd.recipes") || "[]"),
-  meals: JSON.parse(localStorage.getItem("balanceProd.meals") || "{}"),
-  pinboard: JSON.parse(localStorage.getItem("balanceProd.pinboard") || "[]"),
-  familyQuestions: JSON.parse(localStorage.getItem("balanceProd.familyQuestions") || "[]"),
-  recipeLinkFeedback: JSON.parse(localStorage.getItem("balanceProd.recipeLinkFeedback") || "{}"),
-  timeTracking: JSON.parse(localStorage.getItem("balanceProd.timeTracking") || '{"entries":[],"active":[],"stopped":{},"deletedEntries":{}}'),
-  trash: JSON.parse(localStorage.getItem("balanceProd.trash") || "[]"),
-  todoTombstones: JSON.parse(localStorage.getItem("balanceProd.todoTombstones") || "{}"),
-  videoTombstones: JSON.parse(localStorage.getItem("balanceProd.videoTombstones") || "{}"),
-  archiveTombstones: JSON.parse(localStorage.getItem("balanceProd.archiveTombstones") || "{}"),
-  recipeTombstones: JSON.parse(localStorage.getItem("balanceProd.recipeTombstones") || "{}"),
-  pinboardTombstones: JSON.parse(localStorage.getItem("balanceProd.pinboardTombstones") || "{}"),
-  trashTombstones: JSON.parse(localStorage.getItem("balanceProd.trashTombstones") || "{}"),
+/* =========================================================
+   START-SICHERHEIT – beschädigtes LocalStorage darf die App
+   nicht mehr am Laden hindern.
 
-  workroom: JSON.parse(
-    localStorage.getItem("balanceProd.workroom") ||
-    '{"todos":[],"prints":[],"links":[],"substitutions":[],"routines":{"items":[],"completions":{}},"plans":{"week":[],"year":[]}}'
+   Wenn ein JSON-Eintrag unlesbar ist:
+   1. Die App startet mit einem sicheren Standardwert weiter.
+   2. Der beschädigte Rohwert wird EINMAL als .corruptBackup
+      gesichert, damit nichts still verloren geht.
+   3. Der eigentliche Key wird hier NICHT gelöscht.
+   ========================================================= */
+function safeLocalJson(key, fallback) {
+  let raw = null;
+
+  try {
+    raw = localStorage.getItem(key);
+  } catch (err) {
+    console.warn(`LocalStorage konnte nicht gelesen werden: ${key}`, err);
+    return typeof structuredClone === "function"
+      ? structuredClone(fallback)
+      : JSON.parse(JSON.stringify(fallback));
+  }
+
+  if (raw == null || raw === "") {
+    return typeof structuredClone === "function"
+      ? structuredClone(fallback)
+      : JSON.parse(JSON.stringify(fallback));
+  }
+
+  try {
+    return JSON.parse(raw);
+  } catch (err) {
+    console.error(`Beschädigter LocalStorage-Eintrag: ${key}. App startet mit Standardwert weiter.`, err);
+
+    try {
+      const backupKey = `${key}.corruptBackup`;
+      if (localStorage.getItem(backupKey) == null) {
+        localStorage.setItem(backupKey, raw);
+      }
+    } catch (backupErr) {
+      console.warn(`Defekter Wert für ${key} konnte nicht zusätzlich gesichert werden.`, backupErr);
+    }
+
+    return typeof structuredClone === "function"
+      ? structuredClone(fallback)
+      : JSON.parse(JSON.stringify(fallback));
+  }
+}
+
+const state = {
+  videos: safeLocalJson("balanceProd.videos", []),
+  todos: safeLocalJson("balanceProd.todos", []),
+  archive: safeLocalJson("balanceProd.archive", []),
+  shopping: safeLocalJson("balanceProd.shopping", []),
+  shoppingPromos: safeLocalJson("balanceProd.shoppingPromos", []),
+  recipes: safeLocalJson("balanceProd.recipes", []),
+  meals: safeLocalJson("balanceProd.meals", {}),
+  pinboard: safeLocalJson("balanceProd.pinboard", []),
+  familyQuestions: safeLocalJson("balanceProd.familyQuestions", []),
+  recipeLinkFeedback: safeLocalJson("balanceProd.recipeLinkFeedback", {}),
+  timeTracking: safeLocalJson(
+    "balanceProd.timeTracking",
+    {entries:[], active:[], stopped:{}, deletedEntries:{}}
+  ),
+  trash: safeLocalJson("balanceProd.trash", []),
+  todoTombstones: safeLocalJson("balanceProd.todoTombstones", {}),
+  videoTombstones: safeLocalJson("balanceProd.videoTombstones", {}),
+  archiveTombstones: safeLocalJson("balanceProd.archiveTombstones", {}),
+  recipeTombstones: safeLocalJson("balanceProd.recipeTombstones", {}),
+  pinboardTombstones: safeLocalJson("balanceProd.pinboardTombstones", {}),
+  trashTombstones: safeLocalJson("balanceProd.trashTombstones", {}),
+
+  workroom: safeLocalJson(
+    "balanceProd.workroom",
+    {
+      todos:[],
+      prints:[],
+      links:[],
+      substitutions:[],
+      routines:{items:[],completions:{}},
+      plans:{week:[],year:[]}
+    }
   ),
 
   settings: {
