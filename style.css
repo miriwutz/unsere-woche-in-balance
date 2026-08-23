@@ -25635,3 +25635,71 @@ button.day-meal-list-item:hover,a.day-meal-list-item:hover{background:rgba(164,1
   }
 }
 
+/* =========================================================
+   V67 – Kinderzeichen ruhiger + Wochenplan-Link
+   ========================================================= */
+
+/* Großes Kinderzeichen: Creme statt hartem Weiß */
+[data-school-timetable-link="1"],
+[data-school-timetable-link="2"]{
+  background:#f7f1e7 !important;
+  border-color:#eadfce !important;
+  box-shadow:0 4px 14px rgba(101,82,65,.06) !important;
+}
+
+/* Routinen-Kachel: derselbe cremige Ton */
+.school-tile-routines .school-routine-symbol{
+  background:#f7f1e7 !important;
+  border:1px solid #eadfce !important;
+  box-shadow:none !important;
+}
+
+/* Das Zeichen oben im Routinenfenster ist bewusst ohne Kreis/Hintergrund */
+#childRoutinePersonalSign,
+.child-routine-hero-mark{
+  background:transparent !important;
+  border:0 !important;
+  box-shadow:none !important;
+  color:#b88f52 !important;
+}
+
+/* SVGs nie verzerren */
+.school-personal-svg-icon,
+.school-personal-svg-icon svg{
+  aspect-ratio:1 / 1 !important;
+}
+.school-personal-svg-icon svg{
+  object-fit:contain !important;
+  overflow:visible !important;
+}
+.school-moon-stars,
+.school-meditation,
+.school-flower-life{
+  display:inline-grid !important;
+  place-items:center !important;
+}
+
+/* Wochenplan-Kopf mit sichtbarem Bearbeiten-Link */
+.child-routine-week-plan-head{
+  display:flex !important;
+  align-items:center !important;
+  gap:10px !important;
+}
+.child-routine-week-plan-head small{
+  margin-right:auto !important;
+}
+.child-routine-plan-link{
+  margin-left:auto;
+  border:1px solid rgba(163,132,91,.20);
+  border-radius:999px;
+  background:#f8f2e8;
+  color:#765e4e;
+  padding:6px 11px;
+  font-size:.68rem;
+  cursor:pointer;
+  white-space:nowrap;
+}
+.child-routine-plan-link:hover{
+  background:#f3eadc;
+}
+
