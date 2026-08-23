@@ -27717,3 +27717,156 @@ button.day-meal-list-item:hover,a.day-meal-list-item:hover{background:rgba(164,1
     white-space:normal !important;
   }
 }
+
+
+/* =========================================================
+   V90 – MOBILE HAUPTNAVIGATION ENDGÜLTIG
+   Die bisherigen Mobile-Regeln versteckten die Tab-Texte mit
+   font-size:0 und ließen nur schwer verständliche Symbole stehen.
+   Diese Regeln stehen bewusst GANZ AM DATEIENDE.
+   ========================================================= */
+@media (max-width:700px){
+
+  /* 6 Bereiche klar als 3 x 2 Raster */
+  body .tabs{
+    display:grid !important;
+    grid-template-columns:repeat(3,minmax(0,1fr)) !important;
+    gap:7px !important;
+    width:100% !important;
+    margin:12px 0 16px !important;
+    padding:0 !important;
+    border-bottom:0 !important;
+    overflow:visible !important;
+  }
+
+  /* Texte wieder sichtbar + vernünftige Touch-Fläche */
+  body .tabs > .tab{
+    width:100% !important;
+    min-width:0 !important;
+    min-height:58px !important;
+    height:58px !important;
+    margin:0 !important;
+    padding:7px 4px !important;
+
+    display:flex !important;
+    flex-direction:column !important;
+    align-items:center !important;
+    justify-content:center !important;
+    gap:4px !important;
+
+    border:1px solid rgba(154,139,129,.20) !important;
+    border-radius:15px !important;
+    background:rgba(255,253,251,.72) !important;
+    box-shadow:0 3px 10px rgba(85,70,63,.035) !important;
+
+    color:#746a65 !important;
+    font-size:.68rem !important;
+    font-weight:500 !important;
+    line-height:1.05 !important;
+    letter-spacing:0 !important;
+    text-align:center !important;
+    white-space:nowrap !important;
+
+    opacity:1 !important;
+    overflow:hidden !important;
+    transform:none !important;
+    touch-action:manipulation !important;
+    -webkit-tap-highlight-color:transparent !important;
+  }
+
+  body .tabs > .tab.active{
+    background:#efebf4 !important;
+    border-color:rgba(168,151,184,.34) !important;
+    color:#504a48 !important;
+    box-shadow:none !important;
+  }
+
+  body .tabs > .tab:active{
+    transform:scale(.985) !important;
+  }
+
+  /* Alle alten Pseudo-Icons vereinheitlichen */
+  body .tabs > .tab::before{
+    display:block !important;
+    margin:0 !important;
+    font-size:1.05rem !important;
+    line-height:1 !important;
+    font-weight:400 !important;
+    opacity:.82 !important;
+    color:inherit !important;
+  }
+
+  body .tabs > .tab[data-view="week"]::before{
+    content:"⌂" !important;
+    font-family:Georgia,"Times New Roman",serif !important;
+  }
+
+  body .tabs > .tab[data-view="todos"]::before{
+    content:"✓" !important;
+    font-family:Georgia,"Times New Roman",serif !important;
+  }
+
+  body .tabs > .tab[data-view="shopping"]::before{
+    content:"🛒" !important;
+    font-family:"Segoe UI Emoji","Apple Color Emoji","Noto Color Emoji",sans-serif !important;
+  }
+
+  /* Für euch muss am Handy eindeutig sichtbar sein */
+  body .tabs > .tab[data-view="school"]::before{
+    content:"♡" !important;
+    font-family:Georgia,"Times New Roman",serif !important;
+    font-size:1.18rem !important;
+  }
+
+  /* Werkraum: vorhandene Blume des Lebens benutzen */
+  body .tabs > .tab[data-view="workroom"]::before{
+    content:none !important;
+    display:none !important;
+  }
+
+  body .tabs > .tab[data-view="workroom"]{
+    font-size:.68rem !important;
+  }
+
+  body .tabs > .tab[data-view="workroom"] .nav-flower-of-life{
+    display:flex !important;
+    align-items:center !important;
+    justify-content:center !important;
+    width:19px !important;
+    height:19px !important;
+    margin:0 !important;
+    flex:0 0 19px !important;
+    color:#858b62 !important;
+  }
+
+  body .tabs > .tab[data-view="workroom"] .nav-flower-of-life svg{
+    display:block !important;
+    width:19px !important;
+    height:19px !important;
+  }
+
+  /* Überblick klar von "Für euch" unterscheiden */
+  body .tabs > .tab[data-view="archive"]::before{
+    content:"✦" !important;
+    font-family:Georgia,"Times New Roman",serif !important;
+    font-size:1.08rem !important;
+  }
+}
+
+@media (max-width:380px){
+  body .tabs{
+    gap:6px !important;
+  }
+
+  body .tabs > .tab{
+    min-height:56px !important;
+    height:56px !important;
+    padding-inline:2px !important;
+    font-size:.63rem !important;
+  }
+
+  body .tabs > .tab[data-view="workroom"]{
+    font-size:.63rem !important;
+  }
+}
+
