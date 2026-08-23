@@ -5223,7 +5223,7 @@ function renderChildWeekOverview(id,weekOffset=0){
   if(subtitle) subtitle.textContent=weekOffset===0 ? "Das ist diese Woche wichtig." : "Ein Blick nach vorne.";
   if(icon) icon.textContent=personalIcon;
   if(image){
-    image.src=id === "1" ? "./lou-stundenplan.png?v=53" : "./fina-stundenplan.png?v=53";
+    image.src=id === "1" ? "./lou-stundenplan.png?v=105" : "./fina-stundenplan.png?v=105";
     image.alt="";
   }
 
@@ -14745,7 +14745,7 @@ function renderSchoolChildDashboard(id){
     const childName=child?.name || (id==="1"?"Lou":"Fina");
     const quotes=schoolChildQuotes[id] || [];
     const quoteText=quotes.length ? quotes[Math.floor(Date.now()/86400000)%quotes.length] : "Du kannst das.";
-    const imageSrc=id==="1"?"./lou-stundenplan.png?v=53":"./fina-stundenplan.png?v=53";
+    const imageSrc=id==="1"?"./lou-stundenplan.png?v=105":"./fina-stundenplan.png?v=105";
 
     banner.innerHTML=`
       <div class="school-hero-v4-copy">
@@ -19933,4 +19933,3 @@ window.addEventListener("resize", () => {
     ensureMobileWeekHeaderV94();
   }
 });
-
