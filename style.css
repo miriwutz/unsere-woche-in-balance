@@ -30059,3 +30059,224 @@ button.day-meal-list-item:hover,a.day-meal-list-item:hover{background:rgba(164,1
     max-height:146px !important;
   }
 }
+
+/* =========================================================
+   V108 – MOBILE ONLY – FINAL OVERRIDE
+   Samsung + Xiaomi: Kinderkarten gerätefest.
+   Werkraum Schul-To-dos: KEINE Checkbox zurückholen;
+   Text kleiner/ruhiger und Fläche sinnvoller verteilt.
+   Desktop bleibt unverändert.
+   ========================================================= */
+@media (max-width:700px){
+
+  /* ---------- KINDERKARTEN ----------
+     Keine Blend-Modes / keine transparente Kartenfläche.
+     Die Bildzone bekommt selbst eine deckende helle Pastellfläche,
+     damit Browser-Darkmode bzw. Gerätehintergrund nicht durchscheint. */
+  #schoolChildChooser .school-person-card{
+    position:relative !important;
+    overflow:hidden !important;
+    isolation:isolate !important;
+    grid-template-rows:158px auto auto !important;
+  }
+
+  #schoolChildChooser .school-person-card::after{
+    display:none !important;
+    content:none !important;
+  }
+
+  #schoolChildChooser .school-person-card::before{
+    content:"" !important;
+    display:block !important;
+    position:absolute !important;
+    left:0 !important;
+    right:0 !important;
+    top:0 !important;
+    height:158px !important;
+    opacity:1 !important;
+    z-index:0 !important;
+    pointer-events:none !important;
+    filter:none !important;
+    mix-blend-mode:normal !important;
+  }
+
+  #schoolChildChooser .school-person-card.lou::before{
+    background:#eee8f1 !important;
+  }
+  #schoolChildChooser .school-person-card.fina::before{
+    background:#f3e3df !important;
+  }
+
+  #schoolChildChooser .school-person-card > img{
+    position:relative !important;
+    z-index:2 !important;
+    display:block !important;
+    visibility:visible !important;
+    opacity:1 !important;
+    width:100% !important;
+    height:158px !important;
+    min-height:158px !important;
+    max-height:158px !important;
+    padding:7px 9px 0 !important;
+    margin:0 !important;
+    object-fit:contain !important;
+    object-position:center bottom !important;
+    background:transparent !important;
+    mix-blend-mode:normal !important;
+  }
+
+  /* Originalzeichnung erhalten; nur auf der hellen Fläche lesbarer machen. */
+  #schoolChildChooser .school-person-card.lou > img{
+    filter:sepia(55%) saturate(145%) brightness(112%) contrast(118%)
+           drop-shadow(0 1px 1px rgba(78,52,40,.20)) !important;
+  }
+  #schoolChildChooser .school-person-card.fina > img{
+    filter:sepia(48%) saturate(135%) brightness(114%) contrast(116%)
+           drop-shadow(0 1px 1px rgba(82,50,39,.18)) !important;
+  }
+
+  /* Auch der Textsockel bleibt pastellig – kein dunkler Block. */
+  #schoolChildChooser .school-person-card.lou{
+    background:#ded5e4 !important;
+    border-color:rgba(160,139,174,.48) !important;
+  }
+  #schoolChildChooser .school-person-card.fina{
+    background:#ead4cf !important;
+    border-color:rgba(181,139,128,.48) !important;
+  }
+  #schoolChildChooser .school-person-name{
+    color:#342d34 !important;
+    text-shadow:none !important;
+  }
+  #schoolChildChooser .school-person-sub{
+    color:#5b5158 !important;
+    text-shadow:none !important;
+    opacity:1 !important;
+  }
+
+  /* ---------- WERKRAUM / SCHUL-TO-DOS ----------
+     Checkbox bleibt mobil unsichtbar. Der Text wird NICHT künstlich groß.
+     Links bekommt die Aufgabe den Großteil der Breite, rechts nur ★ ↑ ↓. */
+  #schoolWorkTodoList .workroom-todo-check{
+    display:none !important;
+  }
+
+  #schoolWorkTodoList .workroom-todo-row{
+    display:grid !important;
+    grid-template-columns:minmax(0,1fr) 108px !important;
+    align-items:center !important;
+    column-gap:8px !important;
+    width:100% !important;
+    min-width:0 !important;
+    min-height:68px !important;
+    padding:9px 10px 9px 13px !important;
+  }
+
+  #schoolWorkTodoList .workroom-todo-content{
+    grid-column:1 !important;
+    min-width:0 !important;
+    width:100% !important;
+    padding:5px 2px !important;
+    margin:0 !important;
+  }
+
+  #schoolWorkTodoList .workroom-todo-text{
+    display:block !important;
+    width:100% !important;
+    min-width:0 !important;
+    max-width:none !important;
+    font-size:.88rem !important;
+    line-height:1.28 !important;
+    font-weight:400 !important;
+    word-break:normal !important;
+    overflow-wrap:break-word !important;
+    hyphens:auto !important;
+  }
+
+  #schoolWorkTodoList .workroom-todo-actions{
+    grid-column:2 !important;
+    display:grid !important;
+    grid-template-columns:36px 30px 30px !important;
+    gap:6px !important;
+    align-items:center !important;
+    justify-content:end !important;
+    width:108px !important;
+    min-width:108px !important;
+  }
+
+  #schoolWorkTodoList .workroom-important-btn{
+    width:36px !important;
+    min-width:36px !important;
+    max-width:36px !important;
+    height:36px !important;
+    min-height:36px !important;
+    padding:0 !important;
+    border-radius:50% !important;
+    display:grid !important;
+    place-items:center !important;
+    font-size:0 !important;
+    line-height:1 !important;
+  }
+  #schoolWorkTodoList .workroom-important-btn::before{
+    content:"★" !important;
+    font-size:1.05rem !important;
+    line-height:1 !important;
+  }
+
+  /* Mobil nicht gebraucht: bearbeiten, löschen, ganz nach oben/unten. */
+  #schoolWorkTodoList .workroom-todo-edit,
+  #schoolWorkTodoList .workroom-todo-delete,
+  #schoolWorkTodoList .workroom-drag-handle,
+  #schoolWorkTodoList .workroom-move-top,
+  #schoolWorkTodoList .workroom-move-bottom,
+  #schoolWorkTodoList [title*="Bearbeiten"],
+  #schoolWorkTodoList [title*="Löschen"],
+  #schoolWorkTodoList [title*="ganz nach oben"],
+  #schoolWorkTodoList [title*="ganz nach unten"]{
+    display:none !important;
+  }
+
+  /* Normales ↑ / ↓ bleibt. */
+  #schoolWorkTodoList .workroom-move-controls{
+    display:contents !important;
+  }
+  #schoolWorkTodoList .workroom-move-btn{
+    width:30px !important;
+    min-width:30px !important;
+    max-width:30px !important;
+    height:34px !important;
+    min-height:34px !important;
+    padding:0 !important;
+    display:grid !important;
+    place-items:center !important;
+    font-size:1rem !important;
+    line-height:1 !important;
+  }
+
+  #schoolWorkTodoList .workroom-todo-row.done .workroom-todo-text{
+    text-decoration:line-through !important;
+    opacity:.48 !important;
+  }
+}
+
+@media (max-width:380px){
+  #schoolChildChooser .school-person-card{
+    grid-template-rows:146px auto auto !important;
+  }
+  #schoolChildChooser .school-person-card::before,
+  #schoolChildChooser .school-person-card > img{
+    height:146px !important;
+    min-height:146px !important;
+    max-height:146px !important;
+  }
+
+  #schoolWorkTodoList .workroom-todo-row{
+    grid-template-columns:minmax(0,1fr) 102px !important;
+  }
+  #schoolWorkTodoList .workroom-todo-actions{
+    grid-template-columns:34px 28px 28px !important;
+    gap:6px !important;
+    width:102px !important;
+    min-width:102px !important;
+  }
+}
