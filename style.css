@@ -27462,3 +27462,108 @@ button.day-meal-list-item:hover,a.day-meal-list-item:hover{background:rgba(164,1
 
 .v87-left-arrow{display:none !important;}
 .v87-overview-header{padding-left:0 !important;}
+
+
+/* =========================================================
+   V88 – Unser Überblick: ein Pfeil links, sichtbar, klickbar
+   ========================================================= */
+#archive .time-tracker-card > .overview-card-head,
+#archive .recipe-link-tracker-card > .overview-card-head,
+#archive .exercise-overview-card > .section-head{
+  display:grid !important;
+  grid-template-columns:18px minmax(0,1fr) auto !important;
+  align-items:center !important;
+  gap:9px !important;
+  width:100% !important;
+}
+
+#archive .overview-collapse-toggle{
+  grid-column:1 !important;
+  grid-row:1 !important;
+  position:static !important;
+  justify-self:start !important;
+  align-self:center !important;
+  width:18px !important;
+  min-width:18px !important;
+  height:24px !important;
+  min-height:24px !important;
+  margin:0 !important;
+  padding:0 !important;
+  border:0 !important;
+  border-radius:0 !important;
+  background:transparent !important;
+  box-shadow:none !important;
+  color:#858b62 !important;
+  font-size:0 !important;
+  line-height:1 !important;
+  cursor:pointer !important;
+  opacity:.9 !important;
+  z-index:2 !important;
+}
+
+/* Alte Pseudopfeile sicher deaktivieren: sichtbar ist nur der echte span. */
+#archive .overview-collapse-toggle::before,
+#archive .overview-collapse-toggle::after{
+  content:none !important;
+  display:none !important;
+}
+#archive .overview-collapse-toggle > .overview-collapse-arrow{
+  display:block !important;
+  color:#858b62 !important;
+  font-family:Georgia,"Times New Roman",serif !important;
+  font-size:.82rem !important;
+  font-weight:600 !important;
+  line-height:1 !important;
+  pointer-events:none !important;
+}
+
+#archive .time-tracker-card > .overview-card-head > div:not(.active-time-tracker),
+#archive .recipe-link-tracker-card > .overview-card-head > div,
+#archive .exercise-overview-card > .section-head > div{
+  grid-column:2 !important;
+  grid-row:1 !important;
+  justify-self:start !important;
+  min-width:0 !important;
+  margin:0 !important;
+}
+#archive .time-tracker-card > .overview-card-head > .active-time-tracker,
+#archive .exercise-overview-card > .section-head > #deleteAllExercisesBtn{
+  grid-column:3 !important;
+  grid-row:1 !important;
+}
+
+/* Eingeklappt: wirklich nur der Kopf; kompakt und einheitlich. */
+#archive .time-tracker-card.overview-card-collapsed,
+#archive .recipe-link-tracker-card.overview-card-collapsed,
+#archive .exercise-overview-card.overview-card-collapsed{
+  min-height:0 !important;
+  height:auto !important;
+  padding:11px 14px !important;
+}
+#archive .time-tracker-card.overview-card-collapsed > .overview-card-head,
+#archive .recipe-link-tracker-card.overview-card-collapsed > .overview-card-head,
+#archive .exercise-overview-card.overview-card-collapsed > .section-head{
+  min-height:44px !important;
+  margin:0 !important;
+  padding:0 !important;
+}
+#archive .time-tracker-card.overview-card-collapsed > :not(.overview-card-head),
+#archive .recipe-link-tracker-card.overview-card-collapsed > :not(.overview-card-head),
+#archive .exercise-overview-card.overview-card-collapsed > :not(.section-head){
+  display:none !important;
+}
+#archive .exercise-overview-card.overview-card-collapsed #deleteAllExercisesBtn{
+  display:none !important;
+}
+#archive .overview-card-collapsed .overview-card-head p:not(.small-label){
+  display:none !important;
+}
+
+/* Individuelle Einstellungen: ihr nativer details-Pfeil bleibt EINMAL links. */
+#archive .family-settings > summary{
+  cursor:pointer !important;
+}
+#archive .family-settings-summary-chevron::before{
+  color:#858b62 !important;
+}
+
