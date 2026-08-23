@@ -27455,3 +27455,61 @@ button.day-meal-list-item:hover,a.day-meal-list-item:hover{background:rgba(164,1
   grid-column:2 !important;
 }
 
+
+/* =========================================================
+   V87 – ÜBERBLICK: Pfeile links, sichtbar, dezent oliv
+   ========================================================= */
+.v87-overview-header{
+  position:relative !important;
+  padding-left:52px !important;
+}
+
+.v87-overview-header > .v87-left-arrow{
+  position:absolute !important;
+  left:20px !important;
+  top:50% !important;
+  transform:translateY(-50%) !important;
+  width:16px !important;
+  height:20px !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  color:#8f9166 !important;
+  font-family:Georgia,"Times New Roman",serif !important;
+  font-size:13px !important;
+  font-weight:600 !important;
+  line-height:1 !important;
+  opacity:.9 !important;
+  pointer-events:none !important;
+  z-index:5 !important;
+}
+
+/* alte rechte/unsichtbare Toggle-Darstellungen ausblenden,
+   aber NICHT den neuen linken Pfeil */
+.v87-overview-header .overview-collapse-toggle{
+  position:absolute !important;
+  left:20px !important;
+  top:50% !important;
+  transform:translateY(-50%) !important;
+}
+
+/* Hauptkarten im geschlossenen Zustand kompakt halten */
+.v87-overview-header{
+  min-height:0 !important;
+}
+
+/* Unterbereiche in Individuelle Einstellungen:
+   Pfeil ebenfalls links oliv und nur EIN Unterbereich offen */
+.settings-main-group > summary{
+  position:relative !important;
+  padding-left:34px !important;
+}
+.settings-main-group > summary .settings-main-arrow{
+  position:absolute !important;
+  left:10px !important;
+  top:50% !important;
+  transform:translateY(-50%) !important;
+  color:#8f9166 !important;
+  opacity:.9 !important;
+}
+
