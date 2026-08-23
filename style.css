@@ -31040,3 +31040,43 @@ button.day-meal-list-item:hover,a.day-meal-list-item:hover{background:rgba(164,1
     margin-top:0 !important;
   }
 }
+
+
+/* =========================================================
+   V114 – PC ONLY – Reihenfolge jetzt passend zur echten DOM-Struktur
+   ========================================================= */
+@media (min-width:701px){
+
+  /* V113 hatte #archive zu Flex gemacht. Dadurch konnten alte order-Werte
+     die JS-Reihenfolge wieder optisch verdrehen. Ab jetzt entscheidet
+     ausschließlich die echte DOM-Reihenfolge aus V114. */
+  #archive{
+    display:block !important;
+  }
+  #archive > *{
+    order:initial !important;
+  }
+
+  #archive > .quick-links{
+    width:100% !important;
+    margin:0 0 12px !important;
+  }
+
+  /* Routinen: Wochenplanung zuerst, feste Tagesroutinen danach. */
+  #settingsGroupRoutines .settings-main-body{
+    display:flex !important;
+    flex-direction:column !important;
+    gap:10px !important;
+  }
+
+  #settingsGroupRoutines #childRoutineOverviewEditor{
+    order:10 !important;
+    margin:0 !important;
+  }
+
+  #settingsGroupRoutines #personalRoutineSentenceSettings{
+    order:20 !important;
+    margin:0 !important;
+  }
+}
+
