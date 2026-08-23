@@ -3228,46 +3228,87 @@ function childHasNoOpenHomework(child) {
 
 const manualTimetableDayKeys=["Mon","Tue","Wed","Thu","Fri"],manualTimetableDayNames=["Montag","Dienstag","Mittwoch","Donnerstag","Freitag"];
 const defaultLessonTimes=[["07:45","08:35"],["08:35","09:25"],["09:45","10:35"],["10:35","11:25"],["11:35","12:25"],["12:25","13:15"]];
-function subjectOptionsFor(id){
-  if(id==="mama"){
-    return [
-      "",
-      "TW",
-      "GU",
-      "Deutsch",
-      "Mathematik",
-      "Sachunterricht",
-      "GLZ",
-      "Anderes"
-    ];
-  }
+const timetablePastelPalette = [
+  "#f6e2df", "#e6efd9", "#e4e1f3", "#dcecf0",
+  "#f4ead7", "#eadff0", "#dcebdc", "#f3dfe8",
+  "#e8e3d5", "#dce6f2", "#f1e4cf", "#e3ece5"
+];
 
-  if(id==="2"){
-    return [
-      "",
-      "GU",
-      "Deutsch",
-      "Mathematik",
-      "Sachunterricht",
-      "REL",
-      "Bewegung & Sport",
-      "Werken",
-      "Anderes"
-    ];
-  }
+const defaultPersonalTimetableSubjects = {
+  mama: ["TW","GU","Deutsch","Mathematik","Sachunterricht","GLZ"],
+  "1": ["Deutsch","Mathematik","Englisch","Biologie","Geografie","Geschichte","Physik","Chemie","Informatik","Religion","Bewegung & Sport","Werken"],
+  "2": ["GU","Deutsch","Mathematik","Sachunterricht","REL","Bewegung & Sport","Werken"]
+};
 
-  const sel=document.querySelector("#schoolSubject1");
-const v=sel
-  ? [...sel.options]
-      .map(o => o.value)
-      .filter(Boolean)
-      .filter(v => v !== "Sachunterricht")
-  : [];
+function ensurePersonalTimetableSubjects() {
+  state.familySettings = state.familySettings || {};
+  state.familySettings.timetableSubjects =
+    state.familySettings.timetableSubjects &&
+    typeof state.familySettings.timetableSubjects === "object"
+      ? state.familySettings.timetableSubjects
+      : {};
 
-  return v.length
-    ? ["",...new Set(v),"Anderes"]
-    : ["","Deutsch","Mathematik","Englisch","Biologie","Geografie","Geschichte","Physik","Chemie","Informatik","Religion","Bewegung & Sport","Werken","Anderes"];
+  ["mama","1","2"].forEach((id, personIndex) => {
+    const current = state.familySettings.timetableSubjects[id];
+
+    if (!Array.isArray(current) || !current.length) {
+      const names = defaultPersonalTimetableSubjects[id] || [];
+      state.familySettings.timetableSubjects[id] = names.map((name, index) => ({
+        id: `subject-${id}-${index}-${String(name).toLowerCase().replace(/[^a-z0-9äöüß]+/gi,"-")}`,
+        name,
+        color: timetablePastelPalette[(index + personIndex * 2) % timetablePastelPalette.length]
+      }));
+      return;
+    }
+
+    state.familySettings.timetableSubjects[id] = current
+      .map((entry, index) => {
+        if (typeof entry === "string") {
+          return {
+            id: `subject-${id}-${index}-${entry.toLowerCase().replace(/[^a-z0-9äöüß]+/gi,"-")}`,
+            name: entry.trim(),
+            color: timetablePastelPalette[(index + personIndex * 2) % timetablePastelPalette.length]
+          };
+        }
+
+        return {
+          id: String(entry?.id || `subject-${id}-${index}`),
+          name: String(entry?.name || "").trim(),
+          color: /^#[0-9a-f]{6}$/i.test(String(entry?.color || ""))
+            ? entry.color
+            : timetablePastelPalette[(index + personIndex * 2) % timetablePastelPalette.length]
+        };
+      })
+      .filter(entry => entry.name);
+  });
+
+  return state.familySettings.timetableSubjects;
 }
+
+function personalTimetableSubjectEntries(id) {
+  const all = ensurePersonalTimetableSubjects();
+  return Array.isArray(all[id]) ? all[id] : [];
+}
+
+function timetableSubjectColor(id, subject) {
+  const name = String(subject || "").trim();
+  if (!name) return "";
+  return personalTimetableSubjectEntries(id)
+    .find(entry => entry.name.toLocaleLowerCase("de") === name.toLocaleLowerCase("de"))
+    ?.color || "";
+}
+
+function subjectOptionsFor(id){
+  if (["mama","1","2"].includes(String(id))) {
+    const names = personalTimetableSubjectEntries(String(id))
+      .map(entry => entry.name)
+      .filter(Boolean);
+    return ["", ...new Set(names), "Anderes"];
+  }
+
+  return ["","Deutsch","Mathematik","Englisch","Biologie","Geografie","Geschichte","Physik","Chemie","Informatik","Religion","Bewegung & Sport","Werken","Anderes"];
+}
+
 function timetablePerson(id) {
   if (id === "mama") {
     state.school.mama = state.school.mama || {
@@ -3387,7 +3428,8 @@ function renderTTMatrix(id) {
                                             class="tt-subject-cell"
                                             data-child="${id}"
                                             data-day="${day}"
-                                            data-row="${r}">
+                                            data-row="${r}"
+                                            style="${current && timetableSubjectColor(id,current) ? `background:${timetableSubjectColor(id,current)};` : ""}">
                                             ${ttOpts(
                                                 id,
                                                 isCustom ? "Anderes" : current
@@ -3419,9 +3461,11 @@ function renderTTMatrix(id) {
             if (select.value === "Anderes") {
                 custom.classList.remove("hidden");
                 custom.focus();
+                select.style.background = "";
             } else {
                 custom.classList.add("hidden");
                 custom.value = "";
+                select.style.background = timetableSubjectColor(id, select.value) || "";
             }
         });
     });
@@ -3467,8 +3511,14 @@ function saveTTMatrix(id) {
 }
 function timetableSubjectDisplay(subject,id){
   const s=String(subject||"").trim();
-  if(id!=="2" || !s) return escapeHtml(s);
-  return `${schoolTimetableSubjectIcon(s)}<span>${escapeHtml(s)}</span>`;
+  if(!s) return "";
+
+  const color=timetableSubjectColor(String(id),s);
+  const icon=String(id)==="2" ? schoolTimetableSubjectIcon(s) : "";
+
+  return `<span class="tt-subject-pastel" style="${color ? `--tt-subject-bg:${color};` : ""}">
+    ${icon}<span>${escapeHtml(s)}</span>
+  </span>`;
 }
 
 function showManualTimetable(id){
@@ -14834,4 +14884,344 @@ function movePlanningToolsToOverview() {
 movePlanningToolsToOverview();
 requestAnimationFrame(movePlanningToolsToOverview);
 setTimeout(movePlanningToolsToOverview, 100);
+
+/* =========================================================
+   V59 – "Unsere Farben" -> "Individuelle Einstellungen"
+   + individuelle Stundenplanfächer für Mama, Lou und Fina
+   ========================================================= */
+function personalTimetablePersonLabel(id) {
+  if (id === "mama") return familyName("a") || "Mama";
+  if (id === "1") return familyName("c") || "Lou";
+  if (id === "2") return familyName("d") || "Fina";
+  return id;
+}
+
+function renderPersonalTimetableSubjectSettings() {
+  ensurePersonalTimetableSubjects();
+
+  const details =
+    document.querySelector("#familyColorA")?.closest("details.family-settings, .family-settings");
+
+  if (!details) return;
+
+  const summary = details.querySelector("summary");
+  if (summary) {
+    const textNodes = [...summary.childNodes].filter(node => node.nodeType === Node.TEXT_NODE);
+    const target = textNodes.find(node => /Unsere Farben/i.test(node.textContent || ""));
+    if (target) {
+      target.textContent = target.textContent.replace(/Unsere Farben/i, "Individuelle Einstellungen");
+    } else if (/Unsere Farben/i.test(summary.textContent || "")) {
+      summary.innerHTML = summary.innerHTML.replace(/Unsere Farben/i, "Individuelle Einstellungen");
+    }
+  }
+
+  let host = details.querySelector("#personalTimetableSubjectSettings");
+  if (!host) {
+    host = document.createElement("section");
+    host.id = "personalTimetableSubjectSettings";
+    host.className = "personal-timetable-subject-settings";
+    details.appendChild(host);
+  }
+
+  host.innerHTML = `
+    <div class="personal-subject-settings-head">
+      <strong>Stundenplanfächer</strong>
+      <small>Mama, Lou und Fina können hier ihre Fächer und eine sanfte Farbe dafür festlegen.</small>
+    </div>
+
+    <div class="personal-subject-person-tabs">
+      ${["mama","1","2"].map((id,index) => `
+        <button type="button"
+                class="personal-subject-person-tab ${index===0 ? "active" : ""}"
+                data-person="${id}">
+          ${escapeHtml(personalTimetablePersonLabel(id))}
+        </button>
+      `).join("")}
+    </div>
+
+    ${["mama","1","2"].map((id,index) => `
+      <div class="personal-subject-person-panel ${index===0 ? "" : "hidden"}" data-person-panel="${id}">
+        <div class="personal-subject-list">
+          ${personalTimetableSubjectEntries(id).map(entry => `
+            <div class="personal-subject-row" data-subject-id="${escapeHtml(entry.id)}">
+              <input class="personal-subject-name"
+                     type="text"
+                     value="${escapeHtml(entry.name)}"
+                     aria-label="Fachname">
+              <input class="personal-subject-color"
+                     type="color"
+                     value="${escapeHtml(entry.color)}"
+                     aria-label="Farbe für ${escapeHtml(entry.name)}">
+              <button type="button"
+                      class="personal-subject-delete"
+                      data-subject-id="${escapeHtml(entry.id)}"
+                      title="Fach entfernen">×</button>
+            </div>
+          `).join("")}
+        </div>
+
+        <div class="personal-subject-add-row">
+          <input type="text"
+                 class="personal-subject-new-name"
+                 data-person="${id}"
+                 placeholder="Neues Fach …">
+          <input type="color"
+                 class="personal-subject-new-color"
+                 data-person="${id}"
+                 value="${timetablePastelPalette[(index*3+6)%timetablePastelPalette.length]}">
+          <button type="button"
+                  class="personal-subject-add"
+                  data-person="${id}">+ Fach</button>
+        </div>
+      </div>
+    `).join("")}
+  `;
+
+  host.querySelectorAll(".personal-subject-person-tab").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const person=btn.dataset.person;
+      host.querySelectorAll(".personal-subject-person-tab")
+        .forEach(x => x.classList.toggle("active", x===btn));
+      host.querySelectorAll(".personal-subject-person-panel")
+        .forEach(panel => panel.classList.toggle("hidden", panel.dataset.personPanel!==person));
+    });
+  });
+
+  host.querySelectorAll(".personal-subject-row").forEach(row => {
+    const panel=row.closest("[data-person-panel]");
+    const person=panel?.dataset.personPanel;
+    const id=row.dataset.subjectId;
+    const name=row.querySelector(".personal-subject-name");
+    const color=row.querySelector(".personal-subject-color");
+
+    const commit=()=>{
+      const entry=personalTimetableSubjectEntries(person).find(x=>x.id===id);
+      if(!entry) return;
+
+      const nextName=String(name?.value||"").trim();
+      if(!nextName){
+        name.value=entry.name;
+        return;
+      }
+
+      entry.name=nextName;
+      entry.color=String(color?.value||entry.color);
+      save();
+      renderTTMatrix(person);
+    };
+
+    name?.addEventListener("change",commit);
+    color?.addEventListener("input",()=>{
+      const entry=personalTimetableSubjectEntries(person).find(x=>x.id===id);
+      if(!entry) return;
+      entry.color=color.value;
+      row.style.setProperty("--subject-preview",color.value);
+      save();
+      renderTTMatrix(person);
+    });
+
+    row.querySelector(".personal-subject-delete")?.addEventListener("click",()=>{
+      const list=personalTimetableSubjectEntries(person);
+      const index=list.findIndex(x=>x.id===id);
+      if(index<0) return;
+
+      const removed=list[index];
+      if(!confirm(`Fach „${removed.name}“ aus der Auswahl entfernen? Bereits eingetragene Stunden bleiben erhalten.`)) return;
+
+      list.splice(index,1);
+      save();
+      renderPersonalTimetableSubjectSettings();
+      renderTTMatrix(person);
+    });
+  });
+
+  host.querySelectorAll(".personal-subject-add").forEach(btn=>{
+    btn.addEventListener("click",()=>{
+      const person=btn.dataset.person;
+      const panel=host.querySelector(`[data-person-panel="${person}"]`);
+      const nameInput=panel?.querySelector(".personal-subject-new-name");
+      const colorInput=panel?.querySelector(".personal-subject-new-color");
+      const name=String(nameInput?.value||"").trim();
+      if(!name) return;
+
+      const list=personalTimetableSubjectEntries(person);
+      if(list.some(x=>x.name.toLocaleLowerCase("de")===name.toLocaleLowerCase("de"))){
+        showMotivation(`${name} ist bereits vorhanden.`);
+        return;
+      }
+
+      list.push({
+        id:uid(),
+        name,
+        color:String(colorInput?.value||timetablePastelPalette[list.length%timetablePastelPalette.length])
+      });
+
+      save();
+      renderPersonalTimetableSubjectSettings();
+      renderTTMatrix(person);
+
+      const nextPanel=document.querySelector(`[data-person-panel="${person}"]`);
+      document.querySelectorAll(".personal-subject-person-tab").forEach(tab =>
+        tab.classList.toggle("active", tab.dataset.person===person)
+      );
+      document.querySelectorAll(".personal-subject-person-panel").forEach(panel2 =>
+        panel2.classList.toggle("hidden", panel2.dataset.personPanel!==person)
+      );
+      nextPanel?.querySelector(".personal-subject-new-name")?.focus();
+    });
+  });
+}
+
+function ensurePersonalTimetableSubjectStyle() {
+  if(document.querySelector("#personalTimetableSubjectStyle")) return;
+
+  const style=document.createElement("style");
+  style.id="personalTimetableSubjectStyle";
+  style.textContent=`
+    .personal-timetable-subject-settings{
+      margin:12px 14px 14px;
+      padding:14px;
+      border:1px solid rgba(119,103,91,.16);
+      border-radius:16px;
+      background:rgba(255,253,249,.72);
+    }
+    .personal-subject-settings-head{
+      display:grid;
+      gap:3px;
+      margin-bottom:11px;
+    }
+    .personal-subject-settings-head strong{
+      font-family:Georgia,serif;
+      color:#51443d;
+      font-size:1rem;
+    }
+    .personal-subject-settings-head small{
+      color:#8b7d75;
+      font-size:.72rem;
+    }
+    .personal-subject-person-tabs{
+      display:flex;
+      flex-wrap:wrap;
+      gap:6px;
+      margin-bottom:10px;
+    }
+    .personal-subject-person-tab{
+      border:1px solid rgba(120,105,92,.18);
+      background:#fffdf9;
+      border-radius:999px;
+      padding:6px 12px;
+      color:#65564e;
+      cursor:pointer;
+    }
+    .personal-subject-person-tab.active{
+      background:#f1eee6;
+      border-color:#c9bea8;
+      font-weight:600;
+    }
+    .personal-subject-person-panel.hidden{display:none!important;}
+    .personal-subject-list{
+      display:grid;
+      gap:6px;
+    }
+    .personal-subject-row,
+    .personal-subject-add-row{
+      display:grid;
+      grid-template-columns:minmax(150px,1fr) 46px 36px;
+      gap:7px;
+      align-items:center;
+    }
+    .personal-subject-name,
+    .personal-subject-new-name{
+      min-width:0;
+      border:1px solid rgba(126,112,99,.18);
+      border-radius:10px;
+      padding:7px 9px;
+      background:#fffdfa;
+    }
+    .personal-subject-color,
+    .personal-subject-new-color{
+      width:42px;
+      height:34px;
+      padding:3px;
+      border:1px solid rgba(126,112,99,.18);
+      border-radius:9px;
+      background:#fffdfa;
+      cursor:pointer;
+    }
+    .personal-subject-delete{
+      width:34px;
+      height:34px;
+      border:0;
+      border-radius:50%;
+      background:transparent;
+      color:#9b8278;
+      cursor:pointer;
+    }
+    .personal-subject-add-row{
+      grid-template-columns:minmax(150px,1fr) 46px auto;
+      margin-top:9px;
+      padding-top:9px;
+      border-top:1px dashed rgba(126,112,99,.17);
+    }
+    .personal-subject-add{
+      white-space:nowrap;
+      border:1px solid #c9bea8;
+      border-radius:999px;
+      padding:7px 12px;
+      background:#f6f3e9;
+      color:#5d554a;
+      cursor:pointer;
+    }
+
+    .tt-subject-cell{
+      transition:background-color .15s ease;
+    }
+    .tt-subject-pastel{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:4px;
+      width:calc(100% - 6px);
+      min-height:28px;
+      box-sizing:border-box;
+      margin:3px;
+      padding:4px 7px;
+      border-radius:8px;
+      background:var(--tt-subject-bg,transparent);
+    }
+
+    @media(max-width:700px){
+      .personal-timetable-subject-settings{
+        margin:8px;
+        padding:10px;
+      }
+      .personal-subject-row,
+      .personal-subject-add-row{
+        grid-template-columns:minmax(0,1fr) 42px 34px;
+      }
+      .personal-subject-add-row{
+        grid-template-columns:minmax(0,1fr) 42px auto;
+      }
+    }
+  `;
+  document.head.appendChild(style);
+}
+
+ensurePersonalTimetableSubjectStyle();
+ensurePersonalTimetableSubjects();
+
+/* Sobald die bereits verschobenen Einstellungen existieren, umbenennen und erweitern. */
+function initIndividualSettingsPanel(){
+  renderPersonalTimetableSubjectSettings();
+}
+initIndividualSettingsPanel();
+requestAnimationFrame(initIndividualSettingsPanel);
+setTimeout(initIndividualSettingsPanel,120);
+
+/* Nach Namensänderungen die Personen-Tabs ebenfalls aktualisieren. */
+document.addEventListener("change",event=>{
+  if(event.target?.matches?.("#familyNameA,#familyNameC,#familyNameD")){
+    setTimeout(renderPersonalTimetableSubjectSettings,0);
+  }
+});
 
