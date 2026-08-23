@@ -16861,7 +16861,7 @@ body.child-view-active #papaOverviewModal{
    Alle gewählten Personen-/Gemeinsam-Rahmen bleiben original.
    ========================================================= */
 .person-group-general{
-  --group-border:#b8b58d !important;
+  --group-border:var(--family-general-color,#9b9871) !important;
 }
 
 
@@ -25298,3 +25298,9 @@ button.day-meal-list-item:hover,a.day-meal-list-item:hover{background:rgba(164,1
   }
 }
 
+
+
+/* Individuelle Einstellungen – Allgemein-Farbe */
+#familyColorGeneral{
+  min-height:42px;
+}
