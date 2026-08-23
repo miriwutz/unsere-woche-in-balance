@@ -25356,3 +25356,55 @@ button.day-meal-list-item:hover,a.day-meal-list-item:hover{background:rgba(164,1
   font-size:.7rem;
   cursor:pointer;
 }
+
+
+/* "Mein Zeichen" – edle Symbole + dieselbe Auswahl in Routinen */
+.school-personal-svg-icon{
+  width:1.35em;
+  height:1.35em;
+  display:inline-grid;
+  place-items:center;
+  color:currentColor;
+}
+.school-personal-svg-icon svg{
+  width:100%;
+  height:100%;
+  display:block;
+}
+.school-icon-choice .school-personal-svg-icon{
+  width:24px;
+  height:24px;
+}
+#schoolMotivationBanner .school-hero-v4-icon .school-personal-svg-icon{
+  width:34px;
+  height:34px;
+}
+.child-routine-hero-mark{
+  display:grid !important;
+  place-items:center !important;
+  width:64px !important;
+  height:64px !important;
+  padding:0 !important;
+  border:0 !important;
+  background:transparent !important;
+  box-shadow:none !important;
+  color:#b79258 !important;
+  opacity:.92 !important;
+  font-size:2rem !important;
+}
+.child-routine-hero-mark .school-personal-svg-icon{
+  width:52px;
+  height:52px;
+}
+.child-routine-hero-mark:not(:has(.school-personal-svg-icon)){
+  font-family:Georgia,serif !important;
+}
+
+/* Picker bleibt ruhig trotz zusätzlicher edler Zeichen */
+#schoolIconChoices{
+  align-items:center;
+}
+.school-icon-choice{
+  display:grid;
+  place-items:center;
+}
