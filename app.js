@@ -19515,9 +19515,10 @@ setTimeout(()=>{
     v82Move(document.querySelector("#myWeekAppearanceSettings"),weekBody);
 
     /* 4. Routinen:
-       BEIDE Teile bewusst zusammen – feste Tagesroutinen UND Wochenplanung. */
-    v82Move(document.querySelector("#personalRoutineSentenceSettings"),routinesBody);
+       Wochenplanung zuerst, darunter die festen Tagesroutinen.
+       So steht die Wochenplanung direkt VOR den Tageskarten. */
     v82Move(document.querySelector("#childRoutineOverviewEditor"),routinesBody);
+    v82Move(document.querySelector("#personalRoutineSentenceSettings"),routinesBody);
 
     /* Reihenfolge im Hauptbereich festhalten. */
     [family,school,week,routines].forEach(group=>{
@@ -19933,3 +19934,64 @@ window.addEventListener("resize", () => {
     ensureMobileWeekHeaderV94();
   }
 });
+
+
+/* =========================================================
+   V114 – PC-Struktur zuverlässig
+   - Schnellzugriff als ORIGINAL-DOM-Block ganz nach oben
+   - Zeit im Blick bleibt danach im Überblick
+   - Individuelle Einstellungen bleiben separat darunter
+   - wird nach älteren V58/V88-Umsortierungen erneut sauber gesetzt
+   ========================================================= */
+(function(){
+  function v114ArrangeOverview(){
+    const overview=document.querySelector("#archive");
+    if(!overview) return;
+
+    const quickLinks=document.querySelector("#quickLinksRow")
+      ?.closest(".quick-links.card, .quick-links");
+    const pageHead=overview.querySelector(".overview-page-head");
+    const time=overview.querySelector(".time-tracker-card");
+    const tools=overview.querySelector("#overviewTopTools");
+    const familySettings=document.querySelector("#familyColorA")
+      ?.closest("details.family-settings, .family-settings");
+
+    /* Schnellzugriff ist allein ganz oben – nicht zusammen mit Einstellungen. */
+    if(quickLinks && quickLinks.parentElement!==overview){
+      overview.insertBefore(quickLinks, overview.firstElementChild);
+    }else if(quickLinks && overview.firstElementChild!==quickLinks){
+      overview.insertBefore(quickLinks, overview.firstElementChild);
+    }
+
+    /* Danach Seitenüberschrift und anschließend Zeit im Blick. */
+    if(pageHead && quickLinks && pageHead.previousElementSibling!==quickLinks){
+      quickLinks.insertAdjacentElement("afterend",pageHead);
+    }
+    if(time && pageHead && time.previousElementSibling!==pageHead){
+      pageHead.insertAdjacentElement("afterend",time);
+    }
+
+    /* Individuelle Einstellungen bleiben unter Zeit im Blick. */
+    if(tools && familySettings && familySettings.parentElement!==tools){
+      tools.appendChild(familySettings);
+    }
+    if(tools && time && tools.previousElementSibling!==time){
+      time.insertAdjacentElement("afterend",tools);
+    }
+  }
+
+  v114ArrangeOverview();
+  requestAnimationFrame(v114ArrangeOverview);
+  setTimeout(v114ArrangeOverview,120);
+  setTimeout(v114ArrangeOverview,420);
+
+  /* V88 ordnet beim Öffnen noch einmal um – danach setzen wir unsere
+     gewünschte endgültige Reihenfolge erneut. */
+  document.addEventListener("click",e=>{
+    if(e.target.closest?.('[data-view="archive"]')){
+      requestAnimationFrame(()=>requestAnimationFrame(v114ArrangeOverview));
+      setTimeout(v114ArrangeOverview,80);
+    }
+  });
+})();
+
