@@ -28737,3 +28737,142 @@ button.day-meal-list-item:hover,a.day-meal-list-item:hover{background:rgba(164,1
     line-height:1.34 !important;
   }
 }
+
+
+/* =========================================================
+   V99 – HANDY: "Für euch" Kinderkarten
+   Sanfte Pastelltöne + gold/kupferfarbene Illustrationen.
+   NUR Mobile. Desktop bleibt vollständig unverändert.
+   ========================================================= */
+@media (max-width:700px){
+
+  /* Beide Karten bleiben kompakt und klar als zwei Handy-Kacheln. */
+  #schoolChildChooser{
+    gap:12px !important;
+  }
+
+  #schoolChildChooser .school-person-card{
+    overflow:hidden !important;
+    border-radius:22px !important;
+    grid-template-rows:158px auto auto !important;
+    box-shadow:0 8px 24px rgba(35,27,24,.14) !important;
+  }
+
+  /* Der komplette Bildbereich wird weich/pastellig statt dunkel. */
+  #schoolChildChooser .school-person-card::before{
+    left:0 !important;
+    right:0 !important;
+    top:0 !important;
+    height:158px !important;
+    border-radius:22px 22px 0 0 !important;
+    opacity:1 !important;
+  }
+
+  /* Lou: rauchiges Lavendel / Flieder. */
+  #schoolChildChooser .school-person-card.lou::before{
+    background:
+      radial-gradient(circle at 72% 20%,rgba(255,255,255,.48),transparent 34%),
+      linear-gradient(145deg,#e9e2ef 0%,#d9d2e2 55%,#cec7d8 100%) !important;
+  }
+
+  /* Fina: sanftes Pfirsich / Altrosa. */
+  #schoolChildChooser .school-person-card.fina::before{
+    background:
+      radial-gradient(circle at 28% 16%,rgba(255,255,255,.46),transparent 34%),
+      linear-gradient(145deg,#f6dfda 0%,#efcbc4 55%,#e6beb8 100%) !important;
+  }
+
+  /* Illustration vollständig im Pastellfeld – keine dunkle Fläche mehr. */
+  #schoolChildChooser .school-person-card img{
+    position:relative !important;
+    z-index:1 !important;
+    width:100% !important;
+    height:158px !important;
+    max-height:158px !important;
+    padding:8px 12px 2px !important;
+    object-fit:contain !important;
+    object-position:center bottom !important;
+    background:transparent !important;
+    opacity:.98 !important;
+    mix-blend-mode:multiply !important;
+  }
+
+  /* Lou: warmes, leicht kupfriges Gold.
+     brightness(0) vereinheitlicht die Linienfarbe – die Transparenz
+     der Illustration bleibt erhalten. */
+  #schoolChildChooser .school-person-card.lou img{
+    filter:
+      brightness(0)
+      saturate(100%)
+      invert(52%)
+      sepia(54%)
+      saturate(1050%)
+      hue-rotate(350deg)
+      brightness(88%)
+      contrast(91%)
+      drop-shadow(0 2px 3px rgba(116,73,40,.12)) !important;
+  }
+
+  /* Fina: etwas helleres Kupfer / Roségold. */
+  #schoolChildChooser .school-person-card.fina img{
+    filter:
+      brightness(0)
+      saturate(100%)
+      invert(57%)
+      sepia(48%)
+      saturate(1120%)
+      hue-rotate(338deg)
+      brightness(93%)
+      contrast(88%)
+      drop-shadow(0 2px 3px rgba(126,74,58,.11)) !important;
+  }
+
+  /* Unterer Textbereich greift die Kinderfarbe ruhig auf. */
+  #schoolChildChooser .school-person-card.lou{
+    background:linear-gradient(180deg,#ddd7e5 0 158px,#777182 158px 100%) !important;
+    border-color:rgba(175,151,194,.45) !important;
+  }
+
+  #schoolChildChooser .school-person-card.fina{
+    background:linear-gradient(180deg,#efcec8 0 158px,#806a67 158px 100%) !important;
+    border-color:rgba(190,135,126,.45) !important;
+  }
+
+  #schoolChildChooser .school-person-card .school-person-name,
+  #schoolChildChooser .school-person-card .school-person-subtitle{
+    position:relative !important;
+    z-index:2 !important;
+    color:#fff7f0 !important;
+    text-shadow:0 1px 1px rgba(50,38,35,.12) !important;
+  }
+
+  #schoolChildChooser .school-person-card.lou .school-person-subtitle{
+    color:#f1e9f5 !important;
+  }
+
+  #schoolChildChooser .school-person-card.fina .school-person-subtitle{
+    color:#f8e8e2 !important;
+  }
+}
+
+/* Sehr schmale Handys: Bildbereich noch etwas kompakter. */
+@media (max-width:380px){
+  #schoolChildChooser .school-person-card{
+    grid-template-rows:146px auto auto !important;
+  }
+
+  #schoolChildChooser .school-person-card::before,
+  #schoolChildChooser .school-person-card img{
+    height:146px !important;
+    max-height:146px !important;
+  }
+
+  #schoolChildChooser .school-person-card.lou{
+    background:linear-gradient(180deg,#ddd7e5 0 146px,#777182 146px 100%) !important;
+  }
+
+  #schoolChildChooser .school-person-card.fina{
+    background:linear-gradient(180deg,#efcec8 0 146px,#806a67 146px 100%) !important;
+  }
+}
+
