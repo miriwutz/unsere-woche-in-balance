@@ -27362,3 +27362,96 @@ button.day-meal-list-item:hover,a.day-meal-list-item:hover{background:rgba(164,1
     grid-template-columns:minmax(120px,1fr) 34px minmax(120px,1fr) 34px !important;
   }
 }
+
+
+/* =========================================================
+   V86 – Pfeile gut sichtbar, dezent oliv, LINKS
+   ========================================================= */
+
+/* Hauptbereiche im Überblick */
+.overview-collapse-toggle{
+  display:grid !important;
+  place-items:center !important;
+  width:18px !important;
+  min-width:18px !important;
+  height:22px !important;
+  padding:0 !important;
+  margin:0 !important;
+  border:0 !important;
+  background:transparent !important;
+  box-shadow:none !important;
+  color:transparent !important;
+  font-size:0 !important;
+}
+
+.overview-collapse-toggle::before{
+  content:"▸" !important;
+  display:block !important;
+  color:#8f9166 !important;
+  font-family:Georgia,"Times New Roman",serif !important;
+  font-size:.82rem !important;
+  line-height:1 !important;
+  font-weight:600 !important;
+}
+
+.overview-collapse-toggle[aria-expanded="true"]::before{
+  content:"▾" !important;
+}
+
+/* Individuelle Einstellungen */
+.family-settings-summary-chevron{
+  display:grid !important;
+  place-items:center !important;
+  width:18px !important;
+  height:22px !important;
+  color:transparent !important;
+  font-size:0 !important;
+  transform:none !important;
+}
+
+.family-settings-summary-chevron::before{
+  content:"▸" !important;
+  color:#8f9166 !important;
+  font-family:Georgia,"Times New Roman",serif !important;
+  font-size:.82rem !important;
+  line-height:1 !important;
+  font-weight:600 !important;
+}
+
+.family-settings[open] .family-settings-summary-chevron::before{
+  content:"▾" !important;
+}
+
+/* Die vier Unterbereiche: links gut sichtbar, aber ruhig oliv */
+.settings-main-arrow{
+  width:16px !important;
+  min-width:16px !important;
+  display:grid !important;
+  place-items:center !important;
+  color:transparent !important;
+  font-size:0 !important;
+  transform:none !important;
+}
+
+.settings-main-arrow::before{
+  content:"▸" !important;
+  color:#8f9166 !important;
+  font-family:Georgia,"Times New Roman",serif !important;
+  font-size:.76rem !important;
+  line-height:1 !important;
+  font-weight:600 !important;
+}
+
+.settings-main-group[open] .settings-main-arrow::before{
+  content:"▾" !important;
+}
+
+/* Text nie über dem Pfeil liegen lassen */
+.settings-main-group > summary{
+  grid-template-columns:18px minmax(0,1fr) !important;
+  column-gap:8px !important;
+}
+.settings-main-title{
+  grid-column:2 !important;
+}
+
