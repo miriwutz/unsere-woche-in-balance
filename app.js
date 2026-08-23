@@ -14538,3 +14538,43 @@ function ensurePersonalWeekDialogWidthStyle() {
 
 ensurePersonalWeekDialogWidthStyle();
 
+/* =========================================================
+   V55 – zusätzliche Tagesqualitäten
+   ========================================================= */
+function ensureAdditionalRoutineQualities() {
+  const extras = [
+    ["gelassenheit", "Gelassenheit"],
+    ["vertrauen", "Vertrauen"],
+    ["praesenz", "Präsenz"]
+  ];
+
+  document.querySelectorAll(".routine-quality-cloud").forEach(group => {
+    const existing = new Set(
+      [...group.querySelectorAll("button[data-quality]")]
+        .map(btn => String(btn.dataset.quality || "").trim())
+    );
+
+    extras.forEach(([value, label]) => {
+      if (existing.has(value)) return;
+
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.dataset.quality = value;
+      btn.textContent = label;
+      btn.setAttribute("aria-pressed", "false");
+      group.appendChild(btn);
+    });
+  });
+}
+
+ensureAdditionalRoutineQualities();
+
+/* Falls der Routinenbereich später neu aufgebaut/geöffnet wird, sicherstellen,
+   dass die zusätzlichen Qualitäten weiterhin vorhanden sind. */
+document.querySelector("#toggleRoutinePanelBtn")?.addEventListener("click", () => {
+  setTimeout(() => {
+    ensureAdditionalRoutineQualities();
+    renderRoutineIdeaChecks();
+  }, 0);
+});
+
