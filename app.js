@@ -14667,3 +14667,96 @@ document.addEventListener("click", event => {
 
 window.addEventListener("resize", normalizePersonalWeekDialogs);
 
+/* =========================================================
+   V57 – responsive gemeinsame Größe für alle 4 Wochenfenster
+   Desktop/Tablet: Papa-Referenz bis 780x720.
+   Handy: alle vier identisch, nahezu bildschirmfüllend.
+   ========================================================= */
+function normalizePersonalWeekDialogsResponsive() {
+  const dialogs = [
+    document.getElementById("papaOverviewDialog"),
+    document.getElementById("childWeekDialog"),
+    document.getElementById("workroomWeekDialog")
+  ].filter(Boolean);
+
+  const mobile = window.matchMedia("(max-width: 600px)").matches;
+
+  dialogs.forEach(dialog => {
+    const set = (prop, value) =>
+      dialog.style.setProperty(prop, value, "important");
+
+    set("position", "fixed");
+    set("left", "50%");
+    set("right", "auto");
+    set("bottom", "auto");
+    set("margin", "0");
+    set("box-sizing", "border-box");
+    set("overflow", "hidden");
+
+    if (mobile) {
+      /* Handy: identische Außenmaße mit kleinem sicheren Rand. */
+      set("top", "50%");
+      set("inset", "50% auto auto 50%");
+      set("transform", "translate(-50%, -50%)");
+      set("width", "calc(100vw - 16px)");
+      set("max-width", "calc(100vw - 16px)");
+      set("height", "calc(100dvh - 16px)");
+      set("max-height", "calc(100dvh - 16px)");
+      set("border-radius", "18px");
+    } else {
+      /* PC + Tablet: gemeinsame Papa-Referenz, aber nie größer als Viewport. */
+      set("top", "50%");
+      set("inset", "50% auto auto 50%");
+      set("transform", "translate(-50%, -50%)");
+      set("width", "min(780px, calc(100vw - 32px))");
+      set("max-width", "min(780px, calc(100vw - 32px))");
+      set("height", "min(720px, calc(100dvh - 32px))");
+      set("max-height", "min(720px, calc(100dvh - 32px))");
+    }
+  });
+
+  [
+    ["childWeekDialog", ".child-week-shell"],
+    ["workroomWeekDialog", ".workroom-week-shell"]
+  ].forEach(([id, selector]) => {
+    const shell = document.getElementById(id)?.querySelector(selector);
+    if (!shell) return;
+    shell.style.setProperty("width", "100%", "important");
+    shell.style.setProperty("max-width", "100%", "important");
+    shell.style.setProperty("height", "100%", "important");
+    shell.style.setProperty("max-height", "100%", "important");
+    shell.style.setProperty("box-sizing", "border-box", "important");
+  });
+}
+
+/* V57 ist die finale Geometrie und überschreibt V56 bewusst. */
+normalizePersonalWeekDialogsResponsive();
+
+document.addEventListener("click", event => {
+  if (
+    event.target.closest(
+      "#openPapaOverviewBtn, #openWorkroomWeekBtn, .open-child-week, [data-open-child-week]"
+    )
+  ) {
+    normalizePersonalWeekDialogsResponsive();
+    requestAnimationFrame(normalizePersonalWeekDialogsResponsive);
+  }
+}, true);
+
+["papaOverviewDialog","childWeekDialog","workroomWeekDialog"].forEach(id => {
+  const dialog = document.getElementById(id);
+  if (!dialog) return;
+  const observer = new MutationObserver(() => {
+    if (dialog.open) {
+      normalizePersonalWeekDialogsResponsive();
+      requestAnimationFrame(normalizePersonalWeekDialogsResponsive);
+    }
+  });
+  observer.observe(dialog, {attributes:true, attributeFilter:["open"]});
+});
+
+window.addEventListener("resize", normalizePersonalWeekDialogsResponsive);
+window.addEventListener("orientationchange", () => {
+  setTimeout(normalizePersonalWeekDialogsResponsive, 50);
+});
+
