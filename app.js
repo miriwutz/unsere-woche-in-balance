@@ -19591,3 +19591,63 @@ setTimeout(()=>{
   setTimeout(v83Refresh,80);
   setTimeout(v83Refresh,260);
 })();
+
+
+/* =========================================================
+   V85 – Überblick: Auf-/Zuklapppfeile LINKS
+   wie bei Schul-To-dos, ohne neue Observer
+   ========================================================= */
+(function(){
+
+  function v85PlaceOverviewArrowsLeft(){
+    document.querySelectorAll(
+      ".time-tracker-card, .recipe-link-tracker-card, .exercise-overview-card"
+    ).forEach(card=>{
+      const head =
+        card.querySelector(":scope > .overview-card-head") ||
+        card.querySelector(":scope > .section-head");
+      if(!head) return;
+
+      const toggle=head.querySelector(".overview-collapse-toggle");
+      if(!toggle) return;
+
+      /* Toggle als ERSTES Element links in die Kopfzeile setzen. */
+      if(head.firstElementChild !== toggle){
+        head.insertBefore(toggle, head.firstElementChild);
+      }
+    });
+
+    /* Individuelle Einstellungen: Pfeil ebenfalls ganz links. */
+    const familySummary=document.querySelector(".family-settings > summary");
+    if(familySummary){
+      let arrow=familySummary.querySelector(".family-settings-summary-chevron");
+      if(!arrow){
+        arrow=document.createElement("span");
+        arrow.className="family-settings-summary-chevron";
+        arrow.setAttribute("aria-hidden","true");
+        arrow.textContent="›";
+      }
+      if(familySummary.firstElementChild !== arrow){
+        familySummary.insertBefore(arrow, familySummary.firstElementChild);
+      }
+    }
+  }
+
+  function v85Refresh(){
+    v85PlaceOverviewArrowsLeft();
+  }
+
+  document.addEventListener("click",e=>{
+    if(e.target.closest?.('[data-view="archive"]') ||
+       e.target.closest?.(".overview-collapse-toggle") ||
+       e.target.closest?.(".family-settings > summary")){
+      requestAnimationFrame(v85Refresh);
+      setTimeout(v85Refresh,80);
+    }
+  },true);
+
+  document.addEventListener("DOMContentLoaded",v85Refresh,{once:true});
+  setTimeout(v85Refresh,100);
+  setTimeout(v85Refresh,280);
+})();
+
