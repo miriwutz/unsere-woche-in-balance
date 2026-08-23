@@ -1845,215 +1845,6 @@ function alignWeekBands(grid){
   });
 }
 
-
-function ensureMultidayOverlayStyle() {
-  if (document.querySelector("#multidayReadableOverlayStyle")) return;
-
-  const style = document.createElement("style");
-  style.id = "multidayReadableOverlayStyle";
-  style.textContent = `
-    #weekGrid{
-      position:relative !important;
-      overflow:visible !important;
-    }
-
-    /* Die segmentweise Beschriftung ist die Ursache für abgeschnittene /
-       unterschiedlich kleine Texte. Sichtbar ist nur noch das zentrale Overlay. */
-    #weekGrid .multiday-center-label{
-      visibility:hidden !important;
-    }
-
-    .multiday-readable-overlay-layer{
-      position:absolute;
-      inset:0;
-      z-index:40;
-      pointer-events:none;
-      overflow:visible;
-    }
-
-    .multiday-readable-overlay{
-      position:absolute;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      gap:5px;
-      box-sizing:border-box;
-      padding:0 8px;
-      color:#3f3935;
-      font-size:12px;
-      font-weight:650;
-      line-height:1;
-      letter-spacing:0;
-      white-space:nowrap;
-      text-align:center;
-      text-shadow:
-        0 1px 0 rgba(255,255,255,.92),
-        0 0 3px rgba(255,255,255,.72);
-      opacity:1 !important;
-      overflow:visible;
-    }
-
-    .multiday-readable-person,
-    .multiday-readable-title{
-      color:#3f3935 !important;
-      opacity:1 !important;
-      font-size:12px !important;
-      font-weight:650 !important;
-      line-height:1 !important;
-      white-space:nowrap;
-    }
-
-    .multiday-readable-person{
-      display:inline-flex;
-      align-items:center;
-      gap:4px;
-    }
-
-    .multiday-readable-dot{
-      width:7px;
-      height:7px;
-      flex:0 0 7px;
-      border-radius:50%;
-      background:var(--multi-person-bg,#8b817a);
-      box-shadow:0 0 0 1px rgba(255,255,255,.82);
-    }
-
-    .multiday-readable-sep{
-      color:#625a55;
-      font-size:11px;
-      font-weight:600;
-    }
-
-    /* Vergangene Tageskarten dürfen verblassen; die Terminbeschriftung selbst nicht. */
-    .past-day .multiday-readable-overlay,
-    .past-day .multiday-readable-overlay *{
-      opacity:1 !important;
-      color:#3f3935 !important;
-    }
-
-    @media (max-width:1100px) {
-      .multiday-readable-overlay,
-      .multiday-readable-person,
-      .multiday-readable-title{
-        font-size:11px !important;
-      }
-      .multiday-readable-overlay{
-        padding:0 5px;
-        gap:4px;
-      }
-    }
-
-    /* Handy bekommt weiterhin die eigene Mehrtag-Zusammenfassung. */
-    @media (max-width:700px) {
-      .multiday-readable-overlay-layer{
-        display:none !important;
-      }
-    }
-  `;
-  document.head.appendChild(style);
-}
-
-function renderMultidayReadableOverlays(grid, weekDates, weekStartKey, weekEndKey, multiDayEventsThisWeek, multiDayTrackById) {
-  if (!grid) return;
-
-  ensureMultidayOverlayStyle();
-
-  grid.querySelector(".multiday-readable-overlay-layer")?.remove();
-  if (!multiDayEventsThisWeek?.length) return;
-
-  const daysEls = [...grid.querySelectorAll(":scope > .day")];
-  if (daysEls.length !== 7) return;
-
-  const gridRect = grid.getBoundingClientRect();
-  if (!gridRect.width || !gridRect.height) return;
-
-  const layer = document.createElement("div");
-  layer.className = "multiday-readable-overlay-layer";
-  layer.setAttribute("aria-hidden", "true");
-
-  multiDayEventsThisWeek.forEach(item => {
-    const track = multiDayTrackById.get(item.id);
-    if (track === undefined) return;
-
-    const visibleStart = item.date < weekStartKey ? weekStartKey : item.date;
-    const visibleEnd = (item.endDate || item.date) > weekEndKey
-      ? weekEndKey
-      : (item.endDate || item.date);
-
-    const startIndex = weekDates.findIndex(d => dateKey(d) === visibleStart);
-    const endIndex = weekDates.findIndex(d => dateKey(d) === visibleEnd);
-    if (startIndex < 0 || endIndex < startIndex) return;
-
-    const startSeg = daysEls[startIndex]?.querySelector(
-      `.multiday-event-lane[data-track="${track}"] .multiday-continuous-segment`
-    );
-    const endSeg = daysEls[endIndex]?.querySelector(
-      `.multiday-event-lane[data-track="${track}"] .multiday-continuous-segment`
-    );
-    if (!startSeg || !endSeg) return;
-
-    const a = startSeg.getBoundingClientRect();
-    const b = endSeg.getBoundingClientRect();
-
-    const left = a.left - gridRect.left;
-    const top = a.top - gridRect.top;
-    const width = b.right - a.left;
-    const height = Math.max(a.height, b.height);
-
-    if (width <= 0 || height <= 0) return;
-
-    const groupKey = todoGroupKey(item);
-    const personLabel = groupKey === "general" ? "" : familySelectionLabel(item);
-
-    const members = normalizedFamilyMembers(item);
-    const memberColors = members.map(member => familyColor(member)).filter(Boolean);
-    const accent = memberColors[0] || (groupKey === "general" ? "#9b9871" : "#a99f99");
-    const personBg = memberColors.length > 1
-      ? `linear-gradient(110deg, ${memberColors.map((color, i) => {
-          const pos = Math.round((i / Math.max(1, memberColors.length - 1)) * 100);
-          return `${color} ${pos}%`;
-        }).join(", ")})`
-      : accent;
-
-    const showStartTime =
-      item.date >= weekStartKey &&
-      item.date <= weekEndKey &&
-      item.time;
-
-    const showEndTime =
-      (item.endDate || item.date) >= weekStartKey &&
-      (item.endDate || item.date) <= weekEndKey &&
-      item.endTime;
-
-    const titleText = [
-      showStartTime ? item.time : "",
-      item.superImportant ? "★" : "",
-      item.text || "",
-      showEndTime ? `· bis ${item.endTime}` : ""
-    ].filter(Boolean).join(" ");
-
-    const overlay = document.createElement("div");
-    overlay.className = "multiday-readable-overlay";
-    overlay.style.left = `${left}px`;
-    overlay.style.top = `${top}px`;
-    overlay.style.width = `${width}px`;
-    overlay.style.height = `${height}px`;
-    overlay.style.setProperty("--multi-person-bg", personBg);
-
-    overlay.innerHTML = `
-      ${personLabel
-        ? `<span class="multiday-readable-person"><i class="multiday-readable-dot"></i>${escapeHtml(personLabel)}</span>
-           <span class="multiday-readable-sep">·</span>`
-        : ""}
-      <span class="multiday-readable-title">${escapeHtml(titleText)}</span>
-    `;
-
-    layer.appendChild(overlay);
-  });
-
-  grid.appendChild(layer);
-}
-
 function renderWeek() {
   weekLabel();
   const grid = document.querySelector("#weekGrid");
@@ -2579,19 +2370,6 @@ const eventHtml = (multiDayLaneHtml || singleEventHtml) ? `
 
   // V33: gemeinsame Wochenbänder erst NACH dem Rendern messen.
   alignWeekBands(grid);
-
-  // Mehrtägige Termine bekommen EINE gut lesbare Beschriftung über die
-  // gesamte sichtbare Balkenbreite statt je Tagessegment.
-  requestAnimationFrame(() => {
-    renderMultidayReadableOverlays(
-      grid,
-      weekDates,
-      weekStartKey,
-      weekEndKey,
-      multiDayEventsThisWeek,
-      multiDayTrackById
-    );
-  });
 
   document.querySelectorAll(".day-meal-recipe").forEach(btn => btn.addEventListener("click", () => {
     const byId = state.recipes.find(r => r.id === btn.dataset.recipeId);
@@ -14700,13 +14478,63 @@ function debugFamilyCombinationLabels() {
   ];
 }
 
-let multidayOverlayResizeTimer = null;
-window.addEventListener("resize", () => {
-  clearTimeout(multidayOverlayResizeTimer);
-  multidayOverlayResizeTimer = setTimeout(() => {
-    if (window.innerWidth > 700 && document.querySelector("#weekGrid")) {
-      renderWeek();
+/* =========================================================
+   V54 – persönliche Wochenansichten exakt auf Papa-Breite
+   Papa, Lou, Fina und "Mein Plan" bekommen dieselbe Dialogbreite.
+   ========================================================= */
+function ensurePersonalWeekDialogWidthStyle() {
+  if (document.querySelector("#personalWeekDialogWidthStyle")) return;
+
+  const style = document.createElement("style");
+  style.id = "personalWeekDialogWidthStyle";
+  style.textContent = `
+    :root{
+      --personal-week-dialog-width: 700px;
     }
-  }, 140);
-});
+
+    /* Papa = Referenz */
+    #papaOverviewDialog,
+    /* Lou + Fina teilen sich diesen Dialog */
+    #childWeekDialog,
+    /* Mein Plan / Werkraum */
+    #workroomWeekDialog{
+      width:min(var(--personal-week-dialog-width), calc(100vw - 32px)) !important;
+      max-width:min(var(--personal-week-dialog-width), calc(100vw - 32px)) !important;
+      box-sizing:border-box !important;
+    }
+
+    /* Unterschiedliche bisherige Innenkarten dürfen die Breite nicht wieder verändern. */
+    #papaOverviewDialog > *,
+    #childWeekDialog > *,
+    #workroomWeekDialog > *{
+      width:100% !important;
+      max-width:100% !important;
+      box-sizing:border-box !important;
+    }
+
+    /* vorhandene Card-Klassen ebenfalls eindeutig auf die Dialogbreite zwingen */
+    #papaOverviewDialog .dialog-card,
+    #papaOverviewDialog .papa-overview-card,
+    #childWeekDialog .dialog-card,
+    #childWeekDialog .child-week-card,
+    #workroomWeekDialog .dialog-card,
+    #workroomWeekDialog .workroom-week-card{
+      width:100% !important;
+      max-width:100% !important;
+      box-sizing:border-box !important;
+    }
+
+    @media (max-width:700px){
+      #papaOverviewDialog,
+      #childWeekDialog,
+      #workroomWeekDialog{
+        width:calc(100vw - 18px) !important;
+        max-width:calc(100vw - 18px) !important;
+      }
+    }
+  `;
+  document.head.appendChild(style);
+}
+
+ensurePersonalWeekDialogWidthStyle();
 
