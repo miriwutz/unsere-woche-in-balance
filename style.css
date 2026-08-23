@@ -30841,3 +30841,137 @@ button.day-meal-list-item:hover,a.day-meal-list-item:hover{background:rgba(164,1
     max-height:146px !important;
   }
 }
+
+
+/* =========================================================
+   V112 – MOBILE ONLY – KINDERKARTEN: RADIKAL VEREINFACHT
+   Letzter Fix:
+   - keine Pseudo-Hintergründe
+   - keine PNG-Hintergründe
+   - kein dunkler separater Sockel
+   - pro Kind EINE durchgehende Kartenfarbe
+   - Bilder nur noch hell/warm darüber
+   - Desktop bleibt unberührt
+   ========================================================= */
+@media (max-width:700px) {
+
+  #schoolChildChooser .school-chooser-grid {
+    display:grid !important;
+    grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+    gap:12px !important;
+    width:100% !important;
+  }
+
+  #schoolChildChooser .school-person-card {
+    position:relative !important;
+    isolation:auto !important;
+    overflow:hidden !important;
+    min-width:0 !important;
+    border-radius:22px !important;
+    opacity:1 !important;
+    background-image:none !important;
+    box-shadow:0 7px 20px rgba(0,0,0,.14) !important;
+  }
+
+  /* ALLE alten künstlichen Kartenebenen endgültig weg */
+  #schoolChildChooser .school-person-card::before,
+  #schoolChildChooser .school-person-card::after {
+    content:none !important;
+    display:none !important;
+    position:static !important;
+    inset:auto !important;
+    width:0 !important;
+    height:0 !important;
+    opacity:0 !important;
+    background:none !important;
+    background-image:none !important;
+    -webkit-mask:none !important;
+    mask:none !important;
+    filter:none !important;
+  }
+
+  /* Eine einzige, bewusst etwas kräftigere Grundfarbe.
+     Samsung darf sie abdunkeln – sie soll trotzdem klar
+     als Flieder bzw. Rosé erkennbar bleiben. */
+  #schoolChildChooser .school-person-card.lou {
+    background:#9b8aa8 !important;
+    background-color:#9b8aa8 !important;
+    border:1px solid rgba(225,211,235,.55) !important;
+  }
+
+  #schoolChildChooser .school-person-card.fina {
+    background:#b58b86 !important;
+    background-color:#b58b86 !important;
+    border:1px solid rgba(240,211,204,.50) !important;
+  }
+
+  /* Original-Kinderbilder direkt auf der Kartenfarbe */
+  #schoolChildChooser .school-person-card > img {
+    position:relative !important;
+    z-index:1 !important;
+    display:block !important;
+    visibility:visible !important;
+    opacity:1 !important;
+    width:100% !important;
+    height:158px !important;
+    min-height:158px !important;
+    max-height:158px !important;
+    margin:0 !important;
+    padding:8px 10px 0 !important;
+    object-fit:contain !important;
+    object-position:center bottom !important;
+    background:transparent !important;
+    background-color:transparent !important;
+    mix-blend-mode:normal !important;
+  }
+
+  /* Lou: vorhandene dunkle Linien hell-golden machen */
+  #schoolChildChooser .school-person-card.lou > img {
+    filter:
+      invert(88%)
+      sepia(38%)
+      saturate(520%)
+      hue-rotate(342deg)
+      brightness(112%)
+      contrast(92%)
+      drop-shadow(0 1px 1px rgba(75,52,30,.14)) !important;
+  }
+
+  /* Fina ebenfalls warm-golden, aber etwas weniger stark */
+  #schoolChildChooser .school-person-card.fina > img {
+    filter:
+      sepia(42%)
+      saturate(145%)
+      brightness(126%)
+      contrast(101%)
+      drop-shadow(0 1px 1px rgba(75,52,30,.12)) !important;
+  }
+
+  /* Namens-/Textbereich: KEIN eigener Hintergrund mehr */
+  #schoolChildChooser .school-person-name,
+  #schoolChildChooser .school-person-sub {
+    position:relative !important;
+    z-index:2 !important;
+    background:transparent !important;
+    background-color:transparent !important;
+    background-image:none !important;
+    text-shadow:none !important;
+  }
+
+  #schoolChildChooser .school-person-name {
+    color:#fffaf3 !important;
+  }
+
+  #schoolChildChooser .school-person-sub {
+    color:#f7f0eb !important;
+    opacity:.96 !important;
+  }
+}
+
+@media (max-width:380px) {
+  #schoolChildChooser .school-person-card > img {
+    height:146px !important;
+    min-height:146px !important;
+    max-height:146px !important;
+  }
+}
