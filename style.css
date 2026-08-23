@@ -28299,3 +28299,113 @@ button.day-meal-list-item:hover,a.day-meal-list-item:hover{background:rgba(164,1
   }
 }
 
+
+/* =========================================================
+   V94 – HANDY: kompakter Wochenkopf + natürliche Tageskarten
+   ========================================================= */
+@media(max-width:700px){
+
+  /* Wochenwechsel deutlich kleiner, aber weiterhin gut drückbar. */
+  .week-nav{
+    grid-template-columns:32px minmax(0,158px) 32px !important;
+    column-gap:6px !important;
+    align-items:center !important;
+    width:auto !important;
+    max-width:100% !important;
+  }
+
+  .week-nav > div{
+    width:158px !important;
+    max-width:158px !important;
+    min-width:0 !important;
+  }
+
+  .week-nav .week-arrow{
+    width:32px !important;
+    height:32px !important;
+    min-width:32px !important;
+    min-height:32px !important;
+    font-size:1.25rem !important;
+  }
+
+  .week-nav #weekTitle{
+    font-size:1.42rem !important;
+    line-height:1 !important;
+    letter-spacing:.01em !important;
+    white-space:nowrap !important;
+  }
+
+  .week-nav .today-link{
+    margin-top:3px !important;
+    font-size:.65rem !important;
+  }
+
+  /* Tageskarten am Handy: Höhe nur noch nach echtem Inhalt.
+     Keine Desktop-Gleichschaltung, keine künstliche Leerfläche. */
+  #weekGrid .day,
+  .week-grid .day{
+    min-height:0 !important;
+    height:auto !important;
+    max-height:none !important;
+    display:flex !important;
+    flex-direction:column !important;
+    padding:14px 12px !important;
+  }
+
+  .week-grid .day > .week-day-topband,
+  .week-grid .day > .week-band,
+  .week-grid .day > .week-band-meal,
+  .week-grid .day > .week-band-events,
+  .week-grid .day > .week-band-school,
+  .week-grid .day > .week-band-todos,
+  .week-grid .day > .week-band-videos{
+    min-height:0 !important;
+    height:auto !important;
+    max-height:none !important;
+  }
+
+  /* Am Handy gehört der ruhige Sockel direkt nach dem Inhalt,
+     nicht künstlich an den unteren Rand eines hohen Fensters. */
+  .week-grid .day > .day-bottom-stack{
+    margin-top:10px !important;
+  }
+
+  /* Leere Wochenbänder nehmen sicher keinen Platz ein. */
+  .week-grid .day .week-band-unused{
+    display:none !important;
+    min-height:0 !important;
+    height:0 !important;
+    margin:0 !important;
+    padding:0 !important;
+  }
+
+  /* Zwischen den Tagen etwas weniger Leerraum. */
+  .week-grid{
+    gap:10px !important;
+  }
+
+  /* Wochenkopf-Aktionszeile kompakt rechts neben/unter dem Datum.
+     Die eigentlichen Icons werden in app.js final definiert,
+     weil ältere JS-injizierte CSS-Regeln sonst die Datei überstimmen. */
+  .week-head-actions{
+    justify-content:flex-end !important;
+    align-items:center !important;
+    gap:8px !important;
+    margin:0 !important;
+  }
+}
+
+@media(max-width:380px){
+  .week-nav{
+    grid-template-columns:30px minmax(0,148px) 30px !important;
+    column-gap:5px !important;
+  }
+  .week-nav > div{
+    width:148px !important;
+    max-width:148px !important;
+  }
+  .week-nav #weekTitle{
+    font-size:1.32rem !important;
+  }
+}
+
