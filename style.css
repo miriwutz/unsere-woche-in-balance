@@ -27179,3 +27179,186 @@ button.day-meal-list-item:hover,a.day-meal-list-item:hover{background:rgba(164,1
   margin-left:0 !important;
 }
 
+
+/* =========================================================
+   V86 – Überblick + Familie & Farben endgültig ordnen
+   ========================================================= */
+
+/* 1) Die vier Übersichtsköpfe: Pfeil und Text IMMER links zusammen.
+      Höhere Spezifität als ältere V81/V84-Regeln. */
+.time-tracker-card.overview-card-collapsed > .overview-card-head,
+.recipe-link-tracker-card.overview-card-collapsed > .overview-card-head,
+.exercise-overview-card.overview-card-collapsed > .section-head{
+  display:grid !important;
+  grid-template-columns:16px minmax(0,1fr) !important;
+  justify-content:stretch !important;
+  align-items:center !important;
+  gap:8px !important;
+  width:100% !important;
+}
+
+.time-tracker-card.overview-card-collapsed > .overview-card-head > .overview-collapse-toggle,
+.recipe-link-tracker-card.overview-card-collapsed > .overview-card-head > .overview-collapse-toggle,
+.exercise-overview-card.overview-card-collapsed > .section-head > .overview-collapse-toggle{
+  grid-column:1 !important;
+  grid-row:1 !important;
+  margin:0 !important;
+  justify-self:start !important;
+}
+
+.time-tracker-card.overview-card-collapsed > .overview-card-head > div,
+.recipe-link-tracker-card.overview-card-collapsed > .overview-card-head > div,
+.exercise-overview-card.overview-card-collapsed > .section-head > div{
+  grid-column:2 !important;
+  grid-row:1 !important;
+  justify-self:start !important;
+  width:auto !important;
+  min-width:0 !important;
+  margin:0 !important;
+}
+
+/* Zeitkarte genauso kompakt wie Rezepte/Videos */
+.time-tracker-card.overview-card-collapsed,
+.recipe-link-tracker-card.overview-card-collapsed,
+.exercise-overview-card.overview-card-collapsed{
+  min-height:0 !important;
+  height:auto !important;
+  padding:11px 14px !important;
+}
+.time-tracker-card.overview-card-collapsed > .overview-card-head,
+.recipe-link-tracker-card.overview-card-collapsed > .overview-card-head,
+.exercise-overview-card.overview-card-collapsed > .section-head{
+  min-height:42px !important;
+}
+
+/* 2) Familie & Farben: eine sinnvolle Desktop-Zeile.
+      Name direkt neben seinem Farbpunkt, danach Allgemein + Rahmen. */
+#settingsGroupFamily .settings-main-body{
+  padding:10px 12px 12px !important;
+}
+
+#settingsGroupFamily .family-settings-hint{
+  margin:0 0 8px !important;
+  font-size:.68rem !important;
+  color:#9a8174 !important;
+}
+
+#settingsGroupFamily .schoolyear-setting{
+  margin:0 0 10px !important;
+  padding:8px 10px !important;
+  min-height:44px !important;
+  display:flex !important;
+  align-items:center !important;
+  gap:8px !important;
+}
+#settingsGroupFamily .schoolyear-setting span{
+  font-size:.64rem !important;
+}
+#settingsGroupFamily #schoolYearSelect{
+  width:116px !important;
+  min-width:116px !important;
+}
+
+#settingsGroupFamily .family-settings-grid{
+  display:grid !important;
+  grid-template-columns:
+    minmax(92px,1fr) 34px
+    minmax(92px,1fr) 34px
+    minmax(92px,1fr) 34px
+    minmax(92px,1fr) 34px
+    82px 34px
+    150px !important;
+  gap:8px !important;
+  align-items:end !important;
+  padding:0 !important;
+}
+
+/* Alle Labels kompakt, keine unnötigen großen Überschriften. */
+#settingsGroupFamily .family-settings-grid > label{
+  min-width:0 !important;
+  margin:0 !important;
+  display:grid !important;
+  gap:3px !important;
+}
+
+/* Name/Farbe-Zwischenüberschriften ausblenden – Zuordnung entsteht durch Nähe. */
+#settingsGroupFamily .family-settings-grid > label:nth-child(-n+8) > span{
+  display:none !important;
+}
+
+/* Namensfelder bewusst kurz */
+#settingsGroupFamily #familyNameA,
+#settingsGroupFamily #familyNameB,
+#settingsGroupFamily #familyNameC,
+#settingsGroupFamily #familyNameD{
+  width:100% !important;
+  min-width:0 !important;
+  height:36px !important;
+  padding:7px 10px !important;
+}
+
+/* Farbpunkte direkt neben dem Namen */
+#settingsGroupFamily input[type="color"]{
+  width:30px !important;
+  height:30px !important;
+  min-width:30px !important;
+  min-height:30px !important;
+  padding:2px !important;
+  border-radius:50% !important;
+  justify-self:start !important;
+  align-self:center !important;
+}
+
+/* Allgemein: Beschriftung + Punkt nebeneinander, ohne leeres Namensfeld */
+#settingsGroupFamily .family-settings-grid > label:nth-child(9){
+  grid-template-columns:auto 34px !important;
+  align-items:center !important;
+  gap:6px !important;
+}
+#settingsGroupFamily .family-settings-grid > label:nth-child(9) > span{
+  display:block !important;
+  font-size:.66rem !important;
+  color:#8f7668 !important;
+}
+#settingsGroupFamily .family-settings-grid > label:nth-child(9) #familyColorGeneral{
+  grid-column:2 !important;
+}
+
+/* Rahmen ganz rechts; Button entfällt, Änderung wird per JS sofort übernommen. */
+#settingsGroupFamily .family-settings-grid > label:nth-child(10){
+  grid-column:11 !important;
+}
+#settingsGroupFamily .family-settings-grid > label:nth-child(10) > span{
+  font-size:.62rem !important;
+  color:#8f7668 !important;
+}
+#settingsGroupFamily #familyBorderWidth{
+  width:100% !important;
+  height:36px !important;
+}
+#settingsGroupFamily #applyFamilyBorderWidth{
+  display:none !important;
+}
+
+/* Tablet: sinnvoll auf zwei Zeilen statt winzig werden. */
+@media(max-width:1180px){
+  #settingsGroupFamily .family-settings-grid{
+    grid-template-columns:
+      minmax(110px,1fr) 34px
+      minmax(110px,1fr) 34px
+      minmax(110px,1fr) 34px
+      minmax(110px,1fr) 34px !important;
+  }
+  #settingsGroupFamily .family-settings-grid > label:nth-child(9){
+    grid-column:1 / 3 !important;
+  }
+  #settingsGroupFamily .family-settings-grid > label:nth-child(10){
+    grid-column:3 / 5 !important;
+  }
+}
+
+@media(max-width:700px){
+  #settingsGroupFamily .family-settings-grid{
+    grid-template-columns:minmax(120px,1fr) 34px minmax(120px,1fr) 34px !important;
+  }
+}
