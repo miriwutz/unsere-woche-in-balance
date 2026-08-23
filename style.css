@@ -26041,3 +26041,34 @@ button.day-meal-list-item:hover,a.day-meal-list-item:hover{background:rgba(164,1
   }
 }
 
+/* V71 – Kinder-Zeichen: kein weißer Kreis mehr */
+.child-symbol-button,
+.child-symbol-button.active,
+.child-hero-symbol,
+.child-routine-symbol,
+.child-routine-header-symbol,
+[data-child-symbol-button],
+[data-child-routine-symbol] {
+  background: transparent !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
+}
+
+/* Auch eventuelle innere weiße Fläche des Zeichen-Buttons entfernen */
+.child-symbol-button::before,
+.child-symbol-button::after,
+.child-hero-symbol::before,
+.child-hero-symbol::after {
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+/* Falls der runde Button über die bestehende allgemeine Symbol-Klasse läuft */
+.child-page .symbol-button,
+.child-page .hero-symbol,
+.child-page .routine-symbol {
+  background: transparent !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
+}
+
