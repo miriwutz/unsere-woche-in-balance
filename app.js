@@ -17969,3 +17969,170 @@ setTimeout(()=>{
   requestAnimationFrame(v67ApplyRoutineSigns);
 })();
 
+/* =========================================================
+   V68 – Wochenplanung im Überblick vollständig
+   - sichtbare 7-Tage-Wochenansicht direkt unter dem Editor
+   - Rückweg zur richtigen Kinderseite
+   - Lou/Fina exakt gleiche Struktur
+   ========================================================= */
+(function(){
+
+  function childRoutineOverviewWeekLabel(offset){
+    return offset===0 ? "Diese Woche"
+      : offset===1 ? "Nächste Woche"
+      : `+${offset} Wochen`;
+  }
+
+  function childRoutineOverviewMonday(offset){
+    const monday=getMonday(new Date());
+    monday.setDate(monday.getDate()+Number(offset||0)*7);
+    monday.setHours(12,0,0,0);
+    return monday;
+  }
+
+  function childRoutineOverviewPreviewHtml(id,offset){
+    const store=childRoutineStore(id);
+    const weekKey=childRoutineWeekKey(offset);
+    const planned=store.items
+      .filter(item=>childRoutineAppliesToWeek(item,weekKey))
+      .sort((a,b)=>Number(a.order||0)-Number(b.order||0));
+
+    const monday=childRoutineOverviewMonday(offset);
+    const names=["Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag","Sonntag"];
+    const partLabels=store.areaLabels||childRoutineDefaultAreas;
+
+    const days=names.map((name,index)=>{
+      const date=new Date(monday);
+      date.setDate(monday.getDate()+index);
+
+      const items=planned.filter(item=>childRoutineAppliesToDate(item,date));
+
+      return `
+        <section class="child-routine-overview-day ${dateKey(date)===dateKey(new Date())?"is-today":""}">
+          <header>
+            <strong>${name}</strong>
+            <small>${String(date.getDate()).padStart(2,"0")}.${String(date.getMonth()+1).padStart(2,"0")}.</small>
+          </header>
+          <div class="child-routine-overview-day-body">
+            ${items.length ? items.map(item=>`
+              <div class="child-routine-overview-preview-item"
+                   data-preview-routine-id="${escapeHtml(item.id)}">
+                <span class="child-routine-overview-preview-symbol">${childRoutineSymbol(item.part||"morning")}</span>
+                <div>
+                  <strong>${escapeHtml(item.title||"Routinepunkt")}</strong>
+                  <small>
+                    ${escapeHtml(partLabels[item.part]||childRoutineDefaultAreas[item.part]||"")}
+                    ${item.url?` · ${escapeHtml(childRoutineVideoCategoryLabel(id,item.category||"none"))}`:""}
+                    ${item.sticky?" · jede Woche":""}
+                  </small>
+                </div>
+              </div>
+            `).join("") : `
+              <div class="child-routine-overview-empty" aria-label="Nichts geplant">
+                <span>☾</span><small>✦</small>
+              </div>
+            `}
+          </div>
+        </section>
+      `;
+    }).join("");
+
+    return `
+      <section class="child-routine-overview-week-preview">
+        <div class="child-routine-overview-week-preview-head">
+          <div>
+            <strong>Wochenansicht – ${escapeHtml(childRoutinePersonName(id))}</strong>
+            <small>${childRoutineOverviewWeekLabel(offset)}</small>
+          </div>
+          <span class="child-routine-overview-preview-hint">
+            So erscheint die Einteilung anschließend bei ${escapeHtml(childRoutinePersonName(id))}.
+          </span>
+        </div>
+        <div class="child-routine-overview-week-grid">
+          ${days}
+        </div>
+      </section>
+    `;
+  }
+
+  function openCorrectChildPageFromRoutineOverview(id){
+    /* Zurück in "Für euch" */
+    document.querySelector('[data-view="school"]')?.click();
+
+    setTimeout(()=>{
+      /* direkt die zuvor bearbeitete Kinderseite öffnen */
+      renderSchoolChildDashboard(String(id));
+
+      /* möglichst oben beim Kinderbereich landen */
+      document.querySelector("#schoolChildDashboard")
+        ?.scrollIntoView({behavior:"smooth",block:"start"});
+    },60);
+  }
+
+  const renderBeforeV68=renderChildRoutineOverviewEditor;
+
+  renderChildRoutineOverviewEditor=function(){
+    renderBeforeV68();
+
+    const section=document.querySelector("#childRoutineOverviewEditor");
+    if(!section) return;
+
+    const id=String(activeChildRoutineEditorId||"1");
+    const offset=Number(activeChildRoutineEditorWeekOffset||0);
+
+    section.dataset.child=id;
+
+    /* Kopfbereich: eindeutiger Rückweg */
+    const head=section.querySelector(".personal-subject-settings-head");
+    if(head){
+      head.classList.add("child-routine-overview-head-v68");
+
+      let back=head.querySelector("#backToChildFromRoutineOverview");
+      if(!back){
+        back=document.createElement("button");
+        back.type="button";
+        back.id="backToChildFromRoutineOverview";
+        back.className="child-routine-back-to-child";
+        head.appendChild(back);
+      }
+      back.textContent=`← Zurück zu ${childRoutinePersonName(id)}`;
+      back.onclick=()=>openCorrectChildPageFromRoutineOverview(id);
+    }
+
+    /* Wochenreiter klar mit der sichtbaren Vorschau koppeln */
+    const weekTabs=section.querySelector(".child-routine-editor-week-tabs");
+    if(weekTabs){
+      weekTabs.setAttribute("aria-label","Woche auswählen");
+    }
+
+    /* Vorschau immer NACH gespeicherten Punkten anzeigen.
+       Dadurch sieht man direkt nach +Routinepunkt, wo der Eintrag gelandet ist. */
+    section.querySelector("#childRoutineOverviewWeekPreview")?.remove();
+
+    const preview=document.createElement("div");
+    preview.id="childRoutineOverviewWeekPreview";
+    preview.innerHTML=childRoutineOverviewPreviewHtml(id,offset);
+
+    const list=section.querySelector(".child-routine-editor-list");
+    if(list){
+      list.insertAdjacentElement("afterend",preview);
+    }else{
+      section.appendChild(preview);
+    }
+
+    /* Die ausgewählte Woche zusätzlich unmittelbar über der Vorschau sichtbar. */
+    section.querySelectorAll("[data-child-routine-editor-week]").forEach(btn=>{
+      btn.setAttribute(
+        "aria-current",
+        Number(btn.dataset.childRoutineEditorWeek||0)===offset ? "true" : "false"
+      );
+    });
+  };
+
+  window.renderChildRoutineOverviewEditor=renderChildRoutineOverviewEditor;
+
+  /* initial ebenfalls mit vollständiger Woche rendern */
+  renderChildRoutineOverviewEditor();
+
+})();
+
