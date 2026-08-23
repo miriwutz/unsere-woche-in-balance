@@ -26439,3 +26439,61 @@ button.day-meal-list-item:hover,a.day-meal-list-item:hover{background:rgba(164,1
   margin-left:auto !important;
 }
 
+
+/* =========================================================
+   V78 – Kinder-Routinen geschlossen kompakt und einheitlich
+   ========================================================= */
+
+/* Geschlossene Routinenkarten bei Lou/Fina deutlich flacher */
+#childRoutineAreaCards details.child-routine-area-card:not([open]){
+  min-height:0 !important;
+  height:auto !important;
+  padding:0 !important;
+}
+
+/* Nur eine ruhige Kopfzeile – nicht mehr diese hohen Kästen */
+#childRoutineAreaCards details.child-routine-area-card:not([open]) > .child-routine-area-title{
+  min-height:0 !important;
+  height:auto !important;
+  padding:11px 14px !important;
+  margin:0 !important;
+  display:flex !important;
+  align-items:center !important;
+  gap:8px !important;
+}
+
+/* Öffnungspfeil klein und links, wie bei den anderen eingeklappten Bereichen */
+#childRoutineAreaCards .child-routine-area-chevron{
+  order:-10 !important;
+  width:14px !important;
+  min-width:14px !important;
+  margin:0 2px 0 0 !important;
+  font-size:.72rem !important;
+  line-height:1 !important;
+  color:#9b7d67 !important;
+  transform:rotate(-90deg);
+  transition:transform .18s ease;
+}
+
+/* offen wieder nach unten */
+#childRoutineAreaCards details[open] .child-routine-area-chevron{
+  transform:rotate(0deg);
+}
+
+/* Symbol direkt danach, Titel normal */
+#childRoutineAreaCards .child-routine-area-symbol{
+  order:-5 !important;
+}
+
+/* Geschlossene Karten in 2 Spalten bleiben gleich hoch */
+#childRoutineAreaCards.child-routine-area-cards{
+  align-items:start !important;
+  gap:9px 12px !important;
+}
+
+/* Bei geöffnetem Bereich darf die Karte natürlich wieder wachsen */
+#childRoutineAreaCards details.child-routine-area-card[open]{
+  height:auto !important;
+  min-height:0 !important;
+}
+
