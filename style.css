@@ -26497,3 +26497,124 @@ button.day-meal-list-item:hover,a.day-meal-list-item:hover{background:rgba(164,1
   min-height:0 !important;
 }
 
+
+/* =========================================================
+   V79 – Individuelle Einstellungen im Schriftbild der Übersicht
+   ========================================================= */
+
+.family-settings{
+  border:1px solid rgba(137,113,96,.15) !important;
+  border-radius:17px !important;
+  background:#fffdf9 !important;
+  box-shadow:none !important;
+}
+
+.family-settings > summary{
+  list-style:none !important;
+  display:grid !important;
+  grid-template-columns:30px minmax(0,1fr) 18px !important;
+  align-items:center !important;
+  gap:10px !important;
+  min-height:58px !important;
+  padding:10px 14px !important;
+  cursor:pointer !important;
+  color:#5a483f !important;
+}
+
+.family-settings > summary::-webkit-details-marker{
+  display:none !important;
+}
+
+/* Keine Farbpalette mehr – stattdessen ein ruhiges Bearbeiten-Zeichen */
+.family-settings-edit-icon{
+  width:28px;
+  height:28px;
+  display:grid;
+  place-items:center;
+  border:1px solid rgba(170,139,101,.18);
+  border-radius:50%;
+  background:#faf5e9;
+  color:#aa8557;
+  font-family:Georgia,serif;
+  font-size:.88rem;
+}
+
+/* Gleiches Schriftprinzip wie Online-Rezepte / Übungen & Videos */
+.family-settings-summary-copy{
+  min-width:0;
+  display:grid;
+  gap:1px;
+}
+
+.family-settings-summary-copy small{
+  color:#a2826f;
+  font-size:.57rem;
+  font-weight:600;
+  letter-spacing:.18em;
+  line-height:1.1;
+}
+
+.family-settings-summary-copy strong{
+  color:#4e3c34;
+  font-family:"Playfair Display",Georgia,serif;
+  font-size:1rem;
+  line-height:1.18;
+  font-weight:650;
+}
+
+/* Kleiner, unaufdringlicher Öffnungspfeil rechts */
+.family-settings-summary-chevron{
+  justify-self:end;
+  color:#9c7d68;
+  font-size:.9rem;
+  line-height:1;
+  transition:transform .18s ease;
+}
+
+.family-settings[open] .family-settings-summary-chevron{
+  transform:rotate(90deg);
+}
+
+.family-settings[open] > summary{
+  border-bottom:1px solid rgba(137,113,96,.12) !important;
+}
+
+
+
+/* V80 – kompakte, ruhige Einstellungsgruppen */
+.family-settings-grid{
+  grid-template-columns:repeat(5,minmax(0,1fr)) !important;
+  gap:9px !important;
+}
+.family-settings-grid label{min-width:0 !important}
+.family-settings-grid input[type="color"]{
+  width:34px !important;height:34px !important;min-height:34px !important;
+  padding:2px !important;border-radius:50% !important;justify-self:start !important;
+}
+.settings-v80-group{
+  margin:10px 14px !important;border:1px solid rgba(137,113,96,.15) !important;
+  border-radius:15px !important;background:#fffdf9 !important;overflow:hidden !important;
+}
+.settings-v80-group>summary{
+  list-style:none;display:flex;align-items:center;gap:9px;padding:10px 13px;cursor:pointer;
+}
+.settings-v80-group>summary::-webkit-details-marker{display:none}
+.settings-v80-arrow{font-size:.78rem;color:#9c7d68;transition:transform .15s ease}
+.settings-v80-group[open] .settings-v80-arrow{transform:rotate(90deg)}
+.settings-v80-group>summary span:last-child{display:grid;gap:1px}
+.settings-v80-group>summary small{
+  font-size:.55rem;letter-spacing:.16em;color:#a2826f;font-weight:600;
+}
+.settings-v80-group>summary strong{
+  font-family:"Playfair Display",Georgia,serif;font-size:.98rem;color:#4e3c34;
+}
+.settings-v80-group[open]>summary{border-bottom:1px solid rgba(137,113,96,.11)}
+.settings-v80-group>h2,.settings-v80-group>h3,.settings-v80-group>h4{display:none !important}
+
+/* Routinen: keine künstliche Trennung zwischen Tagesroutinen und Wochenplanung */
+.settings-routines-together[open]{
+  padding-bottom:10px;
+}
+@media(max-width:900px){
+  .family-settings-grid{grid-template-columns:repeat(2,minmax(0,1fr)) !important}
+}
