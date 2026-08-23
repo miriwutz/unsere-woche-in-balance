@@ -17801,3 +17801,64 @@ setTimeout(()=>{
 
 })();
 
+
+/* =========================================================
+   V66 – Routinenlogik final
+   Unser Überblick = planen/bearbeiten
+   Lou + Fina = ansehen + abhaken
+   ========================================================= */
+(function(){
+  /* Kinderfenster bewusst frei von Bearbeitungs-/Planungszugängen halten. */
+  const renderChildRoutineDialogBeforeV66 = renderChildRoutineDialog;
+
+  renderChildRoutineDialog = function(){
+    renderChildRoutineDialogBeforeV66();
+
+    const dialog = ensureChildRoutineDialog();
+    if(!dialog) return;
+
+    /* Frühere Hinweise/Buttons zur Bearbeitung im Überblick aus dem
+       Kinderfenster entfernen. Die Wochenreiter + Wochenansicht bleiben. */
+    dialog.querySelector("#childRoutinePlanningNote")?.remove();
+    dialog.querySelector("#openChildRoutinePlanningFromDialog")?.remove();
+
+    /* In der Kinderansicht gibt es keine Editier-/Löschfunktionen. */
+    dialog.querySelectorAll(
+      ".routine-edit-btn, .routine-delete-btn, [data-child-routine-edit], [data-child-routine-delete]"
+    ).forEach(el=>el.remove());
+
+    /* Wochenpunkte bleiben anklickbar/abhakbar. */
+    dialog.querySelectorAll("input[data-child-routine-check]").forEach(input=>{
+      input.disabled = false;
+    });
+  };
+  window.renderChildRoutineDialog = renderChildRoutineDialog;
+
+  /* Im Überblick klar benennen, dass HIER geplant und bearbeitet wird. */
+  const renderChildRoutineOverviewEditorBeforeV66 = renderChildRoutineOverviewEditor;
+
+  renderChildRoutineOverviewEditor = function(){
+    renderChildRoutineOverviewEditorBeforeV66();
+
+    const section = document.querySelector("#childRoutineOverviewEditor");
+    if(!section) return;
+
+    const id = String(activeChildRoutineEditorId || "1");
+    const heading = section.querySelector(".personal-subject-settings-head");
+    if(heading){
+      heading.innerHTML = `
+        <strong>Wochenplanung – ${escapeHtml(childRoutinePersonName(id))}</strong>
+        <small>
+          Hier planst und bearbeitest du die Wochenpunkte. Lou und Fina sehen
+          ihre Einteilung anschließend in „Meine Routinen“ und können sie dort abhaken.
+        </small>
+      `;
+    }
+
+    /* Keine doppelte Wochenauswahl: ausschließlich die vorhandenen Reiter. */
+    section.querySelector("#childRoutineEditorWeek")?.closest("label")?.remove();
+  };
+  window.renderChildRoutineOverviewEditor = renderChildRoutineOverviewEditor;
+
+  renderChildRoutineOverviewEditor();
+})();
