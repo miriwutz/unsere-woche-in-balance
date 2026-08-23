@@ -19651,3 +19651,15 @@ setTimeout(()=>{
   setTimeout(v85Refresh,280);
 })();
 
+
+/* =========================================================
+   V86 – Familie & Farben kompakt + Rahmen sofort anwenden
+   ========================================================= */
+(function(){
+  const border=document.querySelector("#familyBorderWidth");
+  const apply=document.querySelector("#applyFamilyBorderWidth");
+  if(border && apply && border.dataset.v86Auto!=="1"){
+    border.dataset.v86Auto="1";
+    border.addEventListener("change",()=>apply.click());
+  }
+})();
