@@ -14354,6 +14354,57 @@ const schoolChildIcons = [
   "🐳","🦜","🦉","🐢","🐸","🐙","🐧","🦦","🦥","🦔","🐿️","💩"
 ];
 
+/* Für "Mein Zeichen": zusätzlich ruhigere, edlere Symbole.
+   Die normalen Aufgabenzeichen bleiben unverändert. */
+const schoolPersonalIcons = [
+  "🌙","⭐","✨","💫","☀️","🌈","🌸","🌼","🌻","🍄","🌿","🍀","🌱","🐚",
+  "🦋","🐞","🐝","🐾","🐈","🐕","🐇","🦊","🐼","🐨","🦄","🐴","🐎","🐬",
+  "🐳","🦜","🦉","🐢","🐸","🐙","🐧","🦦","🦥","🦔","🐿️",
+  "☾","✧","✦","❈","❉","✾","❀","⚘","☼","❂","⊙","∞","🪷",
+  "__flower_of_life__","__moon_stars__"
+];
+
+function schoolPersonalIconMarkup(icon){
+  if(icon==="__flower_of_life__"){
+    return `<span class="school-personal-svg-icon school-flower-life" aria-hidden="true">
+      <svg viewBox="0 0 64 64" focusable="false">
+        <g fill="none" stroke="currentColor" stroke-width="1.35">
+          <circle cx="32" cy="32" r="10"/>
+          <circle cx="22" cy="32" r="10"/>
+          <circle cx="42" cy="32" r="10"/>
+          <circle cx="27" cy="23.34" r="10"/>
+          <circle cx="37" cy="23.34" r="10"/>
+          <circle cx="27" cy="40.66" r="10"/>
+          <circle cx="37" cy="40.66" r="10"/>
+          <circle cx="32" cy="32" r="28"/>
+        </g>
+      </svg>
+    </span>`;
+  }
+
+  if(icon==="__moon_stars__"){
+    return `<span class="school-personal-svg-icon school-moon-stars" aria-hidden="true">
+      <svg viewBox="0 0 64 64" focusable="false">
+        <g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M29 12c-9 4-13 15-9 24s15 13 24 9c-10 1-18-6-19-16-1-7 1-12 4-17z"/>
+          <path d="M47 16v8M43 20h8"/>
+          <path d="M48 35v5M45.5 37.5h5"/>
+          <path d="M16 13v5M13.5 15.5h5"/>
+        </g>
+      </svg>
+    </span>`;
+  }
+
+  return escapeHtml(icon || "✦");
+}
+
+function schoolPersonalIconLabel(icon){
+  if(icon==="__flower_of_life__") return "Blume des Lebens";
+  if(icon==="__moon_stars__") return "Mond und Sterne";
+  return `Zeichen ${icon}`;
+}
+
+
 function schoolChildDefaultIcon(id){
   return id === "1" ? (state.familySettings.c?.icon || "⭐") : (state.familySettings.d?.icon || "🌙");
 }
@@ -14443,7 +14494,7 @@ function renderSchoolChildDashboard(id){
                 class="school-hero-v4-icon"
                 data-school-timetable-link="${id}"
                 title="${childName} – Stundenplan ansehen"
-                aria-label="${childName} – Stundenplan ansehen">${icon}</button>
+                aria-label="${childName} – Stundenplan ansehen">${schoolPersonalIconMarkup(icon)}</button>
         <div class="school-hero-v4-text">
           <span>Hey ${escapeHtml(childName)}!</span>
           <strong>${escapeHtml(quoteText)}</strong>
@@ -14457,8 +14508,14 @@ function renderSchoolChildDashboard(id){
   }
   const host=document.querySelector("#schoolIconChoices");
   if(host){
-    host.innerHTML=schoolChildIcons.map(x=>
-      `<button type="button" class="school-icon-choice ${x===icon?"active":""}" data-icon="${x}" aria-label="Zeichen ${x}">${x}</button>`
+    host.innerHTML=schoolPersonalIcons.map(x=>
+      `<button type="button"
+               class="school-icon-choice ${x===icon?"active":""}"
+               data-icon="${x}"
+               aria-label="${escapeHtml(schoolPersonalIconLabel(x))}"
+               title="${escapeHtml(schoolPersonalIconLabel(x))}">
+         ${schoolPersonalIconMarkup(x)}
+       </button>`
     ).join("");
   }
 
@@ -15957,6 +16014,58 @@ const defaultLouRoutineSentences = {
   ]
 };
 
+
+const defaultFinaRoutineSentences = {
+  morning: [
+    {step:"breath", text:"3 ruhige Atemzüge – tief einatmen und langsam ausatmen."},
+    {step:"water", text:"Ein Glas Wasser trinken."},
+    {step:"wash", text:"Gesicht waschen und Zähne putzen."},
+    {step:"dress", text:"In Ruhe anziehen und schauen, ob alles für die Schule da ist."},
+    {step:"room", text:"Bettdecke richten und 2 Dinge wegräumen."},
+    {step:"start", text:"Was möchte ich heute Schönes erleben?"}
+  ],
+  school: [
+    {step:"arrival", text:"Vor dem Start einmal tief durchatmen und die Schultern locker lassen."},
+    {step:"water", text:"In der Pause etwas trinken."},
+    {step:"pause", text:"Wenn mir etwas zu viel wird: kurz Füße spüren und langsam ausatmen."},
+    {step:"kind", text:"Freundlich mit mir selbst reden, auch wenn etwas noch nicht klappt."},
+    {step:"ask", text:"Wenn ich etwas nicht verstehe, darf ich nachfragen."}
+  ],
+  afterschool: [
+    {step:"home", text:"Schuhe, Jacke und Schultasche an ihren Platz."},
+    {step:"snack", text:"Etwas trinken und eine kleine Pause machen."},
+    {step:"reset", text:"5 Minuten Zimmer-Reset: Spielsachen und Kleidung wegräumen."},
+    {step:"move", text:"Kurz rausgehen, tanzen, hüpfen oder mich bewegen."},
+    {step:"schoolbag", text:"Schultasche für morgen kurz kontrollieren."}
+  ],
+  evening: [
+    {step:"wash", text:"Zähne putzen, Gesicht waschen und Schlafsachen anziehen."},
+    {step:"room", text:"2 Minuten aufräumen, damit es morgen gemütlich ist."},
+    {step:"prepare", text:"Kleidung oder wichtige Sachen für morgen bereitlegen."},
+    {step:"quiet", text:"Etwas Ruhiges machen: lesen, kuscheln oder Musik hören."},
+    {step:"close", text:"An eine schöne Sache von heute denken – dann darf der Tag fertig sein."}
+  ]
+};
+
+function ensureFinaRoutineStarterPack(){
+  state.familySettings = state.familySettings || {};
+  state.familySettings.routineStarterVersions =
+    state.familySettings.routineStarterVersions &&
+    typeof state.familySettings.routineStarterVersions === "object"
+      ? state.familySettings.routineStarterVersions
+      : {};
+
+  if(Number(state.familySettings.routineStarterVersions.fina || 0) >= 1) return;
+
+  ensurePersonalRoutineSentences();
+  state.familySettings.personalRoutineSentences["2"] =
+    cloneRoutineSet(defaultFinaRoutineSentences);
+
+  state.familySettings.routineStarterVersions.fina = 1;
+  persistFamilySettingsImmediately?.();
+  save();
+}
+
 function cloneRoutineSet(source){
   return Object.fromEntries(
     Object.entries(source).map(([area,rows])=>[
@@ -15989,14 +16098,20 @@ function ensurePersonalRoutineSentences(){
 
     if(!current || typeof current!=="object"){
       state.familySettings.personalRoutineSentences[id] =
-        id==="1" ? cloneRoutineSet(defaultLouRoutineSentences) : clonePersonalRoutineDefaults();
+        id==="1"
+          ? cloneRoutineSet(defaultLouRoutineSentences)
+          : id==="2"
+            ? cloneRoutineSet(defaultFinaRoutineSentences)
+            : clonePersonalRoutineDefaults();
       return;
     }
 
     personalRoutineAreaMeta.forEach(([area])=>{
       const defaults = id==="1"
         ? (defaultLouRoutineSentences[area] || defaultPersonalRoutineSentences[area])
-        : defaultPersonalRoutineSentences[area];
+        : id==="2"
+          ? (defaultFinaRoutineSentences[area] || defaultPersonalRoutineSentences[area])
+          : defaultPersonalRoutineSentences[area];
       const existing=Array.isArray(current[area]) ? current[area] : [];
 
       current[area]=defaults.map(def=>{
@@ -16276,7 +16391,11 @@ function renderPersonalRoutineSentenceSettings(){
       if(!confirm(`Die Routinen-Sätze von ${personalTimetablePersonLabel(id)} auf die ursprüngliche Version zurücksetzen?`)) return;
 
       ensurePersonalRoutineSentences()[id] =
-        id==="1" ? cloneRoutineSet(defaultLouRoutineSentences) : clonePersonalRoutineDefaults();
+        id==="1"
+          ? cloneRoutineSet(defaultLouRoutineSentences)
+          : id==="2"
+            ? cloneRoutineSet(defaultFinaRoutineSentences)
+            : clonePersonalRoutineDefaults();
       save();
       renderPersonalRoutineSentenceSettings();
       if(id==="mama") applyMamaRoutineSentences();
@@ -16428,6 +16547,7 @@ function ensurePersonalRoutineSentenceStyle(){
 
 ensurePersonalRoutineSentenceStyle();
 ensurePersonalRoutineSentences();
+ensureFinaRoutineStarterPack();
 renderPersonalRoutineSentenceSettings();
 applyMamaRoutineSentences();
 
@@ -16668,7 +16788,7 @@ function ensureChildRoutineDialog(){
           <h2 id="childRoutineDialogTitle">Meine Routinen</h2>
           <p id="childRoutineDialogSubtitle"></p>
         </div>
-        <div class="child-routine-hero-mark" aria-hidden="true">☾ ✦</div>
+        <div class="child-routine-hero-mark" id="childRoutinePersonalSign" aria-hidden="true"></div>
         <button id="closeChildRoutineDialog" class="child-routine-close" type="button" aria-label="Schließen">×</button>
       </header>
 
@@ -16727,6 +16847,14 @@ function renderChildRoutineDialog(){
   dialog.dataset.child=id;
   dialog.querySelector("#childRoutineDialogTitle").textContent=childRoutineTitle(id);
   dialog.querySelector("#childRoutineDialogSubtitle").textContent=childRoutineSubtitle(id);
+
+  const routinePersonalSign=dialog.querySelector("#childRoutinePersonalSign");
+  if(routinePersonalSign){
+    const memberKey=schoolMemberKey(id);
+    const selectedIcon=state.familySettings[memberKey]?.icon || (id==="1"?"⭐":"🌙");
+    routinePersonalSign.innerHTML=schoolPersonalIconMarkup(selectedIcon);
+    routinePersonalSign.setAttribute("title",schoolPersonalIconLabel(selectedIcon));
+  }
 
   dialog.querySelectorAll("[data-child-routine-week]").forEach(btn=>{
     btn.classList.toggle("active",Number(btn.dataset.childRoutineWeek||0)===activeChildRoutineWeekOffset);
