@@ -16013,11 +16013,20 @@ setTimeout(()=>{
   applyMyWeekAppearance();
 },180);
 
-/* Beim Öffnen/Neu-Rendern persönlicher Wochenansichten automatisch anwenden. */
+/* Beim Neu-Rendern persönlicher Wochenansichten automatisch anwenden.
+   Stabilität: NICHT mehr den gesamten document.body beobachten,
+   sondern ausschließlich die drei Wochenfenster, in denen diese
+   Darstellung überhaupt gebraucht wird. */
 const myWeekAppearanceObserver=new MutationObserver(()=>{
   requestAnimationFrame(applyMyWeekAppearance);
 });
-myWeekAppearanceObserver.observe(document.body,{childList:true,subtree:true});
+[
+  document.getElementById("papaOverviewDialog"),
+  document.getElementById("childWeekDialog"),
+  document.getElementById("workroomWeekDialog")
+].filter(Boolean).forEach(dialog=>{
+  myWeekAppearanceObserver.observe(dialog,{childList:true,subtree:true});
+});
 
 /* =========================================================
    V61 – Routinentexte individuell bearbeiten
@@ -16641,13 +16650,20 @@ setTimeout(()=>{
   applyMamaRoutineSentences();
 },220);
 
-/* Falls Routinen später neu gerendert werden: individuelle Mama-Sätze wieder anwenden. */
+/* Falls die Mama-Routinen später neu gerendert werden:
+   nur den tatsächlichen Routinenbereich beobachten – nicht die ganze Seite. */
 const personalRoutineSentenceObserver=new MutationObserver(()=>{
-  if(document.querySelector('.routine-step[data-routine-card]')){
-    requestAnimationFrame(applyMamaRoutineSentences);
-  }
+  requestAnimationFrame(applyMamaRoutineSentences);
 });
-personalRoutineSentenceObserver.observe(document.body,{childList:true,subtree:true});
+const personalRoutineObserveRoot =
+  document.querySelector("#workroomRoutineBody") ||
+  document.querySelector(".workroom-routine-card");
+if(personalRoutineObserveRoot){
+  personalRoutineSentenceObserver.observe(
+    personalRoutineObserveRoot,
+    {childList:true,subtree:true}
+  );
+}
 
 document.addEventListener("DOMContentLoaded", () => {
   /* Nach Aufbau der Seite nochmals aus dem tatsächlich gespeicherten
@@ -18537,8 +18553,15 @@ setTimeout(()=>{
     }
   }
 
+  /* Reload-Reparatur nur dort beobachten, wo die Wochenplanung lebt.
+     Ein globaler body-Observer war hier unnötig teuer. */
   const v69Observer=new MutationObserver(v69RepairOverviewIfNeeded);
-  v69Observer.observe(document.body,{childList:true,subtree:true});
+  const v69ObserveRoot =
+    document.querySelector("#archive") ||
+    document.querySelector(".family-settings");
+  if(v69ObserveRoot){
+    v69Observer.observe(v69ObserveRoot,{childList:true,subtree:true});
+  }
 
   window.addEventListener("pageshow",()=>{
     setTimeout(v69RepairOverviewIfNeeded,50);
@@ -19152,10 +19175,9 @@ setTimeout(()=>{
     `;
   }
 
+  /* Summary existiert bereits statisch im HTML. Spätere Schritte verschieben
+     nur denselben DOM-Knoten; ein permanenter body-Observer ist nicht nötig. */
   v79StyleFamilySettingsSummary();
-
-  const observer=new MutationObserver(v79StyleFamilySettingsSummary);
-  observer.observe(document.body,{childList:true,subtree:true});
 })();
 
 
@@ -19210,8 +19232,9 @@ setTimeout(()=>{
     root.querySelectorAll(":scope > .settings-v80-group").forEach(d=>d.open=false);
   }
 
+  /* V82 übernimmt danach die endgültige Gruppierung.
+     Ein permanenter body-Observer aus V80 erzeugt nur unnötige Arbeit. */
   setupSettings();
-  new MutationObserver(setupSettings).observe(document.body,{childList:true,subtree:true});
 })();
 
 
@@ -19462,3 +19485,10 @@ setTimeout(()=>{
   closeOverviewCards();
 })();
 
+
+/* =========================================================
+   STABILITÄTS-AUDIT PUNKT 2
+   Body-weite MutationObserver wurden auf die tatsächlich
+   betroffenen Bereiche begrenzt bzw. entfernt.
+   Funktional notwendige, gezielte Dialog-Observer bleiben erhalten.
+   ========================================================= */
