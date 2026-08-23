@@ -26314,3 +26314,40 @@ button.day-meal-list-item:hover,a.day-meal-list-item:hover{background:rgba(164,1
   }
 }
 
+/* =========================================================
+   V75 – Archivkarten ohne Vorschaubild + geschlossene Routinen
+   ========================================================= */
+
+/* Wenn kein YouTube-/Vorschaubild vorhanden ist, darf die Karte
+   KEINE leere 92px-Bildspalte reservieren. */
+.archive-columns .archive-card:not(:has(.archive-thumb-link)),
+.archive-grid .archive-card:not(:has(.archive-thumb-link)){
+  grid-template-columns:minmax(0,1fr) !important;
+}
+
+/* Inhalt einer Karte ohne Bild nutzt die volle Breite. */
+.archive-card:not(:has(.archive-thumb-link)) .archive-content{
+  grid-column:1 / -1 !important;
+  width:100% !important;
+}
+
+/* Buttons bleiben auch ohne Thumbnail sauber in 2 x 2 angeordnet. */
+.archive-card:not(:has(.archive-thumb-link)) .archive-actions{
+  width:100% !important;
+  grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+}
+
+/* Kein optischer Höhenunterschied nur weil ein Bild fehlt. */
+.archive-card:not(:has(.archive-thumb-link)){
+  min-height:0 !important;
+  align-items:start !important;
+}
+
+/* Die geschlossenen Kinder-Routinenkarten bleiben kompakt. */
+#childRoutineAreaCards details.child-routine-area-card:not([open]){
+  min-height:0 !important;
+}
+#childRoutineAreaCards details.child-routine-area-card:not([open]) > .child-routine-area-title{
+  min-height:64px !important;
+}
+
