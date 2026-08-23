@@ -26703,3 +26703,262 @@ button.day-meal-list-item:hover,a.day-meal-list-item:hover{background:rgba(164,1
   padding:10px 14px !important;
 }
 
+
+/* =========================================================
+   V82 – Individuelle Einstellungen: klare Hauptgruppen
+   ========================================================= */
+
+/* Der geöffnete Hauptbereich selbst bleibt ruhig. */
+.family-settings[open]{
+  padding-bottom:10px !important;
+}
+
+/* Vier kompakte Hauptreiter */
+.family-settings > .settings-main-group{
+  margin:9px 14px !important;
+  border:1px solid rgba(137,113,96,.15) !important;
+  border-radius:14px !important;
+  background:#fffdf9 !important;
+  overflow:hidden !important;
+  box-shadow:none !important;
+}
+
+.family-settings > .settings-main-group > summary{
+  list-style:none !important;
+  display:grid !important;
+  grid-template-columns:15px minmax(0,1fr) !important;
+  align-items:center !important;
+  gap:8px !important;
+  min-height:48px !important;
+  padding:8px 12px !important;
+  cursor:pointer !important;
+}
+
+.family-settings > .settings-main-group > summary::-webkit-details-marker{
+  display:none !important;
+}
+
+/* Kleiner Pfeil links – genau als Öffnungshinweis */
+.settings-main-arrow{
+  color:#9b7c68 !important;
+  font-size:.78rem !important;
+  line-height:1 !important;
+  transform:rotate(0deg);
+  transition:transform .16s ease;
+}
+
+.settings-main-group[open] .settings-main-arrow{
+  transform:rotate(90deg);
+}
+
+.settings-main-title{
+  min-width:0 !important;
+  display:grid !important;
+  gap:1px !important;
+}
+
+.settings-main-title small{
+  margin:0 !important;
+  color:#a48673 !important;
+  font-size:.54rem !important;
+  line-height:1.05 !important;
+  font-weight:600 !important;
+  letter-spacing:.17em !important;
+}
+
+.settings-main-title strong{
+  margin:0 !important;
+  color:#4f3d34 !important;
+  font-family:"Playfair Display",Georgia,serif !important;
+  font-size:.96rem !important;
+  line-height:1.15 !important;
+  font-weight:650 !important;
+}
+
+.settings-main-group[open] > summary{
+  border-bottom:1px solid rgba(137,113,96,.11) !important;
+}
+
+.settings-main-body{
+  padding:10px 12px 12px !important;
+}
+
+/* Die alten Abschnittsüberschriften im Inneren nicht doppelt groß darstellen. */
+.settings-main-body > section > .personal-subject-settings-head{
+  margin:0 0 9px !important;
+}
+
+/* Familie & Farben: kompakter als vorher */
+#settingsGroupFamily .schoolyear-setting{
+  margin:0 0 10px !important;
+}
+
+#settingsGroupFamily .family-settings-grid{
+  padding:0 !important;
+  grid-template-columns:repeat(5,minmax(0,1fr)) !important;
+  gap:8px 10px !important;
+}
+
+/* Farbfelder wirklich klein – kein großer Balken mehr */
+#settingsGroupFamily .family-settings-grid input[type="color"]{
+  width:34px !important;
+  height:34px !important;
+  min-height:34px !important;
+  padding:2px !important;
+  border-radius:50% !important;
+  justify-self:start !important;
+}
+
+/* Routinen: kein zusätzlicher künstlicher Zwischenraum zwischen
+   festen Routinen und Wochenplanung. */
+#settingsGroupRoutines .settings-main-body{
+  display:grid !important;
+  gap:10px !important;
+}
+
+#settingsGroupRoutines #personalRoutineSentenceSettings,
+#settingsGroupRoutines #childRoutineOverviewEditor{
+  margin:0 !important;
+}
+
+/* Der Wocheneditor soll direkt nach den Tagesroutinen anschließen. */
+#settingsGroupRoutines #childRoutineOverviewEditor{
+  border-top:1px solid rgba(137,113,96,.12) !important;
+  padding-top:12px !important;
+}
+
+@media(max-width:900px){
+  #settingsGroupFamily .family-settings-grid{
+    grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+  }
+}
+
+@media(max-width:650px){
+  .family-settings > .settings-main-group{
+    margin:7px 9px !important;
+  }
+  .settings-main-body{
+    padding:9px !important;
+  }
+}
+
+
+/* =========================================================
+   V83 – Überblick elegant/romantisch + sichtbare Pfeile
+   ========================================================= */
+
+/* Einheitliches Karten-Schriftbild */
+.time-tracker-card.overview-card-collapsed h3,
+.recipe-link-tracker-card.overview-card-collapsed h3,
+.exercise-overview-card.overview-card-collapsed h3,
+.family-settings:not([open]) .family-settings-summary-copy strong{
+  font-family:"Playfair Display", Georgia, "Times New Roman", serif !important;
+  font-size:1.05rem !important;
+  font-weight:600 !important;
+  letter-spacing:.005em !important;
+  color:#4b3931 !important;
+  line-height:1.16 !important;
+}
+
+/* Oberzeilen feiner und ruhiger */
+.time-tracker-card.overview-card-collapsed .small-label,
+.recipe-link-tracker-card.overview-card-collapsed .small-label,
+.exercise-overview-card.overview-card-collapsed .small-label,
+.family-settings:not([open]) .family-settings-summary-copy small{
+  font-family:"DM Sans","Segoe UI",sans-serif !important;
+  font-size:.55rem !important;
+  font-weight:500 !important;
+  letter-spacing:.18em !important;
+  color:#a48673 !important;
+  text-transform:uppercase !important;
+}
+
+/* Individuelle Einstellungen: Symbol kleiner und eleganter */
+.family-settings-edit-icon{
+  width:26px !important;
+  height:26px !important;
+  border:1px solid rgba(169,137,102,.14) !important;
+  background:#fbf6ec !important;
+  color:#b08a58 !important;
+  font-size:.78rem !important;
+}
+
+/* Pfeil bei Individuelle Einstellungen klar sichtbar */
+.family-settings-summary-chevron{
+  display:block !important;
+  justify-self:end !important;
+  color:#9b7c68 !important;
+  font-family:Georgia,serif !important;
+  font-size:1rem !important;
+  line-height:1 !important;
+  transform:rotate(0deg) !important;
+}
+.family-settings[open] .family-settings-summary-chevron{
+  transform:rotate(90deg) !important;
+}
+
+/* Die drei Hauptkarten: statt Textbutton nur kleiner Pfeil rechts */
+.overview-collapse-toggle{
+  width:30px !important;
+  height:30px !important;
+  min-width:30px !important;
+  padding:0 !important;
+  margin-left:auto !important;
+  display:grid !important;
+  place-items:center !important;
+  border:1px solid rgba(153,124,103,.15) !important;
+  border-radius:50% !important;
+  background:#fffaf4 !important;
+  color:#9b7c68 !important;
+  box-shadow:none !important;
+  font-size:0 !important;
+}
+
+.overview-collapse-arrow{
+  display:block !important;
+  font-family:Georgia,serif !important;
+  font-size:.92rem !important;
+  line-height:1 !important;
+  color:#9b7c68 !important;
+}
+
+/* Geschlossene Karten noch einheitlicher */
+.time-tracker-card.overview-card-collapsed,
+.recipe-link-tracker-card.overview-card-collapsed,
+.exercise-overview-card.overview-card-collapsed{
+  padding:10px 14px !important;
+  border-radius:16px !important;
+}
+
+.time-tracker-card.overview-card-collapsed > .overview-card-head,
+.recipe-link-tracker-card.overview-card-collapsed > .overview-card-head,
+.exercise-overview-card.overview-card-collapsed > .section-head{
+  min-height:40px !important;
+}
+
+/* Zeit im Blick soll optisch gleich ruhig sein wie die beiden darunter */
+.time-tracker-card.overview-card-collapsed h3{
+  max-width:none !important;
+  white-space:nowrap !important;
+}
+
+/* Kein Zeilenumbruch "Wofür war heute / Zeit?" mehr */
+.time-tracker-card.overview-card-collapsed .overview-card-head > div:first-child{
+  min-width:0 !important;
+  width:auto !important;
+}
+
+/* Individuelle Einstellungen gleiche kompakte Höhe */
+.family-settings:not([open]){
+  border-radius:16px !important;
+}
+.family-settings:not([open]) > summary{
+  min-height:48px !important;
+  padding:9px 14px !important;
+}
+
+/* Abstand nach Zeit oben sauber */
+.time-tracker-card{
+  margin-top:12px !important;
+}
+
