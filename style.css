@@ -28515,3 +28515,61 @@ button.day-meal-list-item:hover,a.day-meal-list-item:hover{background:rgba(164,1
   }
 }
 
+
+/* =========================================================
+   V96 – Für euch: Kinderkarten NUR mobil kompakter + sichtbar
+   Desktop bleibt unverändert.
+   ========================================================= */
+@media (max-width:700px){
+  #schoolChildChooser .school-chooser-grid{
+    grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+    gap:12px !important;
+    width:100% !important;
+  }
+
+  #schoolChildChooser .school-person-card{
+    grid-template-rows:150px auto auto !important;
+    min-width:0 !important;
+    border-radius:22px !important;
+    overflow:hidden !important;
+  }
+
+  #schoolChildChooser .school-person-card img{
+    width:100% !important;
+    height:150px !important;
+    box-sizing:border-box !important;
+    object-fit:contain !important;
+    object-position:center bottom !important;
+    padding:8px 8px 0 !important;
+    filter:none !important;
+    opacity:1 !important;
+  }
+
+  /* Heller Bildgrund: die feinen dunklen Kinderzeichnungen bleiben original
+     und sind auf der dunklen Handy-App wieder klar sichtbar. */
+  #schoolChildChooser .school-person-card.lou img{
+    background:linear-gradient(145deg,#eeeaf5,#f8f5fb) !important;
+  }
+  #schoolChildChooser .school-person-card.fina img{
+    background:linear-gradient(145deg,#f9e9eb,#fff5ef) !important;
+  }
+
+  #schoolChildChooser .school-person-name{
+    padding:12px 14px 0 !important;
+    font-size:1.45rem !important;
+    line-height:1.05 !important;
+  }
+  #schoolChildChooser .school-person-sub{
+    padding:3px 14px 14px !important;
+    font-size:.84rem !important;
+    line-height:1.2 !important;
+  }
+}
+
+@media (max-width:380px){
+  #schoolChildChooser .school-chooser-grid{gap:9px !important;}
+  #schoolChildChooser .school-person-card{grid-template-rows:132px auto auto !important;}
+  #schoolChildChooser .school-person-card img{height:132px !important;}
+  #schoolChildChooser .school-person-name{font-size:1.3rem !important;}
+  #schoolChildChooser .school-person-sub{font-size:.78rem !important;}
+}
