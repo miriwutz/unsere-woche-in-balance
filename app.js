@@ -1987,6 +1987,34 @@ function alignWeekBands(grid){
   const days = [...grid.querySelectorAll(".day")];
   if(!days.length) return;
 
+  /* MOBILE:
+     In der einspaltigen Handyansicht ist die Desktop-Höhensynchronisierung
+     kontraproduktiv: jedes Tagesfenster bekommt sonst die größten Bandhöhen
+     der gesamten Woche und wird unnötig riesig.
+     Am Handy immer natürliche Inhaltshöhen verwenden. */
+  if (window.matchMedia("(max-width: 700px)").matches) {
+    const mobileBands = [
+      ".week-day-topband",
+      ".week-band-meal",
+      ".week-band-events",
+      ".week-band-school",
+      ".week-band-todos",
+      ".week-band-videos"
+    ];
+
+    days.forEach(day => {
+      day.style.removeProperty("min-height");
+      day.style.removeProperty("height");
+      mobileBands.forEach(selector => {
+        const node = day.querySelector(selector);
+        if (!node) return;
+        node.style.removeProperty("min-height");
+        node.style.removeProperty("height");
+      });
+    });
+    return;
+  }
+
   const bands = [
     ".week-day-topband",
     ".week-band-meal",
@@ -19679,4 +19707,125 @@ setTimeout(()=>{
    Konfliktauflösung: ID + updatedAt
    Löschen: deleted:true bleibt synchronisierbar
    ========================================================= */
+
+
+/* =========================================================
+   MOBILE V94 – Wochenkopf endgültig kompakt
+   Nur drei klare Zeichen:
+   Papa = Bogen, Pinnwand = Brief, Stundenplan = Raster.
+   ========================================================= */
+function ensureMobileWeekHeaderV94(){
+  document.querySelector("#mobileWeekHeaderV94")?.remove();
+
+  const style = document.createElement("style");
+  style.id = "mobileWeekHeaderV94";
+  style.textContent = `
+    @media(max-width:700px){
+      .week-head-actions{
+        width:100% !important;
+        max-width:100% !important;
+        min-width:0 !important;
+        display:flex !important;
+        align-items:center !important;
+        justify-content:flex-end !important;
+        gap:8px !important;
+        flex-wrap:nowrap !important;
+        margin:0 !important;
+      }
+
+      /* Am Handy nur die drei wirklich benötigten Wochenkopf-Aktionen. */
+      #addVideoBtn,
+      #printWeekBtn{
+        display:none !important;
+      }
+
+      #openPapaOverviewBtn,
+      #openPinboardBtn,
+      #openFamilyTimetableBtn{
+        position:relative !important;
+        flex:0 0 38px !important;
+        width:38px !important;
+        min-width:38px !important;
+        max-width:38px !important;
+        height:38px !important;
+        min-height:38px !important;
+        max-height:38px !important;
+        padding:0 !important;
+        margin:0 !important;
+        border-radius:50% !important;
+        display:grid !important;
+        place-items:center !important;
+        overflow:visible !important;
+        box-sizing:border-box !important;
+        font-size:0 !important;
+        line-height:1 !important;
+        background:rgba(255,253,250,.15) !important;
+        border:1px solid rgba(133,139,98,.48) !important;
+        color:#a7ad79 !important;
+        box-shadow:none !important;
+      }
+
+      /* Papa: vorhandenen SVG-Bogen verwenden, Text komplett weg. */
+      #openPapaOverviewBtn::before{
+        content:none !important;
+        display:none !important;
+      }
+      #openPapaOverviewBtn .papa-week-label,
+      #openPapaOverviewBtn .papa-week-heart{
+        display:none !important;
+      }
+      #openPapaOverviewBtn .papa-week-bow{
+        display:grid !important;
+        place-items:center !important;
+        width:24px !important;
+        height:18px !important;
+        margin:0 !important;
+        color:#a7ad79 !important;
+      }
+      #openPapaOverviewBtn .papa-week-bow svg{
+        width:24px !important;
+        height:18px !important;
+      }
+
+      /* Pinnwand: nur ein ruhiger Brief. */
+      #openPinboardBtn .pinboard-label,
+      #openPinboardBtn .pinboard-icon{
+        display:none !important;
+      }
+      #openPinboardBtn::before{
+        content:"✉" !important;
+        display:block !important;
+        font-family:Georgia,"Times New Roman",serif !important;
+        font-size:1.13rem !important;
+        line-height:1 !important;
+        color:#a7ad79 !important;
+      }
+      #openPinboardBtn .pinboard-badge{
+        top:-4px !important;
+        right:-4px !important;
+      }
+
+      /* Stundenplan: nur ein Linien-Raster, kein Text/Emoji. */
+      #openFamilyTimetableBtn{
+        color:transparent !important;
+      }
+      #openFamilyTimetableBtn::before{
+        content:"▦" !important;
+        display:block !important;
+        font-family:Georgia,"Times New Roman",serif !important;
+        font-size:1.22rem !important;
+        line-height:1 !important;
+        color:#a7ad79 !important;
+      }
+    }
+  `;
+  document.head.appendChild(style);
+}
+
+ensureMobileWeekHeaderV94();
+window.addEventListener("resize", () => {
+  if (window.matchMedia("(max-width: 700px)").matches) {
+    ensureMobileWeekHeaderV94();
+  }
+});
 
