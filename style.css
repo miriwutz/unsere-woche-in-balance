@@ -25433,3 +25433,88 @@ button.day-meal-list-item:hover,a.day-meal-list-item:hover{background:rgba(164,1
 .child-routine-daily-focus-chips button{border:1px solid rgba(156,126,103,.20);border-radius:999px;background:#fffdf9;padding:7px 11px;color:#725c50;cursor:pointer}
 .child-routine-daily-focus-chips button.active{background:#f0ead9;border-color:#c9b681;box-shadow:inset 0 0 0 1px rgba(201,182,129,.25)}
 @media(max-width:700px){.personal-daily-focus-head{align-items:flex-start}.personal-daily-focus-question{grid-template-columns:1fr}.personal-daily-focus-quality-row input{width:125px}.child-routine-daily-focus{margin:10px 10px 0}}
+
+/* =========================================================
+   V64 – Kinder-Routinen optisch ruhiger und funktional klarer
+   ========================================================= */
+.school-tile-routines .school-routine-symbol{
+  background:rgba(255,253,249,.58) !important;
+  border-color:rgba(167,145,128,.13) !important;
+  box-shadow:none !important;
+}
+.school-tile-routines .school-routine-symbol .school-personal-svg-icon{
+  width:28px !important;
+  height:28px !important;
+}
+.child-routine-hero-mark{
+  background:transparent !important;
+  border:0 !important;
+  box-shadow:none !important;
+}
+.child-routine-area-card{
+  padding:0 !important;
+  overflow:hidden;
+  background:rgba(255,253,249,.72) !important;
+}
+.child-routine-area-card summary{
+  list-style:none;
+  cursor:pointer;
+  padding:11px 13px;
+  margin:0 !important;
+  user-select:none;
+}
+.child-routine-area-card summary::-webkit-details-marker{display:none}
+.child-routine-area-chevron{
+  margin-left:auto;
+  color:#b49a82;
+  font-family:Georgia,serif;
+  transition:transform .18s ease;
+}
+.child-routine-area-card:not([open]) .child-routine-area-chevron{transform:rotate(-90deg)}
+.child-routine-area-card .child-routine-area-list{
+  padding:0 13px 12px;
+  gap:5px;
+}
+.child-routine-area-line{
+  display:grid !important;
+  grid-template-columns:17px minmax(0,1fr) !important;
+  gap:7px !important;
+  align-items:start !important;
+  cursor:pointer;
+  font-size:.76rem !important;
+  line-height:1.3;
+}
+.child-routine-area-line input{
+  width:14px !important;
+  height:14px !important;
+  min-width:14px !important;
+  margin:1px 0 0 !important;
+  accent-color:#b99a68;
+}
+.child-routine-area-line .child-routine-area-checkmark{display:none}
+.child-routine-area-line.is-done>span:last-child{
+  text-decoration:line-through;
+  opacity:.55;
+}
+.child-routine-area-card .child-routine-empty-area{padding:0 13px 12px}
+.child-routine-shell{background:#fbf9f4 !important}
+.child-routine-week-plan,
+.child-routine-area-cards{background:transparent}
+.child-routine-day{background:rgba(255,253,249,.70) !important}
+.child-routine-editor-form{
+  grid-template-columns:minmax(130px,.75fr) minmax(260px,1.8fr) minmax(220px,1.4fr) minmax(140px,.8fr) auto auto !important;
+}
+@media(max-width:900px){
+  .child-routine-editor-form{grid-template-columns:repeat(2,minmax(0,1fr)) !important}
+}
+
+
+/* Kinder-Routinen: Eingabe bewusst wie bei Mama – Bereich | Punkt | Video | Thema | Tag | jede Woche | Speichern */
+.child-routine-editor-form{
+  grid-template-columns:minmax(125px,.72fr) minmax(230px,1.55fr) minmax(210px,1.35fr) minmax(155px,.9fr) minmax(125px,.72fr) auto auto !important;
+  align-items:end !important;
+}
+.child-routine-video-topic{display:block;margin-top:2px;font-size:.65rem;opacity:.68;font-weight:400}
+@media(max-width:1100px){
+  .child-routine-editor-form{grid-template-columns:repeat(2,minmax(0,1fr)) !important}
+}
