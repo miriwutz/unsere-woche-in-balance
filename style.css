@@ -30280,3 +30280,207 @@ button.day-meal-list-item:hover,a.day-meal-list-item:hover{background:rgba(164,1
     min-width:102px !important;
   }
 }
+
+
+/* =========================================================
+   V109 – MOBILE ONLY – gezielter Samsung-Fix
+   1) Schul-To-dos: ★ ⇈ ↑ ↓ garantiert in EINER Zeile, etwas kleiner.
+   2) Drucken: Brief / Bearbeiten / × mobil ausblenden.
+   3) Kinderkarten: Samsung-Force-Dark stärker abfangen;
+      Lou separat invertieren -> helle Gold/Kupfer-Lineart.
+   Desktop bleibt vollständig unverändert.
+   ========================================================= */
+@media (max-width:700px){
+
+  /* ---------- SCHUL-TO-DOS: BEDIENZEICHEN IN EINER ZEILE ---------- */
+  #schoolWorkTodoList .workroom-todo-row{
+    grid-template-columns:minmax(0,1fr) 132px !important;
+    column-gap:7px !important;
+  }
+
+  #schoolWorkTodoList .workroom-todo-actions{
+    grid-column:2 !important;
+    display:flex !important;
+    flex-direction:row !important;
+    flex-wrap:nowrap !important;
+    align-items:center !important;
+    justify-content:flex-end !important;
+    gap:2px !important;
+    width:132px !important;
+    min-width:132px !important;
+    max-width:132px !important;
+    white-space:nowrap !important;
+  }
+
+  #schoolWorkTodoList .workroom-move-controls{
+    display:flex !important;
+    flex-direction:row !important;
+    flex-wrap:nowrap !important;
+    align-items:center !important;
+    gap:1px !important;
+    width:auto !important;
+    min-width:0 !important;
+    margin:0 !important;
+    padding:0 !important;
+    white-space:nowrap !important;
+  }
+
+  #schoolWorkTodoList .workroom-important-btn{
+    flex:0 0 31px !important;
+    width:31px !important;
+    min-width:31px !important;
+    max-width:31px !important;
+    height:31px !important;
+    min-height:31px !important;
+    margin:0 2px 0 0 !important;
+  }
+
+  #schoolWorkTodoList .workroom-important-btn::before{
+    font-size:.92rem !important;
+  }
+
+  #schoolWorkTodoList .workroom-move-btn{
+    display:grid !important;
+    place-items:center !important;
+    flex:0 0 28px !important;
+    width:28px !important;
+    min-width:28px !important;
+    max-width:28px !important;
+    height:31px !important;
+    min-height:31px !important;
+    margin:0 !important;
+    padding:0 !important;
+    font-size:.88rem !important;
+    line-height:1 !important;
+  }
+
+  /* V108 hatte "ganz nach oben" ausgeblendet.
+     Hier bewusst wieder zulassen, aber kompakt in derselben Zeile.
+     Nur ein evtl. vorhandener "ganz nach unten"-Zusatz bleibt weg. */
+  #schoolWorkTodoList .workroom-move-top{
+    display:grid !important;
+  }
+  #schoolWorkTodoList .workroom-move-bottom{
+    display:none !important;
+  }
+
+  /* ---------- DRUCKEN: MOBIL NUR DAS NÖTIGE ---------- */
+  #workroomPrintList .workroom-print-mail-order,
+  #workroomPrintList .workroom-print-mail,
+  #workroomPrintList .workroom-print-edit,
+  #workroomPrintList .workroom-print-delete{
+    display:none !important;
+  }
+
+  /* Fallback, falls der Listencontainer anders verschachtelt ist */
+  .workroom-print-row .workroom-print-mail-order,
+  .workroom-print-row .workroom-print-mail,
+  .workroom-print-row .workroom-print-edit,
+  .workroom-print-row .workroom-print-delete{
+    display:none !important;
+  }
+
+  /* ---------- KINDERKARTEN / SAMSUNG ---------- */
+  #schoolChildChooser .school-person-card{
+    color-scheme:only light !important;
+    forced-color-adjust:none !important;
+  }
+
+  #schoolChildChooser .school-person-card::before{
+    color-scheme:only light !important;
+    forced-color-adjust:none !important;
+    opacity:1 !important;
+  }
+
+  /* Zusätzlich mit inset-shadow "flach" füllen:
+     Samsung verändert solche Flächen weniger aggressiv als reine Hintergründe. */
+  #schoolChildChooser .school-person-card.lou::before{
+    background:#eee8f1 !important;
+    box-shadow:inset 0 0 0 999px #eee8f1 !important;
+  }
+
+  #schoolChildChooser .school-person-card.fina::before{
+    background:#f3e3df !important;
+    box-shadow:inset 0 0 0 999px #f3e3df !important;
+  }
+
+  /* Lou-Datei ist deutlich dunkler als Fina:
+     schwarz/dunkle Linien -> helles warmes Kupfergold.
+     Dadurch auf Samsung UND hellem Xiaomi sichtbar. */
+  #schoolChildChooser .school-person-card.lou > img{
+    opacity:1 !important;
+    mix-blend-mode:normal !important;
+    filter:
+      invert(78%)
+      sepia(44%)
+      saturate(620%)
+      hue-rotate(344deg)
+      brightness(104%)
+      contrast(103%)
+      drop-shadow(0 1px 1px rgba(88,58,34,.18)) !important;
+  }
+
+  /* Fina ist bereits gut lesbar: nicht wieder kaputtfiltern. */
+  #schoolChildChooser .school-person-card.fina > img{
+    opacity:1 !important;
+    mix-blend-mode:normal !important;
+    filter:
+      sepia(36%)
+      saturate(118%)
+      brightness(116%)
+      contrast(108%)
+      drop-shadow(0 1px 1px rgba(88,58,34,.14)) !important;
+  }
+
+  /* Auch der Namenssockel soll hell/pastellig bleiben. */
+  #schoolChildChooser .school-person-card.lou{
+    background:#ded5e4 !important;
+    box-shadow:
+      inset 0 -92px 0 #ded5e4,
+      0 7px 20px rgba(25,20,24,.13) !important;
+  }
+
+  #schoolChildChooser .school-person-card.fina{
+    background:#ead4cf !important;
+    box-shadow:
+      inset 0 -92px 0 #ead4cf,
+      0 7px 20px rgba(25,20,24,.13) !important;
+  }
+
+  #schoolChildChooser .school-person-name{
+    color:#3a3138 !important;
+    text-shadow:none !important;
+  }
+
+  #schoolChildChooser .school-person-sub{
+    color:#655b62 !important;
+    text-shadow:none !important;
+  }
+}
+
+@media (max-width:380px){
+  #schoolWorkTodoList .workroom-todo-row{
+    grid-template-columns:minmax(0,1fr) 124px !important;
+  }
+  #schoolWorkTodoList .workroom-todo-actions{
+    width:124px !important;
+    min-width:124px !important;
+    max-width:124px !important;
+  }
+  #schoolWorkTodoList .workroom-important-btn{
+    flex-basis:29px !important;
+    width:29px !important;
+    min-width:29px !important;
+    max-width:29px !important;
+    height:29px !important;
+    min-height:29px !important;
+  }
+  #schoolWorkTodoList .workroom-move-btn{
+    flex-basis:27px !important;
+    width:27px !important;
+    min-width:27px !important;
+    max-width:27px !important;
+    height:29px !important;
+    min-height:29px !important;
+  }
+}
