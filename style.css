@@ -29850,3 +29850,212 @@ button.day-meal-list-item:hover,a.day-meal-list-item:hover{background:rgba(164,1
     max-height:146px !important;
   }
 }
+
+
+/* =========================================================
+   V107 – MOBILE ONLY
+   1) Kinderkarten: Samsung/Xiaomi robust, bewusst NICHT mehr "Pastell erzwingen".
+      Stattdessen neutrales warmes Kartenbild, damit Originalzeichnung lesbar bleibt.
+   2) Schul-To-dos: kompakte echte Check-Fläche links + Text + nur wichtige Sortierpfeile.
+      Kein "Text antippen = abhaken", weil das mobil zu fehleranfällig ist.
+   ========================================================= */
+@media (max-width:700px){
+
+  /* ---------- KINDERKARTEN ---------- */
+  #schoolChildChooser .school-person-card{
+    overflow:hidden !important;
+    isolation:isolate !important;
+    grid-template-rows:158px auto auto !important;
+  }
+
+  /* V106-Bildhintergrund wieder neutralisieren */
+  #schoolChildChooser .school-person-card::before{
+    content:"" !important;
+    display:block !important;
+    position:absolute !important;
+    inset:0 0 auto 0 !important;
+    height:158px !important;
+    z-index:0 !important;
+    pointer-events:none !important;
+    background-image:none !important;
+    filter:none !important;
+  }
+
+  #schoolChildChooser .school-person-card.lou::before{
+    background:#d9d2dc !important;
+  }
+
+  #schoolChildChooser .school-person-card.fina::before{
+    background:#e4d5cf !important;
+  }
+
+  #schoolChildChooser .school-person-card > img{
+    position:relative !important;
+    z-index:2 !important;
+    display:block !important;
+    width:100% !important;
+    height:158px !important;
+    min-height:158px !important;
+    max-height:158px !important;
+    padding:7px 8px 0 !important;
+    margin:0 !important;
+    object-fit:contain !important;
+    object-position:center bottom !important;
+    opacity:1 !important;
+    visibility:visible !important;
+    background:transparent !important;
+    mix-blend-mode:normal !important;
+  }
+
+  /* Zeichnung hell/kontrastreich halten – keine Silhouette */
+  #schoolChildChooser .school-person-card.lou > img{
+    filter:
+      sepia(36%)
+      saturate(92%)
+      brightness(145%)
+      contrast(126%)
+      drop-shadow(0 1px 1px rgba(63,47,38,.18)) !important;
+  }
+
+  #schoolChildChooser .school-person-card.fina > img{
+    filter:
+      sepia(30%)
+      saturate(86%)
+      brightness(142%)
+      contrast(120%)
+      drop-shadow(0 1px 1px rgba(63,47,38,.16)) !important;
+  }
+
+  /* Unterteil NICHT mehr als dunkler Block */
+  #schoolChildChooser .school-person-card.lou,
+  #schoolChildChooser .school-person-card.fina{
+    background:#d7d0d5 !important;
+  }
+
+  #schoolChildChooser .school-person-card.fina{
+    background:#ddcfcb !important;
+  }
+
+  #schoolChildChooser .school-person-name{
+    color:#2b2628 !important;
+    text-shadow:none !important;
+  }
+
+  #schoolChildChooser .school-person-sub{
+    color:#51494c !important;
+    text-shadow:none !important;
+  }
+
+  /* ---------- SCHUL-TO-DOS ---------- */
+
+  /* Zeile deutlich kompakter */
+  #schoolTodoList .school-todo-row,
+  #schoolTodoList .todo-row,
+  #schoolTodoList > *{
+    min-height:72px !important;
+  }
+
+  /* vorhandene Zeilen: Text bekommt Vorrang */
+  #schoolTodoList .school-todo-row,
+  #schoolTodoList .todo-row{
+    display:grid !important;
+    grid-template-columns:34px minmax(0,1fr) 46px 30px 30px 30px !important;
+    gap:5px !important;
+    align-items:center !important;
+    padding:10px 10px !important;
+  }
+
+  /* echte Checkbox links wieder sichtbar und gut antippbar */
+  #schoolTodoList input[type="checkbox"]{
+    display:block !important;
+    appearance:none !important;
+    -webkit-appearance:none !important;
+    width:27px !important;
+    height:27px !important;
+    min-width:27px !important;
+    margin:0 !important;
+    border:2px solid rgba(225,218,208,.62) !important;
+    border-radius:8px !important;
+    background:rgba(255,255,255,.05) !important;
+    position:relative !important;
+    cursor:pointer !important;
+  }
+
+  #schoolTodoList input[type="checkbox"]:checked{
+    background:rgba(187,167,120,.34) !important;
+    border-color:rgba(220,199,145,.82) !important;
+  }
+
+  #schoolTodoList input[type="checkbox"]:checked::after{
+    content:"✓" !important;
+    position:absolute !important;
+    inset:-5px 0 0 3px !important;
+    font-size:25px !important;
+    line-height:27px !important;
+    color:#efe2bd !important;
+  }
+
+  /* Text: mehr nutzbare Breite, keine absichtlichen schmalen Umbrüche */
+  #schoolTodoList .todo-text,
+  #schoolTodoList .school-todo-text,
+  #schoolTodoList .todo-title,
+  #schoolTodoList [data-role="text"]{
+    min-width:0 !important;
+    width:auto !important;
+    max-width:none !important;
+    overflow-wrap:break-word !important;
+    word-break:normal !important;
+    hyphens:auto !important;
+    font-size:17px !important;
+    line-height:1.25 !important;
+  }
+
+  /* Stern kompakt – kein riesiger Kreis */
+  #schoolTodoList .important-btn,
+  #schoolTodoList .todo-important,
+  #schoolTodoList [title*="Wichtig"]{
+    width:42px !important;
+    height:42px !important;
+    min-width:42px !important;
+    padding:0 !important;
+    border-radius:50% !important;
+    font-size:25px !important;
+  }
+
+  /* doppelt-hoch/runter braucht mobil zu viel Platz */
+  #schoolTodoList .move-top,
+  #schoolTodoList .move-bottom,
+  #schoolTodoList [title*="ganz nach oben"],
+  #schoolTodoList [title*="ganz nach unten"]{
+    display:none !important;
+  }
+
+  /* Bearbeiten/Löschen bleiben mobil verborgen */
+  #schoolTodoList .edit-btn,
+  #schoolTodoList .delete-btn,
+  #schoolTodoList [title*="Bearbeiten"],
+  #schoolTodoList [title*="Löschen"]{
+    display:none !important;
+  }
+
+  /* erledigte Aufgabe weiterhin klar */
+  #schoolTodoList input[type="checkbox"]:checked ~ .todo-text,
+  #schoolTodoList input[type="checkbox"]:checked ~ .school-todo-text,
+  #schoolTodoList .done .todo-text,
+  #schoolTodoList .done .school-todo-text{
+    text-decoration:line-through !important;
+    opacity:.52 !important;
+  }
+}
+
+@media (max-width:380px){
+  #schoolChildChooser .school-person-card{
+    grid-template-rows:146px auto auto !important;
+  }
+  #schoolChildChooser .school-person-card::before,
+  #schoolChildChooser .school-person-card > img{
+    height:146px !important;
+    min-height:146px !important;
+    max-height:146px !important;
+  }
+}
