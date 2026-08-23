@@ -30484,3 +30484,224 @@ button.day-meal-list-item:hover,a.day-meal-list-item:hover{background:rgba(164,1
     min-height:29px !important;
   }
 }
+
+
+/* =========================================================
+   V110 – MOBILE ONLY – HARTE FINAL-OVERRIDES
+   Aktuellen V109-Stand gezielt korrigieren.
+   ========================================================= */
+@media (max-width:700px){
+
+  /* =======================================================
+     1) SCHUL-TO-DOS
+     Die alte V104/V105-Regel grid-row:2 hing noch nach.
+     Deshalb landete ↓ trotz flex wieder in einer zweiten Zeile.
+     Jetzt Text + Aktionen ausdrücklich BEIDE in Zeile 1.
+     ======================================================= */
+  #schoolWorkTodoList .workroom-todo-row{
+    display:grid !important;
+    grid-template-columns:minmax(0,1fr) 118px !important;
+    grid-template-rows:auto !important;
+    align-items:center !important;
+    column-gap:6px !important;
+    min-height:66px !important;
+    padding:9px 10px 9px 13px !important;
+  }
+
+  #schoolWorkTodoList .workroom-todo-content{
+    grid-column:1 !important;
+    grid-row:1 !important;
+    align-self:center !important;
+    min-width:0 !important;
+    width:100% !important;
+    padding:4px 1px !important;
+  }
+
+  #schoolWorkTodoList .workroom-todo-text{
+    font-size:.86rem !important;
+    line-height:1.25 !important;
+    font-weight:400 !important;
+  }
+
+  #schoolWorkTodoList .workroom-todo-actions{
+    grid-column:2 !important;
+    grid-row:1 !important;
+    align-self:center !important;
+    display:flex !important;
+    flex-direction:row !important;
+    flex-wrap:nowrap !important;
+    align-items:center !important;
+    justify-content:flex-end !important;
+    gap:1px !important;
+    width:118px !important;
+    min-width:118px !important;
+    max-width:118px !important;
+    margin:0 !important;
+    padding:0 !important;
+    white-space:nowrap !important;
+  }
+
+  #schoolWorkTodoList .workroom-move-controls{
+    display:flex !important;
+    flex-direction:row !important;
+    flex-wrap:nowrap !important;
+    align-items:center !important;
+    gap:0 !important;
+    margin:0 !important;
+    padding:0 !important;
+  }
+
+  #schoolWorkTodoList .workroom-important-btn{
+    flex:0 0 29px !important;
+    width:29px !important;
+    min-width:29px !important;
+    max-width:29px !important;
+    height:29px !important;
+    min-height:29px !important;
+    margin:0 2px 0 0 !important;
+  }
+
+  #schoolWorkTodoList .workroom-important-btn::before{
+    font-size:.84rem !important;
+  }
+
+  #schoolWorkTodoList .workroom-move-btn,
+  #schoolWorkTodoList .workroom-move-top,
+  #schoolWorkTodoList .workroom-move-up,
+  #schoolWorkTodoList .workroom-move-down{
+    display:grid !important;
+    place-items:center !important;
+    flex:0 0 27px !important;
+    width:27px !important;
+    min-width:27px !important;
+    max-width:27px !important;
+    height:29px !important;
+    min-height:29px !important;
+    margin:0 !important;
+    padding:0 !important;
+    font-size:.82rem !important;
+    line-height:1 !important;
+  }
+
+  #schoolWorkTodoList .workroom-move-bottom,
+  #schoolWorkTodoList .workroom-todo-edit,
+  #schoolWorkTodoList .workroom-todo-delete,
+  #schoolWorkTodoList .workroom-drag-handle,
+  #schoolWorkTodoList .workroom-todo-check{
+    display:none !important;
+  }
+
+  /* =======================================================
+     2) DRUCKEN
+     Der echte Zeilenname ist .school-print-row, NICHT
+     .workroom-print-row. Deshalb griff V109 dort nicht.
+     Mobil bleiben: Checkbox, Text, Link (falls vorhanden), ↑ ↓.
+     Weg: Brief, Bearbeiten, ×.
+     ======================================================= */
+  .school-print-row .workroom-print-mail-order,
+  .school-print-row .workroom-print-edit,
+  .school-print-row .workroom-print-delete{
+    display:none !important;
+  }
+
+  /* Badge "per E-Mail bestellen" ebenfalls mobil nicht nötig */
+  .school-print-row .school-print-mail-badge{
+    display:none !important;
+  }
+
+  /* =======================================================
+     3) KINDERKARTEN – SAMSUNG
+     Pastell nicht mehr als CSS-Hintergrund, sondern als echte
+     SVG-Bildfläche im ::before-Replaced-Element.
+     Das wird von Samsungs Force-Dark wesentlich weniger
+     wie eine normale CSS-Fläche umgerechnet.
+     ======================================================= */
+  #schoolChildChooser .school-person-card{
+    position:relative !important;
+    isolation:isolate !important;
+    overflow:hidden !important;
+    background:transparent !important;
+    box-shadow:0 7px 20px rgba(25,20,24,.13) !important;
+  }
+
+  #schoolChildChooser .school-person-card::before{
+    position:absolute !important;
+    inset:0 !important;
+    width:100% !important;
+    height:100% !important;
+    z-index:0 !important;
+    display:block !important;
+    opacity:1 !important;
+    pointer-events:none !important;
+    object-fit:fill !important;
+    background:none !important;
+    box-shadow:none !important;
+    filter:none !important;
+  }
+
+  #schoolChildChooser .school-person-card.lou::before{
+    content:url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MDAiIGhlaWdodD0iNTIwIiB2aWV3Qm94PSIwIDAgNDAwIDUyMCI+CjxyZWN0IHdpZHRoPSI0MDAiIGhlaWdodD0iMzkwIiBmaWxsPSIjZjFlYWY0Ii8+CjxyZWN0IHk9IjM5MCIgd2lkdGg9IjQwMCIgaGVpZ2h0PSIxMzAiIGZpbGw9IiNkZGQzZTMiLz4KPC9zdmc+") !important;
+  }
+
+  #schoolChildChooser .school-person-card.fina::before{
+    content:url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MDAiIGhlaWdodD0iNTIwIiB2aWV3Qm94PSIwIDAgNDAwIDUyMCI+CjxyZWN0IHdpZHRoPSI0MDAiIGhlaWdodD0iMzkwIiBmaWxsPSIjZjdlOGU0Ii8+CjxyZWN0IHk9IjM5MCIgd2lkdGg9IjQwMCIgaGVpZ2h0PSIxMzAiIGZpbGw9IiNlYWQ0Y2YiLz4KPC9zdmc+") !important;
+  }
+
+  #schoolChildChooser .school-person-card > img{
+    position:relative !important;
+    z-index:2 !important;
+    opacity:1 !important;
+    visibility:visible !important;
+    mix-blend-mode:normal !important;
+    background:transparent !important;
+  }
+
+  /* Lou extrem heller: dunkle Original-Lineart muss auf Samsung
+     wirklich ins helle Kupfer/Gold gedreht werden. */
+  #schoolChildChooser .school-person-card.lou > img{
+    filter:
+      invert(100%)
+      sepia(38%)
+      saturate(520%)
+      hue-rotate(338deg)
+      brightness(122%)
+      contrast(94%)
+      drop-shadow(0 1px 1px rgba(80,52,36,.16)) !important;
+  }
+
+  /* Fina ist bereits gut sichtbar, daher nur sanft warm halten. */
+  #schoolChildChooser .school-person-card.fina > img{
+    filter:
+      sepia(30%)
+      saturate(112%)
+      brightness(118%)
+      contrast(106%)
+      drop-shadow(0 1px 1px rgba(80,52,36,.14)) !important;
+  }
+
+  #schoolChildChooser .school-person-name{
+    position:relative !important;
+    z-index:3 !important;
+    color:#3e343b !important;
+    text-shadow:none !important;
+  }
+
+  #schoolChildChooser .school-person-sub{
+    position:relative !important;
+    z-index:3 !important;
+    color:#675c64 !important;
+    text-shadow:none !important;
+    opacity:1 !important;
+  }
+}
+
+@media (max-width:380px){
+  #schoolWorkTodoList .workroom-todo-row{
+    grid-template-columns:minmax(0,1fr) 112px !important;
+  }
+  #schoolWorkTodoList .workroom-todo-actions{
+    width:112px !important;
+    min-width:112px !important;
+    max-width:112px !important;
+  }
+}
