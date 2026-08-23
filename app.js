@@ -1014,6 +1014,38 @@ const defaultFamilySettings = {
   d:{name:"Fina", color:"#d58c9b", icon:"🌙", taskIcon:"⭐"}
 };
 
+
+function familySettingTimestamp(entry) {
+  return Number(entry?.updatedAt || 0);
+}
+
+function mergeFamilyMemberSetting(localEntry, cloudEntry, fallback = {}) {
+  const local = localEntry && typeof localEntry === "object" ? localEntry : {};
+  const cloud = cloudEntry && typeof cloudEntry === "object" ? cloudEntry : {};
+
+  const localTs = familySettingTimestamp(local);
+  const cloudTs = familySettingTimestamp(cloud);
+
+  if (localTs > cloudTs) return {...fallback, ...cloud, ...local};
+  if (cloudTs > localTs) return {...fallback, ...local, ...cloud};
+
+  /* Alte Daten ohne Zeitstempel: lokal hat Vorrang, damit eine gerade
+     gewählte Farbe beim nächsten Cloud-Snapshot nicht zurückspringt. */
+  return {...fallback, ...cloud, ...local};
+}
+
+function persistFamilySettingsImmediately() {
+  try {
+    localStorage.setItem(
+      "balanceProd.familySettings",
+      JSON.stringify(state.familySettings || {})
+    );
+  } catch (err) {
+    console.warn("Individuelle Einstellungen konnten lokal nicht sofort gespeichert werden:", err);
+  }
+}
+
+
 state.familySettings = (() => {
   try {
     return JSON.parse(localStorage.getItem("balanceProd.familySettings")) || structuredClone(defaultFamilySettings);
@@ -2579,6 +2611,8 @@ function bindFamilySettings(){
       nameInput.dataset.bound = "1";
       nameInput.addEventListener("change", () => {
         state.familySettings[key].name = nameInput.value.trim() || defaultFamilySettings[key].name;
+        state.familySettings[key].updatedAt = Date.now();
+        persistFamilySettingsImmediately();
         save();
         renderAll();
       });
@@ -2586,11 +2620,24 @@ function bindFamilySettings(){
 
     if (colorInput && !colorInput.dataset.bound) {
       colorInput.dataset.bound = "1";
-      colorInput.addEventListener("input", () => {
+      const commitFamilyColor = () => {
         state.familySettings[key].color = colorInput.value;
-        save();
+        state.familySettings[key].updatedAt = Date.now();
+
+        /* Sofort lokal sichern, BEVOR irgendein Render oder Cloud-Snapshot
+           die Eingabe wieder überschreiben kann. */
+        persistFamilySettingsImmediately();
+
+        /* CSS-Variablen und sichtbare Elemente sofort aktualisieren. */
+        applyFamilyVisuals();
         renderAll();
-      });
+
+        /* Cloud danach normal synchronisieren. */
+        save();
+      };
+
+      colorInput.addEventListener("input", commitFamilyColor);
+      colorInput.addEventListener("change", commitFamilyColor);
     }
   });
 }
@@ -12790,6 +12837,31 @@ function applyCloudData(data) {
     state.familySettings = {
       ...cloudFamilySettings,
       ...localFamilySettings,
+
+      /* Namen/Farben je Person nach Änderungszeit zusammenführen.
+         So kann ein älterer Cloud-Stand eine neue lokale Farbauswahl
+         nach Neuladen nicht mehr zurücksetzen. */
+      a: mergeFamilyMemberSetting(
+        localFamilySettings.a,
+        cloudFamilySettings.a,
+        defaultFamilySettings.a
+      ),
+      b: mergeFamilyMemberSetting(
+        localFamilySettings.b,
+        cloudFamilySettings.b,
+        defaultFamilySettings.b
+      ),
+      c: mergeFamilyMemberSetting(
+        localFamilySettings.c,
+        cloudFamilySettings.c,
+        defaultFamilySettings.c
+      ),
+      d: mergeFamilyMemberSetting(
+        localFamilySettings.d,
+        cloudFamilySettings.d,
+        defaultFamilySettings.d
+      ),
+
       quickLinks,
       quickLinkTombstones
     };
@@ -16086,4 +16158,12 @@ const personalRoutineSentenceObserver=new MutationObserver(()=>{
   }
 });
 personalRoutineSentenceObserver.observe(document.body,{childList:true,subtree:true});
+
+document.addEventListener("DOMContentLoaded", () => {
+  /* Nach Aufbau der Seite nochmals aus dem tatsächlich gespeicherten
+     state anwenden – HTML-Defaultfarben dürfen nie sichtbar zurückgewinnen. */
+  requestAnimationFrame(() => {
+    applyFamilyVisuals();
+  });
+});
 
