@@ -16611,7 +16611,7 @@ function freshChildRoutineStore(){
 function normalizeChildRoutineStore(value){
   const raw=value && typeof value==="object" ? value : {};
   return {
-    items:Array.isArray(raw.items) ? raw.items : [],
+    items:Array.isArray(raw.items) ? raw.items.map(item=>({...item,category:item?.category||"none"})) : [],
     completions:raw.completions && typeof raw.completions==="object" ? raw.completions : {},
     tombstones:raw.tombstones && typeof raw.tombstones==="object" ? raw.tombstones : {},
     areaLabels:{...childRoutineDefaultAreas,...(raw.areaLabels||{})},
@@ -16920,7 +16920,7 @@ function renderChildRoutineDialog(){
                        data-date="${dateKey(date)}"
                        ${done?"checked":""}>
                 <span class="child-routine-day-item-symbol">${childRoutineSymbol(item.part||"morning")}</span>
-                <span>${escapeHtml(item.title)}</span>
+                <span>${escapeHtml(item.title)}${item.url?`<small class="child-routine-video-topic">${escapeHtml(childRoutineVideoCategoryLabel(id,item.category||"none"))}</small>`:""}</span>
               </label>`;
             }).join("")
           : `<div class="child-routine-day-empty" aria-label="Nichts geplant">☾ <span>✦</span></div>`
@@ -16951,6 +16951,35 @@ document.addEventListener("click",e=>{
    Unser Überblick – Kinder-Routinen bearbeiten
    ========================================================= */
 
+function childRoutineVideoCategories(id){
+  return String(id)==="1"
+    ? [
+        ["none","Kein Video"],
+        ["clean","Clean Girl & Selfcare"],
+        ["hair","Frisuren & Haare"],
+        ["food","Essen & Snacks"],
+        ["movement","Bewegung & Fitness"],
+        ["calm","Entspannung & Selfcare"],
+        ["focus","Lernen & Fokus"],
+        ["reset","Ordnung & Reset"],
+        ["other","Sonstiges"]
+      ]
+    : [
+        ["none","Kein Video"],
+        ["move","Bewegung & Tanz"],
+        ["creative","Basteln & Kreativzeit"],
+        ["calm","Kinder-Yoga & Entspannung"],
+        ["ready","Fertigmachen & Haare"],
+        ["food","Essen & Snacks"],
+        ["tidy","Aufräumen & Zimmer"],
+        ["learn","Lesen & Lernen"],
+        ["other","Sonstiges"]
+      ];
+}
+function childRoutineVideoCategoryLabel(id,key){
+  return (childRoutineVideoCategories(id).find(row=>row[0]===key)||["","Sonstiges"])[1];
+}
+
 function ensureChildRoutineOverviewEditor(){
   const anchor=document.querySelector("#personalRoutineSentenceSettings");
   if(!anchor) return null;
@@ -16971,13 +17000,13 @@ function resetChildRoutineEditorForm(section){
   const url=section.querySelector("#childRoutineEditorUrl");
   const part=section.querySelector("#childRoutineEditorPart");
   const day=section.querySelector("#childRoutineEditorDay");
-  const week=section.querySelector("#childRoutineEditorWeek");
+  const category=section.querySelector("#childRoutineEditorCategory");
   const sticky=section.querySelector("#childRoutineEditorSticky");
   if(title) title.value="";
   if(url) url.value="";
   if(part) part.value="morning";
   if(day) day.value="daily";
-  if(week) week.value=String(activeChildRoutineEditorWeekOffset);
+  if(category) category.value="none";
   if(sticky) sticky.checked=false;
   const saveBtn=section.querySelector("#saveChildRoutineEditorItem");
   if(saveBtn) saveBtn.textContent="+ Routinepunkt";
@@ -17037,13 +17066,11 @@ function renderChildRoutineOverviewEditor(){
       <label>Link – optional
         <input id="childRoutineEditorUrl" type="url" placeholder="https://…">
       </label>
-      <label>Woche
-        <select id="childRoutineEditorWeek">
-          ${[0,1,2,3,4].map(offset=>`
-            <option value="${offset}" ${activeChildRoutineEditorWeekOffset===offset?"selected":""}>
-              ${offset===0?"Diese Woche":offset===1?"Nächste Woche":`+${offset} Wochen`}
-            </option>
-          `).join("")}
+      <label>Video-Thema
+        <select id="childRoutineEditorCategory">
+          ${childRoutineVideoCategories(id).map(([value,label])=>
+            `<option value="${value}">${escapeHtml(label)}</option>`
+          ).join("")}
         </select>
       </label>
       <label>Tag
@@ -17071,6 +17098,7 @@ function renderChildRoutineOverviewEditor(){
               <small>
                 ${escapeHtml(store.areaLabels[item.part]||childRoutineDefaultAreas[item.part]||"")}
                 · ${item.day==="daily"?"täglich":escapeHtml(item.day)}
+                ${item.url?` · ${escapeHtml(childRoutineVideoCategoryLabel(id,item.category||"none"))}`:""}
                 ${item.sticky?" · jede Woche":""}
               </small>
             </div>
@@ -17113,11 +17141,10 @@ function renderChildRoutineOverviewEditor(){
       part:section.querySelector("#childRoutineEditorPart")?.value||"morning",
       title,
       url:section.querySelector("#childRoutineEditorUrl")?.value.trim()||"",
+      category:section.querySelector("#childRoutineEditorCategory")?.value||"none",
       day:section.querySelector("#childRoutineEditorDay")?.value||"daily",
       sticky:!!section.querySelector("#childRoutineEditorSticky")?.checked,
-      weekKey:childRoutineWeekKey(
-        Number(section.querySelector("#childRoutineEditorWeek")?.value ?? activeChildRoutineEditorWeekOffset)
-      ),
+      weekKey:childRoutineWeekKey(activeChildRoutineEditorWeekOffset),
       updatedAt:now
     };
 
@@ -17152,12 +17179,8 @@ function renderChildRoutineOverviewEditor(){
       section.querySelector("#childRoutineEditorPart").value=item.part||"morning";
       section.querySelector("#childRoutineEditorTitle").value=item.title||"";
       section.querySelector("#childRoutineEditorUrl").value=item.url||"";
+      section.querySelector("#childRoutineEditorCategory").value=item.category||"none";
       section.querySelector("#childRoutineEditorDay").value=item.day||"daily";
-      const weekSelect=section.querySelector("#childRoutineEditorWeek");
-      if(weekSelect){
-        const match=[0,1,2,3,4].find(offset=>childRoutineWeekKey(offset)===item.weekKey);
-        weekSelect.value=String(match ?? activeChildRoutineEditorWeekOffset);
-      }
       section.querySelector("#childRoutineEditorSticky").checked=!!item.sticky;
       section.querySelector("#saveChildRoutineEditorItem").textContent="Änderung speichern";
       section.querySelector("#cancelChildRoutineEditorEdit").classList.remove("hidden");
@@ -17394,3 +17417,162 @@ setTimeout(()=>{
   renderPersonalRoutineSentenceSettings();
   applyMamaDailyFocus();
 },0);
+
+/* =========================================================
+   V64 – Kinder-Routinen: gleiche Zeichenlogik + kompakte Bedienung
+   Änderungen gelten für Lou UND Fina.
+   ========================================================= */
+(function(){
+  function childSelectedIcon(id){
+    const memberKey=schoolMemberKey(String(id));
+    return state.familySettings?.[memberKey]?.icon || (String(id)==="1"?"⭐":"🌙");
+  }
+
+  function refreshChildRoutineSigns(){
+    ["1","2"].forEach(id=>{
+      const icon=childSelectedIcon(id);
+      document.querySelectorAll(`[data-school-open-routines="${id}"] .school-routine-symbol`).forEach(el=>{
+        el.innerHTML=schoolPersonalIconMarkup(icon);
+        el.setAttribute("title",schoolPersonalIconLabel(icon));
+      });
+    });
+    const dialog=document.querySelector("#childRoutineDialog");
+    if(dialog?.open){
+      const id=String(dialog.dataset.child||activeChildRoutineId||"1");
+      const mark=dialog.querySelector("#childRoutinePersonalSign");
+      if(mark){
+        const icon=childSelectedIcon(id);
+        mark.innerHTML=schoolPersonalIconMarkup(icon);
+        mark.setAttribute("title",schoolPersonalIconLabel(icon));
+      }
+    }
+  }
+
+  window.refreshChildRoutineSigns=refreshChildRoutineSigns;
+  refreshChildRoutineSigns();
+  requestAnimationFrame(refreshChildRoutineSigns);
+  setTimeout(refreshChildRoutineSigns,250);
+
+  /* Nach einer Zeichenwahl beide Stellen sofort synchronisieren. */
+  document.addEventListener("click",e=>{
+    if(e.target.closest("[data-school-icon], .school-icon-option, .school-sign-option, [data-personal-icon]")){
+      setTimeout(refreshChildRoutineSigns,0);
+      setTimeout(refreshChildRoutineSigns,120);
+    }
+  });
+
+  /* Kinderansicht bewusst neu rendern:
+     - vier feste Bereiche = heutige Routinen, dort direkt abhaken
+     - Bereiche lassen sich einzeln ein-/ausklappen
+     - Wochenraster zeigt NUR zusätzlich geplante Wochenpunkte
+       und wiederholt nicht sämtliche festen Routinen an jedem Tag. */
+  const originalRenderChildRoutineDialog=window.renderChildRoutineDialog || renderChildRoutineDialog;
+  renderChildRoutineDialog=function(){
+    const dialog=ensureChildRoutineDialog();
+    const id=activeChildRoutineId;
+    const store=childRoutineStore(id);
+    const weekKey=childRoutineWeekKey(activeChildRoutineWeekOffset);
+    const labels=store.areaLabels||childRoutineDefaultAreas;
+
+    dialog.dataset.child=id;
+    dialog.querySelector("#childRoutineDialogTitle").textContent=childRoutineTitle(id);
+    dialog.querySelector("#childRoutineDialogSubtitle").textContent=childRoutineSubtitle(id);
+    refreshChildRoutineSigns();
+
+    dialog.querySelectorAll("[data-child-routine-week]").forEach(btn=>{
+      btn.classList.toggle("active",Number(btn.dataset.childRoutineWeek||0)===activeChildRoutineWeekOffset);
+    });
+
+    const fixedItems=childRoutineFixedItems(id);
+    const plannedWeekItems=store.items
+      .filter(item=>childRoutineAppliesToWeek(item,weekKey))
+      .sort((a,b)=>Number(a.order||0)-Number(b.order||0));
+
+    const today=new Date();
+    today.setHours(12,0,0,0);
+    const areaHost=dialog.querySelector("#childRoutineAreaCards");
+    areaHost.innerHTML=Object.keys(childRoutineDefaultAreas).map(part=>{
+      const items=fixedItems.filter(item=>(item.part||"morning")===part);
+      return `
+        <details class="child-routine-area-card" open>
+          <summary class="child-routine-area-title">
+            <span class="child-routine-area-symbol">${childRoutineSymbol(part)}</span>
+            <strong>${escapeHtml(labels[part]||childRoutineDefaultAreas[part])}</strong>
+            <span class="child-routine-area-chevron" aria-hidden="true">⌄</span>
+          </summary>
+          ${items.length
+            ? `<div class="child-routine-area-list">
+                ${items.map(item=>{
+                  const done=!!childRoutineCompletion(id,item.id,today)?.done;
+                  return `<label class="child-routine-area-line ${done?"is-done":""}">
+                    <input type="checkbox"
+                           data-child-routine-check="${escapeHtml(item.id)}"
+                           data-date="${dateKey(today)}"
+                           ${done?"checked":""}>
+                    <span class="child-routine-area-checkmark" aria-hidden="true"></span>
+                    <span>${escapeHtml(item.title)}</span>
+                  </label>`;
+                }).join("")}
+              </div>`
+            : `<div class="child-routine-empty-area">☾ <span>✦</span></div>`
+          }
+        </details>`;
+    }).join("");
+
+    const monday=childRoutineMondayForOffset(activeChildRoutineWeekOffset);
+    const names=["Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag","Sonntag"];
+    const grid=dialog.querySelector("#childRoutineWeekGrid");
+    grid.innerHTML=names.map((name,index)=>{
+      const date=new Date(monday);
+      date.setDate(monday.getDate()+index);
+      const dayItems=plannedWeekItems.filter(item=>childRoutineAppliesToDate(item,date));
+      return `<section class="child-routine-day ${dateKey(date)===dateKey(new Date())?"is-today":""}">
+        <div class="child-routine-day-head">
+          <strong>${name}</strong>
+          <small>${String(date.getDate()).padStart(2,"0")}.${String(date.getMonth()+1).padStart(2,"0")}.</small>
+        </div>
+        <div class="child-routine-day-body">
+          ${dayItems.length
+            ? dayItems.map(item=>{
+                const done=!!childRoutineCompletion(id,item.id,date)?.done;
+                return `<label class="child-routine-day-item ${done?"is-done":""}">
+                  <input type="checkbox" data-child-routine-check="${escapeHtml(item.id)}" data-date="${dateKey(date)}" ${done?"checked":""}>
+                  <span class="child-routine-day-item-symbol">${childRoutineSymbol(item.part||"morning")}</span>
+                  <span>${escapeHtml(item.title)}</span>
+                </label>`;
+              }).join("")
+            : `<div class="child-routine-day-empty" aria-label="Nichts geplant">☾ <span>✦</span></div>`
+          }
+        </div>
+      </section>`;
+    }).join("");
+
+    const label=dialog.querySelector("#childRoutineWeekLabel");
+    if(label){
+      label.textContent=activeChildRoutineWeekOffset===0?"Diese Woche":activeChildRoutineWeekOffset===1?"Nächste Woche":`+${activeChildRoutineWeekOffset} Wochen`;
+    }
+    if(typeof renderChildDailyFocusInDialog==="function") renderChildDailyFocusInDialog();
+  };
+  window.renderChildRoutineDialog=renderChildRoutineDialog;
+
+  /* Editor im Überblick an Mamas Wochenplanung angleichen:
+     Woche wird ausschließlich über die Reiter gewählt – kein doppeltes Wochenfeld. */
+  const oldOverviewRender=window.renderChildRoutineOverviewEditor || renderChildRoutineOverviewEditor;
+  renderChildRoutineOverviewEditor=function(){
+    oldOverviewRender();
+    const section=document.querySelector("#childRoutineOverviewEditor");
+    if(!section) return;
+    const weekField=section.querySelector("#childRoutineEditorWeek")?.closest("label");
+    if(weekField) weekField.remove();
+    const hint=section.querySelector(".personal-subject-settings-head small");
+    if(hint) hint.textContent="Zusätzliche Punkte für die gewählte Woche planen. Die festen Routinen darüber bleiben davon unabhängig.";
+    const title=section.querySelector(".personal-subject-settings-head strong");
+    if(title) title.textContent="Wochenplanung";
+  };
+  window.renderChildRoutineOverviewEditor=renderChildRoutineOverviewEditor;
+  renderChildRoutineOverviewEditor();
+
+  /* Der vorhandene Speichercode darf trotz entferntem Wochen-Select weiterlaufen:
+     er verwendet bereits activeChildRoutineEditorWeekOffset als Fallback. */
+  setTimeout(refreshChildRoutineSigns,400);
+})();
