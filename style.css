@@ -26041,34 +26041,93 @@ button.day-meal-list-item:hover,a.day-meal-list-item:hover{background:rgba(164,1
   }
 }
 
-/* V71 – Kinder-Zeichen: kein weißer Kreis mehr */
-.child-symbol-button,
-.child-symbol-button.active,
-.child-hero-symbol,
-.child-routine-symbol,
-.child-routine-header-symbol,
-[data-child-symbol-button],
-[data-child-routine-symbol] {
+
+/* =========================================================
+   V72 – Kinder: Zeichen wirklich transparent + Bewertung lesbar
+   ========================================================= */
+
+/* EXAKTER Button im Kinder-Kopf: kein weißer Kreis, kein Schatten */
+#schoolMotivationBanner .school-hero-v4-icon,
+#schoolMotivationBanner .school-hero-v4-icon:hover,
+#schoolMotivationBanner .school-hero-v4-icon:focus,
+#schoolMotivationBanner .school-hero-v4-icon:active {
   background: transparent !important;
   background-color: transparent !important;
+  border-color: transparent !important;
   box-shadow: none !important;
 }
 
-/* Auch eventuelle innere weiße Fläche des Zeichen-Buttons entfernen */
-.child-symbol-button::before,
-.child-symbol-button::after,
-.child-hero-symbol::before,
-.child-hero-symbol::after {
-  background: transparent !important;
-  box-shadow: none !important;
+/* Das Zeichen selbst bleibt klar sichtbar */
+#schoolMotivationBanner .school-hero-v4-icon .school-personal-svg-icon {
+  width: 38px !important;
+  height: 38px !important;
 }
 
-/* Falls der runde Button über die bestehende allgemeine Symbol-Klasse läuft */
-.child-page .symbol-button,
-.child-page .hero-symbol,
-.child-page .routine-symbol {
-  background: transparent !important;
-  background-color: transparent !important;
-  box-shadow: none !important;
+/* Bewertung darf NICHT unter dem Wochenfenster abgeschnitten werden */
+.child-routine-day {
+  overflow: visible !important;
+}
+.child-routine-day-body {
+  overflow: visible !important;
+}
+.child-routine-day-item {
+  position: relative !important;
+  overflow: visible !important;
+}
+
+/* Nach dem Abhaken: kompakte, gut lesbare Bewertungsbox ÜBER dem Eintrag */
+.child-routine-rating {
+  position: absolute !important;
+  z-index: 80 !important;
+  left: 2px !important;
+  right: 2px !important;
+  bottom: calc(100% + 6px) !important;
+  width: auto !important;
+  margin: 0 !important;
+  padding: 7px 8px !important;
+  display: grid !important;
+  grid-template-columns: 1fr 1fr 1fr !important;
+  gap: 5px !important;
+  border: 1px solid rgba(166,137,108,.30) !important;
+  border-radius: 10px !important;
+  background: #fffaf2 !important;
+  box-shadow: 0 7px 18px rgba(83,66,54,.15) !important;
+}
+
+/* "Wie war es?" über die ganze Breite */
+.child-routine-rating > span {
+  grid-column: 1 / -1 !important;
+  display: block !important;
+  margin: 0 0 2px !important;
+  color: #705b4e !important;
+  font-size: .68rem !important;
+  font-weight: 700 !important;
+  text-align: center !important;
+}
+
+/* Gut / Mittel / Schlecht tatsächlich anklickbar und lesbar */
+.child-routine-rating button {
+  min-width: 0 !important;
+  padding: 5px 4px !important;
+  border: 1px solid rgba(145,121,103,.22) !important;
+  border-radius: 8px !important;
+  background: #fffdf9 !important;
+  color: #604d43 !important;
+  font-size: .62rem !important;
+  line-height: 1.15 !important;
+  white-space: nowrap !important;
+  cursor: pointer !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
+}
+.child-routine-rating button:hover {
+  background: #f1eadf !important;
+  border-color: rgba(145,121,103,.42) !important;
+}
+
+/* Am unteren Rand genug Platz, falls eine Bewertung offen ist */
+.child-routine-week-plan,
+.child-routine-week-grid {
+  overflow: visible !important;
 }
 
