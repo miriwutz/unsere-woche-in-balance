@@ -18496,3 +18496,528 @@ setTimeout(()=>{
 
 })();
 
+/* =========================================================
+   V70 – Drei getrennte Videoarchive: Mama / Lou / Fina
+   - Kindervideo abhaken -> bewerten -> persönliches Archiv
+   - pro Person eigenes Archiv
+   - Archivvideo wieder in die jeweilige Wochenplanung einplanen
+   ========================================================= */
+(function(){
+
+  let activeRoutineArchiveOwner = "mama";
+
+  function v70ArchiveOwner(entry){
+    return String(entry?.owner || "mama");
+  }
+
+  function v70ArchiveOwnerName(owner){
+    if(owner==="1") return familyName("c") || "Lou";
+    if(owner==="2") return familyName("d") || "Fina";
+    return familyName("a") || "Mama";
+  }
+
+  function v70ArchiveCategories(owner){
+    if(owner==="1" || owner==="2"){
+      return childRoutineVideoCategories(owner);
+    }
+    return [
+      ["all","Alle Kategorien"],
+      ["yoga","Yoga"],
+      ["meditation","Meditation"],
+      ["pain","Schmerz"],
+      ["sport","Sport"],
+      ["other","Sonstiges"]
+    ];
+  }
+
+  function v70CategoryLabel(owner,key){
+    if(owner==="1" || owner==="2"){
+      return childRoutineVideoCategoryLabel(owner,key);
+    }
+    return ({
+      yoga:"Yoga",
+      meditation:"Meditation",
+      pain:"Schmerz",
+      sport:"Sport",
+      other:"Sonstiges",
+      none:"Sonstiges"
+    })[key||"other"] || "Sonstiges";
+  }
+
+  function v70NormalizeUrl(url){
+    try{return normalizeUrl(url);}
+    catch{return String(url||"").trim();}
+  }
+
+  function childArchiveFromRoutineItem(owner,item,rating,date){
+    if(!item?.url) return null;
+    if(!Array.isArray(state.archive)) state.archive=[];
+
+    const normalized=v70NormalizeUrl(item.url);
+
+    let entry=state.archive.find(a=>
+      v70ArchiveOwner(a)===String(owner) &&
+      v70NormalizeUrl(a.url)===normalized
+    );
+
+    if(!entry){
+      entry={
+        id:uid(),
+        owner:String(owner),
+        title:item.title || "Routinevideo",
+        url:item.url,
+        thumbnail:thumbnailFor(item.url),
+        timesDone:0,
+        rating:null,
+        favorite:false,
+        lastDone:null,
+        category:item.category || "other",
+        createdAt:Date.now(),
+        updatedAt:Date.now()
+      };
+      state.archive.push(entry);
+    }
+
+    entry.owner=String(owner);
+    entry.title=item.title || entry.title || "Routinevideo";
+    entry.url=item.url;
+    entry.thumbnail=entry.thumbnail || thumbnailFor(item.url);
+    entry.category=item.category || entry.category || "other";
+    entry.rating=rating || entry.rating || null;
+    entry.timesDone=(entry.timesDone||0)+1;
+    entry.lastDone=(date instanceof Date ? date : new Date()).toISOString();
+    entry.planned=false;
+    entry.updatedAt=Date.now();
+
+    return entry;
+  }
+
+  /* ---------- Kind: nach dem Abhaken Bewertung anbieten ---------- */
+  const renderChildRoutineDialogBeforeV70=renderChildRoutineDialog;
+
+  renderChildRoutineDialog=function(){
+    renderChildRoutineDialogBeforeV70();
+
+    const dialog=ensureChildRoutineDialog();
+    if(!dialog) return;
+
+    const owner=String(activeChildRoutineId||"1");
+    const store=childRoutineStore(owner);
+
+    dialog.querySelectorAll(".child-routine-day-item").forEach(row=>{
+      const checkbox=row.querySelector("[data-child-routine-check]");
+      if(!checkbox) return;
+
+      const item=store.items.find(x=>x.id===checkbox.dataset.childRoutineCheck);
+      if(!item?.url) return;
+
+      const date=parseLocalDate(checkbox.dataset.date);
+      if(!date) return;
+
+      const completion=childRoutineCompletion(owner,item.id,date);
+
+      row.querySelector(".child-routine-rating")?.remove();
+
+      if(completion?.done && !completion?.rating){
+        const rating=document.createElement("div");
+        rating.className="child-routine-rating";
+        rating.innerHTML=`
+          <span>Wie war es?</span>
+          <button type="button"
+                  data-child-video-rating="super"
+                  data-child-owner="${owner}"
+                  data-child-item="${escapeHtml(item.id)}"
+                  data-child-date="${escapeHtml(dateKey(date))}">✦ Gut</button>
+          <button type="button"
+                  data-child-video-rating="okay"
+                  data-child-owner="${owner}"
+                  data-child-item="${escapeHtml(item.id)}"
+                  data-child-date="${escapeHtml(dateKey(date))}">○ Mittel</button>
+          <button type="button"
+                  data-child-video-rating="nope"
+                  data-child-owner="${owner}"
+                  data-child-item="${escapeHtml(item.id)}"
+                  data-child-date="${escapeHtml(dateKey(date))}">— Schlecht</button>
+        `;
+        row.appendChild(rating);
+      }
+    });
+  };
+  window.renderChildRoutineDialog=renderChildRoutineDialog;
+
+  document.addEventListener("click",e=>{
+    const btn=e.target.closest("[data-child-video-rating]");
+    if(!btn) return;
+
+    e.preventDefault();
+    e.stopPropagation();
+
+    const owner=String(btn.dataset.childOwner||"");
+    const store=childRoutineStore(owner);
+    const item=store.items.find(x=>x.id===btn.dataset.childItem);
+    const date=parseLocalDate(btn.dataset.childDate);
+
+    if(!item || !date) return;
+
+    const current=childRoutineCompletion(owner,item.id,date);
+    const rating=btn.dataset.childVideoRating;
+
+    childArchiveFromRoutineItem(owner,item,rating,date);
+    setChildRoutineCompletion(owner,item.id,date,true);
+
+    store.completions[childRoutineCompletionKey(item.id,date)]={
+      ...(current||{}),
+      done:true,
+      rating,
+      archived:true,
+      updatedAt:Date.now()
+    };
+    store.updatedAt=Date.now();
+
+    try{
+      localStorage.setItem("balanceProd.archive",JSON.stringify(state.archive));
+      persistFamilySettingsImmediately?.();
+    }catch{}
+
+    save();
+    renderChildRoutineDialog();
+
+    if(document.querySelector("#archiveList")){
+      renderArchive();
+    }
+
+    showMotivation(`${item.title || "Video"} wurde bewertet und in ${v70ArchiveOwnerName(owner)}s Archiv gespeichert.`);
+  });
+
+  /* ---------- Archiv: Personenumschalter einsetzen ---------- */
+  function v70EnsureArchiveOwnerTabs(){
+    const card=document.querySelector(".exercise-overview-card");
+    if(!card) return null;
+
+    let tabs=card.querySelector("#routineArchiveOwnerTabs");
+    if(!tabs){
+      tabs=document.createElement("div");
+      tabs.id="routineArchiveOwnerTabs";
+      tabs.className="routine-archive-owner-tabs";
+
+      const filterRow=card.querySelector(".exercise-filter-row");
+      filterRow?.insertAdjacentElement("beforebegin",tabs);
+    }
+
+    tabs.innerHTML=["mama","1","2"].map(owner=>`
+      <button type="button"
+              data-routine-archive-owner="${owner}"
+              class="${activeRoutineArchiveOwner===owner?"active":""}">
+        ${escapeHtml(v70ArchiveOwnerName(owner))}
+      </button>
+    `).join("");
+
+    tabs.querySelectorAll("[data-routine-archive-owner]").forEach(btn=>{
+      btn.addEventListener("click",()=>{
+        activeRoutineArchiveOwner=String(btn.dataset.routineArchiveOwner);
+        archiveFilter="all";
+        archiveCategoryFilter="all";
+        renderArchive();
+      });
+    });
+
+    return tabs;
+  }
+
+  function v70RefreshArchiveCategoryOptions(){
+    const select=document.querySelector("#archiveCategoryFilter");
+    if(!select) return;
+
+    const categories=v70ArchiveCategories(activeRoutineArchiveOwner);
+    const rows=categories[0]?.[0]==="all"
+      ? categories
+      : [["all","Alle Kategorien"],...categories.filter(([key])=>key!=="none")];
+
+    select.innerHTML=rows.map(([key,label])=>
+      `<option value="${escapeHtml(key)}"${archiveCategoryFilter===key?" selected":""}>${escapeHtml(label)}</option>`
+    ).join("");
+  }
+
+  function v70ArchiveCardHtml(a){
+    const owner=v70ArchiveOwner(a);
+    const ratingLabel={super:"✦ Gut",okay:"○ Mittel",nope:"— Schlecht"};
+
+    return `
+      <article class="archive-card">
+        ${a.thumbnail ? `
+          <a class="archive-thumb-link"
+             href="${escapeHtml(a.url)}"
+             target="_blank"
+             rel="noopener"
+             aria-label="${escapeHtml(a.title)} öffnen">
+            <img class="archive-thumb" src="${escapeHtml(a.thumbnail)}" alt="">
+            <span class="archive-thumb-play">▶</span>
+          </a>` : ""}
+
+        <div class="archive-content">
+          <div class="archive-title-row">
+            <h3>${escapeHtml(a.title)}</h3>
+            ${isMostWanted(a.url) ? '<span class="most-wanted-badge" title="Wird häufig genutzt">✦ Most wanted</span>' : ''}
+          </div>
+
+          <div class="archive-meta">
+            <span>${ratingLabel[a.rating] || "☆ Noch nicht bewertet"}</span>
+            <span>${escapeHtml(v70CategoryLabel(owner,a.category||"other"))}</span>
+            <span>${a.timesDone || 0}× gemacht</span>
+          </div>
+
+          <div class="archive-actions">
+            <button type="button"
+                    class="archive-action favorite-btn ${a.favorite?"active":""}"
+                    data-id="${a.id}">
+              ${a.favorite ? "♥ Favorit" : "♡ Favorit"}
+            </button>
+            <button type="button"
+                    class="archive-action replan-btn"
+                    data-id="${a.id}">
+              ＋ Einplanen
+            </button>
+            <a class="archive-action archive-open-link"
+               href="${escapeHtml(a.url)}"
+               target="_blank"
+               rel="noopener">
+              Video öffnen ↗
+            </a>
+            <button type="button"
+                    class="archive-action archive-delete-action delete-exercise-btn"
+                    data-id="${a.id}">
+              Löschen
+            </button>
+          </div>
+        </div>
+      </article>
+    `;
+  }
+
+  renderArchive=function(){
+    const list=document.querySelector("#archiveList");
+    if(!list) return;
+
+    v70EnsureArchiveOwnerTabs();
+    v70RefreshArchiveCategoryOptions();
+
+    document.querySelectorAll("[data-routine-archive-owner]").forEach(btn=>{
+      btn.classList.toggle("active",btn.dataset.routineArchiveOwner===activeRoutineArchiveOwner);
+    });
+
+    let items=(state.archive||[])
+      .filter(a=>v70ArchiveOwner(a)===activeRoutineArchiveOwner);
+
+    if(archiveFilter==="favorite"){
+      items=items.filter(x=>x.favorite);
+    }else if(archiveFilter==="wanted"){
+      const wantedIds=new Set(
+        getMostWantedEntries()
+          .filter(x=>v70ArchiveOwner(x)===activeRoutineArchiveOwner)
+          .map(x=>x.id)
+      );
+      items=items.filter(x=>wantedIds.has(x.id));
+    }else if(["super","okay","nope"].includes(archiveFilter)){
+      items=items.filter(x=>x.rating===archiveFilter);
+    }
+
+    if(archiveCategoryFilter!=="all"){
+      items=items.filter(x=>(x.category||"other")===archiveCategoryFilter);
+    }
+
+    const byNewest=arr=>arr.sort((a,b)=>new Date(b.lastDone||0)-new Date(a.lastDone||0));
+
+    if(!items.length){
+      list.className="archive-grid";
+      list.innerHTML=`<div class="empty">
+        ${escapeHtml(v70ArchiveOwnerName(activeRoutineArchiveOwner))} hat hier noch keine passenden Videos.
+      </div>`;
+      bindArchiveButtons();
+      return;
+    }
+
+    if(archiveFilter==="all"){
+      const groups=[
+        ["unrated","☆ Noch bewerten",byNewest(items.filter(x=>!x.rating))],
+        ["super","✦ Gut",byNewest(items.filter(x=>x.rating==="super"))],
+        ["okay","○ Mittel",byNewest(items.filter(x=>x.rating==="okay"))],
+        ["nope","— Schlecht",byNewest(items.filter(x=>x.rating==="nope"))]
+      ];
+
+      list.className="archive-columns";
+      list.innerHTML=groups.map(([key,label,group])=>`
+        <section class="archive-column ${key}">
+          <div class="archive-column-head">${label}<span>${group.length}</span></div>
+          <div class="archive-column-list">
+            ${group.length
+              ? group.map(v70ArchiveCardHtml).join("")
+              : '<div class="column-empty">Noch keine Übungen</div>'}
+          </div>
+        </section>
+      `).join("");
+    }else{
+      if(archiveFilter!=="wanted") byNewest(items);
+      list.className="archive-grid";
+      list.innerHTML=items.map(v70ArchiveCardHtml).join("");
+    }
+
+    bindArchiveButtons();
+  };
+  window.renderArchive=renderArchive;
+
+  bindArchiveButtons=function(){
+    document.querySelectorAll(".favorite-btn").forEach(btn=>{
+      btn.onclick=()=>{
+        const item=state.archive.find(a=>a.id===btn.dataset.id);
+        if(!item) return;
+        item.favorite=!item.favorite;
+        item.updatedAt=Date.now();
+        save();
+        renderArchive();
+      };
+    });
+
+    document.querySelectorAll(".replan-btn").forEach(btn=>{
+      btn.onclick=()=>{
+        const item=state.archive.find(a=>a.id===btn.dataset.id);
+        if(!item) return;
+
+        replanArchiveId=item.id;
+        activeRoutineArchiveOwner=v70ArchiveOwner(item);
+
+        const title=document.querySelector("#replanTitle");
+        if(title) title.textContent=item.title || "Wieder einplanen";
+
+        const week=document.querySelector("#replanWeek");
+        if(week) week.value="0";
+
+        const day=document.querySelector("#replanDay");
+        if(day) day.value="Montag";
+
+        const part=document.querySelector("#replanPart");
+        if(part) part.value="morning";
+
+        document.querySelector("#replanDialog")?.showModal();
+      };
+    });
+
+    document.querySelectorAll(".delete-exercise-btn").forEach(btn=>{
+      btn.onclick=()=>{
+        const item=state.archive.find(a=>a.id===btn.dataset.id);
+        if(!item) return;
+        if(!confirm(`„${item.title}“ wirklich aus ${v70ArchiveOwnerName(v70ArchiveOwner(item))}s Archiv löschen?`)) return;
+
+        markListItemDeleted("archiveTombstones",item.id);
+        state.archive=state.archive.filter(a=>a.id!==item.id);
+        save();
+        persistTopLevelDeletionImmediately("archive");
+        renderArchive();
+      };
+    });
+  };
+  window.bindArchiveButtons=bindArchiveButtons;
+
+  /* ---------- Replan-Dialog: Kinder ins Kinder-System, Mama wie bisher ---------- */
+  const confirm=document.querySelector("#confirmReplanBtn");
+  if(confirm){
+    confirm.addEventListener("click",e=>{
+      const item=state.archive.find(a=>a.id===replanArchiveId);
+      if(!item) return;
+
+      const owner=v70ArchiveOwner(item);
+      if(owner==="mama") return; // alter Mama-Handler darf normal weiterlaufen
+
+      e.preventDefault();
+      e.stopImmediatePropagation();
+
+      const weeksAhead=Number(document.querySelector("#replanWeek")?.value||0);
+      const day=document.querySelector("#replanDay")?.value||"Montag";
+      const part=document.querySelector("#replanPart")?.value||"morning";
+      const store=childRoutineStore(owner);
+      const weekKey=childRoutineWeekKey(weeksAhead);
+
+      const already=store.items.some(existing=>{
+        if(existing.weekKey!==weekKey ||
+           existing.day!==day ||
+           (existing.part||"morning")!==part) return false;
+
+        if(existing.sourceArchiveId===item.id) return true;
+        return existing.url &&
+          v70NormalizeUrl(existing.url)===v70NormalizeUrl(item.url);
+      });
+
+      if(already){
+        showMotivation(`${item.title || "Video"} ist dort bereits eingeplant.`);
+        return;
+      }
+
+      store.items.push({
+        id:uid(),
+        title:item.title || "Routinevideo",
+        url:item.url,
+        category:item.category || "other",
+        part,
+        day,
+        sticky:false,
+        weekKey,
+        sourceArchiveId:item.id,
+        createdAt:Date.now(),
+        updatedAt:Date.now(),
+        order:store.items.length
+      });
+      store.updatedAt=Date.now();
+
+      item.updatedAt=Date.now();
+      persistFamilySettingsImmediately?.();
+      save();
+
+      replanArchiveId=null;
+      document.querySelector("#replanDialog")?.close();
+
+      activeChildRoutineEditorId=owner;
+      activeChildRoutineEditorWeekOffset=weeksAhead;
+      renderChildRoutineOverviewEditor();
+      renderArchive();
+
+      showMotivation(
+        `${item.title || "Video"} ist für ${v70ArchiveOwnerName(owner)} am ${day} eingeplant.`
+      );
+    },true);
+  }
+
+  /* ---------- "Alle Übungen löschen" nur für das ausgewählte Archiv ---------- */
+  const deleteAll=document.querySelector("#deleteAllExercisesBtn");
+  if(deleteAll){
+    deleteAll.addEventListener("click",e=>{
+      e.preventDefault();
+      e.stopImmediatePropagation();
+
+      const owner=activeRoutineArchiveOwner;
+      const ownItems=(state.archive||[]).filter(a=>v70ArchiveOwner(a)===owner);
+
+      if(!ownItems.length){
+        showMotivation(`${v70ArchiveOwnerName(owner)}s Archiv ist bereits leer.`);
+        return;
+      }
+
+      if(!confirm(`Wirklich alle Videos aus ${v70ArchiveOwnerName(owner)}s Archiv löschen?`)) return;
+
+      const ids=new Set(ownItems.map(x=>x.id));
+      ownItems.forEach(x=>markListItemDeleted("archiveTombstones",x.id));
+      state.archive=(state.archive||[]).filter(a=>!ids.has(a.id));
+
+      save();
+      persistTopLevelDeletionImmediately("archive");
+      renderArchive();
+    },true);
+  }
+
+  /* Bei alten Archivdaten ohne owner handelt es sich um Mamas bisheriges Archiv. */
+  (state.archive||[]).forEach(entry=>{
+    if(!entry.owner) entry.owner="mama";
+  });
+
+  renderArchive();
+
+})();
+
