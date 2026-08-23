@@ -26315,39 +26315,65 @@ button.day-meal-list-item:hover,a.day-meal-list-item:hover{background:rgba(164,1
 }
 
 /* =========================================================
-   V75 – Archivkarten ohne Vorschaubild + geschlossene Routinen
+   V76 – Überblick: Hauptkarten einklappbar
    ========================================================= */
-
-/* Wenn kein YouTube-/Vorschaubild vorhanden ist, darf die Karte
-   KEINE leere 92px-Bildspalte reservieren. */
-.archive-columns .archive-card:not(:has(.archive-thumb-link)),
-.archive-grid .archive-card:not(:has(.archive-thumb-link)){
-  grid-template-columns:minmax(0,1fr) !important;
+.overview-collapsible-head{
+  display:flex !important;
+  align-items:flex-start !important;
+  gap:10px !important;
 }
 
-/* Inhalt einer Karte ohne Bild nutzt die volle Breite. */
-.archive-card:not(:has(.archive-thumb-link)) .archive-content{
-  grid-column:1 / -1 !important;
-  width:100% !important;
+.overview-collapse-toggle{
+  margin-left:auto;
+  flex:0 0 auto;
+  border:1px solid rgba(137,113,96,.18);
+  border-radius:999px;
+  background:#fffaf4;
+  color:#715d51;
+  padding:7px 11px;
+  font-size:.68rem;
+  cursor:pointer;
+  white-space:nowrap;
 }
 
-/* Buttons bleiben auch ohne Thumbnail sauber in 2 x 2 angeordnet. */
-.archive-card:not(:has(.archive-thumb-link)) .archive-actions{
-  width:100% !important;
-  grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+.overview-collapse-toggle:hover{
+  background:#f6efe5;
 }
 
-/* Kein optischer Höhenunterschied nur weil ein Bild fehlt. */
-.archive-card:not(:has(.archive-thumb-link)){
-  min-height:0 !important;
-  align-items:start !important;
+/* Bei Übungen & Videos: Toggle + Löschen sauber nebeneinander */
+.exercise-overview-card > .section-head .overview-collapse-toggle{
+  margin-left:auto;
+}
+.exercise-overview-card > .section-head #deleteAllExercisesBtn{
+  margin-left:0 !important;
 }
 
-/* Die geschlossenen Kinder-Routinenkarten bleiben kompakt. */
-#childRoutineAreaCards details.child-routine-area-card:not([open]){
-  min-height:0 !important;
+/* Eingeklappt bleibt nur der Kopf sichtbar. */
+.time-tracker-card.overview-card-collapsed > :not(.overview-card-head),
+.recipe-link-tracker-card.overview-card-collapsed > :not(.overview-card-head),
+.exercise-overview-card.overview-card-collapsed > :not(.section-head){
+  display:none !important;
 }
-#childRoutineAreaCards details.child-routine-area-card:not([open]) > .child-routine-area-title{
-  min-height:64px !important;
+
+.time-tracker-card.overview-card-collapsed,
+.recipe-link-tracker-card.overview-card-collapsed,
+.exercise-overview-card.overview-card-collapsed{
+  padding-bottom:14px !important;
+}
+
+/* Kopf im eingeklappten Zustand etwas kompakter */
+.overview-card-collapsed > .overview-card-head,
+.overview-card-collapsed > .section-head{
+  margin-bottom:0 !important;
+  padding-bottom:0 !important;
+}
+
+@media(max-width:700px){
+  .overview-collapsible-head{
+    flex-wrap:wrap;
+  }
+  .overview-collapse-toggle{
+    margin-left:0;
+  }
 }
 
