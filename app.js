@@ -1054,6 +1054,92 @@ state.familySettings = (() => {
   }
 })();
 
+const DEFAULT_GENERAL_COLOR = "#9b9871";
+
+function normalizeFamilyColorEntry(value, fallback) {
+  if (typeof value === "string") {
+    return {
+      color: /^#[0-9a-f]{6}$/i.test(value) ? value : fallback,
+      updatedAt: 0
+    };
+  }
+
+  const raw = value && typeof value === "object" ? value : {};
+  return {
+    color: /^#[0-9a-f]{6}$/i.test(String(raw.color || ""))
+      ? String(raw.color)
+      : fallback,
+    updatedAt: Number(raw.updatedAt || 0)
+  };
+}
+
+function normalizeFamilyColors(value) {
+  const raw = value && typeof value === "object" ? value : {};
+  return {
+    a: normalizeFamilyColorEntry(raw.a, state.familySettings?.a?.color || defaultFamilySettings.a.color),
+    b: normalizeFamilyColorEntry(raw.b, state.familySettings?.b?.color || defaultFamilySettings.b.color),
+    c: normalizeFamilyColorEntry(raw.c, state.familySettings?.c?.color || defaultFamilySettings.c.color),
+    d: normalizeFamilyColorEntry(raw.d, state.familySettings?.d?.color || defaultFamilySettings.d.color),
+    general: normalizeFamilyColorEntry(raw.general, DEFAULT_GENERAL_COLOR)
+  };
+}
+
+function loadFamilyColorsLocal() {
+  try {
+    const raw = JSON.parse(localStorage.getItem("balanceProd.familyColors") || "null");
+    return normalizeFamilyColors(raw);
+  } catch {
+    return normalizeFamilyColors(null);
+  }
+}
+
+state.familyColors = loadFamilyColorsLocal();
+
+function persistFamilyColorsImmediately() {
+  try {
+    localStorage.setItem(
+      "balanceProd.familyColors",
+      JSON.stringify(state.familyColors || {})
+    );
+  } catch (err) {
+    console.warn("Farbauswahl konnte lokal nicht sofort gespeichert werden:", err);
+  }
+}
+
+function mergeFamilyColorEntry(localEntry, cloudEntry, fallback) {
+  const local = normalizeFamilyColorEntry(localEntry, fallback);
+  const cloud = normalizeFamilyColorEntry(cloudEntry, fallback);
+
+  if (local.updatedAt > cloud.updatedAt) return local;
+  if (cloud.updatedAt > local.updatedAt) return cloud;
+
+  /* Bei alten/gleich alten Daten gewinnt lokal. */
+  return local;
+}
+
+function mergeFamilyColors(localValue, cloudValue) {
+  const local = normalizeFamilyColors(localValue);
+  const cloud = normalizeFamilyColors(cloudValue);
+
+  return {
+    a: mergeFamilyColorEntry(local.a, cloud.a, defaultFamilySettings.a.color),
+    b: mergeFamilyColorEntry(local.b, cloud.b, defaultFamilySettings.b.color),
+    c: mergeFamilyColorEntry(local.c, cloud.c, defaultFamilySettings.c.color),
+    d: mergeFamilyColorEntry(local.d, cloud.d, defaultFamilySettings.d.color),
+    general: mergeFamilyColorEntry(local.general, cloud.general, DEFAULT_GENERAL_COLOR)
+  };
+}
+
+function syncLegacyFamilyColorsFromDedicatedStore() {
+  ["a","b","c","d"].forEach(key => {
+    state.familySettings[key] = state.familySettings[key] || {...defaultFamilySettings[key]};
+    state.familySettings[key].color = state.familyColors?.[key]?.color || defaultFamilySettings[key].color;
+  });
+}
+
+syncLegacyFamilyColorsFromDedicatedStore();
+
+
 ["a","b","c","d"].forEach(key => {
   state.familySettings[key] = state.familySettings[key] || {...defaultFamilySettings[key]};
   state.familySettings[key].name = state.familySettings[key].name || defaultFamilySettings[key].name;
@@ -1132,7 +1218,12 @@ function familyName(key){
 }
 
 function familyColor(key){
+  if (state.familyColors?.[key]?.color) return state.familyColors[key].color;
   return state.familySettings[key]?.color || defaultFamilySettings[key]?.color || "#aaa29c";
+}
+
+function generalColor(){
+  return state.familyColors?.general?.color || DEFAULT_GENERAL_COLOR;
 }
 
 function selectedFamilyMembers() {
@@ -1974,7 +2065,7 @@ function renderWeek() {
     const groupKey = todoGroupKey(item);
     const accent = isSharedGroupKey(groupKey)
       ? "#b58fa7"
-      : (groupKey === "general" ? "#aaa77f" : (familyColor(groupKey) || "#a99f99"));
+      : (groupKey === "general" ? generalColor() : (familyColor(groupKey) || "#a99f99"));
 
     const person =
       groupKey === "general"
@@ -2070,7 +2161,7 @@ function renderWeek() {
           <div class="person-todo-group grouped-family-block ${groupAccentClass(groupKey)}"
                style="${isSharedGroupKey(groupKey)
                  ? `--group-border:${sharedGroupGradient(groupItems)}`
-                 : `--group-border:${groupKey === "general" ? "#b8b58d" : (familyColor(groupKey) || "#c8c0ba")}`}">
+                 : `--group-border:${groupKey === "general" ? generalColor() : (familyColor(groupKey) || "#c8c0ba")}`}">
             <div class="person-todo-group-title">
               <span>${todoGroupLabel(groupKey)}</span>
               ${groupItems.some(isNewEntry) ? `<span class="new-entry-badge group-new-badge">NEU</span>` : ""}
@@ -2132,7 +2223,7 @@ const renderEventCard = (t) => {
     <div class="person-todo-group grouped-family-block event-person-block ${groupAccentClass(groupKey)}"
          style="${isSharedGroupKey(groupKey)
            ? `--group-border:${sharedGroupGradient([t])}`
-           : `--group-border:${groupKey === "general" ? "#b8b58d" : (familyColor(groupKey) || "#c8c0ba")}`}">
+           : `--group-border:${groupKey === "general" ? generalColor() : (familyColor(groupKey) || "#c8c0ba")}`}">
       <div class="person-todo-group-title">
         <span>${familySelectionLabel(t)}</span>
         ${isNewEntry(t) ? `<span class="new-entry-badge group-new-badge">NEU</span>` : ""}
@@ -2204,7 +2295,7 @@ const multiDayLaneHtml = multiDayTrackCount
 
         const accent =
           memberColors[0] ||
-          (groupKey === "general" ? "#9b9871" : "#a99f99");
+          (groupKey === "general" ? generalColor() : "#a99f99");
 
         // Bei mehreren Personen bleibt die frühere Farbmischung erhalten,
         // nur bewusst etwas heller und ruhiger als bei den normalen Karten.
@@ -2595,10 +2686,16 @@ function applyFamilyVisuals(){
     if (colorInput && document.activeElement !== colorInput) colorInput.value = familyColor(key);
   });
 
+  const generalInput = document.querySelector("#familyColorGeneral");
+  if (generalInput && document.activeElement !== generalInput) {
+    generalInput.value = generalColor();
+  }
+
   document.documentElement.style.setProperty("--family-a-color", familyColor("a"));
   document.documentElement.style.setProperty("--family-b-color", familyColor("b"));
   document.documentElement.style.setProperty("--family-c-color", familyColor("c"));
   document.documentElement.style.setProperty("--family-d-color", familyColor("d"));
+  document.documentElement.style.setProperty("--family-general-color", generalColor());
 }
 
 function bindFamilySettings(){
@@ -2620,26 +2717,58 @@ function bindFamilySettings(){
 
     if (colorInput && !colorInput.dataset.bound) {
       colorInput.dataset.bound = "1";
-      const commitFamilyColor = () => {
+
+      /* WICHTIG:
+         Während der Farbwähler offen ist NICHT renderAll() aufrufen.
+         Das bisherige Rendern bei jedem "input" konnte das aktive
+         <input type="color"> ersetzen und damit die endgültige Auswahl
+         wieder verlieren. */
+      colorInput.addEventListener("input", () => {
+        state.familyColors[key].color = colorInput.value;
         state.familySettings[key].color = colorInput.value;
-        state.familySettings[key].updatedAt = Date.now();
-
-        /* Sofort lokal sichern, BEVOR irgendein Render oder Cloud-Snapshot
-           die Eingabe wieder überschreiben kann. */
-        persistFamilySettingsImmediately();
-
-        /* CSS-Variablen und sichtbare Elemente sofort aktualisieren. */
         applyFamilyVisuals();
-        renderAll();
+      });
 
-        /* Cloud danach normal synchronisieren. */
+      colorInput.addEventListener("change", () => {
+        const now = Date.now();
+        state.familyColors[key] = {
+          color: colorInput.value,
+          updatedAt: now
+        };
+        state.familySettings[key].color = colorInput.value;
+        state.familySettings[key].updatedAt = now;
+
+        persistFamilyColorsImmediately();
+        persistFamilySettingsImmediately();
         save();
-      };
 
-      colorInput.addEventListener("input", commitFamilyColor);
-      colorInput.addEventListener("change", commitFamilyColor);
+        /* Erst NACH dem abgeschlossenen Farbwähler neu rendern. */
+        renderAll();
+        applyFamilyVisuals();
+      });
     }
   });
+
+  const generalInput = document.querySelector("#familyColorGeneral");
+  if (generalInput && !generalInput.dataset.bound) {
+    generalInput.dataset.bound = "1";
+
+    generalInput.addEventListener("input", () => {
+      state.familyColors.general.color = generalInput.value;
+      applyFamilyVisuals();
+    });
+
+    generalInput.addEventListener("change", () => {
+      state.familyColors.general = {
+        color: generalInput.value,
+        updatedAt: Date.now()
+      };
+      persistFamilyColorsImmediately();
+      save();
+      renderAll();
+      applyFamilyVisuals();
+    });
+  }
 }
 function isNewEntry(item) {
   if (!item.createdAt) return false;
@@ -2969,7 +3098,7 @@ todos.sort((a, b) => {
     <section class="todo-person-section grouped-family-section ${groupAccentClass(groupKey)}"
       style="${isSharedGroupKey(groupKey)
         ? `--group-border:${sharedGroupGradient(groupItems)}`
-        : `--group-border:${groupKey === "general" ? "#b8b58d" : (familyColor(groupKey) || "#c8c0ba")}`}">
+        : `--group-border:${groupKey === "general" ? generalColor() : (familyColor(groupKey) || "#c8c0ba")}`}">
       <div class="todo-person-heading">
         <span>${todoGroupLabel(groupKey)}</span>
         <small>${groupItems.length} ${groupItems.length === 1 ? "Eintrag" : "Einträge"}</small>
@@ -12653,6 +12782,7 @@ function snapshotPersistentState() {
     workroom: state.workroom,
     school: state.school,
     familySettings: state.familySettings,
+    familyColors: state.familyColors || {},
     settings: state.settings || {}
   };
 }
@@ -12696,6 +12826,7 @@ function saveLocal() {
   localStorage.setItem("balanceProd.workroom", JSON.stringify(state.workroom));
   localStorage.setItem("balanceProd.school", JSON.stringify(state.school));
   localStorage.setItem("balanceProd.familySettings", JSON.stringify(state.familySettings));
+  localStorage.setItem("balanceProd.familyColors", JSON.stringify(state.familyColors || {}));
   localStorage.setItem("balanceProd.schoolYear", state.settings?.schoolYear || "2026-27");
   localStorage.setItem("balanceProd.familyBorderWidth", state.settings?.familyBorderWidth || "3");
 }
@@ -12722,6 +12853,7 @@ function cloudPayload() {
     workroom: state.workroom,
     school: state.school,
     familySettings: state.familySettings,
+    familyColors: state.familyColors || {},
     settings: state.settings || {}
   }));
 }
@@ -12824,6 +12956,14 @@ function applyCloudData(data) {
 
     const localFamilySettings = state.familySettings || {};
     const cloudFamilySettings = data.familySettings || {};
+
+    /* Farben separat und revisionssicher zusammenführen.
+       Dadurch können ältere familySettings aus der Cloud die neue
+       Farbauswahl nicht mehr überschreiben. */
+    state.familyColors = mergeFamilyColors(
+      state.familyColors,
+      data.familyColors
+    );
     const quickLinkTombstones = mergeSimpleTombstones(
       localFamilySettings.quickLinkTombstones,
       cloudFamilySettings.quickLinkTombstones
@@ -12876,6 +13016,9 @@ function applyCloudData(data) {
       quickLinks,
       quickLinkTombstones
     };
+
+    syncLegacyFamilyColorsFromDedicatedStore();
+    persistFamilyColorsImmediately();
 
     state.settings = {
       ...(data.settings || {}),
