@@ -16174,7 +16174,10 @@ function applyMamaRoutineSentences(){
       if(!textSpan) return;
 
       /* Nur Text ersetzen; Markierung links bleibt vollständig erhalten. */
-      textSpan.textContent=String(row.text||"").trim();
+      const nextText=String(row.text||"").trim();
+      if(textSpan.textContent!==nextText){
+        textSpan.textContent=nextText;
+      }
     });
   });
 }
@@ -19512,55 +19515,60 @@ setTimeout(()=>{
 
   v82Setup();
 
-  const obs=new MutationObserver(()=>{
-    requestAnimationFrame(v82Setup);
-  });
-  obs.observe(document.body,{childList:true,subtree:true});
-
+  /* Stabilität: kein body-weiter MutationObserver mehr.
+     Initialisierung einmal direkt und einmal verzögert reicht; beim Öffnen
+     der Einstellungen läuft v82Setup über den vorhandenen toggle-Handler. */
   setTimeout(v82Setup,80);
   setTimeout(v82Setup,260);
 })();
 
 
 /* =========================================================
-   V83 – Überblick: Zeit nach oben + echte Pfeile
+   V83-STABLE – Überblick: Zeit nach oben + echte Pfeile
+   Kein MutationObserver auf document.body.
    ========================================================= */
 (function(){
 
   function v83ReorderOverview(){
-    const archive=document.querySelector("#archive");
-    if(!archive) return;
-
     const settings=document.querySelector("details.family-settings");
     const time=document.querySelector(".time-tracker-card");
-    if(!settings || !time) return;
+    if(!settings || !time || !settings.parentNode) return;
 
-    /* Zeit im Blick direkt VOR Individuelle Einstellungen */
     if(time.nextElementSibling !== settings){
       settings.parentNode.insertBefore(time, settings);
     }
   }
 
   function v83NormalizeArrows(){
-    /* Individuelle Einstellungen */
     const familySummary=document.querySelector(".family-settings > summary");
     if(familySummary){
       let arrow=familySummary.querySelector(".family-settings-summary-chevron");
       if(!arrow){
         arrow=document.createElement("span");
         arrow.className="family-settings-summary-chevron";
+        arrow.setAttribute("aria-hidden","true");
         familySummary.appendChild(arrow);
       }
-      arrow.textContent="›";
+      if(arrow.textContent!=="›") arrow.textContent="›";
     }
 
-    /* Zeit / Rezepte / Videos */
     document.querySelectorAll(".overview-collapse-toggle").forEach(btn=>{
       const card=btn.closest(".time-tracker-card, .recipe-link-tracker-card, .exercise-overview-card");
       const collapsed=!!card?.classList.contains("overview-card-collapsed");
-      btn.innerHTML=`<span class="overview-collapse-arrow">${collapsed?"›":"⌄"}</span>`;
-      btn.setAttribute("aria-label",collapsed ? "Öffnen" : "Einklappen");
-      btn.title=collapsed ? "Öffnen" : "Einklappen";
+      const symbol=collapsed ? "›" : "⌄";
+
+      let span=btn.querySelector(".overview-collapse-arrow");
+      if(!span){
+        btn.textContent="";
+        span=document.createElement("span");
+        span.className="overview-collapse-arrow";
+        btn.appendChild(span);
+      }
+      if(span.textContent!==symbol) span.textContent=symbol;
+
+      const label=collapsed ? "Öffnen" : "Einklappen";
+      if(btn.getAttribute("aria-label")!==label) btn.setAttribute("aria-label",label);
+      if(btn.title!==label) btn.title=label;
     });
   }
 
@@ -19569,21 +19577,17 @@ setTimeout(()=>{
     v83NormalizeArrows();
   }
 
+  /* Nur bei echten Benutzeraktionen aktualisieren. */
   document.addEventListener("click",e=>{
     if(e.target.closest?.('[data-view="archive"]') ||
        e.target.closest?.(".overview-collapse-toggle") ||
        e.target.closest?.(".family-settings > summary")){
-      setTimeout(v83Refresh,30);
-      setTimeout(v83Refresh,140);
+      requestAnimationFrame(v83Refresh);
+      setTimeout(v83Refresh,80);
     }
   },true);
 
-  const obs=new MutationObserver(()=>{
-    requestAnimationFrame(v83Refresh);
-  });
-  obs.observe(document.body,{childList:true,subtree:true});
-
-  setTimeout(v83Refresh,60);
-  setTimeout(v83Refresh,240);
+  document.addEventListener("DOMContentLoaded",v83Refresh,{once:true});
+  setTimeout(v83Refresh,80);
+  setTimeout(v83Refresh,260);
 })();
-
