@@ -28573,3 +28573,70 @@ button.day-meal-list-item:hover,a.day-meal-list-item:hover{background:rgba(164,1
   #schoolChildChooser .school-person-name{font-size:1.3rem !important;}
   #schoolChildChooser .school-person-sub{font-size:.78rem !important;}
 }
+
+
+/* =========================================================
+   V97 – HANDY: Kinderzeichnungen wirklich sichtbar
+   Die Bilddateien selbst sind sehr dunkel. Ein heller Karten-
+   hintergrund allein reicht deshalb nicht. Auf Mobile werden
+   nur die beiden Auswahlbilder kontrastiert und aufgehellt.
+   Desktop bleibt unverändert.
+   ========================================================= */
+@media(max-width:700px){
+
+  #schoolChildChooser .school-person-card{
+    position:relative !important;
+    isolation:isolate !important;
+  }
+
+  /* Ruhiger heller Bildraum hinter der Figur */
+  #schoolChildChooser .school-person-card::before{
+    content:"" !important;
+    position:absolute !important;
+    left:10px !important;
+    right:10px !important;
+    top:10px !important;
+    height:138px !important;
+    border-radius:18px !important;
+    z-index:0 !important;
+    pointer-events:none !important;
+  }
+
+  #schoolChildChooser .school-person-card.lou::before{
+    background:linear-gradient(145deg,#f5f0fb,#eee8f5) !important;
+  }
+
+  #schoolChildChooser .school-person-card.fina::before{
+    background:linear-gradient(145deg,#fff2f3,#f9e8e8) !important;
+  }
+
+  /* Die Zeichnung selbst wird deutlich heller/kontrastreicher.
+     Da es sich um dunkle Line-Art handelt, wird sie mobil invertiert
+     und leicht warm getönt. */
+  #schoolChildChooser .school-person-card img{
+    position:relative !important;
+    z-index:1 !important;
+    height:148px !important;
+    max-height:148px !important;
+    object-fit:contain !important;
+    object-position:center bottom !important;
+    padding:8px 14px 0 !important;
+    background:transparent !important;
+
+    filter:
+      invert(1)
+      sepia(.12)
+      saturate(.65)
+      brightness(1.12)
+      contrast(1.18)
+      drop-shadow(0 2px 5px rgba(70,58,52,.12)) !important;
+
+    opacity:.98 !important;
+  }
+
+  /* Bildbereich bleibt kompakt */
+  #schoolChildChooser .school-person-card{
+    grid-template-rows:158px auto auto !important;
+  }
+}
+
