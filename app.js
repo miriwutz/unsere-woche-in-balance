@@ -6946,6 +6946,49 @@ document.querySelectorAll(".workroom-todo-check").forEach(box => {
 }
   });
 });
+
+/* V102 – NUR HANDY:
+   Schul-To-do durch Tippen auf den Aufgabentext abhaken.
+   Aktionen rechts (Stern, Bearbeiten, Löschen, Pfeile, Links) bleiben
+   vollständig getrennte Klickziele und lösen das Abhaken NICHT aus. */
+if (window.matchMedia("(max-width: 700px)").matches) {
+  document.querySelectorAll(".workroom-todo-content").forEach(content => {
+    content.setAttribute("role", "button");
+    content.setAttribute("tabindex", "0");
+    content.setAttribute("aria-label", "Schul-To-do als erledigt markieren");
+
+    const toggleMobileSchoolTodo = () => {
+      const row = content.closest(".workroom-todo-row");
+      const id = row?.dataset.id;
+      const item = state.workroom.todos.find(t => t.id === id);
+      if (!item) return;
+
+      item.done = !item.done;
+      item.completedAt = item.done ? Date.now() : null;
+      touchWorkroomTodo(item);
+
+      save();
+      renderSchoolWorkTodos();
+
+      if (item.done) {
+        setTimeout(() => {
+          renderSchoolWorkTodos();
+        }, 61000);
+      }
+    };
+
+    content.addEventListener("click", e => {
+      e.preventDefault();
+      toggleMobileSchoolTodo();
+    });
+
+    content.addEventListener("keydown", e => {
+      if (e.key !== "Enter" && e.key !== " ") return;
+      e.preventDefault();
+      toggleMobileSchoolTodo();
+    });
+  });
+}
     function moveSchoolWorkTodo(id, direction) {
   const sorted = [...state.workroom.todos]
     .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
