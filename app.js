@@ -19698,73 +19698,9 @@ setTimeout(()=>{
   },true);
 })();
 
-
 /* =========================================================
-   V87 – ÜBERBLICK: echte linke Pfeile für ALLE 4 Hauptbereiche
+   V87-FIX – bewusst entfernt
+   Die zusätzlichen, nur optischen Pfeile haben die bereits vorhandenen
+   echten .overview-collapse-toggle-Buttons verdoppelt. V83/V85/V86
+   liefern bereits die gewünschte linke, olivfarbene und klickbare Lösung.
    ========================================================= */
-(function () {
-  const OLIVE = "#8f9166";
-
-  function titleText(el) {
-    return (el?.textContent || "").replace(/\s+/g, " ").trim().toLowerCase();
-  }
-
-  function findHeaderByText(needle) {
-    const candidates = [...document.querySelectorAll(
-      "summary, button, .overview-card, .overview-section, .overview-panel, section, article, div"
-    )];
-    return candidates.find(el => {
-      const t = titleText(el);
-      if (!t.includes(needle)) return false;
-      // Prefer the smallest container that actually contains the title.
-      return ![...el.children].some(ch => titleText(ch).includes(needle) && ch.querySelector?.("*"));
-    });
-  }
-
-  function normalizeHeader(header) {
-    if (!header || header.dataset.v87Arrow === "1") return;
-    header.dataset.v87Arrow = "1";
-    header.classList.add("v87-overview-header");
-
-    let arrow = header.querySelector(":scope > .v87-left-arrow");
-    if (!arrow) {
-      arrow = document.createElement("span");
-      arrow.className = "v87-left-arrow";
-      arrow.setAttribute("aria-hidden", "true");
-      header.prepend(arrow);
-    }
-
-    // Keep state in sync for details/summary and aria-expanded based controls.
-    const update = () => {
-      let open = false;
-      if (header.tagName === "SUMMARY") {
-        open = !!header.parentElement?.open;
-      } else {
-        open = header.getAttribute("aria-expanded") === "true";
-      }
-      arrow.textContent = open ? "▾" : "▸";
-    };
-    update();
-
-    header.addEventListener("click", () => setTimeout(update, 0));
-    if (header.tagName === "SUMMARY" && header.parentElement instanceof HTMLDetailsElement) {
-      header.parentElement.addEventListener("toggle", update);
-    }
-  }
-
-  function installOverviewArrows() {
-    [
-      "wofür war heute zeit?",
-      "individuelle einstellungen",
-      "was möchten wir wieder kochen?",
-      "was sich bewährt hat"
-    ].forEach(label => normalizeHeader(findHeaderByText(label)));
-  }
-
-  installOverviewArrows();
-  new MutationObserver(installOverviewArrows).observe(document.body, {
-    childList: true,
-    subtree: true
-  });
-})();
-
