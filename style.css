@@ -28998,3 +28998,142 @@ button.day-meal-list-item:hover,a.day-meal-list-item:hover{background:rgba(164,1
     background:linear-gradient(180deg,#f9dfda 0 146px,#806864 146px 100%) !important;
   }
 }
+
+
+/* =========================================================
+   V102 – HANDY: Schul-To-dos kompakt & touchfreundlich
+   NUR Mobile. Desktop bleibt komplett unverändert.
+   ========================================================= */
+@media (max-width:700px){
+
+  /* Die Checkbox bleibt funktional im DOM, wird mobil aber nicht angezeigt.
+     Abhaken erfolgt per Tipp auf den Aufgabentext. */
+  #schoolWorkTodoList .workroom-todo-check{
+    display:none !important;
+  }
+
+  /* Mehr Platz für den eigentlichen Aufgabentext. */
+  #schoolWorkTodoList .workroom-todo-row{
+    display:grid !important;
+    grid-template-columns:minmax(0,1fr) auto !important;
+    align-items:center !important;
+    gap:8px !important;
+    width:100% !important;
+    max-width:100% !important;
+    min-width:0 !important;
+    padding:10px 10px 10px 13px !important;
+  }
+
+  #schoolWorkTodoList .workroom-todo-content{
+    grid-column:1 !important;
+    min-width:0 !important;
+    width:100% !important;
+    padding:9px 6px !important;
+    margin:0 !important;
+    border-radius:10px !important;
+    cursor:pointer !important;
+    -webkit-tap-highlight-color:rgba(151,157,105,.11) !important;
+    touch-action:manipulation !important;
+  }
+
+  #schoolWorkTodoList .workroom-todo-text{
+    display:block !important;
+    width:100% !important;
+    min-width:0 !important;
+    font-size:1rem !important;
+    line-height:1.28 !important;
+    overflow-wrap:anywhere !important;
+  }
+
+  /* Rechts nur kompakte Aktionen. */
+  #schoolWorkTodoList .workroom-todo-actions{
+    grid-column:2 !important;
+    display:flex !important;
+    align-items:center !important;
+    justify-content:flex-end !important;
+    gap:4px !important;
+    flex-wrap:nowrap !important;
+    min-width:0 !important;
+  }
+
+  /* "★ Wichtig" wird mobil zu genau EINEM Stern. */
+  #schoolWorkTodoList .workroom-important-btn{
+    width:34px !important;
+    min-width:34px !important;
+    max-width:34px !important;
+    height:34px !important;
+    min-height:34px !important;
+    padding:0 !important;
+    border-radius:50% !important;
+    display:grid !important;
+    place-items:center !important;
+    font-size:0 !important;
+    line-height:1 !important;
+    overflow:hidden !important;
+  }
+
+  #schoolWorkTodoList .workroom-important-btn::before{
+    content:"★" !important;
+    display:block !important;
+    font-size:1.08rem !important;
+    line-height:1 !important;
+  }
+
+  /* Bearbeiten/Löschen und Verschiebepfeile bleiben erhalten,
+     werden aber auf vernünftige Touchgröße komprimiert. */
+  #schoolWorkTodoList .workroom-todo-edit,
+  #schoolWorkTodoList .workroom-todo-delete,
+  #schoolWorkTodoList .workroom-move-btn{
+    width:31px !important;
+    min-width:31px !important;
+    max-width:31px !important;
+    height:34px !important;
+    min-height:34px !important;
+    padding:0 !important;
+    display:grid !important;
+    place-items:center !important;
+    font-size:.95rem !important;
+    line-height:1 !important;
+  }
+
+  #schoolWorkTodoList .workroom-move-controls{
+    display:flex !important;
+    align-items:center !important;
+    gap:2px !important;
+    flex-wrap:nowrap !important;
+  }
+
+  /* Drag-Handle ist mobil überflüssig – die Pfeile reichen. */
+  #schoolWorkTodoList .workroom-drag-handle{
+    display:none !important;
+  }
+
+  /* Typ/Link nur so breit wie nötig, damit der Text nicht wieder schrumpft. */
+  #schoolWorkTodoList .workroom-todo-type{
+    max-width:82px !important;
+    overflow:hidden !important;
+    text-overflow:ellipsis !important;
+    white-space:nowrap !important;
+    font-size:.68rem !important;
+  }
+
+  #schoolWorkTodoList .workroom-todo-link{
+    flex:0 0 auto !important;
+  }
+
+  /* Erledigt sofort klar erkennen. */
+  #schoolWorkTodoList .workroom-todo-row.done .workroom-todo-text{
+    text-decoration:line-through !important;
+    opacity:.48 !important;
+  }
+
+  #schoolWorkTodoList .workroom-todo-row.done{
+    opacity:.72 !important;
+  }
+
+  /* Touch-Feedback nur auf dem Textbereich. */
+  #schoolWorkTodoList .workroom-todo-content:active{
+    background:rgba(151,157,105,.10) !important;
+  }
+}
+
