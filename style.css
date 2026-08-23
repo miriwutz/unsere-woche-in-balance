@@ -26222,3 +26222,95 @@ button.day-meal-list-item:hover,a.day-meal-list-item:hover{background:rgba(164,1
   }
 }
 
+
+/* =========================================================
+   V74 – Offene Routinen dürfen die Wochenansicht nicht quetschen
+   ========================================================= */
+
+/* Nicht mehr auf fixe 760px zwingen:
+   geschlossen bleibt das Fenster kompakt,
+   geöffnet darf es bis fast zur Bildschirmhöhe wachsen. */
+.child-routine-dialog{
+  width:min(1180px,calc(100vw - 28px)) !important;
+  max-width:1180px !important;
+
+  height:auto !important;
+  max-height:calc(100dvh - 22px) !important;
+
+  overflow:hidden !important;
+}
+
+/* Der Inhalt scrollt im Fenster, falls alle vier Bereiche offen sind.
+   Dadurch bleibt die Wochenansicht vollständig erreichbar. */
+.child-routine-shell{
+  height:auto !important;
+  max-height:calc(100dvh - 22px) !important;
+  overflow-y:auto !important;
+  overflow-x:hidden !important;
+}
+
+/* Kopf und Wochenreiter bleiben beim Scrollen sichtbar/ruhig */
+.child-routine-hero{
+  flex:0 0 auto !important;
+}
+.child-routine-week-tabs{
+  flex:0 0 auto !important;
+}
+
+/* Die oberen Routinenbereiche bestimmen ihre natürliche Höhe,
+   drücken aber die Woche nicht mehr in einen zu kleinen Restbereich. */
+.child-routine-area-cards{
+  flex:0 0 auto !important;
+}
+
+/* Wochenbereich bekommt IMMER genug Eigenhöhe.
+   Bei offenen Tagesmenüs scrollt man einfach ein Stück nach unten. */
+.child-routine-week-plan{
+  flex:0 0 auto !important;
+  min-height:245px !important;
+  padding-bottom:18px !important;
+  overflow:visible !important;
+}
+.child-routine-week-grid{
+  min-height:190px !important;
+  height:auto !important;
+  overflow:visible !important;
+}
+.child-routine-day{
+  min-height:190px !important;
+}
+
+/* Bewertung bleibt vollständig im Tageskästchen sichtbar */
+.child-routine-day:has(.child-routine-rating){
+  min-height:250px !important;
+}
+.child-routine-day:has(.child-routine-rating) .child-routine-day-body{
+  padding-bottom:10px !important;
+}
+
+/* Scrollbar sehr zurückhaltend */
+.child-routine-shell{
+  scrollbar-width:thin;
+  scrollbar-color:rgba(157,132,111,.26) transparent;
+}
+.child-routine-shell::-webkit-scrollbar{
+  width:7px;
+}
+.child-routine-shell::-webkit-scrollbar-track{
+  background:transparent;
+}
+.child-routine-shell::-webkit-scrollbar-thumb{
+  background:rgba(157,132,111,.24);
+  border-radius:999px;
+}
+
+@media(max-width:1050px){
+  .child-routine-dialog{
+    width:calc(100vw - 16px) !important;
+    max-height:calc(100dvh - 12px) !important;
+  }
+  .child-routine-shell{
+    max-height:calc(100dvh - 12px) !important;
+  }
+}
+
