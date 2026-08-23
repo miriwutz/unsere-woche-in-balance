@@ -25703,3 +25703,171 @@ button.day-meal-list-item:hover,a.day-meal-list-item:hover{background:rgba(164,1
   background:#f3eadc;
 }
 
+/* =========================================================
+   V68 – Wochenplanung Lou/Fina: Editor + sichtbare Woche
+   ========================================================= */
+.child-routine-overview-head-v68{
+  display:grid !important;
+  grid-template-columns:minmax(0,1fr) auto;
+  column-gap:16px;
+  align-items:center;
+}
+.child-routine-overview-head-v68 > strong,
+.child-routine-overview-head-v68 > small{
+  grid-column:1;
+}
+.child-routine-back-to-child{
+  grid-column:2;
+  grid-row:1 / span 2;
+  align-self:center;
+  border:1px solid rgba(139,116,99,.20);
+  border-radius:999px;
+  background:#fffaf3;
+  color:#6e584d;
+  padding:8px 13px;
+  font-size:.72rem;
+  cursor:pointer;
+  white-space:nowrap;
+}
+.child-routine-back-to-child:hover{
+  background:#f7f0e5;
+}
+
+#childRoutineOverviewWeekPreview{
+  margin-top:14px;
+}
+.child-routine-overview-week-preview{
+  border-top:1px solid rgba(132,111,96,.14);
+  padding-top:13px;
+}
+.child-routine-overview-week-preview-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-end;
+  gap:16px;
+  margin:0 2px 9px;
+}
+.child-routine-overview-week-preview-head > div{
+  display:flex;
+  align-items:baseline;
+  gap:9px;
+}
+.child-routine-overview-week-preview-head strong{
+  font-family:Georgia,serif;
+  font-size:1rem;
+  color:#57443c;
+}
+.child-routine-overview-week-preview-head small,
+.child-routine-overview-preview-hint{
+  color:#9b8172;
+  font-size:.67rem;
+}
+.child-routine-overview-week-grid{
+  display:grid;
+  grid-template-columns:repeat(7,minmax(0,1fr));
+  gap:7px;
+}
+.child-routine-overview-day{
+  min-width:0;
+  min-height:165px;
+  border:1px solid #e7dcd3;
+  border-radius:13px;
+  background:#fffdfa;
+  overflow:hidden;
+}
+.child-routine-overview-day.is-today{
+  border-color:#cfaa70;
+  box-shadow:inset 0 0 0 1px rgba(207,170,112,.16);
+}
+.child-routine-overview-day > header{
+  padding:8px 9px 7px;
+  border-bottom:1px solid #eee4dc;
+}
+.child-routine-overview-day > header strong{
+  display:block;
+  font-family:"Segoe Script","Lucida Handwriting","Bradley Hand",cursive;
+  color:#60483d;
+  font-size:.82rem;
+}
+.child-routine-overview-day > header small{
+  color:#a18879;
+  font-size:.61rem;
+}
+.child-routine-overview-day-body{
+  display:grid;
+  gap:6px;
+  padding:7px;
+}
+.child-routine-overview-preview-item{
+  display:grid;
+  grid-template-columns:18px minmax(0,1fr);
+  gap:5px;
+  padding:6px 7px;
+  border-radius:9px;
+  background:#f8f3ea;
+  color:#5b4b43;
+  font-size:.65rem;
+  line-height:1.25;
+}
+.child-routine-overview-editor[data-child="2"] .child-routine-overview-preview-item{
+  background:#fbf0eb;
+}
+.child-routine-overview-preview-item strong{
+  display:block;
+  font-weight:600;
+  overflow-wrap:anywhere;
+}
+.child-routine-overview-preview-item small{
+  display:block;
+  color:#988276;
+  font-size:.58rem;
+  margin-top:2px;
+}
+.child-routine-overview-preview-symbol{
+  color:#ae8654;
+}
+.child-routine-overview-empty{
+  min-height:92px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:2px;
+  color:#c9aa73;
+  font-family:Georgia,serif;
+  opacity:.82;
+}
+.child-routine-overview-empty > span{
+  font-size:1.05rem;
+}
+.child-routine-overview-empty > small{
+  font-size:.55rem;
+  transform:translateY(9px);
+}
+
+@media(max-width:1150px){
+  .child-routine-overview-week-grid{
+    grid-template-columns:repeat(4,minmax(0,1fr));
+  }
+}
+@media(max-width:760px){
+  .child-routine-overview-head-v68{
+    grid-template-columns:1fr;
+  }
+  .child-routine-back-to-child{
+    grid-column:1;
+    grid-row:auto;
+    justify-self:start;
+    margin-top:7px;
+  }
+  .child-routine-overview-week-preview-head{
+    align-items:flex-start;
+    flex-direction:column;
+  }
+  .child-routine-overview-week-grid{
+    grid-template-columns:1fr;
+  }
+  .child-routine-overview-day{
+    min-height:110px;
+  }
+}
+
