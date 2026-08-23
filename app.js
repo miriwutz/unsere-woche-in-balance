@@ -14760,3 +14760,78 @@ window.addEventListener("orientationchange", () => {
   setTimeout(normalizePersonalWeekDialogsResponsive, 50);
 });
 
+/* =========================================================
+   V58 – Schnellzugriffe + Unsere Farben nach "Unser Überblick"
+   Die ORIGINALEN DOM-Blöcke werden verschoben, nicht kopiert.
+   Dadurch bleiben bestehende Events, Sync und Bearbeiten-Funktionen erhalten.
+   ========================================================= */
+function movePlanningToolsToOverview() {
+  const overview = document.querySelector("#archive");
+  if (!overview) return;
+
+  const quickLinks =
+    document.querySelector("#quickLinksRow")?.closest(".quick-links.card, .quick-links");
+
+  const familySettings =
+    document.querySelector("#familyColorA")?.closest("details.family-settings, .family-settings");
+
+  if (!quickLinks && !familySettings) return;
+
+  let host = overview.querySelector("#overviewTopTools");
+  if (!host) {
+    host = document.createElement("div");
+    host.id = "overviewTopTools";
+    host.className = "overview-top-tools";
+
+    const head = overview.querySelector(".overview-page-head, .section-head");
+    if (head) head.insertAdjacentElement("afterend", host);
+    else overview.prepend(host);
+  }
+
+  /* Reihenfolge: Schnellzugriffe zuerst, darunter Unsere Farben. */
+  if (quickLinks && quickLinks.parentElement !== host) host.appendChild(quickLinks);
+  if (familySettings && familySettings.parentElement !== host) host.appendChild(familySettings);
+
+  if (!document.querySelector("#overviewTopToolsStyle")) {
+    const style = document.createElement("style");
+    style.id = "overviewTopToolsStyle";
+    style.textContent = `
+      #overviewTopTools{
+        display:grid;
+        gap:10px;
+        margin:0 0 14px;
+      }
+
+      #overviewTopTools > .quick-links,
+      #overviewTopTools > .family-settings{
+        width:100%;
+        max-width:none;
+        box-sizing:border-box;
+        margin:0;
+      }
+
+      #overviewTopTools .quick-links{
+        order:1;
+      }
+
+      #overviewTopTools .family-settings{
+        order:2;
+      }
+
+      @media(max-width:700px){
+        #overviewTopTools{
+          gap:8px;
+          margin-bottom:10px;
+        }
+      }
+    `;
+    document.head.appendChild(style);
+  }
+}
+
+/* Direkt beim Start und nochmals nach dem ersten Rendern.
+   So funktioniert es auch, wenn einzelne Bereiche erst kurz später initialisiert werden. */
+movePlanningToolsToOverview();
+requestAnimationFrame(movePlanningToolsToOverview);
+setTimeout(movePlanningToolsToOverview, 100);
+
