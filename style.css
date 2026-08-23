@@ -26377,3 +26377,65 @@ button.day-meal-list-item:hover,a.day-meal-list-item:hover{background:rgba(164,1
   }
 }
 
+/* =========================================================
+   V77 – Archivkarten ohne YouTube-Bild + geschlossener Überblick
+   ========================================================= */
+
+/* Explizite Klasse aus JS: Karten OHNE Thumbnail benutzen die volle Breite.
+   Dadurch kann der Titel nicht mehr in einer 92px-Bildspalte Buchstabe für
+   Buchstabe umbrechen. */
+.archive-columns .archive-card.no-thumb,
+.archive-grid .archive-card.no-thumb{
+  grid-template-columns:minmax(0,1fr) !important;
+}
+
+.archive-card.no-thumb .archive-content{
+  grid-column:1 / -1 !important;
+  width:100% !important;
+  min-width:0 !important;
+}
+
+.archive-card.no-thumb .archive-title-row,
+.archive-card.no-thumb .archive-meta,
+.archive-card.no-thumb .archive-actions{
+  width:100% !important;
+  min-width:0 !important;
+}
+
+/* Bildkarten behalten den bisherigen schönen Aufbau. */
+.archive-columns .archive-card.has-thumb{
+  grid-template-columns:92px minmax(0,1fr) !important;
+}
+
+/* Im eingeklappten Überblick bleibt wirklich nur der Kopf übrig. */
+.time-tracker-card.overview-card-collapsed > :not(.overview-card-head),
+.recipe-link-tracker-card.overview-card-collapsed > :not(.overview-card-head),
+.exercise-overview-card.overview-card-collapsed > :not(.section-head){
+  display:none !important;
+}
+
+/* Eingeklappt kompakter und ruhiger. */
+.overview-card-collapsed{
+  padding-top:13px !important;
+  padding-bottom:13px !important;
+}
+.overview-card-collapsed > .overview-card-head,
+.overview-card-collapsed > .section-head{
+  margin:0 !important;
+  padding:0 !important;
+}
+
+/* Beschreibungszeilen brauchen wir im geschlossenen Zustand nicht. */
+.overview-card-collapsed > .overview-card-head p:not(.small-label){
+  display:none !important;
+}
+
+/* Gefährliche Aktion erst zeigen, wenn der Archivbereich geöffnet ist. */
+.exercise-overview-card.overview-card-collapsed #deleteAllExercisesBtn{
+  display:none !important;
+}
+
+.overview-card-collapsed .overview-collapse-toggle{
+  margin-left:auto !important;
+}
+
