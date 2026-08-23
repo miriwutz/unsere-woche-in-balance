@@ -10,6 +10,114 @@ const days = ["Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag","S
 
 let onlineRecipeCategoryFilter = "all";
 
+let collectionSearchState = {
+  todos:"",
+  schoolTodos:"",
+  exercises:"",
+  onlineRecipes:"",
+  workroomLinks:""
+};
+
+let schoolTodoArchiveLimit = 15;
+let exerciseArchiveLimit = 15;
+let exerciseArchiveGroupLimit = 6;
+let onlineRecipeGroupLimit = 8;
+
+function collectionSearchNormalize(value){
+  return String(value || "")
+    .toLocaleLowerCase("de-AT")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g,"")
+    .trim();
+}
+
+function collectionSearchMatches(query, values){
+  const q = collectionSearchNormalize(query);
+  if(!q) return true;
+  return values.some(value => collectionSearchNormalize(value).includes(q));
+}
+
+function ensureCollectionSearchBar({
+  anchor,
+  id,
+  placeholder="Suchen …",
+  value="",
+  visible=true,
+  onInput
+}){
+  if(!anchor) return null;
+
+  let bar=document.querySelector(`#${id}`);
+  if(!bar){
+    bar=document.createElement("div");
+    bar.id=id;
+    bar.className="collection-search-bar";
+    bar.innerHTML=`
+      <label class="collection-search-shell">
+        <span class="collection-search-icon" aria-hidden="true"></span>
+        <input type="search" autocomplete="off">
+        <button type="button" class="collection-search-clear" aria-label="Suche löschen" title="Suche löschen">×</button>
+      </label>
+      <span class="collection-search-count" aria-live="polite"></span>
+    `;
+    anchor.insertAdjacentElement("beforebegin",bar);
+
+    const input=bar.querySelector("input");
+    const clear=bar.querySelector(".collection-search-clear");
+
+    input.addEventListener("input",()=>{
+      if(typeof bar._collectionOnInput==="function") bar._collectionOnInput(input.value);
+      clear.classList.toggle("hidden",!input.value);
+    });
+    clear.addEventListener("click",()=>{
+      input.value="";
+      clear.classList.add("hidden");
+      if(typeof bar._collectionOnInput==="function") bar._collectionOnInput("");
+      input.focus();
+    });
+  }
+
+  bar.classList.toggle("hidden",!visible);
+  const input=bar.querySelector("input");
+  if(input){
+    input.placeholder=placeholder;
+    if(document.activeElement!==input && input.value!==String(value||"")){
+      input.value=String(value||"");
+    }
+  }
+  bar.querySelector(".collection-search-clear")?.classList.toggle("hidden",!String(value||""));
+  bar._collectionOnInput=onInput;
+  return bar;
+}
+
+function updateCollectionSearchCount(bar, shown, total, noun="Einträge"){
+  const count=bar?.querySelector(".collection-search-count");
+  if(!count) return;
+  const s=Number(shown||0);
+  const t=Number(total||0);
+  count.textContent = `${s} von ${t} ${noun}`;
+}
+
+function ensureCollectionMoreButton(anchor,id,remaining,onClick,label="Weitere anzeigen"){
+  if(!anchor) return null;
+  let btn=document.querySelector(`#${id}`);
+  if(remaining<=0){
+    btn?.remove();
+    return null;
+  }
+  if(!btn){
+    btn=document.createElement("button");
+    btn.id=id;
+    btn.type="button";
+    btn.className="secondary-btn collection-more-btn";
+    anchor.insertAdjacentElement("afterend",btn);
+  }
+  btn.textContent=`${label} (${remaining})`;
+  btn.onclick=onClick;
+  return btn;
+}
+
+
 const onlineRecipeCategoryMeta = [
   ["breakfast","🥣 Frühstück & Morgenideen"],
   ["spread","🥖 Aufstriche & Dips"],
@@ -3060,6 +3168,20 @@ function renderTodos() {
   const list = document.querySelector("#todoList");
   renderTodoTrash();
 
+  const todoSearchVisible = todoFilter === "done" || todoFilter === "event";
+  const todoSearchBar = ensureCollectionSearchBar({
+    anchor:list,
+    id:"todoCollectionSearch",
+    placeholder: todoFilter === "event" ? "Termine suchen …" : "Fertige To-dos suchen …",
+    value:collectionSearchState.todos,
+    visible:todoSearchVisible,
+    onInput:value=>{
+      collectionSearchState.todos=value;
+      expandedTodoGroups.clear();
+      renderTodos();
+    }
+  });
+
   if (!todoFilter) {
     if (list) {
       list.innerHTML = "";
@@ -3103,6 +3225,25 @@ function renderTodos() {
     if (todoFilter === "latest") {
       todos = todos.filter(t => isNewEntry(t));
     }
+  }
+
+  if(todoSearchVisible){
+    const totalBeforeSearch=todos.length;
+    todos=todos.filter(t=>collectionSearchMatches(collectionSearchState.todos,[
+      t.text,
+      t.day,
+      t.date,
+      t.time,
+      t.area,
+      t.priority,
+      t.eventCategory
+    ]));
+    updateCollectionSearchCount(
+      todoSearchBar,
+      todos.length,
+      totalBeforeSearch,
+      todoFilter === "event" ? "Termine" : "To-dos"
+    );
   }
 
 todos.sort((a, b) => {
@@ -3364,6 +3505,20 @@ function renderArchive() {
   const list = document.querySelector("#archiveList");
   if(!list) return;
 
+  const exerciseSearchBar=ensureCollectionSearchBar({
+    anchor:list,
+    id:"exerciseArchiveSearch",
+    placeholder:"Übungen & Videos suchen …",
+    value:collectionSearchState.exercises,
+    visible:true,
+    onInput:value=>{
+      collectionSearchState.exercises=value;
+      exerciseArchiveLimit=15;
+      exerciseArchiveGroupLimit=6;
+      renderArchive();
+    }
+  });
+
   let items = [...state.archive];
 
   // Zuerst den Hauptfilter anwenden.
@@ -3381,11 +3536,21 @@ function renderArchive() {
     items=items.filter(x=>(x.category||"other")===archiveCategoryFilter);
   }
 
+  const totalBeforeSearch=items.length;
+  items=items.filter(x=>collectionSearchMatches(collectionSearchState.exercises,[
+    x.title,
+    x.category,
+    x.url,
+    x.rating
+  ]));
+  updateCollectionSearchCount(exerciseSearchBar,items.length,totalBeforeSearch,"Übungen");
+
   const byNewest = arr => arr.sort((a,b) => new Date(b.lastDone || 0) - new Date(a.lastDone || 0));
 
   if (!items.length) {
     list.className = "archive-grid";
     list.innerHTML = '<div class="empty">Hier gibt es noch keine passenden Übungen.</div>';
+    document.querySelector("#exerciseArchiveMore")?.remove();
     return;
   }
 
@@ -3398,18 +3563,40 @@ function renderArchive() {
     ];
 
     list.className = "archive-columns";
-    list.innerHTML = groups.map(([key,label,group]) => `
+    list.innerHTML = groups.map(([key,label,group]) => {
+      const shown=group.slice(0,exerciseArchiveGroupLimit);
+      const remaining=Math.max(0,group.length-shown.length);
+      return `
       <section class="archive-column ${key}">
         <div class="archive-column-head">${label}<span>${group.length}</span></div>
         <div class="archive-column-list">
-          ${group.length ? group.map(archiveCardHtml).join("") : '<div class="column-empty">Noch keine Übungen</div>'}
+          ${shown.length ? shown.map(archiveCardHtml).join("") : '<div class="column-empty">Noch keine Übungen</div>'}
         </div>
-      </section>
-    `).join("");
+        ${remaining ? `<button type="button" class="secondary-btn archive-column-more" data-more="${remaining}">Weitere anzeigen (${remaining})</button>` : ""}
+      </section>`;
+    }).join("");
+
+    list.querySelectorAll(".archive-column-more").forEach(btn=>{
+      btn.addEventListener("click",()=>{
+        exerciseArchiveGroupLimit+=6;
+        renderArchive();
+      });
+    });
+    document.querySelector("#exerciseArchiveMore")?.remove();
   } else {
     if (archiveFilter !== "wanted") byNewest(items);
+    const shown=items.slice(0,exerciseArchiveLimit);
     list.className = "archive-grid";
-    list.innerHTML = items.map(archiveCardHtml).join("");
+    list.innerHTML = shown.map(archiveCardHtml).join("");
+    ensureCollectionMoreButton(
+      list,
+      "exerciseArchiveMore",
+      Math.max(0,items.length-shown.length),
+      ()=>{
+        exerciseArchiveLimit+=15;
+        renderArchive();
+      }
+    );
   }
 
   bindArchiveButtons();
@@ -3453,6 +3640,8 @@ function archiveCardHtml(a) {
 
 document.querySelector("#archiveCategoryFilter")?.addEventListener("change",e=>{
   archiveCategoryFilter=e.currentTarget.value||"all";
+  exerciseArchiveLimit=15;
+  exerciseArchiveGroupLimit=6;
   renderArchive();
 });
 
@@ -6800,13 +6989,37 @@ if (!todos.length) {
 const archive = document.querySelector("#schoolWorkTodoArchive");
 
 if (archive) {
-  const archivedTodos = state.workroom.todos
+  const allArchivedTodos = state.workroom.todos
     .filter(t =>
       t.done &&
       t.completedAt &&
       t.completedAt <= oneMinuteAgo
     )
     .sort((a, b) => (b.completedAt ?? 0) - (a.completedAt ?? 0));
+
+  const schoolArchiveSearchBar=ensureCollectionSearchBar({
+    anchor:archive,
+    id:"schoolTodoArchiveSearch",
+    placeholder:"Erledigte Schul-To-dos suchen …",
+    value:collectionSearchState.schoolTodos,
+    visible:true,
+    onInput:value=>{
+      collectionSearchState.schoolTodos=value;
+      schoolTodoArchiveLimit=15;
+      renderSchoolWorkTodos();
+    }
+  });
+
+  const matchedArchivedTodos=allArchivedTodos.filter(t=>
+    collectionSearchMatches(collectionSearchState.schoolTodos,[t.text,t.type,t.link])
+  );
+  const archivedTodos=matchedArchivedTodos.slice(0,schoolTodoArchiveLimit);
+  updateCollectionSearchCount(
+    schoolArchiveSearchBar,
+    matchedArchivedTodos.length,
+    allArchivedTodos.length,
+    "To-dos"
+  );
 
 archive.innerHTML = archivedTodos.length
   ? archivedTodos.map(t => `
@@ -6822,7 +7035,21 @@ archive.innerHTML = archivedTodos.length
         >×</button>
       </div>
     `).join("")
-  : `<div class="workroom-empty">Noch keine erledigten Schul-To-dos.</div>`;
+  : `<div class="workroom-empty">${
+      allArchivedTodos.length && collectionSearchState.schoolTodos
+        ? "Keine erledigten Schul-To-dos passen zur Suche."
+        : "Noch keine erledigten Schul-To-dos."
+    }</div>`;
+
+ensureCollectionMoreButton(
+  archive,
+  "schoolTodoArchiveMore",
+  Math.max(0,matchedArchivedTodos.length-archivedTodos.length),
+  ()=>{
+    schoolTodoArchiveLimit+=15;
+    renderSchoolWorkTodos();
+  }
+);
 
 /* GENAU HIER EINFÜGEN */
 document.querySelectorAll(".workroom-archive-delete").forEach(btn => {
@@ -7940,7 +8167,22 @@ function renderWorkroomLinks() {
     private: "♡ Privat"
   };
 
-  let links = [...state.workroom.links]
+  const workroomLinkSearchBar=ensureCollectionSearchBar({
+    anchor:list,
+    id:"workroomLinkSearchBar",
+    placeholder:"Fundstücke suchen …",
+    value:collectionSearchState.workroomLinks,
+    visible:true,
+    onInput:value=>{
+      collectionSearchState.workroomLinks=value;
+      workroomLinkPage=1;
+      renderWorkroomLinks();
+    }
+  });
+
+  const allWorkroomLinks=[...state.workroom.links];
+
+  let links = allWorkroomLinks
     .filter(link =>
       activeWorkroomLinkCategory === "all" ||
       workroomLinkEffectiveCategory(link) === activeWorkroomLinkCategory
@@ -7952,7 +8194,23 @@ function renderWorkroomLinks() {
     .filter(link =>
       !activeWorkroomLinkImportant || !!link.important
     )
+    .filter(link =>
+      collectionSearchMatches(collectionSearchState.workroomLinks,[
+        link.title,
+        link.note,
+        link.url,
+        workroomLinkEffectiveCategory(link),
+        workroomLinkEffectiveUse(link)
+      ])
+    )
     .sort((a,b)=>Number(a.order??999999)-Number(b.order??999999));
+
+  updateCollectionSearchCount(
+    workroomLinkSearchBar,
+    links.length,
+    allWorkroomLinks.length,
+    links.length===1 ? "Link" : "Links"
+  );
 
   // Sortierung ist nur eine Ansicht. Die manuelle Reihenfolge in state bleibt unverändert.
   // Gewählte Gruppe zuerst; danach werden auch die übrigen Gruppen sauber gebündelt.
@@ -12582,10 +12840,38 @@ function renderRecipeLinkTracker() {
   const host = document.querySelector("#recipeLinkTrackerList");
   if (!host) return;
 
+  const onlineRecipeSearchBar=ensureCollectionSearchBar({
+    anchor:host,
+    id:"onlineRecipeSearchBar",
+    placeholder:"Online-Rezepte suchen …",
+    value:collectionSearchState.onlineRecipes,
+    visible:true,
+    onInput:value=>{
+      collectionSearchState.onlineRecipes=value;
+      onlineRecipeGroupLimit=8;
+      renderRecipeLinkTracker();
+    }
+  });
+
   const allLinks = collectInternetRecipeLinks();
-  const links = onlineRecipeCategoryFilter === "all"
+  const categoryLinks = onlineRecipeCategoryFilter === "all"
     ? allLinks
     : allLinks.filter(link => onlineRecipeCategoryKey(link) === onlineRecipeCategoryFilter);
+  const links = categoryLinks.filter(link =>
+    collectionSearchMatches(collectionSearchState.onlineRecipes,[
+      link.label,
+      link.source,
+      link.url,
+      onlineRecipeCategoryKey(link)
+    ])
+  );
+
+  updateCollectionSearchCount(
+    onlineRecipeSearchBar,
+    links.length,
+    categoryLinks.length,
+    "Rezepte"
+  );
 
   if (!allLinks.length) {
     host.innerHTML = `<div class="overview-empty">Noch keine Internetrezepte hinterlegt. Sobald eine Rezeptkarte oder ein Essensplan-Eintrag einen Web-/YouTube-Link hat, erscheint er hier zum Bewerten.</div>`;
@@ -12679,6 +12965,8 @@ function renderRecipeLinkTracker() {
   const groupHtml = groups.map(group => {
     const items = grouped[group.key];
     if (!items.length) return "";
+    const shown=items.slice(0,onlineRecipeGroupLimit);
+    const remaining=Math.max(0,items.length-shown.length);
 
     return `
       <section class="online-recipe-group" data-group="${group.key}">
@@ -12690,8 +12978,9 @@ function renderRecipeLinkTracker() {
           <b>${items.length}</b>
         </div>
         <div class="online-recipe-group-list">
-          ${items.map(rowHtml).join("")}
+          ${shown.map(rowHtml).join("")}
         </div>
+        ${remaining ? `<button type="button" class="secondary-btn online-recipe-more" data-more="${remaining}">Weitere anzeigen (${remaining})</button>` : ""}
       </section>
     `;
   }).join("");
@@ -12703,7 +12992,15 @@ function renderRecipeLinkTracker() {
 
   host.querySelector("#onlineRecipeCategoryFilter")?.addEventListener("change", e => {
     onlineRecipeCategoryFilter = e.currentTarget.value || "all";
+    onlineRecipeGroupLimit=8;
     renderRecipeLinkTracker();
+  });
+
+  host.querySelectorAll(".online-recipe-more").forEach(btn=>{
+    btn.addEventListener("click",()=>{
+      onlineRecipeGroupLimit+=8;
+      renderRecipeLinkTracker();
+    });
   });
 
   host.querySelectorAll(".recipe-link-category").forEach(select => {
@@ -19994,4 +20291,3 @@ window.addEventListener("resize", () => {
     }
   });
 })();
-
