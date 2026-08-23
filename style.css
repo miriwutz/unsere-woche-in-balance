@@ -25408,3 +25408,28 @@ button.day-meal-list-item:hover,a.day-meal-list-item:hover{background:rgba(164,1
   display:grid;
   place-items:center;
 }
+
+/* V64 – Tagesausrichtung / Qualitäten */
+.personal-daily-focus-settings{
+  margin:0 0 14px;
+  padding:14px;
+  border:1px solid rgba(119,103,91,.16);
+  border-radius:16px;
+  background:linear-gradient(90deg,rgba(249,242,248,.58),rgba(250,247,230,.58),rgba(239,247,239,.58));
+}
+.personal-daily-focus-head{display:flex;justify-content:space-between;gap:16px;align-items:center;margin-bottom:12px}
+.personal-daily-focus-head>div{display:grid;gap:3px}.personal-daily-focus-head small{color:#9a8175}
+.personal-daily-focus-toggle{display:flex;align-items:center;gap:7px;white-space:nowrap}
+.personal-daily-focus-question{display:grid;grid-template-columns:70px minmax(0,1fr);gap:10px;align-items:center;margin-bottom:10px}
+.personal-daily-focus-question input,.personal-daily-focus-quality-row input{min-height:40px;border:1px solid rgba(119,103,91,.18);border-radius:12px;background:#fffdfb;padding:8px 11px}
+.personal-daily-focus-quality-list{display:flex;flex-wrap:wrap;gap:7px}
+.personal-daily-focus-quality-row{display:flex;align-items:center;border:1px solid rgba(119,103,91,.16);border-radius:999px;background:#fffdf9;overflow:hidden}
+.personal-daily-focus-quality-row input{width:145px;min-height:36px;border:0;border-radius:0;background:transparent}
+.personal-daily-focus-quality-row button{width:34px;height:34px;border:0;border-left:1px solid rgba(119,103,91,.12);background:transparent;color:#a06f62;cursor:pointer}
+.personal-daily-focus-add{margin-top:10px;border:1px solid rgba(119,103,91,.18);border-radius:999px;background:#fffdf9;padding:8px 13px;cursor:pointer}
+.child-routine-daily-focus{margin:12px 20px 2px;padding:13px 15px;border:1px solid rgba(156,126,103,.18);border-radius:16px;background:rgba(255,253,249,.72)}
+.child-routine-daily-focus-question{font-family:"Segoe Print","Bradley Hand",cursive;font-size:1.02rem;font-weight:600;margin-bottom:9px;color:#5d463d}
+.child-routine-daily-focus-chips{display:flex;flex-wrap:wrap;gap:7px}
+.child-routine-daily-focus-chips button{border:1px solid rgba(156,126,103,.20);border-radius:999px;background:#fffdf9;padding:7px 11px;color:#725c50;cursor:pointer}
+.child-routine-daily-focus-chips button.active{background:#f0ead9;border-color:#c9b681;box-shadow:inset 0 0 0 1px rgba(201,182,129,.25)}
+@media(max-width:700px){.personal-daily-focus-head{align-items:flex-start}.personal-daily-focus-question{grid-template-columns:1fr}.personal-daily-focus-quality-row input{width:125px}.child-routine-daily-focus{margin:10px 10px 0}}
