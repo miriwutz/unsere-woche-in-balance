@@ -19298,3 +19298,84 @@ setTimeout(()=>{
   setTimeout(v77CloseAll,360);
 })();
 
+
+/* =========================================================
+   V79 – Individuelle Einstellungen: ruhiger, editierbar erkennbar
+   ========================================================= */
+(function(){
+  function v79StyleFamilySettingsSummary(){
+    const summary=document.querySelector(".family-settings > summary");
+    if(!summary || summary.dataset.v79Styled==="1") return;
+
+    summary.dataset.v79Styled="1";
+    summary.innerHTML=`
+      <span class="family-settings-edit-icon" aria-hidden="true">✎</span>
+      <span class="family-settings-summary-copy">
+        <small>PERSONALISIEREN</small>
+        <strong>Individuelle Einstellungen</strong>
+      </span>
+      <span class="family-settings-summary-chevron" aria-hidden="true">›</span>
+    `;
+  }
+
+  v79StyleFamilySettingsSummary();
+
+  const observer=new MutationObserver(v79StyleFamilySettingsSummary);
+  observer.observe(document.body,{childList:true,subtree:true});
+})();
+
+
+
+/* V80 – Individuelle Einstellungen sinnvoll gliedern */
+(function(){
+  function setupSettings(){
+    const root=document.querySelector(".family-settings");
+    if(!root || root.dataset.v80==="1") return;
+    root.dataset.v80="1";
+
+    const findHeading = txt => [...root.querySelectorAll("h2,h3,h4")].find(x => x.textContent.trim().includes(txt));
+
+    function wrapFromHeading(heading, title, kicker, cls){
+      if(!heading || heading.closest(".settings-v80-group")) return;
+      const box=document.createElement("details");
+      box.className="settings-v80-group "+cls;
+      const sum=document.createElement("summary");
+      sum.innerHTML=`<span class="settings-v80-arrow">›</span><span><small>${kicker}</small><strong>${title}</strong></span>`;
+      box.appendChild(sum);
+
+      const parent=heading.parentElement;
+      parent.insertBefore(box,heading);
+      box.appendChild(heading);
+
+      let n=box.nextSibling;
+      while(n){
+        const next=n.nextSibling;
+        if(n.nodeType===1 && (n.matches("h2,h3,h4") || n.classList?.contains("settings-v80-group"))) break;
+        box.appendChild(n); n=next;
+      }
+      return box;
+    }
+
+    const routineHeading=findHeading("Routinen");
+    const timetableHeading=findHeading("Stundenplan");
+    const weekHeading=findHeading("Meine Woche");
+
+    wrapFromHeading(timetableHeading,"Schule & Stundenplan","SCHULE","settings-school");
+    wrapFromHeading(weekHeading,"Meine Woche","ANSICHT","settings-week");
+
+    if(routineHeading){
+      const box=wrapFromHeading(routineHeading,"Routinen","ALLTAG","settings-routines");
+      if(box){
+        /* Tagesroutinen + Wochenplanung bleiben bewusst im selben offenen Block:
+           So sieht man feste Punkte und Wochenpunkte gleichzeitig. */
+        box.classList.add("settings-routines-together");
+      }
+    }
+
+    /* Alles standardmäßig geschlossen. */
+    root.querySelectorAll(":scope > .settings-v80-group").forEach(d=>d.open=false);
+  }
+
+  setupSettings();
+  new MutationObserver(setupSettings).observe(document.body,{childList:true,subtree:true});
+})();
