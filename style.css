@@ -25330,3 +25330,29 @@ button.day-meal-list-item:hover,a.day-meal-list-item:hover{background:rgba(164,1
   }
   .child-routine-editor-title-field{grid-column:span 2;}
 }
+
+
+/* Individuelle Routinen – Punkte hinzufügen/löschen */
+.personal-routine-sentence-row{
+  grid-template-columns:24px minmax(0,1fr) 34px 34px !important;
+}
+.personal-routine-delete-one{
+  width:32px;
+  height:32px;
+  border:1px solid rgba(150,105,95,.14);
+  border-radius:50%;
+  background:#fff8f5;
+  color:#a47b70;
+  cursor:pointer;
+}
+.personal-routine-add-one{
+  justify-self:start;
+  margin:4px 0 2px 30px;
+  border:1px solid rgba(137,121,105,.18);
+  border-radius:999px;
+  background:#f8f5ec;
+  color:#6d5c52;
+  padding:7px 11px;
+  font-size:.7rem;
+  cursor:pointer;
+}
