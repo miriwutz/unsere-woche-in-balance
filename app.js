@@ -19021,3 +19021,54 @@ setTimeout(()=>{
 
 })();
 
+/* =========================================================
+   V75 – Kinder-Routinen beim Öffnen geschlossen
+   - Lou + Fina identisch
+   - beim ersten Öffnen alle vier Bereiche geschlossen
+   - danach bleibt der aktuelle Auf-/Zu-Zustand beim Abhaken erhalten
+   ========================================================= */
+(function(){
+  let v75FreshRoutineOpen = false;
+
+  /* Capture läuft vor dem bestehenden Öffnen-Handler. */
+  document.addEventListener("click", e=>{
+    if(e.target.closest?.("[data-school-open-routines]")){
+      v75FreshRoutineOpen = true;
+    }
+  }, true);
+
+  const renderChildRoutineDialogBeforeV75 = renderChildRoutineDialog;
+
+  renderChildRoutineDialog = function(){
+    const dialog = document.querySelector("#childRoutineDialog");
+
+    /* Zustand vor einem normalen Re-Render merken. */
+    const openIndexes = [];
+    if(dialog && !v75FreshRoutineOpen){
+      dialog.querySelectorAll("#childRoutineAreaCards details.child-routine-area-card")
+        .forEach((details,index)=>{
+          if(details.open) openIndexes.push(index);
+        });
+    }
+
+    renderChildRoutineDialogBeforeV75();
+
+    const currentDialog = document.querySelector("#childRoutineDialog");
+    const cards = currentDialog
+      ? [...currentDialog.querySelectorAll("#childRoutineAreaCards details.child-routine-area-card")]
+      : [];
+
+    cards.forEach((details,index)=>{
+      details.dataset.routineAreaIndex = String(index);
+
+      /* Beim Öffnen immer geschlossen.
+         Bei späteren Re-Renders den momentanen Zustand behalten. */
+      details.open = v75FreshRoutineOpen ? false : openIndexes.includes(index);
+    });
+
+    v75FreshRoutineOpen = false;
+  };
+
+  window.renderChildRoutineDialog = renderChildRoutineDialog;
+})();
+
