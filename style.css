@@ -26131,3 +26131,94 @@ button.day-meal-list-item:hover,a.day-meal-list-item:hover{background:rgba(164,1
   overflow: visible !important;
 }
 
+
+/* =========================================================
+   V73 – Bewertung wieder IM Tageskästchen, dafür mehr Platz
+   ========================================================= */
+
+/* Routinenfenster am PC etwas breiter, damit 7 Tage wirklich Platz haben */
+.child-routine-dialog{
+  width:min(1180px,calc(100vw - 28px)) !important;
+  max-width:1180px !important;
+}
+
+/* Wochenbereich etwas höher */
+.child-routine-week-grid{
+  gap:7px !important;
+}
+.child-routine-day{
+  min-height:190px !important;
+  overflow:hidden !important;
+}
+.child-routine-day-body{
+  padding:8px !important;
+  overflow:visible !important;
+}
+
+/* Eintrag bleibt oben kompakt */
+.child-routine-day-item{
+  position:static !important;
+  overflow:visible !important;
+  padding:7px !important;
+}
+
+/* Bewertung NICHT mehr schwebend, sondern sauber darunter */
+.child-routine-rating{
+  position:static !important;
+  z-index:auto !important;
+  left:auto !important;
+  right:auto !important;
+  bottom:auto !important;
+  width:100% !important;
+  margin:7px 0 0 !important;
+  padding:7px 6px !important;
+  box-sizing:border-box !important;
+
+  display:grid !important;
+  grid-template-columns:1fr !important;
+  gap:5px !important;
+
+  border:1px solid rgba(166,137,108,.22) !important;
+  border-radius:9px !important;
+  background:#fbf5eb !important;
+  box-shadow:none !important;
+}
+
+/* "Wie war es?" gut sichtbar */
+.child-routine-rating > span{
+  grid-column:auto !important;
+  margin:0 !important;
+  color:#6d594e !important;
+  font-size:.66rem !important;
+  font-weight:700 !important;
+  text-align:left !important;
+}
+
+/* Die drei Bewertungen untereinander – dadurch nichts mehr gequetscht */
+.child-routine-rating button{
+  width:100% !important;
+  min-height:27px !important;
+  padding:5px 7px !important;
+  text-align:left !important;
+  border:1px solid rgba(145,121,103,.18) !important;
+  border-radius:7px !important;
+  background:#fffdf9 !important;
+  color:#604d43 !important;
+  font-size:.61rem !important;
+  line-height:1.2 !important;
+  white-space:normal !important;
+  opacity:1 !important;
+}
+
+/* Der Wochenplan darf durch die geöffnete Bewertung nach unten wachsen */
+.child-routine-week-plan,
+.child-routine-week-grid{
+  overflow:visible !important;
+}
+
+@media(max-width:1050px){
+  .child-routine-dialog{
+    width:calc(100vw - 18px) !important;
+  }
+}
+
