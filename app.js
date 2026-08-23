@@ -19379,3 +19379,211 @@ setTimeout(()=>{
   setupSettings();
   new MutationObserver(setupSettings).observe(document.body,{childList:true,subtree:true});
 })();
+
+
+/* =========================================================
+   V82 – Individuelle Einstellungen: 4 saubere Hauptgruppen
+   Familie & Farben / Schule & Stundenplan / Meine Woche / Routinen
+   Alle beim Öffnen standardmäßig geschlossen.
+   Routinen bleiben IN EINEM gemeinsamen Block:
+   Tagesroutinen + Wochenplanung gleichzeitig sichtbar.
+   ========================================================= */
+(function(){
+
+  function v82UnwrapOldGroups(root){
+    root.querySelectorAll(":scope > .settings-v80-group").forEach(old=>{
+      const parent=old.parentNode;
+      while(old.firstChild){
+        if(old.firstChild.tagName==="SUMMARY"){
+          old.firstChild.remove();
+          continue;
+        }
+        parent.insertBefore(old.firstChild,old);
+      }
+      old.remove();
+    });
+  }
+
+  function v82CreateGroup(id,kicker,title){
+    const details=document.createElement("details");
+    details.id=id;
+    details.className="settings-main-group";
+    details.innerHTML=`
+      <summary>
+        <span class="settings-main-arrow" aria-hidden="true">›</span>
+        <span class="settings-main-title">
+          <small>${kicker}</small>
+          <strong>${title}</strong>
+        </span>
+      </summary>
+      <div class="settings-main-body"></div>
+    `;
+    return details;
+  }
+
+  function v82Move(node,body){
+    if(node && node.parentElement!==body) body.appendChild(node);
+  }
+
+  function v82BuildSettingsGroups(){
+    const root=document.querySelector("details.family-settings");
+    if(!root) return;
+
+    /* Alte V80-Struktur einmal sauber entfernen. */
+    v82UnwrapOldGroups(root);
+
+    let family=root.querySelector("#settingsGroupFamily");
+    let school=root.querySelector("#settingsGroupSchool");
+    let week=root.querySelector("#settingsGroupWeek");
+    let routines=root.querySelector("#settingsGroupRoutines");
+
+    if(!family){
+      family=v82CreateGroup("settingsGroupFamily","GRUNDLAGEN","Familie & Farben");
+      root.appendChild(family);
+    }
+    if(!school){
+      school=v82CreateGroup("settingsGroupSchool","SCHULE","Schule & Stundenplan");
+      root.appendChild(school);
+    }
+    if(!week){
+      week=v82CreateGroup("settingsGroupWeek","ANSICHT","Meine Woche");
+      root.appendChild(week);
+    }
+    if(!routines){
+      routines=v82CreateGroup("settingsGroupRoutines","ALLTAG","Routinen");
+      root.appendChild(routines);
+    }
+
+    const familyBody=family.querySelector(".settings-main-body");
+    const schoolBody=school.querySelector(".settings-main-body");
+    const weekBody=week.querySelector(".settings-main-body");
+    const routinesBody=routines.querySelector(".settings-main-body");
+
+    /* 1. Familie & Farben */
+    v82Move(root.querySelector(":scope > .family-settings-hint"),familyBody);
+    v82Move(root.querySelector(":scope > .schoolyear-setting"),familyBody);
+    v82Move(root.querySelector(":scope > .family-settings-grid"),familyBody);
+
+    /* Falls V80 die Basis bereits in eine Gruppe gezogen hatte, dort finden. */
+    v82Move(root.querySelector(".family-settings-hint"),familyBody);
+    v82Move(root.querySelector(".schoolyear-setting"),familyBody);
+    v82Move(root.querySelector(".family-settings-grid"),familyBody);
+
+    /* 2. Schule & Stundenplan */
+    v82Move(document.querySelector("#personalTimetableSubjectSettings"),schoolBody);
+
+    /* 3. Meine Woche */
+    v82Move(document.querySelector("#myWeekAppearanceSettings"),weekBody);
+
+    /* 4. Routinen:
+       BEIDE Teile bewusst zusammen – feste Tagesroutinen UND Wochenplanung. */
+    v82Move(document.querySelector("#personalRoutineSentenceSettings"),routinesBody);
+    v82Move(document.querySelector("#childRoutineOverviewEditor"),routinesBody);
+
+    /* Reihenfolge im Hauptbereich festhalten. */
+    [family,school,week,routines].forEach(group=>{
+      if(group.parentElement!==root) root.appendChild(group);
+    });
+
+    root.dataset.v82Grouped="1";
+  }
+
+  function v82CloseInnerGroups(){
+    const root=document.querySelector("details.family-settings");
+    if(!root) return;
+    root.querySelectorAll(":scope > .settings-main-group").forEach(d=>d.open=false);
+  }
+
+  function v82Setup(){
+    v82BuildSettingsGroups();
+
+    const root=document.querySelector("details.family-settings");
+    if(!root || root.dataset.v82Listener==="1") return;
+    root.dataset.v82Listener="1";
+
+    root.addEventListener("toggle",()=>{
+      /* Jedes neue Öffnen beginnt ruhig mit allen vier Hauptgruppen geschlossen. */
+      if(root.open){
+        v82BuildSettingsGroups();
+        v82CloseInnerGroups();
+      }
+    });
+  }
+
+  v82Setup();
+
+  const obs=new MutationObserver(()=>{
+    requestAnimationFrame(v82Setup);
+  });
+  obs.observe(document.body,{childList:true,subtree:true});
+
+  setTimeout(v82Setup,80);
+  setTimeout(v82Setup,260);
+})();
+
+
+/* =========================================================
+   V83 – Überblick: Zeit nach oben + echte Pfeile
+   ========================================================= */
+(function(){
+
+  function v83ReorderOverview(){
+    const archive=document.querySelector("#archive");
+    if(!archive) return;
+
+    const settings=document.querySelector("details.family-settings");
+    const time=document.querySelector(".time-tracker-card");
+    if(!settings || !time) return;
+
+    /* Zeit im Blick direkt VOR Individuelle Einstellungen */
+    if(time.nextElementSibling !== settings){
+      settings.parentNode.insertBefore(time, settings);
+    }
+  }
+
+  function v83NormalizeArrows(){
+    /* Individuelle Einstellungen */
+    const familySummary=document.querySelector(".family-settings > summary");
+    if(familySummary){
+      let arrow=familySummary.querySelector(".family-settings-summary-chevron");
+      if(!arrow){
+        arrow=document.createElement("span");
+        arrow.className="family-settings-summary-chevron";
+        familySummary.appendChild(arrow);
+      }
+      arrow.textContent="›";
+    }
+
+    /* Zeit / Rezepte / Videos */
+    document.querySelectorAll(".overview-collapse-toggle").forEach(btn=>{
+      const card=btn.closest(".time-tracker-card, .recipe-link-tracker-card, .exercise-overview-card");
+      const collapsed=!!card?.classList.contains("overview-card-collapsed");
+      btn.innerHTML=`<span class="overview-collapse-arrow">${collapsed?"›":"⌄"}</span>`;
+      btn.setAttribute("aria-label",collapsed ? "Öffnen" : "Einklappen");
+      btn.title=collapsed ? "Öffnen" : "Einklappen";
+    });
+  }
+
+  function v83Refresh(){
+    v83ReorderOverview();
+    v83NormalizeArrows();
+  }
+
+  document.addEventListener("click",e=>{
+    if(e.target.closest?.('[data-view="archive"]') ||
+       e.target.closest?.(".overview-collapse-toggle") ||
+       e.target.closest?.(".family-settings > summary")){
+      setTimeout(v83Refresh,30);
+      setTimeout(v83Refresh,140);
+    }
+  },true);
+
+  const obs=new MutationObserver(()=>{
+    requestAnimationFrame(v83Refresh);
+  });
+  obs.observe(document.body,{childList:true,subtree:true});
+
+  setTimeout(v83Refresh,60);
+  setTimeout(v83Refresh,240);
+})();
+
