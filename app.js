@@ -19076,233 +19076,6 @@ setTimeout(()=>{
 })();
 
 /* =========================================================
-   V76 – Überblick: 3 Hauptkarten einklappbar + Archiv-Löschen robust
-   ========================================================= */
-(function(){
-
-  /* ---------- A) Einzelnes Archiv-Element zuverlässig löschen ---------- */
-  document.addEventListener("click", e=>{
-    const btn=e.target.closest?.(".delete-exercise-btn");
-    if(!btn) return;
-
-    e.preventDefault();
-    e.stopImmediatePropagation();
-
-    const id=String(btn.dataset.id||"");
-    const item=(state.archive||[]).find(a=>String(a.id)===id);
-    if(!item) return;
-
-    const owner=String(item.owner||"mama");
-    const ownerName=
-      owner==="1" ? (familyName("c")||"Lou") :
-      owner==="2" ? (familyName("d")||"Fina") :
-      (familyName("a")||"Mama");
-
-    if(!confirm(`„${item.title||"Übung"}“ wirklich aus ${ownerName}s Archiv löschen?`)) return;
-
-    markListItemDeleted("archiveTombstones",id);
-    state.archive=(state.archive||[]).filter(a=>String(a.id)!==id);
-
-    save();
-    persistTopLevelDeletionImmediately("archive");
-    renderArchive();
-
-    showMotivation(`„${item.title||"Übung"}“ wurde aus ${ownerName}s Archiv gelöscht.`);
-  }, true);
-
-  /* ---------- B) Drei Hauptbereiche im Überblick einklappbar ---------- */
-  const cards=[
-    {
-      selector:".time-tracker-card",
-      key:"time",
-      label:"Zeit im Blick"
-    },
-    {
-      selector:".recipe-link-tracker-card",
-      key:"recipes",
-      label:"Online-Rezepte"
-    },
-    {
-      selector:".exercise-overview-card",
-      key:"archive",
-      label:"Übungen & Videos"
-    }
-  ];
-
-  function v76CollapseStorage(){
-    try{
-      const raw=localStorage.getItem("balanceProd.overviewCollapsedV76");
-      const parsed=raw?JSON.parse(raw):{};
-      return parsed && typeof parsed==="object" ? parsed : {};
-    }catch{
-      return {};
-    }
-  }
-
-  function v76SaveCollapse(stateObj){
-    try{
-      localStorage.setItem("balanceProd.overviewCollapsedV76",JSON.stringify(stateObj||{}));
-    }catch{}
-  }
-
-  function v76SetCardCollapsed(card,collapsed,key){
-    if(!card) return;
-
-    card.classList.toggle("overview-card-collapsed",!!collapsed);
-
-    const toggle=card.querySelector(".overview-collapse-toggle");
-    if(toggle){
-      toggle.textContent=collapsed ? "⌄ Öffnen" : "⌃ Einklappen";
-      toggle.setAttribute("aria-expanded",collapsed?"false":"true");
-    }
-
-    const store=v76CollapseStorage();
-    store[key]=!!collapsed;
-    v76SaveCollapse(store);
-  }
-
-  function v76PrepareOverviewCards(){
-    const saved=v76CollapseStorage();
-
-    cards.forEach(config=>{
-      const card=document.querySelector(config.selector);
-      if(!card) return;
-
-      const head=
-        card.querySelector(":scope > .overview-card-head") ||
-        card.querySelector(":scope > .section-head");
-
-      if(!head) return;
-
-      head.classList.add("overview-collapsible-head");
-
-      let toggle=head.querySelector(".overview-collapse-toggle");
-      if(!toggle){
-        toggle=document.createElement("button");
-        toggle.type="button";
-        toggle.className="overview-collapse-toggle";
-        toggle.dataset.overviewCollapse=config.key;
-        toggle.setAttribute("aria-label",`${config.label} ein- oder ausklappen`);
-
-        /* Bei Übungen & Videos steht schon "Alle Übungen löschen" rechts.
-           Der Einklapp-Button kommt davor, ohne dessen Funktion zu stören. */
-        const danger=head.querySelector("#deleteAllExercisesBtn");
-        if(danger){
-          danger.insertAdjacentElement("beforebegin",toggle);
-        }else{
-          head.appendChild(toggle);
-        }
-      }
-
-      toggle.onclick=e=>{
-        e.preventDefault();
-        e.stopPropagation();
-        v76SetCardCollapsed(card,!card.classList.contains("overview-card-collapsed"),config.key);
-      };
-
-      v76SetCardCollapsed(card,!!saved[config.key],config.key);
-    });
-  }
-
-  /* Beim Öffnen des Überblicks und nach Rendern erneut sichern */
-  document.addEventListener("click",e=>{
-    if(e.target.closest?.('[data-view="archive"]')){
-      setTimeout(v76PrepareOverviewCards,50);
-      setTimeout(v76PrepareOverviewCards,220);
-    }
-  },true);
-
-  const v76Observer=new MutationObserver(()=>{
-    if(document.querySelector("#archive") && !document.querySelector(".time-tracker-card .overview-collapse-toggle")){
-      requestAnimationFrame(v76PrepareOverviewCards);
-    }
-  });
-  v76Observer.observe(document.body,{childList:true,subtree:true});
-
-  setTimeout(v76PrepareOverviewCards,80);
-  setTimeout(v76PrepareOverviewCards,300);
-
-})();
-
-/* =========================================================
-   V77 – Überblick beim Betreten immer geschlossen
-   + Einklappen/Öffnen robust
-   ========================================================= */
-(function(){
-  const v77Cards=[
-    [".time-tracker-card","Zeit im Blick"],
-    [".recipe-link-tracker-card","Online-Rezepte"],
-    [".exercise-overview-card","Übungen & Videos"]
-  ];
-
-  function v77Apply(card,collapsed){
-    if(!card) return;
-    card.classList.toggle("overview-card-collapsed",!!collapsed);
-
-    const toggle=card.querySelector(".overview-collapse-toggle");
-    if(toggle){
-      toggle.textContent=collapsed ? "⌄ Öffnen" : "⌃ Einklappen";
-      toggle.setAttribute("aria-expanded",collapsed ? "false" : "true");
-    }
-  }
-
-  function v77CloseAll(){
-    /* Auch V76 liest diesen Speicher. So kann kein späterer V76-Render
-       die Karten direkt wieder öffnen. */
-    try{
-      localStorage.setItem("balanceProd.overviewCollapsedV76",JSON.stringify({
-        time:true,
-        recipes:true,
-        archive:true
-      }));
-    }catch{}
-
-    v77Cards.forEach(([selector])=>v77Apply(document.querySelector(selector),true));
-  }
-
-  /* Beim Betreten von "Unser Überblick" IMMER mit allen drei Karten zu starten. */
-  document.addEventListener("click",e=>{
-    if(!e.target.closest?.('[data-view="archive"]')) return;
-
-    v77CloseAll();
-    setTimeout(v77CloseAll,70);
-    setTimeout(v77CloseAll,260);
-  },true);
-
-  /* Toggle selbst zuverlässig übernehmen. */
-  document.addEventListener("click",e=>{
-    const toggle=e.target.closest?.(".overview-collapse-toggle");
-    if(!toggle) return;
-
-    e.preventDefault();
-    e.stopImmediatePropagation();
-
-    const card=toggle.closest(".time-tracker-card, .recipe-link-tracker-card, .exercise-overview-card");
-    if(!card) return;
-
-    const willCollapse=!card.classList.contains("overview-card-collapsed");
-    v77Apply(card,willCollapse);
-
-    /* V76-Speicher passend halten, damit spätere Render nicht dagegen arbeiten. */
-    try{
-      const raw=localStorage.getItem("balanceProd.overviewCollapsedV76");
-      const stored=raw?JSON.parse(raw):{};
-      const key=card.classList.contains("time-tracker-card") ? "time"
-        : card.classList.contains("recipe-link-tracker-card") ? "recipes"
-        : "archive";
-      stored[key]=willCollapse;
-      localStorage.setItem("balanceProd.overviewCollapsedV76",JSON.stringify(stored));
-    }catch{}
-  },true);
-
-  /* Auch nach Reload ist der Überblick zunächst geschlossen. */
-  v77CloseAll();
-  setTimeout(v77CloseAll,120);
-  setTimeout(v77CloseAll,360);
-})();
-
-
-/* =========================================================
    V79 – Individuelle Einstellungen: ruhiger, editierbar erkennbar
    ========================================================= */
 (function(){
@@ -19524,135 +19297,6 @@ setTimeout(()=>{
 
 
 /* =========================================================
-   V83-STABLE – Überblick: Zeit nach oben + echte Pfeile
-   Kein MutationObserver auf document.body.
-   ========================================================= */
-(function(){
-
-  function v83ReorderOverview(){
-    const settings=document.querySelector("details.family-settings");
-    const time=document.querySelector(".time-tracker-card");
-    if(!settings || !time || !settings.parentNode) return;
-
-    if(time.nextElementSibling !== settings){
-      settings.parentNode.insertBefore(time, settings);
-    }
-  }
-
-  function v83NormalizeArrows(){
-    const familySummary=document.querySelector(".family-settings > summary");
-    if(familySummary){
-      let arrow=familySummary.querySelector(".family-settings-summary-chevron");
-      if(!arrow){
-        arrow=document.createElement("span");
-        arrow.className="family-settings-summary-chevron";
-        arrow.setAttribute("aria-hidden","true");
-        familySummary.appendChild(arrow);
-      }
-      if(arrow.textContent!=="›") arrow.textContent="›";
-    }
-
-    document.querySelectorAll(".overview-collapse-toggle").forEach(btn=>{
-      const card=btn.closest(".time-tracker-card, .recipe-link-tracker-card, .exercise-overview-card");
-      const collapsed=!!card?.classList.contains("overview-card-collapsed");
-      const symbol=collapsed ? "›" : "⌄";
-
-      let span=btn.querySelector(".overview-collapse-arrow");
-      if(!span){
-        btn.textContent="";
-        span=document.createElement("span");
-        span.className="overview-collapse-arrow";
-        btn.appendChild(span);
-      }
-      if(span.textContent!==symbol) span.textContent=symbol;
-
-      const label=collapsed ? "Öffnen" : "Einklappen";
-      if(btn.getAttribute("aria-label")!==label) btn.setAttribute("aria-label",label);
-      if(btn.title!==label) btn.title=label;
-    });
-  }
-
-  function v83Refresh(){
-    v83ReorderOverview();
-    v83NormalizeArrows();
-  }
-
-  /* Nur bei echten Benutzeraktionen aktualisieren. */
-  document.addEventListener("click",e=>{
-    if(e.target.closest?.('[data-view="archive"]') ||
-       e.target.closest?.(".overview-collapse-toggle") ||
-       e.target.closest?.(".family-settings > summary")){
-      requestAnimationFrame(v83Refresh);
-      setTimeout(v83Refresh,80);
-    }
-  },true);
-
-  document.addEventListener("DOMContentLoaded",v83Refresh,{once:true});
-  setTimeout(v83Refresh,80);
-  setTimeout(v83Refresh,260);
-})();
-
-
-/* =========================================================
-   V85 – Überblick: Auf-/Zuklapppfeile LINKS
-   wie bei Schul-To-dos, ohne neue Observer
-   ========================================================= */
-(function(){
-
-  function v85PlaceOverviewArrowsLeft(){
-    document.querySelectorAll(
-      ".time-tracker-card, .recipe-link-tracker-card, .exercise-overview-card"
-    ).forEach(card=>{
-      const head =
-        card.querySelector(":scope > .overview-card-head") ||
-        card.querySelector(":scope > .section-head");
-      if(!head) return;
-
-      const toggle=head.querySelector(".overview-collapse-toggle");
-      if(!toggle) return;
-
-      /* Toggle als ERSTES Element links in die Kopfzeile setzen. */
-      if(head.firstElementChild !== toggle){
-        head.insertBefore(toggle, head.firstElementChild);
-      }
-    });
-
-    /* Individuelle Einstellungen: Pfeil ebenfalls ganz links. */
-    const familySummary=document.querySelector(".family-settings > summary");
-    if(familySummary){
-      let arrow=familySummary.querySelector(".family-settings-summary-chevron");
-      if(!arrow){
-        arrow=document.createElement("span");
-        arrow.className="family-settings-summary-chevron";
-        arrow.setAttribute("aria-hidden","true");
-        arrow.textContent="›";
-      }
-      if(familySummary.firstElementChild !== arrow){
-        familySummary.insertBefore(arrow, familySummary.firstElementChild);
-      }
-    }
-  }
-
-  function v85Refresh(){
-    v85PlaceOverviewArrowsLeft();
-  }
-
-  document.addEventListener("click",e=>{
-    if(e.target.closest?.('[data-view="archive"]') ||
-       e.target.closest?.(".overview-collapse-toggle") ||
-       e.target.closest?.(".family-settings > summary")){
-      requestAnimationFrame(v85Refresh);
-      setTimeout(v85Refresh,80);
-    }
-  },true);
-
-  document.addEventListener("DOMContentLoaded",v85Refresh,{once:true});
-  setTimeout(v85Refresh,100);
-  setTimeout(v85Refresh,280);
-})();
-
-
-/* =========================================================
    V86 – Familie & Farben kompakt + Rahmen sofort anwenden
    ========================================================= */
 (function(){
@@ -19698,9 +19342,65 @@ setTimeout(()=>{
   },true);
 })();
 
+
 /* =========================================================
-   V87-FIX – bewusst entfernt
-   Die zusätzlichen, nur optischen Pfeile haben die bereits vorhandenen
-   echten .overview-collapse-toggle-Buttons verdoppelt. V83/V85/V86
-   liefern bereits die gewünschte linke, olivfarbene und klickbare Lösung.
+   V88 – Unser Überblick: EIN einziges, robustes Klappsystem
+   Die drei Hauptkarten besitzen ihre echten Buttons direkt in index.html.
+   Keine MutationObserver, keine nachträglich erzeugten Pfeile.
    ========================================================= */
+(function(){
+  const configs={
+    time:{selector:".time-tracker-card", label:"Zeit im Blick"},
+    recipes:{selector:".recipe-link-tracker-card", label:"Online-Rezepte"},
+    archive:{selector:".exercise-overview-card", label:"Übungen & Videos"}
+  };
+
+  function setOverviewCollapsed(key, collapsed){
+    const cfg=configs[key];
+    if(!cfg) return;
+    const card=document.querySelector(cfg.selector);
+    if(!card) return;
+    const btn=card.querySelector(`.overview-collapse-toggle[data-overview-collapse="${key}"]`);
+    card.classList.toggle("overview-card-collapsed", !!collapsed);
+    if(btn){
+      btn.setAttribute("aria-expanded", collapsed ? "false" : "true");
+      btn.setAttribute("aria-label", `${cfg.label} ${collapsed ? "öffnen" : "schließen"}`);
+      const arrow=btn.querySelector(".overview-collapse-arrow");
+      if(arrow) arrow.textContent=collapsed ? "▸" : "▾";
+    }
+  }
+
+  function placeTimeCardAtTop(){
+    const overview=document.querySelector("#archive");
+    const time=document.querySelector(".time-tracker-card");
+    const tools=document.querySelector("#overviewTopTools");
+    if(overview && time && tools && tools.parentElement===overview && time.nextElementSibling!==tools){
+      overview.insertBefore(time,tools);
+    }
+  }
+
+  function closeOverviewCards(){
+    placeTimeCardAtTop();
+    Object.keys(configs).forEach(key=>setOverviewCollapsed(key,true));
+  }
+
+  document.addEventListener("click", e=>{
+    const btn=e.target.closest?.(".overview-collapse-toggle[data-overview-collapse]");
+    if(btn){
+      e.preventDefault();
+      const key=btn.dataset.overviewCollapse;
+      const cfg=configs[key];
+      const card=cfg ? document.querySelector(cfg.selector) : null;
+      if(card) setOverviewCollapsed(key,!card.classList.contains("overview-card-collapsed"));
+      return;
+    }
+
+    if(e.target.closest?.('[data-view="archive"]')){
+      requestAnimationFrame(closeOverviewCards);
+    }
+  }, true);
+
+  document.addEventListener("DOMContentLoaded", closeOverviewCards, {once:true});
+  closeOverviewCards();
+})();
+
