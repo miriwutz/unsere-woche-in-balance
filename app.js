@@ -14578,3 +14578,92 @@ document.querySelector("#toggleRoutinePanelBtn")?.addEventListener("click", () =
   }, 0);
 });
 
+/* =========================================================
+   V56 – persönliche Wochenfenster WIRKLICH identisch
+   Grund: die bestehende CSS-Datei enthält für Papa spätere,
+   spezifischere !important-Regeln (780x720), während Kinder/
+   Werkraum auf andere Größen gesetzt sind. Inline-!important
+   am echten Dialogelement gewinnt zuverlässig gegen alle diese Regeln.
+   ========================================================= */
+function normalizePersonalWeekDialogs() {
+  const ids = [
+    "papaOverviewDialog",
+    "childWeekDialog",
+    "workroomWeekDialog"
+  ];
+
+  ids.forEach(id => {
+    const dialog = document.getElementById(id);
+    if (!dialog) return;
+
+    const set = (prop, value) =>
+      dialog.style.setProperty(prop, value, "important");
+
+    /* Papa ist die Referenz: bestehende finale Papa-Größe = 780 x 720. */
+    set("width", "min(780px, 92vw)");
+    set("max-width", "780px");
+    set("height", "min(720px, 86vh)");
+    set("max-height", "min(720px, 86vh)");
+
+    /* Alle drei exakt an dieselbe Bildschirmposition. */
+    set("position", "fixed");
+    set("top", "50%");
+    set("left", "50%");
+    set("right", "auto");
+    set("bottom", "auto");
+    set("inset", "50% auto auto 50%");
+    set("transform", "translate(-50%, -50%)");
+    set("margin", "0");
+
+    set("box-sizing", "border-box");
+    set("overflow", "hidden");
+  });
+
+  /* Die beiden Shell-Dialoge müssen die volle identische Außenhöhe nutzen. */
+  [
+    ["childWeekDialog", ".child-week-shell"],
+    ["workroomWeekDialog", ".workroom-week-shell"]
+  ].forEach(([id, selector]) => {
+    const dialog = document.getElementById(id);
+    const shell = dialog?.querySelector(selector);
+    if (!shell) return;
+
+    shell.style.setProperty("width", "100%", "important");
+    shell.style.setProperty("max-width", "100%", "important");
+    shell.style.setProperty("height", "100%", "important");
+    shell.style.setProperty("max-height", "100%", "important");
+    shell.style.setProperty("box-sizing", "border-box", "important");
+  });
+}
+
+normalizePersonalWeekDialogs();
+
+/* Auch direkt vor jedem Öffnen erneut anwenden, falls andere Renderlogik
+   vorher Inline-Werte verändert haben sollte. */
+document.addEventListener("click", event => {
+  if (
+    event.target.closest(
+      "#openPapaOverviewBtn, #openWorkroomWeekBtn, .open-child-week, [data-open-child-week]"
+    )
+  ) {
+    normalizePersonalWeekDialogs();
+    requestAnimationFrame(normalizePersonalWeekDialogs);
+  }
+}, true);
+
+/* showModal() kann Browser-Dialogpositionierung neu initialisieren.
+   Deshalb nach dem Öffnen noch einmal festziehen. */
+["papaOverviewDialog","childWeekDialog","workroomWeekDialog"].forEach(id => {
+  const dialog = document.getElementById(id);
+  if (!dialog) return;
+
+  const observer = new MutationObserver(() => {
+    if (dialog.open) {
+      normalizePersonalWeekDialogs();
+    }
+  });
+  observer.observe(dialog, {attributes:true, attributeFilter:["open"]});
+});
+
+window.addEventListener("resize", normalizePersonalWeekDialogs);
+
