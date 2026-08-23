@@ -26962,3 +26962,103 @@ button.day-meal-list-item:hover,a.day-meal-list-item:hover{background:rgba(164,1
   margin-top:12px !important;
 }
 
+
+/* =========================================================
+   V84 – Überblick: nur elegante kleine Pfeile
+   - keine 'Öffnen/Einklappen'-Pillen mehr
+   - gleicher Chevron bei Zeit / Rezepte / Übungen
+   - Pfeil dreht sich beim Öffnen
+   ========================================================= */
+
+.overview-collapse-toggle{
+  position:static !important;
+  width:24px !important;
+  height:24px !important;
+  min-width:24px !important;
+  min-height:24px !important;
+  margin-left:auto !important;
+  padding:0 !important;
+  border:0 !important;
+  border-radius:0 !important;
+  background:transparent !important;
+  box-shadow:none !important;
+  color:transparent !important;
+  font-size:0 !important;
+  line-height:1 !important;
+  display:grid !important;
+  place-items:center !important;
+  cursor:pointer !important;
+}
+
+/* Text im Button vollständig ausblenden – nur unser Chevron bleibt sichtbar */
+.overview-collapse-toggle > *{
+  display:none !important;
+}
+
+.overview-collapse-toggle::before{
+  content:"›";
+  display:block !important;
+  color:#9b7c68 !important;
+  font-family:Georgia, "Times New Roman", serif !important;
+  font-size:1rem !important;
+  font-weight:400 !important;
+  line-height:1 !important;
+  transform:rotate(0deg);
+  transform-origin:center;
+  transition:transform .16s ease, color .16s ease;
+}
+
+/* aria-expanded=true = Bereich offen */
+.overview-collapse-toggle[aria-expanded="true"]::before{
+  transform:rotate(90deg);
+}
+
+.overview-collapse-toggle:hover::before{
+  color:#755b4c !important;
+}
+
+/* Individuelle Einstellungen: exakt dieselbe Pfeil-Sprache */
+.family-settings-summary-chevron{
+  width:24px !important;
+  height:24px !important;
+  display:grid !important;
+  place-items:center !important;
+  color:#9b7c68 !important;
+  font-family:Georgia, "Times New Roman", serif !important;
+  font-size:1rem !important;
+  font-weight:400 !important;
+  line-height:1 !important;
+  transition:transform .16s ease, color .16s ease;
+}
+
+.family-settings[open] .family-settings-summary-chevron{
+  transform:rotate(90deg) !important;
+}
+
+/* Zeit im Blick geschlossen genauso kompakt wie die beiden anderen Karten */
+.time-tracker-card.overview-card-collapsed{
+  min-height:0 !important;
+  height:auto !important;
+  padding:10px 14px !important;
+}
+
+.time-tracker-card.overview-card-collapsed > .overview-card-head{
+  min-height:40px !important;
+  height:auto !important;
+  padding:0 !important;
+  margin:0 !important;
+}
+
+/* Einheitliche elegante Typografie der vier Hauptzeilen */
+.time-tracker-card.overview-card-collapsed h3,
+.recipe-link-tracker-card.overview-card-collapsed h3,
+.exercise-overview-card.overview-card-collapsed h3,
+.family-settings:not([open]) .family-settings-summary-copy strong{
+  font-family:"Playfair Display", Georgia, serif !important;
+  font-size:1rem !important;
+  font-weight:600 !important;
+  line-height:1.15 !important;
+  letter-spacing:0 !important;
+  color:#4b3931 !important;
+}
+
