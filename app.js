@@ -19497,3 +19497,126 @@ setTimeout(()=>{
    Live-Sync bleibt über onSnapshot; gezielter Pull nur noch
    bei Start, Rückkehr zur App und Wiederherstellung des Netzes.
    ========================================================= */
+
+/* =========================================================
+   V89 – UNSER ÜBERBLICK
+   Klappsystem nach dem bewährten Werkraum-Prinzip
+   ========================================================= */
+(function () {
+  const archive = document.querySelector("#archive");
+  if (!archive || archive.dataset.v89OverviewFold === "1") return;
+  archive.dataset.v89OverviewFold = "1";
+
+  const cards = [
+    {
+      el: archive.querySelector(".time-tracker-card"),
+      headSelector: ":scope > .overview-card-head"
+    },
+    {
+      el: archive.querySelector(".recipe-link-tracker-card"),
+      headSelector: ":scope > .overview-card-head"
+    },
+    {
+      el: archive.querySelector(".exercise-overview-card"),
+      headSelector: ":scope > .section-head"
+    }
+  ].filter(x => x.el);
+
+  const settings = archive.querySelector("details.family-settings");
+
+  function prepareCard(item) {
+    const card = item.el;
+    const head = card.querySelector(item.headSelector);
+    if (!head) return;
+
+    card.classList.add("overview-workroom-card");
+    head.classList.add("workroom-fold-head", "overview-workroom-head");
+
+    head.querySelectorAll(".overview-collapse-toggle").forEach(btn => {
+      btn.hidden = true;
+      btn.setAttribute("aria-hidden", "true");
+      btn.tabIndex = -1;
+    });
+
+    const textBlock = head.querySelector(":scope > div");
+    if (textBlock && !textBlock.querySelector(":scope > .workroom-fold-arrow")) {
+      const arrow = document.createElement("span");
+      arrow.className = "workroom-fold-arrow overview-workroom-arrow";
+      arrow.setAttribute("aria-hidden", "true");
+      arrow.textContent = "▾";
+      textBlock.prepend(arrow);
+    }
+
+    head.setAttribute("role", "button");
+    head.setAttribute("tabindex", "0");
+    head.setAttribute("aria-expanded", "false");
+  }
+
+  cards.forEach(prepareCard);
+
+  function setCardOpen(card, open) {
+    card.classList.toggle("open", !!open);
+    const head = card.querySelector(":scope > .overview-workroom-head");
+    if (head) head.setAttribute("aria-expanded", open ? "true" : "false");
+    card.classList.toggle("overview-card-collapsed", !open);
+  }
+
+  function closeAllExcept(except = null) {
+    cards.forEach(({ el }) => {
+      if (el !== except) setCardOpen(el, false);
+    });
+
+    if (settings && settings !== except) {
+      settings.open = false;
+    }
+  }
+
+  function toggleCard(card) {
+    const willOpen = !card.classList.contains("open");
+    closeAllExcept(willOpen ? card : null);
+    setCardOpen(card, willOpen);
+  }
+
+  function handleHead(head) {
+    const card = head.closest(".overview-workroom-card");
+    if (!card) return;
+    toggleCard(card);
+  }
+
+  archive.addEventListener("click", e => {
+    const head = e.target.closest(".overview-workroom-head");
+    if (!head || !archive.contains(head)) return;
+    if (e.target.closest("button,a,input,select,textarea")) return;
+
+    e.preventDefault();
+    handleHead(head);
+  });
+
+  archive.addEventListener("keydown", e => {
+    const head = e.target.closest(".overview-workroom-head");
+    if (!head || !archive.contains(head)) return;
+    if (e.key !== "Enter" && e.key !== " ") return;
+
+    e.preventDefault();
+    handleHead(head);
+  });
+
+  if (settings) {
+    settings.addEventListener("toggle", () => {
+      if (settings.open) {
+        cards.forEach(({ el }) => setCardOpen(el, false));
+      }
+    });
+  }
+
+  cards.forEach(({ el }) => setCardOpen(el, false));
+  if (settings) settings.open = false;
+
+  document.addEventListener("click", e => {
+    if (!e.target.closest?.('[data-view="archive"]')) return;
+    requestAnimationFrame(() => {
+      cards.forEach(({ el }) => setCardOpen(el, false));
+      if (settings) settings.open = false;
+    });
+  }, true);
+})();
