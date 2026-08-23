@@ -15225,3 +15225,434 @@ document.addEventListener("change",event=>{
   }
 });
 
+/* =========================================================
+   V60 – "Meine Woche" personalisieren
+   Header-Verlauf + Termin + To-do + aktueller Tag
+   ========================================================= */
+const myWeekPastelGradients = [
+  ["Rosé & Salbei", "linear-gradient(120deg,#f8e5e7 0%,#f7eddf 52%,#e6f0e4 100%)"],
+  ["Flieder & Creme", "linear-gradient(120deg,#eee7f7 0%,#fbf1e3 52%,#e8f1e4 100%)"],
+  ["Pfirsich & Mint", "linear-gradient(120deg,#fae8dc 0%,#f8f0dc 50%,#e2f0e8 100%)"],
+  ["Puderrosa & Himmel", "linear-gradient(120deg,#f6e2ea 0%,#f3ebdf 50%,#e3edf5 100%)"],
+  ["Vanille & Salbei", "linear-gradient(120deg,#faf1d9 0%,#f3eee4 50%,#dfead9 100%)"],
+  ["Lavendel & Rosé", "linear-gradient(120deg,#e9e3f4 0%,#f5e5eb 52%,#f6eedf 100%)"],
+  ["Apricot & Flieder", "linear-gradient(120deg,#f8e3d6 0%,#f5ebdf 48%,#e9e3f4 100%)"],
+  ["Meergrün & Creme", "linear-gradient(120deg,#dfeee9 0%,#f7f0df 52%,#eee4ef 100%)"],
+  ["Altrosa & Eukalyptus", "linear-gradient(120deg,#efdfe1 0%,#f5eadf 50%,#dfe9df 100%)"],
+  ["Mondlicht", "linear-gradient(120deg,#ece8f2 0%,#f8f2e7 48%,#e5eee8 100%)"]
+];
+
+const myWeekPastelColors = [
+  "#f4dfdf","#f2e5d4","#eee3f2","#e3edf3","#e1ecdf",
+  "#f4e2ea","#e4eee9","#f1ead7","#e8e2f0","#dfe9e2"
+];
+
+function ensureMyWeekPersonalization(){
+  state.familySettings = state.familySettings || {};
+  state.familySettings.myWeekAppearance =
+    state.familySettings.myWeekAppearance &&
+    typeof state.familySettings.myWeekAppearance === "object"
+      ? state.familySettings.myWeekAppearance
+      : {};
+
+  const defaults = {
+    mama:{gradient:0,event:"#f2e5d4",todo:"#e1ecdf",today:"#f4dfdf"},
+    "1":{gradient:1,event:"#f2e5d4",todo:"#e3edf3",today:"#eee3f2"},
+    "2":{gradient:2,event:"#f2e5d4",todo:"#e1ecdf",today:"#f4dfdf"}
+  };
+
+  ["mama","1","2"].forEach(id=>{
+    const current=state.familySettings.myWeekAppearance[id] || {};
+    const d=defaults[id];
+    state.familySettings.myWeekAppearance[id]={
+      gradient:Number.isInteger(Number(current.gradient))
+        ? Math.max(0,Math.min(myWeekPastelGradients.length-1,Number(current.gradient)))
+        : d.gradient,
+      event:/^#[0-9a-f]{6}$/i.test(String(current.event||"")) ? current.event : d.event,
+      todo:/^#[0-9a-f]{6}$/i.test(String(current.todo||"")) ? current.todo : d.todo,
+      today:/^#[0-9a-f]{6}$/i.test(String(current.today||"")) ? current.today : d.today
+    };
+  });
+  return state.familySettings.myWeekAppearance;
+}
+
+function myWeekAppearanceFor(id){
+  return ensureMyWeekPersonalization()[String(id)] || ensureMyWeekPersonalization().mama;
+}
+
+function renderMyWeekAppearanceSettings(){
+  const root=document.querySelector("#personalTimetableSubjectSettings");
+  if(!root) return;
+
+  let section=document.querySelector("#myWeekAppearanceSettings");
+  if(!section){
+    section=document.createElement("section");
+    section.id="myWeekAppearanceSettings";
+    section.className="my-week-appearance-settings";
+    root.insertAdjacentElement("afterend",section);
+  }
+
+  ensureMyWeekPersonalization();
+
+  section.innerHTML=`
+    <div class="personal-subject-settings-head">
+      <strong>Meine Woche</strong>
+      <small>Header, Termine, To-dos und den aktuellen Tag persönlich gestalten.</small>
+    </div>
+
+    <div class="my-week-person-tabs">
+      ${["mama","1","2"].map((id,index)=>`
+        <button type="button"
+                class="my-week-person-tab ${index===0?"active":""}"
+                data-my-week-person="${id}">
+          ${escapeHtml(personalTimetablePersonLabel(id))}
+        </button>
+      `).join("")}
+    </div>
+
+    ${["mama","1","2"].map((id,index)=>{
+      const value=myWeekAppearanceFor(id);
+      return `
+        <div class="my-week-person-panel ${index===0?"":"hidden"}"
+             data-my-week-panel="${id}">
+          <label class="my-week-setting-label">Header</label>
+          <div class="my-week-gradient-grid">
+            ${myWeekPastelGradients.map(([name,gradient],i)=>`
+              <button type="button"
+                      class="my-week-gradient-swatch ${value.gradient===i?"selected":""}"
+                      data-gradient="${i}"
+                      title="${escapeHtml(name)}"
+                      style="background:${gradient}">
+                <span>${escapeHtml(name)}</span>
+              </button>
+            `).join("")}
+          </div>
+
+          <div class="my-week-color-row">
+            ${[
+              ["event","Termine"],
+              ["todo","To-dos"],
+              ["today","Aktueller Tag"]
+            ].map(([key,label])=>`
+              <label class="my-week-color-control">
+                <span>${label}</span>
+                <span class="my-week-color-picker-wrap">
+                  <input type="color"
+                         data-my-week-color="${key}"
+                         value="${escapeHtml(value[key])}">
+                  <span class="my-week-color-preview"
+                        style="background:${escapeHtml(value[key])}"></span>
+                </span>
+              </label>
+            `).join("")}
+          </div>
+
+          <div class="my-week-preset-colors" aria-label="Pastellfarben">
+            ${myWeekPastelColors.map(color=>`
+              <button type="button"
+                      class="my-week-preset-color"
+                      data-preset-color="${color}"
+                      style="background:${color}"
+                      title="${color}"></button>
+            `).join("")}
+            <small>Pastellton anklicken und danach Termine, To-dos oder aktuellen Tag wählen.</small>
+          </div>
+        </div>
+      `;
+    }).join("")}
+  `;
+
+  section.querySelectorAll(".my-week-person-tab").forEach(btn=>{
+    btn.addEventListener("click",()=>{
+      const id=btn.dataset.myWeekPerson;
+      section.querySelectorAll(".my-week-person-tab").forEach(x=>
+        x.classList.toggle("active",x===btn)
+      );
+      section.querySelectorAll(".my-week-person-panel").forEach(panel=>
+        panel.classList.toggle("hidden",panel.dataset.myWeekPanel!==id)
+      );
+    });
+  });
+
+  section.querySelectorAll(".my-week-person-panel").forEach(panel=>{
+    const id=panel.dataset.myWeekPanel;
+
+    panel.querySelectorAll(".my-week-gradient-swatch").forEach(btn=>{
+      btn.addEventListener("click",()=>{
+        myWeekAppearanceFor(id).gradient=Number(btn.dataset.gradient);
+        save();
+        panel.querySelectorAll(".my-week-gradient-swatch")
+          .forEach(x=>x.classList.toggle("selected",x===btn));
+        applyMyWeekAppearance();
+      });
+    });
+
+    let chosenPreset=null;
+    panel.querySelectorAll(".my-week-preset-color").forEach(btn=>{
+      btn.addEventListener("click",()=>{
+        chosenPreset=btn.dataset.presetColor;
+        panel.querySelectorAll(".my-week-preset-color")
+          .forEach(x=>x.classList.toggle("selected",x===btn));
+      });
+    });
+
+    panel.querySelectorAll("[data-my-week-color]").forEach(input=>{
+      input.addEventListener("input",()=>{
+        const key=input.dataset.myWeekColor;
+        myWeekAppearanceFor(id)[key]=input.value;
+        input.parentElement?.querySelector(".my-week-color-preview")
+          ?.style.setProperty("background",input.value);
+        save();
+        applyMyWeekAppearance();
+      });
+
+      input.closest(".my-week-color-control")?.addEventListener("click",event=>{
+        if(!chosenPreset || event.target===input) return;
+        const key=input.dataset.myWeekColor;
+        input.value=chosenPreset;
+        myWeekAppearanceFor(id)[key]=chosenPreset;
+        input.parentElement?.querySelector(".my-week-color-preview")
+          ?.style.setProperty("background",chosenPreset);
+        save();
+        applyMyWeekAppearance();
+      });
+    });
+  });
+}
+
+function inferMyWeekPersonFromOpenView(){
+  /* bekannte persönliche Wochenfenster anhand vorhandener Texte/IDs erkennen */
+  const dialogs=[...document.querySelectorAll('[role="dialog"], .modal, .overlay, .week-modal, .person-week-modal')]
+    .filter(el=>{
+      const r=el.getBoundingClientRect();
+      return r.width>250 && r.height>180 && getComputedStyle(el).display!=="none";
+    });
+
+  for(const dialog of dialogs.reverse()){
+    const text=(dialog.textContent||"").toLocaleLowerCase("de");
+    if(text.includes("lous woche")) return {id:"1",root:dialog};
+    if(text.includes("finas woche")) return {id:"2",root:dialog};
+    if(text.includes("was steht für mich an?") || text.includes("meine woche")) return {id:"mama",root:dialog};
+  }
+  return null;
+}
+
+function applyMyWeekAppearance(){
+  const found=inferMyWeekPersonFromOpenView();
+  if(!found) return;
+
+  const {id,root}=found;
+  const appearance=myWeekAppearanceFor(id);
+  const gradient=myWeekPastelGradients[appearance.gradient]?.[1] || myWeekPastelGradients[0][1];
+
+  root.style.setProperty("--my-week-header",gradient);
+  root.style.setProperty("--my-week-event",appearance.event);
+  root.style.setProperty("--my-week-todo",appearance.todo);
+  root.style.setProperty("--my-week-today",appearance.today);
+  root.classList.add("personalized-my-week");
+
+  /* Header robust finden: oberster größerer Bereich vor den Wochen-Tabs */
+  const candidates=[...root.querySelectorAll("header, .modal-header, .week-header, .person-week-header, section, div")];
+  const header=candidates.find(el=>{
+    const t=(el.textContent||"").toLocaleLowerCase("de");
+    const r=el.getBoundingClientRect();
+    return r.height>=70 && r.height<=220 &&
+      (t.includes("lous woche") || t.includes("finas woche") ||
+       t.includes("was steht für mich an?"));
+  });
+  if(header) header.classList.add("personalized-my-week-header");
+
+  /* Karten semantisch färben, ohne deren Größe/Layout anzutasten */
+  [...root.querySelectorAll("*")].forEach(el=>{
+    const direct=[...el.childNodes]
+      .filter(n=>n.nodeType===Node.TEXT_NODE)
+      .map(n=>n.textContent.trim().toLocaleLowerCase("de"))
+      .filter(Boolean)
+      .join(" ");
+
+    if(direct==="termin") el.closest("article, li, .card, [class*='item']")?.classList.add("personalized-my-week-event");
+    if(direct==="to-do" || direct==="todo") el.closest("article, li, .card, [class*='item']")?.classList.add("personalized-my-week-todo");
+  });
+
+  /* Aktuellen Tag über das echte heutige Datum markieren */
+  const today=new Date();
+  const dd=String(today.getDate()).padStart(2,"0")+".";
+  const mm=String(today.getMonth()+1).padStart(2,"0")+".";
+  const token=dd+mm;
+
+  [...root.querySelectorAll("article, section, li, div")].forEach(el=>{
+    const text=(el.textContent||"");
+    const r=el.getBoundingClientRect();
+    if(text.includes(token) && r.width>180 && r.height>55 && r.height<500){
+      el.classList.add("personalized-my-week-today");
+    }
+  });
+}
+
+function ensureMyWeekAppearanceStyle(){
+  if(document.querySelector("#myWeekAppearanceStyle")) return;
+  const style=document.createElement("style");
+  style.id="myWeekAppearanceStyle";
+  style.textContent=`
+    .my-week-appearance-settings{
+      margin:12px 14px 14px;
+      padding:14px;
+      border:1px solid rgba(119,103,91,.16);
+      border-radius:16px;
+      background:rgba(255,253,249,.72);
+    }
+    .my-week-person-tabs{
+      display:flex;
+      gap:6px;
+      flex-wrap:wrap;
+      margin:10px 0 12px;
+    }
+    .my-week-person-tab{
+      border:1px solid rgba(120,105,92,.18);
+      background:#fffdf9;
+      border-radius:999px;
+      padding:6px 12px;
+      color:#65564e;
+      cursor:pointer;
+    }
+    .my-week-person-tab.active{
+      background:#f1eee6;
+      border-color:#c9bea8;
+      font-weight:600;
+    }
+    .my-week-person-panel.hidden{display:none!important;}
+    .my-week-setting-label{
+      display:block;
+      margin-bottom:7px;
+      font-size:.76rem;
+      color:#6f6259;
+      font-weight:600;
+    }
+    .my-week-gradient-grid{
+      display:grid;
+      grid-template-columns:repeat(5,minmax(90px,1fr));
+      gap:7px;
+    }
+    .my-week-gradient-swatch{
+      min-height:54px;
+      border:2px solid transparent;
+      border-radius:12px;
+      padding:7px;
+      cursor:pointer;
+      box-shadow:inset 0 0 0 1px rgba(110,95,83,.12);
+    }
+    .my-week-gradient-swatch.selected{
+      border-color:#9d846f;
+      box-shadow:0 0 0 2px rgba(157,132,111,.12);
+    }
+    .my-week-gradient-swatch span{
+      display:inline-block;
+      padding:2px 5px;
+      border-radius:6px;
+      background:rgba(255,255,255,.68);
+      color:#5f534b;
+      font-size:.65rem;
+    }
+    .my-week-color-row{
+      display:grid;
+      grid-template-columns:repeat(3,minmax(120px,1fr));
+      gap:8px;
+      margin-top:12px;
+    }
+    .my-week-color-control{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:8px;
+      padding:8px 10px;
+      border:1px solid rgba(120,105,92,.15);
+      border-radius:11px;
+      background:#fffdfa;
+      color:#665950;
+      font-size:.75rem;
+      cursor:pointer;
+    }
+    .my-week-color-picker-wrap{
+      position:relative;
+      width:32px;
+      height:26px;
+    }
+    .my-week-color-picker-wrap input{
+      position:absolute;
+      inset:0;
+      opacity:0;
+      width:100%;
+      height:100%;
+      cursor:pointer;
+    }
+    .my-week-color-preview{
+      display:block;
+      width:30px;
+      height:24px;
+      border-radius:8px;
+      border:1px solid rgba(90,75,65,.14);
+    }
+    .my-week-preset-colors{
+      display:flex;
+      align-items:center;
+      flex-wrap:wrap;
+      gap:6px;
+      margin-top:9px;
+    }
+    .my-week-preset-color{
+      width:24px;
+      height:24px;
+      border-radius:50%;
+      border:2px solid #fff;
+      outline:1px solid rgba(100,85,75,.13);
+      cursor:pointer;
+    }
+    .my-week-preset-color.selected{
+      outline:2px solid #9d846f;
+    }
+    .my-week-preset-colors small{
+      margin-left:4px;
+      color:#93857b;
+      font-size:.66rem;
+    }
+
+    .personalized-my-week .personalized-my-week-header{
+      background:var(--my-week-header)!important;
+    }
+    .personalized-my-week .personalized-my-week-event{
+      background:var(--my-week-event)!important;
+    }
+    .personalized-my-week .personalized-my-week-todo{
+      background:var(--my-week-todo)!important;
+    }
+    .personalized-my-week .personalized-my-week-today{
+      border-color:color-mix(in srgb,var(--my-week-today) 70%,#b99c91)!important;
+      box-shadow:inset 0 0 0 9999px color-mix(in srgb,var(--my-week-today) 16%,transparent);
+    }
+
+    @media(max-width:850px){
+      .my-week-gradient-grid{grid-template-columns:repeat(2,minmax(100px,1fr));}
+      .my-week-color-row{grid-template-columns:1fr;}
+    }
+  `;
+  document.head.appendChild(style);
+}
+
+ensureMyWeekAppearanceStyle();
+ensureMyWeekPersonalization();
+renderMyWeekAppearanceSettings();
+requestAnimationFrame(()=>{
+  renderMyWeekAppearanceSettings();
+  applyMyWeekAppearance();
+});
+setTimeout(()=>{
+  renderMyWeekAppearanceSettings();
+  applyMyWeekAppearance();
+},180);
+
+/* Beim Öffnen/Neu-Rendern persönlicher Wochenansichten automatisch anwenden. */
+const myWeekAppearanceObserver=new MutationObserver(()=>{
+  requestAnimationFrame(applyMyWeekAppearance);
+});
+myWeekAppearanceObserver.observe(document.body,{childList:true,subtree:true});
+
