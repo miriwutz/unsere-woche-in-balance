@@ -31258,3 +31258,22 @@ button.day-meal-list-item:hover,a.day-meal-list-item:hover{background:rgba(164,1
   }
 }
 
+
+/* =========================================================
+   V117 – ÜBERBLICK NUR AUF DER ÜBERBLICK-SEITE
+   Ursache:
+   V113/V114 hatten #archive mit display:flex/block !important
+   erzwungen. Dadurch war die View auch ohne .active sichtbar.
+   Ab jetzt gilt wieder die normale View-Logik:
+   - ohne .active unsichtbar
+   - nur bei "Unser Überblick" sichtbar
+   Gilt für PC UND Handy.
+   ========================================================= */
+
+#archive.view{
+  display:none !important;
+}
+
+#archive.view.active{
+  display:block !important;
+}
