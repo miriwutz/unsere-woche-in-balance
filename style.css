@@ -31080,3 +31080,181 @@ button.day-meal-list-item:hover,a.day-meal-list-item:hover{background:rgba(164,1
   }
 }
 
+
+/* =========================================================
+   V116 – GEMEINSAME SUCHE FÜR WACHSENDE SAMMLUNGEN
+   Ruhige, einheitliche Lupe ohne Emoji:
+   - Fertige To-dos / Termine
+   - Erledigte Schul-To-dos
+   - Online-Rezepte
+   - Übungen & Videos
+   - Meine Fundstücke
+   Rezeptkarten nutzen ihre vorhandene Suche + Pagination.
+   ========================================================= */
+
+.collection-search-bar{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  margin:10px 0 12px;
+  width:100%;
+}
+
+.collection-search-shell{
+  position:relative;
+  flex:1 1 320px;
+  min-width:0;
+  display:block;
+}
+
+.collection-search-shell input[type="search"]{
+  width:100%;
+  min-height:42px;
+  padding:9px 38px 9px 39px;
+  border:1px solid rgba(137,113,96,.17);
+  border-radius:999px;
+  background:#fffdf9;
+  color:#51463f;
+  font:inherit;
+  font-size:.86rem;
+  outline:none;
+  box-shadow:none;
+}
+
+.collection-search-shell input[type="search"]:focus{
+  border-color:rgba(137,113,96,.34);
+  box-shadow:0 0 0 3px rgba(153,131,111,.07);
+}
+
+.collection-search-shell input[type="search"]::-webkit-search-cancel-button{
+  -webkit-appearance:none;
+  appearance:none;
+}
+
+/* Monochrome Lupe – kein buntes Emoji, auf hell/dunkel stabil. */
+.collection-search-icon{
+  position:absolute;
+  left:15px;
+  top:50%;
+  width:13px;
+  height:13px;
+  transform:translateY(-58%);
+  border:1.7px solid #8f8175;
+  border-radius:50%;
+  pointer-events:none;
+  box-sizing:border-box;
+}
+
+.collection-search-icon::after{
+  content:"";
+  position:absolute;
+  width:6px;
+  height:1.7px;
+  right:-5px;
+  bottom:-3px;
+  border-radius:999px;
+  background:#8f8175;
+  transform:rotate(45deg);
+  transform-origin:left center;
+}
+
+.collection-search-clear{
+  position:absolute;
+  right:10px;
+  top:50%;
+  transform:translateY(-50%);
+  width:28px;
+  height:28px;
+  padding:0;
+  border:0;
+  border-radius:50%;
+  background:transparent;
+  color:#9b8f86;
+  font-size:1rem;
+  line-height:1;
+  cursor:pointer;
+}
+
+.collection-search-clear:hover{
+  background:rgba(137,113,96,.07);
+  color:#685b52;
+}
+
+.collection-search-count{
+  flex:0 0 auto;
+  color:#9a8c82;
+  font-size:.72rem;
+  white-space:nowrap;
+}
+
+.collection-more-btn,
+.archive-column-more,
+.online-recipe-more{
+  display:block;
+  margin:10px auto 2px;
+  min-height:36px;
+  padding:7px 13px;
+  font-size:.76rem;
+}
+
+.archive-column-more,
+.online-recipe-more{
+  margin-top:8px;
+}
+
+#workroomLinkSearchBar{
+  margin-top:4px;
+}
+
+/* Vorhandene Rezeptsuche erhält dieselbe ruhige Lupe. */
+.recipe-search-wrap{
+  position:relative;
+}
+.recipe-search-wrap::before{
+  content:"";
+  position:absolute;
+  left:14px;
+  top:50%;
+  width:13px;
+  height:13px;
+  transform:translateY(-60%);
+  border:1.7px solid #8f8175;
+  border-radius:50%;
+  z-index:2;
+  pointer-events:none;
+  box-sizing:border-box;
+}
+.recipe-search-wrap::after{
+  content:"";
+  position:absolute;
+  left:25px;
+  top:calc(50% + 5px);
+  width:6px;
+  height:1.7px;
+  border-radius:999px;
+  background:#8f8175;
+  transform:rotate(45deg);
+  transform-origin:left center;
+  z-index:2;
+  pointer-events:none;
+}
+#recipeSearch{
+  padding-left:39px !important;
+}
+
+@media(max-width:700px){
+  .collection-search-bar{
+    gap:7px;
+    margin:8px 0 10px;
+  }
+
+  .collection-search-shell input[type="search"]{
+    min-height:44px;
+    font-size:.88rem;
+  }
+
+  .collection-search-count{
+    font-size:.68rem;
+  }
+}
+
