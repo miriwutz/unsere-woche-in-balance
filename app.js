@@ -18743,7 +18743,7 @@ setTimeout(()=>{
     const ratingLabel={super:"✦ Gut",okay:"○ Mittel",nope:"— Schlecht"};
 
     return `
-      <article class="archive-card">
+      <article class="archive-card ${a.thumbnail ? "has-thumb" : "no-thumb"}">
         ${a.thumbnail ? `
           <a class="archive-thumb-link"
              href="${escapeHtml(a.url)}"
@@ -19219,5 +19219,82 @@ setTimeout(()=>{
   setTimeout(v76PrepareOverviewCards,80);
   setTimeout(v76PrepareOverviewCards,300);
 
+})();
+
+/* =========================================================
+   V77 – Überblick beim Betreten immer geschlossen
+   + Einklappen/Öffnen robust
+   ========================================================= */
+(function(){
+  const v77Cards=[
+    [".time-tracker-card","Zeit im Blick"],
+    [".recipe-link-tracker-card","Online-Rezepte"],
+    [".exercise-overview-card","Übungen & Videos"]
+  ];
+
+  function v77Apply(card,collapsed){
+    if(!card) return;
+    card.classList.toggle("overview-card-collapsed",!!collapsed);
+
+    const toggle=card.querySelector(".overview-collapse-toggle");
+    if(toggle){
+      toggle.textContent=collapsed ? "⌄ Öffnen" : "⌃ Einklappen";
+      toggle.setAttribute("aria-expanded",collapsed ? "false" : "true");
+    }
+  }
+
+  function v77CloseAll(){
+    /* Auch V76 liest diesen Speicher. So kann kein späterer V76-Render
+       die Karten direkt wieder öffnen. */
+    try{
+      localStorage.setItem("balanceProd.overviewCollapsedV76",JSON.stringify({
+        time:true,
+        recipes:true,
+        archive:true
+      }));
+    }catch{}
+
+    v77Cards.forEach(([selector])=>v77Apply(document.querySelector(selector),true));
+  }
+
+  /* Beim Betreten von "Unser Überblick" IMMER mit allen drei Karten zu starten. */
+  document.addEventListener("click",e=>{
+    if(!e.target.closest?.('[data-view="archive"]')) return;
+
+    v77CloseAll();
+    setTimeout(v77CloseAll,70);
+    setTimeout(v77CloseAll,260);
+  },true);
+
+  /* Toggle selbst zuverlässig übernehmen. */
+  document.addEventListener("click",e=>{
+    const toggle=e.target.closest?.(".overview-collapse-toggle");
+    if(!toggle) return;
+
+    e.preventDefault();
+    e.stopImmediatePropagation();
+
+    const card=toggle.closest(".time-tracker-card, .recipe-link-tracker-card, .exercise-overview-card");
+    if(!card) return;
+
+    const willCollapse=!card.classList.contains("overview-card-collapsed");
+    v77Apply(card,willCollapse);
+
+    /* V76-Speicher passend halten, damit spätere Render nicht dagegen arbeiten. */
+    try{
+      const raw=localStorage.getItem("balanceProd.overviewCollapsedV76");
+      const stored=raw?JSON.parse(raw):{};
+      const key=card.classList.contains("time-tracker-card") ? "time"
+        : card.classList.contains("recipe-link-tracker-card") ? "recipes"
+        : "archive";
+      stored[key]=willCollapse;
+      localStorage.setItem("balanceProd.overviewCollapsedV76",JSON.stringify(stored));
+    }catch{}
+  },true);
+
+  /* Auch nach Reload ist der Überblick zunächst geschlossen. */
+  v77CloseAll();
+  setTimeout(v77CloseAll,120);
+  setTimeout(v77CloseAll,360);
 })();
 
