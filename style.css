@@ -24864,3 +24864,38 @@ button.day-meal-list-item:hover,a.day-meal-list-item:hover{background:rgba(164,1
   opacity:1 !important;
 }
 
+/* =========================================================
+   V55 – Stundenplan: Fachfarben direkt auf der Zelle
+   Keine rosa Innenflächen / keine feste blaue Fachfläche
+   ========================================================= */
+#manualTimetableDisplay .tt-view-table td.tt-subject-display{
+  background:#fbfaf8 !important;
+  color:#4f4a48 !important;
+  padding:0 !important;
+  overflow:hidden !important;
+}
+#manualTimetableDisplay .tt-view-table td.tt-subject-display.has-subject{
+  background:var(--tt-cell-bg,#f4f1ed) !important;
+}
+#manualTimetableDisplay .tt-view-table td.tt-subject-display.is-empty{
+  background:#f7f6f3 !important;
+}
+#manualTimetableDisplay .tt-subject-pastel{
+  display:contents !important;
+  background:transparent !important;
+}
+#manualTimetableDisplay .tt-subject-display{
+  text-align:center !important;
+  vertical-align:middle !important;
+}
+#manualTimetableDisplay .tt-subject-display .tt-subject-label{
+  display:inline !important;
+  color:#443f3d !important;
+  font-weight:500 !important;
+  line-height:1.2 !important;
+}
+#manualTimetableDisplay .tt-subject-display .tt-subject-icon,
+#manualTimetableDisplay .tt-subject-display .tt-subject-symbol{
+  vertical-align:middle !important;
+  margin-right:4px !important;
+}
