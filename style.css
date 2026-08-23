@@ -29317,3 +29317,125 @@ button.day-meal-list-item:hover,a.day-meal-list-item:hover{background:rgba(164,1
   }
 }
 
+
+/* =========================================================
+   V104 – HANDY: Schul-To-dos wieder übersichtlich
+   NUR MOBILE. Desktop bleibt unverändert.
+   Ziel:
+   - maximaler Platz für Aufgabentext
+   - mobil KEIN Bearbeiten und KEIN Löschen
+   - Stern + Verschiebepfeile bleiben
+   - Text bekommt eine eigene volle Zeile
+   ========================================================= */
+@media (max-width:700px){
+
+  #schoolWorkTodoList .workroom-todo-row{
+    display:grid !important;
+    grid-template-columns:minmax(0,1fr) !important;
+    grid-template-rows:auto auto !important;
+    gap:4px !important;
+    padding:10px 12px !important;
+    align-items:start !important;
+  }
+
+  /* Der Aufgabentext bekommt die komplette Kartenbreite. */
+  #schoolWorkTodoList .workroom-todo-content{
+    grid-column:1 !important;
+    grid-row:1 !important;
+    width:100% !important;
+    min-width:0 !important;
+    padding:8px 4px 7px !important;
+    margin:0 !important;
+  }
+
+  #schoolWorkTodoList .workroom-todo-text{
+    display:block !important;
+    width:100% !important;
+    min-width:0 !important;
+    font-size:1.05rem !important;
+    line-height:1.28 !important;
+    overflow-wrap:break-word !important;
+    word-break:normal !important;
+    hyphens:auto !important;
+  }
+
+  /* Aktionen kommen kompakt in eine zweite Zeile rechts.
+     Dadurch drücken sie den Aufgabentext nicht mehr zusammen. */
+  #schoolWorkTodoList .workroom-todo-actions{
+    grid-column:1 !important;
+    grid-row:2 !important;
+    width:100% !important;
+    min-width:0 !important;
+    display:flex !important;
+    align-items:center !important;
+    justify-content:flex-end !important;
+    gap:3px !important;
+    padding-top:2px !important;
+  }
+
+  /* Mobil nicht benötigt. */
+  #schoolWorkTodoList .workroom-todo-edit,
+  #schoolWorkTodoList .workroom-todo-delete,
+  #schoolWorkTodoList .workroom-drag-handle{
+    display:none !important;
+  }
+
+  /* Stern bleibt bewusst kompakt. */
+  #schoolWorkTodoList .workroom-important-btn{
+    width:32px !important;
+    min-width:32px !important;
+    max-width:32px !important;
+    height:32px !important;
+    min-height:32px !important;
+    border-radius:50% !important;
+    padding:0 !important;
+  }
+
+  #schoolWorkTodoList .workroom-important-btn::before{
+    font-size:1rem !important;
+  }
+
+  /* Pfeile kleiner, aber noch gut antippbar. */
+  #schoolWorkTodoList .workroom-move-controls{
+    display:flex !important;
+    align-items:center !important;
+    justify-content:flex-end !important;
+    gap:1px !important;
+  }
+
+  #schoolWorkTodoList .workroom-move-btn{
+    width:30px !important;
+    min-width:30px !important;
+    max-width:30px !important;
+    height:32px !important;
+    min-height:32px !important;
+    padding:0 !important;
+    font-size:.95rem !important;
+  }
+
+  /* Typ/Link bleiben, falls vorhanden, aber nehmen kaum Platz ein. */
+  #schoolWorkTodoList .workroom-todo-type{
+    max-width:92px !important;
+    font-size:.68rem !important;
+    white-space:nowrap !important;
+    overflow:hidden !important;
+    text-overflow:ellipsis !important;
+  }
+
+  #schoolWorkTodoList .workroom-todo-link{
+    flex:0 0 auto !important;
+  }
+
+  /* Checkbox bleibt mobil ausgeblendet:
+     Tippen auf den Text hakt ab. */
+  #schoolWorkTodoList .workroom-todo-check{
+    display:none !important;
+  }
+
+  /* Erledigt deutlich, aber nicht sofort "weg". */
+  #schoolWorkTodoList .workroom-todo-row.done .workroom-todo-text{
+    text-decoration:line-through !important;
+    opacity:.46 !important;
+  }
+}
+
