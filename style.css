@@ -28876,3 +28876,125 @@ button.day-meal-list-item:hover,a.day-meal-list-item:hover{background:rgba(164,1
   }
 }
 
+
+
+/* =========================================================
+   V101 – HANDY: Kinderkarten sichtbar + wirklich pastellig
+   NUR Mobile. Desktop bleibt unverändert.
+   Wichtig: kein mix-blend-mode mehr – dadurch verschwanden die
+   transparenten Line-Art-Bilder auf dunklen Handy-Darstellungen.
+   ========================================================= */
+@media (max-width:700px){
+
+  #schoolChildChooser .school-person-card{
+    position:relative !important;
+    isolation:isolate !important;
+    grid-template-rows:158px auto auto !important;
+  }
+
+  /* Heller, pudriger Bildbereich. */
+  #schoolChildChooser .school-person-card.lou::before{
+    background:
+      radial-gradient(circle at 72% 18%,rgba(255,255,255,.82),transparent 38%),
+      linear-gradient(145deg,#f5eff8 0%,#eee5f2 54%,#e5dbea 100%) !important;
+    opacity:1 !important;
+  }
+
+  #schoolChildChooser .school-person-card.fina::before{
+    background:
+      radial-gradient(circle at 28% 16%,rgba(255,255,255,.82),transparent 38%),
+      linear-gradient(145deg,#fff1ed 0%,#f9dfda 54%,#f2d2cc 100%) !important;
+    opacity:1 !important;
+  }
+
+  /* Bild liegt sicher ÜBER der Pastellfläche.
+     Keine Mischmethode mehr, volle Deckkraft. */
+  #schoolChildChooser .school-person-card img{
+    position:relative !important;
+    z-index:3 !important;
+    display:block !important;
+    visibility:visible !important;
+    opacity:1 !important;
+    mix-blend-mode:normal !important;
+    width:100% !important;
+    height:158px !important;
+    max-height:158px !important;
+    object-fit:contain !important;
+    object-position:center bottom !important;
+    padding:7px 10px 1px !important;
+    background:transparent !important;
+  }
+
+  /* Beide Zeichnungen warm und deutlich.
+     Bewusst stärkerer Kontrast als V99, damit die Linien auch bei
+     Samsung-Browser/Dark-Mode nicht im Hintergrund verschwinden. */
+  #schoolChildChooser .school-person-card.lou img{
+    filter:
+      invert(72%)
+      sepia(34%)
+      saturate(780%)
+      hue-rotate(348deg)
+      brightness(91%)
+      contrast(118%)
+      drop-shadow(0 2px 3px rgba(91,58,34,.24)) !important;
+  }
+
+  #schoolChildChooser .school-person-card.fina img{
+    filter:
+      invert(70%)
+      sepia(38%)
+      saturate(820%)
+      hue-rotate(340deg)
+      brightness(94%)
+      contrast(116%)
+      drop-shadow(0 2px 3px rgba(102,61,43,.22)) !important;
+  }
+
+  /* Kartenkörper: heller als V99; nur der Namenssockel etwas tiefer. */
+  #schoolChildChooser .school-person-card.lou{
+    background:
+      linear-gradient(180deg,#eee5f2 0 158px,#6f6879 158px 100%) !important;
+  }
+
+  #schoolChildChooser .school-person-card.fina{
+    background:
+      linear-gradient(180deg,#f9dfda 0 158px,#806864 158px 100%) !important;
+  }
+
+  /* Im HTML heißt die zweite Zeile .school-person-sub, nicht subtitle. */
+  #schoolChildChooser .school-person-card .school-person-name,
+  #schoolChildChooser .school-person-card .school-person-sub{
+    position:relative !important;
+    z-index:4 !important;
+    color:#fffaf6 !important;
+  }
+
+  #schoolChildChooser .school-person-card .school-person-name{
+    padding-top:13px !important;
+  }
+
+  #schoolChildChooser .school-person-card .school-person-sub{
+    padding-bottom:15px !important;
+    opacity:.92 !important;
+  }
+}
+
+@media (max-width:380px){
+  #schoolChildChooser .school-person-card{
+    grid-template-rows:146px auto auto !important;
+  }
+
+  #schoolChildChooser .school-person-card::before,
+  #schoolChildChooser .school-person-card img{
+    height:146px !important;
+    max-height:146px !important;
+  }
+
+  #schoolChildChooser .school-person-card.lou{
+    background:linear-gradient(180deg,#eee5f2 0 146px,#6f6879 146px 100%) !important;
+  }
+
+  #schoolChildChooser .school-person-card.fina{
+    background:linear-gradient(180deg,#f9dfda 0 146px,#806864 146px 100%) !important;
+  }
+}
