@@ -30705,3 +30705,139 @@ button.day-meal-list-item:hover,a.day-meal-list-item:hover{background:rgba(164,1
     max-width:112px !important;
   }
 }
+
+
+/* =========================================================
+   V111 – MOBILE ONLY – KINDERBEREICH FINAL
+   Ziel:
+   - Samsung + Xiaomi möglichst identische Kartenwirkung
+   - echte, deckende Pastellfläche als eingebettetes PNG
+   - Lou deutlich heller/wärmer, Fina nur sanft angepasst
+   - Namensbereich ebenfalls pastellig, kein dunkler Sockel
+   - KEINE anderen Bereiche verändern
+   ========================================================= */
+@media (max-width:700px) {
+
+  #schoolChildChooser .school-chooser-grid {
+    display:grid !important;
+    grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+    gap:12px !important;
+    width:100% !important;
+  }
+
+  #schoolChildChooser .school-person-card {
+    position:relative !important;
+    isolation:isolate !important;
+    overflow:hidden !important;
+    min-width:0 !important;
+    border-radius:22px !important;
+    background:transparent !important;
+    box-shadow:0 8px 22px rgba(26,20,22,.14) !important;
+  }
+
+  /* Alle früheren Masken/Silhouetten abschalten. */
+  #schoolChildChooser .school-person-card::after {
+    content:none !important;
+    display:none !important;
+    -webkit-mask:none !important;
+    mask:none !important;
+    background:none !important;
+  }
+
+  /* Ganze Karte als eingebettetes PNG:
+     dadurch wird der Pastellton nicht mehr als normale CSS-Farbe
+     vom Samsung-Webseiten-Darkmode umgerechnet. */
+  #schoolChildChooser .school-person-card::before {
+    content:"" !important;
+    position:absolute !important;
+    inset:0 !important;
+    z-index:0 !important;
+    display:block !important;
+    width:100% !important;
+    height:100% !important;
+    opacity:1 !important;
+    pointer-events:none !important;
+    background-repeat:no-repeat !important;
+    background-size:100% 100% !important;
+    background-position:center !important;
+    box-shadow:none !important;
+    filter:none !important;
+  }
+
+  #schoolChildChooser .school-person-card.lou::before {
+    background-image:url("data:image/png;base64,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") !important;
+    background-color:#efe8f4 !important;
+  }
+
+  #schoolChildChooser .school-person-card.fina::before {
+    background-image:url("data:image/png;base64,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") !important;
+    background-color:#f8e9e4 !important;
+  }
+
+  /* Originalbilder immer ÜBER der Pastellfläche. */
+  #schoolChildChooser .school-person-card > img {
+    position:relative !important;
+    z-index:2 !important;
+    display:block !important;
+    visibility:visible !important;
+    opacity:1 !important;
+    width:100% !important;
+    height:158px !important;
+    min-height:158px !important;
+    max-height:158px !important;
+    margin:0 !important;
+    padding:7px 9px 0 !important;
+    object-fit:contain !important;
+    object-position:center bottom !important;
+    background:transparent !important;
+    mix-blend-mode:normal !important;
+  }
+
+  /* Lou: die dunkle Original-Lineart wird deutlich heller und warm-golden.
+     Kein brightness(0), damit Innenzeichnung erhalten bleibt. */
+  #schoolChildChooser .school-person-card.lou > img {
+    filter:
+      invert(78%)
+      sepia(38%)
+      saturate(390%)
+      hue-rotate(342deg)
+      brightness(118%)
+      contrast(92%)
+      drop-shadow(0 1px 1px rgba(86,60,40,.14)) !important;
+  }
+
+  /* Fina: nur sanft warm/hell, weil sie bereits gut lesbar ist. */
+  #schoolChildChooser .school-person-card.fina > img {
+    filter:
+      sepia(30%)
+      saturate(110%)
+      brightness(119%)
+      contrast(105%)
+      drop-shadow(0 1px 1px rgba(86,60,40,.12)) !important;
+  }
+
+  /* Text sicher über dem Karten-PNG. */
+  #schoolChildChooser .school-person-name,
+  #schoolChildChooser .school-person-sub {
+    position:relative !important;
+    z-index:3 !important;
+    text-shadow:none !important;
+  }
+
+  #schoolChildChooser .school-person-name {
+    color:#3d343b !important;
+  }
+
+  #schoolChildChooser .school-person-sub {
+    color:#655b62 !important;
+    opacity:1 !important;
+  }
+}
+
+@media (max-width:380px) {
+  #schoolChildChooser .school-person-card > img {
+    height:146px !important;
+    min-height:146px !important;
+    max-height:146px !important;
+  }
+}
