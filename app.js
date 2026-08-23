@@ -3855,6 +3855,41 @@ out.innerHTML=`<div class="tt-table-wrap"><table class="tt-table tt-view-table $
     </tbody>
   </table></div>`;
   d.showModal();
+
+  /* V100 – Stundenplanansicht:
+     Am Handy beim Öffnen automatisch den aktuellen Wochentag zeigen.
+     Gilt identisch für Mama, Lou und Fina, weil alle drei dieselbe
+     showManualTimetable()-Ansicht verwenden.
+     Samstag/Sonntag: Montag zeigen, da der Stundenplan nur Mo–Fr enthält. */
+  if (window.matchMedia("(max-width: 700px)").matches) {
+    requestAnimationFrame(() => {
+      const wrap = out.querySelector(".tt-table-wrap");
+      const table = out.querySelector(".tt-view-table");
+      if (!wrap || !table) return;
+
+      const jsDay = new Date().getDay(); // So=0, Mo=1 ... Sa=6
+      const timetableDayIndex =
+        jsDay >= 1 && jsDay <= 5
+          ? jsDay - 1
+          : 0; // Wochenende -> Montag
+
+      /* Spalte 1 ist "Zeit", danach Mo–Fr. */
+      const targetHeader =
+        table.querySelector(`thead th:nth-child(${timetableDayIndex + 2})`);
+
+      if (!targetHeader) return;
+
+      /* Die Zeitspalte links als Orientierung sichtbar lassen. */
+      const firstHeader = table.querySelector("thead th:first-child");
+      const firstColumnWidth = firstHeader?.offsetWidth || 70;
+      const targetLeft = Math.max(
+        0,
+        targetHeader.offsetLeft - firstColumnWidth - 6
+      );
+
+      wrap.scrollLeft = targetLeft;
+    });
+  }
 }
 function bindManualTimetableControls(){document.querySelectorAll(".save-tt-matrix").forEach(b=>{if(b.dataset.bound)return;b.dataset.bound="1";b.addEventListener("click",e=>saveTTMatrix(e.currentTarget.dataset.child))})}
 document.querySelectorAll(".add-tt-row").forEach(btn => {
