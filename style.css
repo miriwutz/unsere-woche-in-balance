@@ -25518,3 +25518,120 @@ button.day-meal-list-item:hover,a.day-meal-list-item:hover{background:rgba(164,1
 @media(max-width:1100px){
   .child-routine-editor-form{grid-template-columns:repeat(2,minmax(0,1fr)) !important}
 }
+
+/* =========================================================
+   V65 – Kinder-Routinen: gleicher Grundaufbau Lou/Fina
+   ========================================================= */
+
+/* Routinen-Kachel: kein grellweißes Symbolfeld mehr */
+.school-tile-routines .school-routine-symbol{
+  background:rgba(255,253,249,.22) !important;
+  border:1px solid rgba(157,132,111,.10) !important;
+  box-shadow:none !important;
+  backdrop-filter:none !important;
+}
+
+/* Lou und Fina exakt gleiche Kachel-Geometrie */
+.school-tile-routines,
+.school-tile-routines-fina{
+  min-width:0 !important;
+}
+.school-tile-routines .school-tile-icon{
+  width:48px !important;
+  height:48px !important;
+  min-width:48px !important;
+}
+
+/* Persönliches Zeichen im Routinenfenster transparent */
+.child-routine-hero-mark{
+  background:transparent !important;
+  border:0 !important;
+  box-shadow:none !important;
+  opacity:.9 !important;
+}
+.child-routine-hero-mark .school-personal-svg-icon{
+  width:48px !important;
+  height:48px !important;
+}
+
+/* Hinweis zwischen festen Routinen und Wochenraster */
+.child-routine-planning-note{
+  margin:8px 18px 4px;
+  padding:9px 12px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  border:1px solid rgba(155,132,111,.14);
+  border-radius:13px;
+  background:rgba(250,247,239,.72);
+  color:#887268;
+  font-size:.7rem;
+}
+.child-routine-planning-note button{
+  white-space:nowrap;
+  border:1px solid rgba(155,132,111,.18);
+  border-radius:999px;
+  background:#fffdf8;
+  color:#67564e;
+  padding:6px 10px;
+  cursor:pointer;
+}
+
+/* Wocheneditor – gleiche Geometrie für beide Kinder */
+.child-routine-overview-editor[data-child="1"],
+.child-routine-overview-editor[data-child="2"]{
+  width:auto !important;
+}
+.child-routine-editor-form-unified{
+  display:grid !important;
+  grid-template-columns:
+    minmax(125px,.85fr)
+    minmax(240px,1.7fr)
+    minmax(220px,1.45fr)
+    minmax(170px,1fr)
+    minmax(135px,.85fr)
+    auto
+    auto !important;
+  align-items:end !important;
+  gap:8px !important;
+}
+.child-routine-editor-form-unified label{
+  min-width:0 !important;
+}
+.child-routine-editor-form-unified input,
+.child-routine-editor-form-unified select{
+  width:100% !important;
+  box-sizing:border-box !important;
+}
+.child-routine-editor-form-unified label.is-muted{
+  opacity:.64;
+}
+
+/* beide Personentabs identisch */
+.child-routine-editor-person-tabs button{
+  min-width:86px;
+  text-align:center;
+}
+
+@media(max-width:1150px){
+  .child-routine-editor-form-unified{
+    grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+  }
+  .child-routine-editor-form-unified .child-routine-editor-title-field{
+    grid-column:1 / -1;
+  }
+}
+@media(max-width:700px){
+  .child-routine-planning-note{
+    align-items:flex-start;
+    flex-direction:column;
+  }
+  .child-routine-editor-form-unified{
+    grid-template-columns:1fr !important;
+  }
+  .child-routine-editor-form-unified .child-routine-editor-title-field{
+    grid-column:auto;
+  }
+}
+
