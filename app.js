@@ -5512,7 +5512,6 @@ const TIME_TRACKING_LOCAL_KEY = "balanceProd.timeTracking";
 let timeTrackingUnsubscribe = null;
 let timeTrackingCloudSaveTimer = null;
 let timeTrackingCloudApplying = false;
-let timeTrackingPollTimer = null;
 let lastTimeTrackingCloudFingerprint = "";
 
 function writeTimeTrackingLocalOnly() {
@@ -5677,16 +5676,6 @@ async function refreshTimeTrackingFromCloud() {
   }
 }
 
-function startTimeTrackingPollFallback() {
-  if (timeTrackingPollTimer) clearInterval(timeTrackingPollTimer);
-
-  // onSnapshot bleibt die Hauptsynchronisation.
-  // Der Pull hilft besonders auf Tablets, wenn der Browser Listener pausiert.
-  timeTrackingPollTimer = setInterval(() => {
-    if (!document.hidden) refreshTimeTrackingFromCloud();
-  }, 12000);
-}
-
 async function startTimeTrackingSync() {
   if (timeTrackingUnsubscribe) {
     timeTrackingUnsubscribe();
@@ -5739,8 +5728,9 @@ async function startTimeTrackingSync() {
     console.error("Zeittracking Live-Sync fehlgeschlagen:", err);
   });
 
+  /* Einmaliger Abgleich nach dem Start.
+     Danach ist onSnapshot die Hauptsynchronisation. */
   await refreshTimeTrackingFromCloud();
-  startTimeTrackingPollFallback();
 }
 
 function restoreTimeTrackingFromLocal() {
@@ -9402,15 +9392,23 @@ startShoppingSync();
       timeTrackingUnsubscribe();
       timeTrackingUnsubscribe = null;
     }
-    if (timeTrackingPollTimer) {
-      clearInterval(timeTrackingPollTimer);
-      timeTrackingPollTimer = null;
-    }
 showLoginGate(true);
   }
 });
 
+/* Zeittracking-Fallback ohne Dauer-Polling:
+   - onSnapshot liefert Live-Änderungen
+   - wenn Handy/Tablet nach Pause wieder aktiv wird, einmal frisch laden
+   - ebenso nach Wiederherstellung der Internetverbindung / BFCache-Rückkehr */
 document.addEventListener("visibilitychange", () => {
+  if (!document.hidden) refreshTimeTrackingFromCloud();
+});
+
+window.addEventListener("pageshow", () => {
+  if (!document.hidden) refreshTimeTrackingFromCloud();
+});
+
+window.addEventListener("online", () => {
   if (!document.hidden) refreshTimeTrackingFromCloud();
 });
 
@@ -19491,4 +19489,11 @@ setTimeout(()=>{
    Body-weite MutationObserver wurden auf die tatsächlich
    betroffenen Bereiche begrenzt bzw. entfernt.
    Funktional notwendige, gezielte Dialog-Observer bleiben erhalten.
+   ========================================================= */
+
+/* =========================================================
+   STABILITÄTS-AUDIT PUNKT 3
+   12-Sekunden-Firestore-Polling entfernt.
+   Live-Sync bleibt über onSnapshot; gezielter Pull nur noch
+   bei Start, Rückkehr zur App und Wiederherstellung des Netzes.
    ========================================================= */
