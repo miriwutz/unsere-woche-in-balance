@@ -19663,3 +19663,38 @@ setTimeout(()=>{
     border.addEventListener("change",()=>apply.click());
   }
 })();
+
+
+/* =========================================================
+   V86 – Einstellungen als echtes Accordion
+   - innerhalb "Individuelle Einstellungen" immer nur EIN Bereich offen
+   - Pfeile links bleiben echte, sichtbare Öffnungszeichen
+   ========================================================= */
+(function(){
+  function setupSingleOpenSettingsAccordion(){
+    const root=document.querySelector("details.family-settings");
+    if(!root || root.dataset.v86Accordion==="1") return;
+    root.dataset.v86Accordion="1";
+
+    root.addEventListener("toggle", e=>{
+      const opened=e.target;
+      if(
+        !(opened instanceof HTMLDetailsElement) ||
+        !opened.classList.contains("settings-main-group") ||
+        !opened.open
+      ) return;
+
+      root.querySelectorAll(":scope > .settings-main-group").forEach(other=>{
+        if(other!==opened) other.open=false;
+      });
+    }, true);
+  }
+
+  setupSingleOpenSettingsAccordion();
+  document.addEventListener("click",e=>{
+    if(e.target.closest?.(".family-settings > summary")){
+      setTimeout(setupSingleOpenSettingsAccordion,0);
+    }
+  },true);
+})();
+
