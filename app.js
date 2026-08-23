@@ -17188,3 +17188,209 @@ requestAnimationFrame(renderChildRoutineOverviewEditor);
 setTimeout(renderChildRoutineOverviewEditor,220);
 
 
+
+/* =========================================================
+   V64 – Tagesausrichtung / Qualitäten pro Person
+   Mama: „Welche Qualität möchte ich heute leben?“
+   Lou:  „Wie möchte ich heute durch meinen Tag gehen?“
+   Fina: „Wie möchte ich heute sein?“
+   Komplett ausblendbar; Begriffe frei änderbar/löschbar/ergänzbar.
+   ========================================================= */
+
+const defaultPersonalDailyFocus = {
+  mama:{
+    enabled:true,
+    question:"Welche Qualität möchte ich heute leben?",
+    qualities:["Ruhe","Leichtigkeit","Klarheit","Geduld","Mut","Freundlichkeit","Gelassenheit","Vertrauen","Präsenz"]
+  },
+  "1":{
+    enabled:true,
+    question:"Wie möchte ich heute durch meinen Tag gehen?",
+    qualities:["ruhig","mutig","konzentriert","freundlich","selbstbewusst","geduldig","gelassen","neugierig","gut zu mir"]
+  },
+  "2":{
+    enabled:true,
+    question:"Wie möchte ich heute sein?",
+    qualities:["fröhlich","mutig","ruhig","freundlich","aufmerksam","geduldig","hilfsbereit","neugierig","stark"]
+  }
+};
+
+function ensurePersonalDailyFocus(){
+  state.familySettings=state.familySettings||{};
+  state.familySettings.personalDailyFocus=
+    state.familySettings.personalDailyFocus && typeof state.familySettings.personalDailyFocus==="object"
+      ? state.familySettings.personalDailyFocus : {};
+
+  ["mama","1","2"].forEach(id=>{
+    const def=defaultPersonalDailyFocus[id];
+    const cur=state.familySettings.personalDailyFocus[id];
+    if(!cur || typeof cur!=="object"){
+      state.familySettings.personalDailyFocus[id]={...def,qualities:[...def.qualities]};
+      return;
+    }
+    if(typeof cur.enabled!=="boolean") cur.enabled=def.enabled;
+    if(!String(cur.question||"").trim()) cur.question=def.question;
+    if(!Array.isArray(cur.qualities)) cur.qualities=[...def.qualities];
+    cur.qualities=cur.qualities.map(x=>String(x||"").trim()).filter(Boolean);
+  });
+  return state.familySettings.personalDailyFocus;
+}
+
+function personalDailyFocusFor(id){
+  return ensurePersonalDailyFocus()[String(id)] || ensurePersonalDailyFocus().mama;
+}
+
+function applyMamaDailyFocus(){
+  const cfg=personalDailyFocusFor("mama");
+  const block=document.querySelector('.routine-quality-block');
+  if(!block) return;
+  block.style.display=cfg.enabled?"":"none";
+  const title=block.querySelector('.routine-quality-title');
+  if(title) title.textContent=cfg.question;
+  const cloud=block.querySelector('.routine-quality-cloud');
+  if(cloud){
+    cloud.innerHTML=cfg.qualities.map(q=>`<button type="button" data-quality="${escapeHtml(q)}">${escapeHtml(q)}</button>`).join("");
+    if(typeof syncRoutineInspirationChecks==="function") syncRoutineInspirationChecks();
+  }
+}
+
+function dailyFocusEditorMarkup(id){
+  const cfg=personalDailyFocusFor(id);
+  return `
+    <div class="personal-daily-focus-settings" data-daily-focus-editor="${id}">
+      <div class="personal-daily-focus-head">
+        <div>
+          <strong>Tagesausrichtung</strong>
+          <small>Optional – ausgeschaltet erscheint dieser Bereich in „Meine Routinen“ gar nicht.</small>
+        </div>
+        <label class="personal-daily-focus-toggle">
+          <input type="checkbox" data-daily-focus-enabled ${cfg.enabled?"checked":""}>
+          <span>Anzeigen</span>
+        </label>
+      </div>
+      <label class="personal-daily-focus-question">
+        <span>Frage</span>
+        <input type="text" data-daily-focus-question value="${escapeHtml(cfg.question)}">
+      </label>
+      <div class="personal-daily-focus-quality-list">
+        ${cfg.qualities.map((q,i)=>`
+          <div class="personal-daily-focus-quality-row" data-quality-index="${i}">
+            <input type="text" value="${escapeHtml(q)}" aria-label="Qualität ${i+1}">
+            <button type="button" data-delete-daily-quality title="Qualität löschen">×</button>
+          </div>`).join("")}
+      </div>
+      <button type="button" class="personal-daily-focus-add" data-add-daily-quality>+ Qualität hinzufügen</button>
+    </div>`;
+}
+
+function bindDailyFocusEditor(panel,id){
+  const editor=panel.querySelector(`[data-daily-focus-editor="${id}"]`);
+  if(!editor) return;
+  const cfg=personalDailyFocusFor(id);
+  const refresh=()=>{
+    save();
+    if(id==="mama") applyMamaDailyFocus();
+    if((id==="1"||id==="2") && document.querySelector("#childRoutineDialog")?.open && activeChildRoutineId===id){
+      renderChildRoutineDialog();
+    }
+  };
+  editor.querySelector('[data-daily-focus-enabled]')?.addEventListener('change',e=>{
+    cfg.enabled=!!e.target.checked; refresh();
+  });
+  editor.querySelector('[data-daily-focus-question]')?.addEventListener('change',e=>{
+    const v=e.target.value.trim(); cfg.question=v||defaultPersonalDailyFocus[id].question; e.target.value=cfg.question; refresh();
+  });
+  editor.querySelectorAll('.personal-daily-focus-quality-row input').forEach(input=>{
+    input.addEventListener('change',()=>{
+      const row=input.closest('[data-quality-index]');
+      const i=Number(row?.dataset.qualityIndex);
+      const v=input.value.trim();
+      if(!Number.isFinite(i)) return;
+      if(!v){ input.value=cfg.qualities[i]||""; return; }
+      cfg.qualities[i]=v; refresh();
+    });
+  });
+  editor.querySelectorAll('[data-delete-daily-quality]').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      const row=btn.closest('[data-quality-index]');
+      const i=Number(row?.dataset.qualityIndex);
+      if(!Number.isFinite(i)) return;
+      cfg.qualities.splice(i,1); save(); renderPersonalRoutineSentenceSettings();
+      const s=document.querySelector('#personalRoutineSentenceSettings');
+      s?.querySelectorAll('.personal-routine-person-tab').forEach(t=>t.classList.toggle('active',t.dataset.routinePerson===id));
+      s?.querySelectorAll('.personal-routine-person-panel').forEach(p=>p.classList.toggle('hidden',p.dataset.routinePersonPanel!==id));
+      if(id==="mama") applyMamaDailyFocus();
+    });
+  });
+  editor.querySelector('[data-add-daily-quality]')?.addEventListener('click',()=>{
+    cfg.qualities.push(id==="2"?"neue Stärke":"neue Qualität"); save(); renderPersonalRoutineSentenceSettings();
+    const s=document.querySelector('#personalRoutineSentenceSettings');
+    s?.querySelectorAll('.personal-routine-person-tab').forEach(t=>t.classList.toggle('active',t.dataset.routinePerson===id));
+    s?.querySelectorAll('.personal-routine-person-panel').forEach(p=>p.classList.toggle('hidden',p.dataset.routinePersonPanel!==id));
+  });
+}
+
+const _renderPersonalRoutineSentenceSettingsV64=renderPersonalRoutineSentenceSettings;
+renderPersonalRoutineSentenceSettings=function(){
+  _renderPersonalRoutineSentenceSettingsV64();
+  ensurePersonalDailyFocus();
+  document.querySelectorAll('#personalRoutineSentenceSettings [data-routine-person-panel]').forEach(panel=>{
+    const id=panel.dataset.routinePersonPanel;
+    if(!panel.querySelector('[data-daily-focus-editor]')){
+      panel.insertAdjacentHTML('afterbegin',dailyFocusEditorMarkup(id));
+      bindDailyFocusEditor(panel,id);
+    }
+  });
+  applyMamaDailyFocus();
+};
+
+const _renderChildRoutineDialogV64=renderChildRoutineDialog;
+renderChildRoutineDialog=function(){
+  _renderChildRoutineDialogV64();
+  const dialog=document.querySelector('#childRoutineDialog');
+  if(!dialog) return;
+  const id=activeChildRoutineId;
+  const cfg=personalDailyFocusFor(id);
+  let focus=dialog.querySelector('.child-routine-daily-focus');
+  if(!cfg.enabled){ focus?.remove(); return; }
+  if(!focus){
+    focus=document.createElement('section');
+    focus.className='child-routine-daily-focus';
+    dialog.querySelector('.child-routine-area-cards')?.insertAdjacentElement('beforebegin',focus);
+  }
+  focus.innerHTML=`
+    <div class="child-routine-daily-focus-question">${escapeHtml(cfg.question)}</div>
+    <div class="child-routine-daily-focus-chips">
+      ${cfg.qualities.map(q=>`<button type="button" data-child-daily-quality="${escapeHtml(q)}">${escapeHtml(q)}</button>`).join('')}
+    </div>`;
+
+  const dayKey=`childDailyFocus__${id}__${dateKey(new Date())}`;
+  const selected=String(state.familySettings?.childDailyFocusSelections?.[dayKey]||"");
+  focus.querySelectorAll('[data-child-daily-quality]').forEach(btn=>{
+    btn.classList.toggle('active',btn.dataset.childDailyQuality===selected);
+    btn.addEventListener('click',()=>{
+      state.familySettings.childDailyFocusSelections=state.familySettings.childDailyFocusSelections||{};
+      state.familySettings.childDailyFocusSelections[dayKey]=
+        state.familySettings.childDailyFocusSelections[dayKey]===btn.dataset.childDailyQuality ? "" : btn.dataset.childDailyQuality;
+      save(); renderChildRoutineDialog();
+    });
+  });
+};
+
+/* Alte Tagesmarkierungen nach 03:00 Uhr nicht weiterführen. */
+function cleanupChildDailyFocusSelections(){
+  ensurePersonalDailyFocus();
+  const map=state.familySettings.childDailyFocusSelections||{};
+  const now=new Date();
+  const logical=new Date(now);
+  if(now.getHours()<3) logical.setDate(logical.getDate()-1);
+  const keep=dateKey(logical);
+  Object.keys(map).forEach(k=>{ if(!k.endsWith(`__${keep}`)) delete map[k]; });
+}
+
+ensurePersonalDailyFocus();
+cleanupChildDailyFocusSelections();
+setTimeout(()=>{
+  renderPersonalRoutineSentenceSettings();
+  applyMamaDailyFocus();
+},0);
