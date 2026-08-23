@@ -29137,3 +29137,183 @@ button.day-meal-list-item:hover,a.day-meal-list-item:hover{background:rgba(164,1
   }
 }
 
+
+/* =========================================================
+   V103 – HANDY: Kinderkarten zuverlässig
+   NUR MOBILE.
+   Die Original-PNGs werden nicht mehr per Filter eingefärbt.
+   Stattdessen dienen sie als Alpha-Maske und werden dadurch
+   zuverlässig als deckende Gold-/Kupfer-Zeichnung dargestellt.
+   Desktop bleibt vollständig unverändert.
+   ========================================================= */
+@media (max-width:700px){
+
+  #schoolChildChooser .school-chooser-grid{
+    grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+    gap:12px !important;
+    width:100% !important;
+  }
+
+  #schoolChildChooser .school-person-card{
+    position:relative !important;
+    isolation:isolate !important;
+    overflow:hidden !important;
+    min-width:0 !important;
+    border-radius:22px !important;
+    grid-template-rows:158px auto auto !important;
+    box-shadow:0 8px 22px rgba(29,22,20,.14) !important;
+  }
+
+  /* Pastell-Bildflächen – bewusst hell und wenig transparent. */
+  #schoolChildChooser .school-person-card::before{
+    content:"" !important;
+    position:absolute !important;
+    inset:0 0 auto 0 !important;
+    height:158px !important;
+    z-index:0 !important;
+    pointer-events:none !important;
+    opacity:1 !important;
+    border-radius:22px 22px 0 0 !important;
+  }
+
+  #schoolChildChooser .school-person-card.lou::before{
+    background:
+      radial-gradient(circle at 76% 17%,rgba(255,255,255,.78),transparent 38%),
+      linear-gradient(145deg,#f5eff8 0%,#ece2f1 56%,#e2d6e8 100%) !important;
+  }
+
+  #schoolChildChooser .school-person-card.fina::before{
+    background:
+      radial-gradient(circle at 26% 16%,rgba(255,255,255,.80),transparent 38%),
+      linear-gradient(145deg,#fff2ee 0%,#f8dfd8 56%,#efd0c8 100%) !important;
+  }
+
+  /*
+    WICHTIGER FIX:
+    Das sichtbare Kinderbild wird als CSS-Maske neu gezeichnet.
+    Dadurch hängt die Farbe NICHT von Schwarz/Transparenz/Dark-Mode
+    des Browsers ab. Die Linien sind deckend und klar sichtbar.
+  */
+  #schoolChildChooser .school-person-card::after{
+    content:"" !important;
+    position:absolute !important;
+    left:8px !important;
+    right:8px !important;
+    top:5px !important;
+    height:153px !important;
+    z-index:2 !important;
+    pointer-events:none !important;
+
+    -webkit-mask-repeat:no-repeat !important;
+    mask-repeat:no-repeat !important;
+    -webkit-mask-position:center bottom !important;
+    mask-position:center bottom !important;
+    -webkit-mask-size:contain !important;
+    mask-size:contain !important;
+
+    opacity:.97 !important;
+  }
+
+  #schoolChildChooser .school-person-card.lou::after{
+    -webkit-mask-image:url("./lou-stundenplan.png?v=53") !important;
+    mask-image:url("./lou-stundenplan.png?v=53") !important;
+    background:#b47b45 !important; /* warmes Kupfer-Gold */
+  }
+
+  #schoolChildChooser .school-person-card.fina::after{
+    -webkit-mask-image:url("./fina-stundenplan.png?v=53") !important;
+    mask-image:url("./fina-stundenplan.png?v=53") !important;
+    background:#b77855 !important; /* weicheres Rosé-Kupfer */
+  }
+
+  /* Originalbilder mobil nur als Platzhalter behalten:
+     keine Filter, keine Mischung, aber unsichtbar.
+     So bleibt das Grid stabil und es kann nichts doppelt erscheinen. */
+  #schoolChildChooser .school-person-card > img{
+    position:relative !important;
+    z-index:1 !important;
+    display:block !important;
+    width:100% !important;
+    height:158px !important;
+    max-height:158px !important;
+    padding:0 !important;
+    margin:0 !important;
+    object-fit:contain !important;
+    object-position:center bottom !important;
+    background:transparent !important;
+    filter:none !important;
+    mix-blend-mode:normal !important;
+    opacity:0 !important;
+    visibility:visible !important;
+  }
+
+  /* Ruhiger dunkler Sockel, aber nicht fast schwarz. */
+  #schoolChildChooser .school-person-card.lou{
+    background:
+      linear-gradient(180deg,transparent 0 158px,#70687b 158px 100%) !important;
+    border:1px solid rgba(178,151,194,.38) !important;
+  }
+
+  #schoolChildChooser .school-person-card.fina{
+    background:
+      linear-gradient(180deg,transparent 0 158px,#806a66 158px 100%) !important;
+    border:1px solid rgba(194,145,132,.38) !important;
+  }
+
+  #schoolChildChooser .school-person-name,
+  #schoolChildChooser .school-person-sub{
+    position:relative !important;
+    z-index:4 !important;
+    color:#fffaf6 !important;
+  }
+
+  #schoolChildChooser .school-person-name{
+    padding:12px 14px 0 !important;
+    font-size:1.42rem !important;
+    line-height:1.06 !important;
+  }
+
+  #schoolChildChooser .school-person-sub{
+    padding:3px 14px 14px !important;
+    font-size:.82rem !important;
+    line-height:1.2 !important;
+    opacity:.92 !important;
+  }
+}
+
+@media (max-width:380px){
+  #schoolChildChooser .school-chooser-grid{
+    gap:9px !important;
+  }
+
+  #schoolChildChooser .school-person-card{
+    grid-template-rows:146px auto auto !important;
+  }
+
+  #schoolChildChooser .school-person-card::before,
+  #schoolChildChooser .school-person-card > img{
+    height:146px !important;
+    max-height:146px !important;
+  }
+
+  #schoolChildChooser .school-person-card::after{
+    height:141px !important;
+  }
+
+  #schoolChildChooser .school-person-card.lou{
+    background:linear-gradient(180deg,transparent 0 146px,#70687b 146px 100%) !important;
+  }
+
+  #schoolChildChooser .school-person-card.fina{
+    background:linear-gradient(180deg,transparent 0 146px,#806a66 146px 100%) !important;
+  }
+
+  #schoolChildChooser .school-person-name{
+    font-size:1.28rem !important;
+  }
+
+  #schoolChildChooser .school-person-sub{
+    font-size:.76rem !important;
+  }
+}
+
