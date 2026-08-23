@@ -3513,12 +3513,15 @@ function timetableSubjectDisplay(subject,id){
   const s=String(subject||"").trim();
   if(!s) return "";
 
-  const color=timetableSubjectColor(String(id),s);
   const icon=String(id)==="2" ? schoolTimetableSubjectIcon(s) : "";
+  return `${icon}<span class="tt-subject-label">${escapeHtml(s)}</span>`;
+}
 
-  return `<span class="tt-subject-pastel" style="${color ? `--tt-subject-bg:${color};` : ""}">
-    ${icon}<span>${escapeHtml(s)}</span>
-  </span>`;
+function timetableSubjectCellStyle(subject,id){
+  const s=String(subject||"").trim();
+  if(!s) return "";
+  const color=timetableSubjectColor(String(id),s);
+  return color ? ` style="--tt-cell-bg:${escapeHtml(color)}"` : "";
 }
 
 function showManualTimetable(id){
@@ -3559,7 +3562,7 @@ out.innerHTML=`<div class="tt-table-wrap"><table class="tt-table tt-view-table $
     <thead><tr><th>Zeit</th>${manualTimetableDayNames.map(x=>`<th>${x}</th>`).join("")}</tr></thead>
     <tbody>
       <tr class="tt-home-row tt-home-row-top"><th>⌂ Zu Hause bis</th>${manualTimetableDayKeys.map(day=>`<td>${escapeHtml(t.homeBy[day]||"–")}</td>`).join("")}</tr>
-      ${t.times.map((tm,r)=>`<tr><th>${escapeHtml(tm.from)}–${escapeHtml(tm.to)}</th>${manualTimetableDayKeys.map(day=>`<td class="tt-subject-display">${timetableSubjectDisplay(t.subjects[day][r]||"",id)}</td>`).join("")}</tr>`).join("")}
+      ${t.times.map((tm,r)=>`<tr><th>${escapeHtml(tm.from)}–${escapeHtml(tm.to)}</th>${manualTimetableDayKeys.map(day=>{const subject=t.subjects[day][r]||"";return `<td class="tt-subject-display ${subject ? "has-subject" : "is-empty"}"${timetableSubjectCellStyle(subject,id)}>${timetableSubjectDisplay(subject,id)}</td>`;}).join("")}</tr>`).join("")}
     </tbody>
   </table></div>`;
   d.showModal();
@@ -16083,5 +16086,4 @@ const personalRoutineSentenceObserver=new MutationObserver(()=>{
   }
 });
 personalRoutineSentenceObserver.observe(document.body,{childList:true,subtree:true});
-
 
