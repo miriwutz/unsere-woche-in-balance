@@ -17576,3 +17576,228 @@ setTimeout(()=>{
      er verwendet bereits activeChildRoutineEditorWeekOffset als Fallback. */
   setTimeout(refreshChildRoutineSigns,400);
 })();
+
+/* =========================================================
+   V65 – Kinder-Routinen konsolidiert
+   Lou + Fina: gleicher Grundaufbau, nur altersgerechte Inhalte/Themen verschieden.
+   ========================================================= */
+(function(){
+
+  /* ---------- 1) Starterdaten einmal sauber vereinheitlichen ---------- */
+  function migrateChildRoutineStarterPacks(){
+    state.familySettings = state.familySettings || {};
+    state.familySettings.routineStarterVersions =
+      state.familySettings.routineStarterVersions &&
+      typeof state.familySettings.routineStarterVersions === "object"
+        ? state.familySettings.routineStarterVersions
+        : {};
+
+    ensurePersonalRoutineSentences();
+
+    const migrateOne=(id, source, versionKey, targetVersion)=>{
+      if(Number(state.familySettings.routineStarterVersions[versionKey]||0) >= targetVersion) return;
+
+      const current=personalRoutineSentencesFor(id);
+      const custom={};
+
+      Object.entries(current||{}).forEach(([area,rows])=>{
+        custom[area]=(Array.isArray(rows)?rows:[])
+          .filter(row=>String(row?.step||"").startsWith("custom-"))
+          .map(row=>({...row}));
+      });
+
+      const fresh=cloneRoutineSet(source);
+      Object.keys(fresh).forEach(area=>{
+        fresh[area].push(...(custom[area]||[]));
+      });
+
+      state.familySettings.personalRoutineSentences[id]=fresh;
+      state.familySettings.routineStarterVersions[versionKey]=targetVersion;
+    };
+
+    migrateOne("1", defaultLouRoutineSentences, "lou", 2);
+    migrateOne("2", defaultFinaRoutineSentences, "fina", 2);
+
+    persistFamilySettingsImmediately?.();
+    save();
+  }
+
+  migrateChildRoutineStarterPacks();
+
+  /* ---------- 2) Persönliches Zeichen an ALLEN drei Stellen ---------- */
+  function currentChildPersonalIcon(id){
+    const key=schoolMemberKey(String(id));
+    return state.familySettings?.[key]?.icon || (String(id)==="1" ? "⭐" : "🌙");
+  }
+
+  function syncChildPersonalSigns(){
+    ["1","2"].forEach(id=>{
+      const icon=currentChildPersonalIcon(id);
+      const markup=schoolPersonalIconMarkup(icon);
+      const label=schoolPersonalIconLabel(icon);
+
+      /* Routinen-Kachel */
+      document.querySelectorAll(`[data-school-open-routines="${id}"] .school-routine-symbol`)
+        .forEach(el=>{
+          el.innerHTML=markup;
+          el.title=label;
+        });
+
+      /* großes Zeichen im Kinder-Header */
+      document.querySelectorAll(`[data-school-timetable-link="${id}"]`)
+        .forEach(el=>{
+          el.innerHTML=markup;
+          el.title=label;
+          el.setAttribute("aria-label",`${childRoutinePersonName(id)} – Stundenplan ansehen`);
+        });
+    });
+
+    /* Zeichen im geöffneten Routinenfenster */
+    const dialog=document.querySelector("#childRoutineDialog");
+    if(dialog?.open){
+      const id=String(dialog.dataset.child||activeChildRoutineId||"1");
+      const mark=dialog.querySelector("#childRoutinePersonalSign");
+      if(mark){
+        const icon=currentChildPersonalIcon(id);
+        mark.innerHTML=schoolPersonalIconMarkup(icon);
+        mark.title=schoolPersonalIconLabel(icon);
+      }
+    }
+  }
+
+  window.syncChildPersonalSigns=syncChildPersonalSigns;
+
+  /* renderSchoolChildDashboard erzeugt die Kacheln neu -> danach erneut einsetzen */
+  const renderSchoolChildDashboardBeforeV65=renderSchoolChildDashboard;
+  renderSchoolChildDashboard=function(id){
+    const result=renderSchoolChildDashboardBeforeV65(id);
+    requestAnimationFrame(syncChildPersonalSigns);
+    return result;
+  };
+
+  /* Die Auswahl läuft über pointerup, deshalb dort unabhängig vom Click synchronisieren. */
+  document.addEventListener("pointerup",e=>{
+    if(e.target.closest?.(".school-icon-choice")){
+      requestAnimationFrame(syncChildPersonalSigns);
+      setTimeout(syncChildPersonalSigns,80);
+    }
+  },true);
+
+  document.addEventListener("click",e=>{
+    if(e.target.closest?.(".school-icon-choice")){
+      requestAnimationFrame(syncChildPersonalSigns);
+      setTimeout(syncChildPersonalSigns,80);
+    }
+  },true);
+
+  syncChildPersonalSigns();
+  requestAnimationFrame(syncChildPersonalSigns);
+
+  /* ---------- 3) Kinder-Routinenfenster für BEIDE exakt gleich aufbauen ---------- */
+  const renderChildRoutineDialogBeforeV65=renderChildRoutineDialog;
+
+  renderChildRoutineDialog=function(){
+    renderChildRoutineDialogBeforeV65();
+
+    const dialog=ensureChildRoutineDialog();
+    const id=String(activeChildRoutineId||"1");
+    dialog.dataset.child=id;
+
+    syncChildPersonalSigns();
+
+    /* Einheitliche Erklärung: Wochenpunkte werden bewusst im Überblick bearbeitet. */
+    let note=dialog.querySelector("#childRoutinePlanningNote");
+    if(!note){
+      note=document.createElement("div");
+      note.id="childRoutinePlanningNote";
+      note.className="child-routine-planning-note";
+      const plan=dialog.querySelector(".child-routine-week-plan");
+      plan?.insertAdjacentElement("beforebegin",note);
+    }
+
+    note.innerHTML=`
+      <span>Wochenpunkte planst du unter <strong>Unser Überblick → Routinen</strong>.</span>
+      <button type="button" id="openChildRoutinePlanningFromDialog">Planung öffnen</button>
+    `;
+
+    note.querySelector("#openChildRoutinePlanningFromDialog")?.addEventListener("click",()=>{
+      dialog.close();
+
+      document.querySelector('[data-view="archive"]')?.click();
+
+      setTimeout(()=>{
+        const settings=document.querySelector("#personalRoutineSentenceSettings")?.closest("details");
+        if(settings) settings.open=true;
+
+        activeChildRoutineEditorId=id;
+        activeChildRoutineEditorWeekOffset=activeChildRoutineWeekOffset;
+        editingChildRoutineItemId=null;
+        renderChildRoutineOverviewEditor();
+
+        document.querySelector("#childRoutineOverviewEditor")
+          ?.scrollIntoView({behavior:"smooth",block:"center"});
+      },80);
+    });
+  };
+
+  window.renderChildRoutineDialog=renderChildRoutineDialog;
+
+  /* ---------- 4) Wochenplanung im Überblick: BEIDE gleiche Bedienung ---------- */
+  const renderChildRoutineOverviewEditorBeforeV65=renderChildRoutineOverviewEditor;
+
+  renderChildRoutineOverviewEditor=function(){
+    renderChildRoutineOverviewEditorBeforeV65();
+
+    const section=document.querySelector("#childRoutineOverviewEditor");
+    if(!section) return;
+
+    const id=String(activeChildRoutineEditorId||"1");
+
+    section.dataset.child=id;
+
+    /* Eindeutig sichtbare Struktur wie bei Mamas Planung */
+    const heading=section.querySelector(".personal-subject-settings-head");
+    if(heading){
+      heading.innerHTML=`
+        <strong>Wochenplanung – ${escapeHtml(childRoutinePersonName(id))}</strong>
+        <small>
+          Woche oben wählen, Punkt eintragen und mit „+ Routinepunkt“ speichern.
+          Feste Routinen werden darüber separat bearbeitet.
+        </small>
+      `;
+    }
+
+    /* Woche ausschließlich über die Reiter – exakt gleich für Lou/Fina */
+    section.querySelector("#childRoutineEditorWeek")?.closest("label")?.remove();
+
+    /* Einheitliche Reihenfolge und Beschriftung */
+    const form=section.querySelector(".child-routine-editor-form");
+    if(form){
+      form.classList.add("child-routine-editor-form-unified");
+    }
+
+    const categoryLabel=section.querySelector("#childRoutineEditorCategory")?.closest("label");
+    if(categoryLabel){
+      categoryLabel.childNodes[0].textContent="Video-Thema ";
+    }
+
+    /* Bei keinem Link ist die Kategorie optisch optional, aber auswählbar. */
+    const url=section.querySelector("#childRoutineEditorUrl");
+    const category=section.querySelector("#childRoutineEditorCategory");
+    const updateVideoTopicState=()=>{
+      if(!category) return;
+      category.closest("label")?.classList.toggle("is-muted",!String(url?.value||"").trim());
+    };
+    url?.addEventListener("input",updateVideoTopicState);
+    updateVideoTopicState();
+  };
+
+  window.renderChildRoutineOverviewEditor=renderChildRoutineOverviewEditor;
+
+  /* initial sauber neu rendern */
+  renderPersonalRoutineSentenceSettings();
+  renderChildRoutineOverviewEditor();
+  syncChildPersonalSigns();
+
+})();
+
