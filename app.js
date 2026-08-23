@@ -19072,3 +19072,152 @@ setTimeout(()=>{
   window.renderChildRoutineDialog = renderChildRoutineDialog;
 })();
 
+/* =========================================================
+   V76 – Überblick: 3 Hauptkarten einklappbar + Archiv-Löschen robust
+   ========================================================= */
+(function(){
+
+  /* ---------- A) Einzelnes Archiv-Element zuverlässig löschen ---------- */
+  document.addEventListener("click", e=>{
+    const btn=e.target.closest?.(".delete-exercise-btn");
+    if(!btn) return;
+
+    e.preventDefault();
+    e.stopImmediatePropagation();
+
+    const id=String(btn.dataset.id||"");
+    const item=(state.archive||[]).find(a=>String(a.id)===id);
+    if(!item) return;
+
+    const owner=String(item.owner||"mama");
+    const ownerName=
+      owner==="1" ? (familyName("c")||"Lou") :
+      owner==="2" ? (familyName("d")||"Fina") :
+      (familyName("a")||"Mama");
+
+    if(!confirm(`„${item.title||"Übung"}“ wirklich aus ${ownerName}s Archiv löschen?`)) return;
+
+    markListItemDeleted("archiveTombstones",id);
+    state.archive=(state.archive||[]).filter(a=>String(a.id)!==id);
+
+    save();
+    persistTopLevelDeletionImmediately("archive");
+    renderArchive();
+
+    showMotivation(`„${item.title||"Übung"}“ wurde aus ${ownerName}s Archiv gelöscht.`);
+  }, true);
+
+  /* ---------- B) Drei Hauptbereiche im Überblick einklappbar ---------- */
+  const cards=[
+    {
+      selector:".time-tracker-card",
+      key:"time",
+      label:"Zeit im Blick"
+    },
+    {
+      selector:".recipe-link-tracker-card",
+      key:"recipes",
+      label:"Online-Rezepte"
+    },
+    {
+      selector:".exercise-overview-card",
+      key:"archive",
+      label:"Übungen & Videos"
+    }
+  ];
+
+  function v76CollapseStorage(){
+    try{
+      const raw=localStorage.getItem("balanceProd.overviewCollapsedV76");
+      const parsed=raw?JSON.parse(raw):{};
+      return parsed && typeof parsed==="object" ? parsed : {};
+    }catch{
+      return {};
+    }
+  }
+
+  function v76SaveCollapse(stateObj){
+    try{
+      localStorage.setItem("balanceProd.overviewCollapsedV76",JSON.stringify(stateObj||{}));
+    }catch{}
+  }
+
+  function v76SetCardCollapsed(card,collapsed,key){
+    if(!card) return;
+
+    card.classList.toggle("overview-card-collapsed",!!collapsed);
+
+    const toggle=card.querySelector(".overview-collapse-toggle");
+    if(toggle){
+      toggle.textContent=collapsed ? "⌄ Öffnen" : "⌃ Einklappen";
+      toggle.setAttribute("aria-expanded",collapsed?"false":"true");
+    }
+
+    const store=v76CollapseStorage();
+    store[key]=!!collapsed;
+    v76SaveCollapse(store);
+  }
+
+  function v76PrepareOverviewCards(){
+    const saved=v76CollapseStorage();
+
+    cards.forEach(config=>{
+      const card=document.querySelector(config.selector);
+      if(!card) return;
+
+      const head=
+        card.querySelector(":scope > .overview-card-head") ||
+        card.querySelector(":scope > .section-head");
+
+      if(!head) return;
+
+      head.classList.add("overview-collapsible-head");
+
+      let toggle=head.querySelector(".overview-collapse-toggle");
+      if(!toggle){
+        toggle=document.createElement("button");
+        toggle.type="button";
+        toggle.className="overview-collapse-toggle";
+        toggle.dataset.overviewCollapse=config.key;
+        toggle.setAttribute("aria-label",`${config.label} ein- oder ausklappen`);
+
+        /* Bei Übungen & Videos steht schon "Alle Übungen löschen" rechts.
+           Der Einklapp-Button kommt davor, ohne dessen Funktion zu stören. */
+        const danger=head.querySelector("#deleteAllExercisesBtn");
+        if(danger){
+          danger.insertAdjacentElement("beforebegin",toggle);
+        }else{
+          head.appendChild(toggle);
+        }
+      }
+
+      toggle.onclick=e=>{
+        e.preventDefault();
+        e.stopPropagation();
+        v76SetCardCollapsed(card,!card.classList.contains("overview-card-collapsed"),config.key);
+      };
+
+      v76SetCardCollapsed(card,!!saved[config.key],config.key);
+    });
+  }
+
+  /* Beim Öffnen des Überblicks und nach Rendern erneut sichern */
+  document.addEventListener("click",e=>{
+    if(e.target.closest?.('[data-view="archive"]')){
+      setTimeout(v76PrepareOverviewCards,50);
+      setTimeout(v76PrepareOverviewCards,220);
+    }
+  },true);
+
+  const v76Observer=new MutationObserver(()=>{
+    if(document.querySelector("#archive") && !document.querySelector(".time-tracker-card .overview-collapse-toggle")){
+      requestAnimationFrame(v76PrepareOverviewCards);
+    }
+  });
+  v76Observer.observe(document.body,{childList:true,subtree:true});
+
+  setTimeout(v76PrepareOverviewCards,80);
+  setTimeout(v76PrepareOverviewCards,300);
+
+})();
+
