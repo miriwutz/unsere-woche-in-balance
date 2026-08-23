@@ -27870,3 +27870,208 @@ button.day-meal-list-item:hover,a.day-meal-list-item:hover{background:rgba(164,1
   }
 }
 
+
+/* =========================================================
+   V91 – MOBILE: NAV-ICONS + STUNDENPLAN-EDITOR
+   ========================================================= */
+@media (max-width:700px){
+
+  /* -------------------------------------------------------
+     1. Alle sechs Haupt-Navigationszeichen:
+        gedecktes Oliv – auf hell UND dunkel gut sichtbar.
+     ------------------------------------------------------- */
+  body .tabs > .tab::before,
+  body .tabs > .tab[data-view="week"]::before,
+  body .tabs > .tab[data-view="todos"]::before,
+  body .tabs > .tab[data-view="shopping"]::before,
+  body .tabs > .tab[data-view="school"]::before,
+  body .tabs > .tab[data-view="archive"]::before{
+    color:#858b62 !important;
+    opacity:1 !important;
+  }
+
+  body .tabs > .tab[data-view="workroom"] .nav-flower-of-life,
+  body .tabs > .tab[data-view="workroom"] .nav-flower-of-life svg{
+    color:#858b62 !important;
+    stroke:currentColor !important;
+    opacity:1 !important;
+  }
+
+  /* -------------------------------------------------------
+     2. Stundenplan bearbeiten:
+        Dialog muss innerhalb des Handybildschirms bleiben.
+     ------------------------------------------------------- */
+  #manualTimetableDialog{
+    width:100vw !important;
+    max-width:100vw !important;
+    padding:8px !important;
+    box-sizing:border-box !important;
+    overflow-x:hidden !important;
+  }
+
+  #manualTimetableDialog .timetable-dialog-card{
+    width:100% !important;
+    max-width:100% !important;
+    min-width:0 !important;
+    max-height:calc(100dvh - 16px) !important;
+    overflow-y:auto !important;
+    overflow-x:hidden !important;
+    box-sizing:border-box !important;
+    padding:16px 12px 14px !important;
+    border-radius:18px !important;
+  }
+
+  #manualTimetableDialog .dialog-head{
+    width:100% !important;
+    min-width:0 !important;
+    padding-right:42px !important;
+    box-sizing:border-box !important;
+  }
+
+  /* Personenwahl kompakt – keine riesigen Bildkarten am Handy */
+  #manualTimetableDialog .timetable-switcher{
+    width:100% !important;
+    display:grid !important;
+    grid-template-columns:repeat(3,minmax(0,1fr)) !important;
+    gap:6px !important;
+    margin:10px 0 12px !important;
+  }
+
+  #manualTimetableDialog .timetable-person-card{
+    width:100% !important;
+    min-width:0 !important;
+    height:58px !important;
+    min-height:58px !important;
+    padding:6px 5px !important;
+    border-radius:14px !important;
+    overflow:hidden !important;
+  }
+
+  #manualTimetableDialog .timetable-person-card img{
+    width:34px !important;
+    height:34px !important;
+    max-width:34px !important;
+    max-height:34px !important;
+    object-fit:contain !important;
+  }
+
+  #manualTimetableDialog .timetable-person-name{
+    font-size:.78rem !important;
+    line-height:1 !important;
+  }
+
+  #manualTimetableDialog .timetable-person-heart{
+    display:none !important;
+  }
+
+  /* -------------------------------------------------------
+     3. Tabelle:
+        Nicht mehr rechts aus dem Dialog heraus.
+        Sie darf innerhalb ihres eigenen Bereichs horizontal
+        gescrollt werden; der Dialog selbst bleibt stehen.
+     ------------------------------------------------------- */
+  #manualTimetableDisplay{
+    width:100% !important;
+    max-width:100% !important;
+    min-width:0 !important;
+    overflow:hidden !important;
+  }
+
+  #manualTimetableDisplay .tt-table-wrap{
+    display:block !important;
+    width:100% !important;
+    max-width:100% !important;
+    min-width:0 !important;
+    overflow-x:auto !important;
+    overflow-y:visible !important;
+    overscroll-behavior-x:contain !important;
+    -webkit-overflow-scrolling:touch !important;
+    padding:0 0 6px !important;
+    box-sizing:border-box !important;
+  }
+
+  /* Alle fünf Tage bleiben vollständig erreichbar.
+     Nicht auf Handybreite zusammenquetschen – lieber sauber
+     innerhalb der Tabelle seitlich wischen. */
+  #manualTimetableDisplay .tt-view-table{
+    width:max-content !important;
+    min-width:690px !important;
+    max-width:none !important;
+    table-layout:fixed !important;
+    border-spacing:4px 5px !important;
+    margin:0 !important;
+  }
+
+  #manualTimetableDisplay .tt-view-table th,
+  #manualTimetableDisplay .tt-view-table td{
+    width:104px !important;
+    min-width:104px !important;
+    max-width:104px !important;
+    height:40px !important;
+    padding:5px 6px !important;
+    font-size:.78rem !important;
+    box-sizing:border-box !important;
+  }
+
+  #manualTimetableDisplay .tt-view-table th:first-child,
+  #manualTimetableDisplay .tt-view-table td:first-child{
+    width:70px !important;
+    min-width:70px !important;
+    max-width:70px !important;
+  }
+
+  /* Eingabefelder dürfen ihre Zelle nicht verbreitern */
+  #manualTimetableDisplay input,
+  #manualTimetableDisplay select,
+  #manualTimetableDisplay textarea{
+    width:100% !important;
+    min-width:0 !important;
+    max-width:100% !important;
+    box-sizing:border-box !important;
+    font-size:.78rem !important;
+  }
+
+  /* -------------------------------------------------------
+     4. Untere Aktionen:
+        keine drei riesigen runden Buttons mehr.
+     ------------------------------------------------------- */
+  #manualTimetableDialog .dialog-actions{
+    width:100% !important;
+    display:flex !important;
+    flex-wrap:wrap !important;
+    justify-content:flex-end !important;
+    align-items:center !important;
+    gap:7px !important;
+    margin-top:10px !important;
+  }
+
+  #manualTimetableDialog .dialog-actions button{
+    width:auto !important;
+    min-width:0 !important;
+    min-height:36px !important;
+    height:36px !important;
+    padding:0 12px !important;
+    border-radius:12px !important;
+    font-size:.76rem !important;
+    line-height:1 !important;
+    display:inline-flex !important;
+    align-items:center !important;
+    justify-content:center !important;
+    flex:0 0 auto !important;
+  }
+
+  /* X klein und innerhalb des Fensters */
+  #manualTimetableDialog #closeManualTimetableDialog{
+    top:10px !important;
+    right:10px !important;
+    width:34px !important;
+    min-width:34px !important;
+    height:34px !important;
+    min-height:34px !important;
+  }
+
+  #manualTimetableDialog #closeManualTimetableDialog::before{
+    font-size:20px !important;
+  }
+}
+
