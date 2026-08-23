@@ -15926,6 +15926,47 @@ const defaultPersonalRoutineSentences = {
   ]
 };
 
+const defaultLouRoutineSentences = {
+  morning: [
+    {step:"breath", text:"3 ruhige Atemzüge – tief einatmen und langsam ausatmen."},
+    {step:"water", text:"Ein Glas Wasser trinken."},
+    {step:"face", text:"Gesicht waschen und mich frisch machen."},
+    {step:"hair", text:"Haare in Ruhe richten – ohne Stress."},
+    {step:"room", text:"Bett kurz machen und 2 Minuten aufräumen."},
+    {step:"start", text:"Was tut mir heute gut? Eine Sache bewusst wählen."}
+  ],
+  school: [
+    {step:"posture", text:"Kurz aufrichten: Schultern locker, Kiefer entspannt."},
+    {step:"water", text:"Zwischendurch Wasser trinken."},
+    {step:"pause", text:"Vor einer stressigen Stunde einmal tief ein- und langsam ausatmen."},
+    {step:"focus", text:"Handy weg, wenn ich mich konzentrieren möchte."}
+  ],
+  afterschool: [
+    {step:"reset", text:"Jacke, Tasche und Schuhe gleich an ihren Platz."},
+    {step:"fresh", text:"Hände waschen, Wasser trinken und kurz durchatmen."},
+    {step:"room", text:"5 Minuten Zimmer-Reset: herumliegende Dinge wegräumen."},
+    {step:"move", text:"Kurz bewegen, spazieren oder mich strecken."},
+    {step:"prep", text:"Für morgen nur das vorbereiten, was mir wirklich hilft."}
+  ],
+  evening: [
+    {step:"wash", text:"Abendroutine in Ruhe: Gesicht waschen und Zähne putzen."},
+    {step:"room", text:"2-Minuten-Aufräumen, damit morgen ruhiger beginnt."},
+    {step:"phone", text:"Handy rechtzeitig weglegen."},
+    {step:"water", text:"Wasser für morgen bereitstellen."},
+    {step:"close", text:"Ein schöner Gedanke für heute – dann ist der Tag genug."}
+  ]
+};
+
+function cloneRoutineSet(source){
+  return Object.fromEntries(
+    Object.entries(source).map(([area,rows])=>[
+      area,
+      rows.map(row=>({...row}))
+    ])
+  );
+}
+
+
 function clonePersonalRoutineDefaults(){
   return Object.fromEntries(
     Object.entries(defaultPersonalRoutineSentences).map(([area,rows])=>[
@@ -15947,12 +15988,15 @@ function ensurePersonalRoutineSentences(){
     const current=state.familySettings.personalRoutineSentences[id];
 
     if(!current || typeof current!=="object"){
-      state.familySettings.personalRoutineSentences[id]=clonePersonalRoutineDefaults();
+      state.familySettings.personalRoutineSentences[id] =
+        id==="1" ? cloneRoutineSet(defaultLouRoutineSentences) : clonePersonalRoutineDefaults();
       return;
     }
 
     personalRoutineAreaMeta.forEach(([area])=>{
-      const defaults=defaultPersonalRoutineSentences[area];
+      const defaults = id==="1"
+        ? (defaultLouRoutineSentences[area] || defaultPersonalRoutineSentences[area])
+        : defaultPersonalRoutineSentences[area];
       const existing=Array.isArray(current[area]) ? current[area] : [];
 
       current[area]=defaults.map(def=>{
@@ -16056,8 +16100,16 @@ function renderPersonalRoutineSentenceSettings(){
                     <button type="button"
                             class="personal-routine-reset-one"
                             title="Auf ursprünglichen Satz zurücksetzen">↶</button>
+                    <button type="button"
+                            class="personal-routine-delete-one"
+                            title="Routinepunkt löschen">×</button>
                   </div>
                 `).join("")}
+                <button type="button"
+                        class="personal-routine-add-one"
+                        data-add-routine-area="${area}">
+                  + Routinepunkt
+                </button>
               </div>
             </details>
           `).join("")}
@@ -16116,6 +16168,79 @@ function renderPersonalRoutineSentenceSettings(){
     });
   });
 
+
+  section.querySelectorAll(".personal-routine-add-one").forEach(btn=>{
+    btn.addEventListener("click",()=>{
+      const panel=btn.closest("[data-routine-person-panel]");
+      const id=panel?.dataset.routinePersonPanel;
+      const area=btn.dataset.addRoutineArea;
+      if(!id || !area) return;
+
+      const list=personalRoutineSentencesFor(id)[area] || [];
+      const step=`custom-${Date.now()}-${Math.random().toString(36).slice(2,7)}`;
+      list.push({
+        step,
+        text:"Neuer Routinepunkt"
+      });
+
+      save();
+      renderPersonalRoutineSentenceSettings();
+
+      const newSection=document.querySelector("#personalRoutineSentenceSettings");
+      newSection?.querySelectorAll(".personal-routine-person-tab").forEach(tab=>
+        tab.classList.toggle("active",tab.dataset.routinePerson===id)
+      );
+      newSection?.querySelectorAll(".personal-routine-person-panel").forEach(p=>
+        p.classList.toggle("hidden",p.dataset.routinePersonPanel!==id)
+      );
+
+      const newRow=newSection?.querySelector(
+        `[data-routine-person-panel="${id}"] .personal-routine-sentence-row[data-step="${CSS.escape(step)}"]`
+      );
+      const input=newRow?.querySelector(".personal-routine-sentence-input");
+      if(input){
+        input.focus();
+        input.select();
+      }
+    });
+  });
+
+  section.querySelectorAll(".personal-routine-delete-one").forEach(btn=>{
+    btn.addEventListener("click",()=>{
+      const panel=btn.closest("[data-routine-person-panel]");
+      const row=btn.closest(".personal-routine-sentence-row");
+      const id=panel?.dataset.routinePersonPanel;
+      const area=row?.dataset.area;
+      const step=row?.dataset.step;
+      if(!id || !area || !step) return;
+
+      const list=personalRoutineSentencesFor(id)[area] || [];
+      const target=list.find(x=>x.step===step);
+      if(!target) return;
+
+      if(!confirm(`Routinepunkt „${target.text}“ löschen?`)) return;
+
+      const index=list.findIndex(x=>x.step===step);
+      if(index>=0) list.splice(index,1);
+
+      save();
+      renderPersonalRoutineSentenceSettings();
+
+      const newSection=document.querySelector("#personalRoutineSentenceSettings");
+      newSection?.querySelectorAll(".personal-routine-person-tab").forEach(tab=>
+        tab.classList.toggle("active",tab.dataset.routinePerson===id)
+      );
+      newSection?.querySelectorAll(".personal-routine-person-panel").forEach(p=>
+        p.classList.toggle("hidden",p.dataset.routinePersonPanel!==id)
+      );
+
+      if(id==="mama") applyMamaRoutineSentences();
+      if((id==="1" || id==="2") &&
+         document.querySelector("#childRoutineDialog")?.open &&
+         activeChildRoutineId===id) renderChildRoutineDialog();
+    });
+  });
+
   section.querySelectorAll(".personal-routine-reset-one").forEach(btn=>{
     btn.addEventListener("click",()=>{
       const panel=btn.closest("[data-routine-person-panel]");
@@ -16150,7 +16275,8 @@ function renderPersonalRoutineSentenceSettings(){
 
       if(!confirm(`Die Routinen-Sätze von ${personalTimetablePersonLabel(id)} auf die ursprüngliche Version zurücksetzen?`)) return;
 
-      ensurePersonalRoutineSentences()[id]=clonePersonalRoutineDefaults();
+      ensurePersonalRoutineSentences()[id] =
+        id==="1" ? cloneRoutineSet(defaultLouRoutineSentences) : clonePersonalRoutineDefaults();
       save();
       renderPersonalRoutineSentenceSettings();
       if(id==="mama") applyMamaRoutineSentences();
