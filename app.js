@@ -2580,6 +2580,33 @@ const eventHtml = (multiDayLaneHtml || singleEventHtml) ? `
   // V33: gemeinsame Wochenbänder erst NACH dem Rendern messen.
   alignWeekBands(grid);
 
+  /* MOBILE V95:
+     Wenn die aktuell laufende Woche geöffnet wird, soll der heutige Tag
+     tatsächlich im sichtbaren Bereich landen. Nur einmal pro Seitenaufruf/
+     Woche automatisch springen, damit spätere Änderungen nicht ständig
+     zurück zum heutigen Tag ziehen. */
+  if (window.matchMedia("(max-width: 700px)").matches) {
+    const shownWeekKey = dateKey(currentWeekMonday);
+    if (
+      shownWeekKey === currentWeekKey() &&
+      window.__mobileTodayShownWeek !== shownWeekKey
+    ) {
+      window.__mobileTodayShownWeek = shownWeekKey;
+      requestAnimationFrame(() => {
+        setTimeout(() => {
+          const todayCard = grid.querySelector(".day.today");
+          if (todayCard) {
+            todayCard.scrollIntoView({
+              block: "start",
+              inline: "nearest",
+              behavior: "auto"
+            });
+          }
+        }, 80);
+      });
+    }
+  }
+
   document.querySelectorAll(".day-meal-recipe").forEach(btn => btn.addEventListener("click", () => {
     const byId = state.recipes.find(r => r.id === btn.dataset.recipeId);
     const recipe = resolveMealRecipe(btn.dataset.recipeId, byId?.title || "");
