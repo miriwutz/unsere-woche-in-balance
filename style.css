@@ -29439,3 +29439,287 @@ button.day-meal-list-item:hover,a.day-meal-list-item:hover{background:rgba(164,1
   }
 }
 
+
+/* =========================================================
+   V105 – HANDY FINALFIX
+   1) Kinderkarten: echtes PNG sichtbar, Pastellfläche, Kupfer/Gold.
+      KEINE Maske mehr (V103 wird hier bewusst überschrieben).
+   2) Schul-To-dos: Text volle erste Zeile; darunter NUR Stern + Pfeile.
+      Bearbeiten/Löschen/Typ/Link/Checkbox mobil ausgeblendet.
+   NUR HANDY. Desktop bleibt unverändert.
+   ========================================================= */
+@media (max-width:700px){
+
+  /* ---------- FÜR EUCH / KINDERKARTEN ---------- */
+  #schoolChildChooser .school-chooser-grid{
+    display:grid !important;
+    grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+    gap:12px !important;
+    width:100% !important;
+  }
+
+  #schoolChildChooser .school-person-card{
+    position:relative !important;
+    isolation:isolate !important;
+    overflow:hidden !important;
+    min-width:0 !important;
+    min-height:0 !important;
+    grid-template-rows:158px auto auto !important;
+    border-radius:22px !important;
+  }
+
+  /* V103-Maske vollständig abschalten. */
+  #schoolChildChooser .school-person-card::after{
+    content:none !important;
+    display:none !important;
+    -webkit-mask-image:none !important;
+    mask-image:none !important;
+  }
+
+  /* Helle, deckende Pastellfläche hinter dem ECHTEN Bild. */
+  #schoolChildChooser .school-person-card::before{
+    content:"" !important;
+    position:absolute !important;
+    left:0 !important;
+    right:0 !important;
+    top:0 !important;
+    height:158px !important;
+    z-index:0 !important;
+    opacity:1 !important;
+    pointer-events:none !important;
+    border-radius:22px 22px 0 0 !important;
+  }
+
+  #schoolChildChooser .school-person-card.lou::before{
+    background:
+      radial-gradient(circle at 72% 16%,rgba(255,255,255,.92),transparent 38%),
+      linear-gradient(145deg,#f6f0f8 0%,#eee4f2 55%,#e4d8e9 100%) !important;
+  }
+
+  #schoolChildChooser .school-person-card.fina::before{
+    background:
+      radial-gradient(circle at 28% 15%,rgba(255,255,255,.92),transparent 38%),
+      linear-gradient(145deg,#fff3ef 0%,#f9e1da 55%,#f1d1c9 100%) !important;
+  }
+
+  /* Das echte PNG wieder sichtbar machen.
+     Dadurch bleibt die Zeichnung eine Zeichnung und wird NICHT zur Silhouette. */
+  #schoolChildChooser .school-person-card > img{
+    position:relative !important;
+    z-index:2 !important;
+    display:block !important;
+    visibility:visible !important;
+    opacity:1 !important;
+    width:100% !important;
+    height:158px !important;
+    max-height:158px !important;
+    min-height:158px !important;
+    margin:0 !important;
+    padding:7px 9px 1px !important;
+    object-fit:contain !important;
+    object-position:center bottom !important;
+    background:transparent !important;
+    mix-blend-mode:normal !important;
+  }
+
+  /* Kupfer-Gold – bewusst heller und klarer als die bisherige dunkle Version. */
+  #schoolChildChooser .school-person-card.lou > img{
+    filter:
+      brightness(0)
+      saturate(100%)
+      invert(63%)
+      sepia(38%)
+      saturate(930%)
+      hue-rotate(350deg)
+      brightness(98%)
+      contrast(92%)
+      drop-shadow(0 1px 2px rgba(91,58,34,.18)) !important;
+  }
+
+  #schoolChildChooser .school-person-card.fina > img{
+    filter:
+      brightness(0)
+      saturate(100%)
+      invert(66%)
+      sepia(36%)
+      saturate(820%)
+      hue-rotate(338deg)
+      brightness(101%)
+      contrast(91%)
+      drop-shadow(0 1px 2px rgba(102,61,43,.16)) !important;
+  }
+
+  #schoolChildChooser .school-person-card.lou{
+    background:linear-gradient(180deg,transparent 0 158px,#81788a 158px 100%) !important;
+    border:1px solid rgba(178,151,194,.38) !important;
+  }
+
+  #schoolChildChooser .school-person-card.fina{
+    background:linear-gradient(180deg,transparent 0 158px,#987c77 158px 100%) !important;
+    border:1px solid rgba(194,145,132,.38) !important;
+  }
+
+  #schoolChildChooser .school-person-name,
+  #schoolChildChooser .school-person-sub{
+    position:relative !important;
+    z-index:4 !important;
+    color:#fffaf6 !important;
+  }
+
+  /* ---------- SCHUL-TO-DOS ---------- */
+  #schoolWorkTodoList .workroom-todo-row{
+    display:grid !important;
+    grid-template-columns:minmax(0,1fr) !important;
+    grid-template-rows:auto auto !important;
+    width:100% !important;
+    max-width:100% !important;
+    min-width:0 !important;
+    gap:2px !important;
+    padding:10px 12px 9px !important;
+    align-items:start !important;
+  }
+
+  /* Text bekommt ALLE Breite in der ersten Zeile. */
+  #schoolWorkTodoList .workroom-todo-content{
+    display:block !important;
+    grid-column:1 !important;
+    grid-row:1 !important;
+    width:100% !important;
+    max-width:100% !important;
+    min-width:0 !important;
+    margin:0 !important;
+    padding:9px 4px 8px !important;
+    cursor:pointer !important;
+    touch-action:manipulation !important;
+    -webkit-tap-highlight-color:rgba(151,157,105,.12) !important;
+  }
+
+  #schoolWorkTodoList .workroom-todo-text{
+    display:block !important;
+    width:100% !important;
+    max-width:100% !important;
+    min-width:0 !important;
+    margin:0 !important;
+    font-size:1.03rem !important;
+    line-height:1.32 !important;
+    white-space:normal !important;
+    word-break:normal !important;
+    overflow-wrap:anywhere !important;
+    hyphens:auto !important;
+  }
+
+  /* Mobil wirklich weg: Checkbox, Bearbeiten, Löschen, Typ, Link, Ziehgriff. */
+  #schoolWorkTodoList input.workroom-todo-check,
+  #schoolWorkTodoList .workroom-todo-edit,
+  #schoolWorkTodoList .workroom-todo-delete,
+  #schoolWorkTodoList .workroom-todo-type,
+  #schoolWorkTodoList .workroom-todo-link,
+  #schoolWorkTodoList .workroom-drag-handle{
+    display:none !important;
+  }
+
+  /* Zweite Zeile: ausschließlich Stern + vorhandene Pfeile. */
+  #schoolWorkTodoList .workroom-todo-actions{
+    display:flex !important;
+    grid-column:1 !important;
+    grid-row:2 !important;
+    width:100% !important;
+    max-width:100% !important;
+    min-width:0 !important;
+    margin:0 !important;
+    padding:0 !important;
+    align-items:center !important;
+    justify-content:flex-end !important;
+    gap:2px !important;
+    flex-wrap:nowrap !important;
+  }
+
+  /* Text "Wichtig" unsichtbar; sichtbarer Inhalt ist nur ★.
+     font-size:0 verhindert zuverlässig, dass "Wichtig" Platz verbraucht. */
+  #schoolWorkTodoList button.workroom-important-btn{
+    display:grid !important;
+    place-items:center !important;
+    flex:0 0 34px !important;
+    width:34px !important;
+    min-width:34px !important;
+    max-width:34px !important;
+    height:34px !important;
+    min-height:34px !important;
+    margin:0 3px 0 0 !important;
+    padding:0 !important;
+    border-radius:50% !important;
+    font-size:0 !important;
+    line-height:1 !important;
+    overflow:hidden !important;
+  }
+
+  #schoolWorkTodoList button.workroom-important-btn::before{
+    content:"★" !important;
+    display:block !important;
+    font-size:1.15rem !important;
+    line-height:1 !important;
+  }
+
+  #schoolWorkTodoList .workroom-move-controls{
+    display:flex !important;
+    flex:0 0 auto !important;
+    width:auto !important;
+    margin:0 !important;
+    padding:0 !important;
+    gap:1px !important;
+    align-items:center !important;
+    justify-content:flex-end !important;
+  }
+
+  #schoolWorkTodoList button.workroom-move-btn{
+    display:grid !important;
+    place-items:center !important;
+    flex:0 0 31px !important;
+    width:31px !important;
+    min-width:31px !important;
+    max-width:31px !important;
+    height:34px !important;
+    min-height:34px !important;
+    margin:0 !important;
+    padding:0 !important;
+    border:0 !important;
+    background:transparent !important;
+    box-shadow:none !important;
+    font-size:1rem !important;
+  }
+
+  #schoolWorkTodoList .workroom-todo-row.done .workroom-todo-text{
+    text-decoration:line-through !important;
+    opacity:.46 !important;
+  }
+
+  #schoolWorkTodoList .workroom-todo-row.done{
+    opacity:.72 !important;
+  }
+
+  #schoolWorkTodoList .workroom-todo-content:active{
+    background:rgba(151,157,105,.10) !important;
+    border-radius:10px !important;
+  }
+}
+
+@media (max-width:380px){
+  #schoolChildChooser .school-person-card{
+    grid-template-rows:146px auto auto !important;
+  }
+
+  #schoolChildChooser .school-person-card::before,
+  #schoolChildChooser .school-person-card > img{
+    height:146px !important;
+    min-height:146px !important;
+    max-height:146px !important;
+  }
+
+  #schoolChildChooser .school-person-card.lou{
+    background:linear-gradient(180deg,transparent 0 146px,#81788a 146px 100%) !important;
+  }
+
+  #schoolChildChooser .school-person-card.fina{
+    background:linear-gradient(180deg,transparent 0 146px,#987c77 146px 100%) !important;
+  }
+}
