@@ -12944,6 +12944,49 @@ function mergeRecipeLinkFeedback(localValue, cloudValue) {
   return merged;
 }
 
+/* =========================================================
+   SYNC-FIX – Rabatte & Pickerl
+   Jeder Rabatt bleibt über seine ID eindeutig.
+   Bei derselben ID gewinnt die neuere Version (updatedAt/createdAt).
+   Gelöschte Rabatte bleiben als deleted:true erhalten und können deshalb
+   auf einem zweiten Gerät nicht wieder auferstehen.
+   ========================================================= */
+function mergeShoppingPromosByRevision(localValue, cloudValue) {
+  const local = Array.isArray(localValue) ? localValue : [];
+  const remote = Array.isArray(cloudValue) ? cloudValue : [];
+  const byId = new Map();
+  const withoutId = [];
+
+  function promoTimestamp(item) {
+    if (!item || typeof item !== "object") return 0;
+    return Number(
+      item.updatedAt ||
+      item.expiredAt ||
+      item.createdAt ||
+      0
+    ) || 0;
+  }
+
+  function take(item) {
+    if (!item || typeof item !== "object") return;
+
+    if (!item.id) {
+      withoutId.push(item);
+      return;
+    }
+
+    const previous = byId.get(item.id);
+    if (!previous || promoTimestamp(item) >= promoTimestamp(previous)) {
+      byId.set(item.id, item);
+    }
+  }
+
+  local.forEach(take);
+  remote.forEach(take);
+
+  return [...byId.values(), ...withoutId];
+}
+
 function applyCloudData(data) {
   cloudApplying = true;
   try {
@@ -12975,6 +13018,14 @@ function applyCloudData(data) {
     );
     state.shopping = guardedMergeById(state.shopping, data.shopping, "Einkauf");
     shoppingItems = state.shopping;
+
+    /* Rabatte wurden bisher zwar in die Cloud GESCHRIEBEN,
+       beim Cloud-Einlesen aber vollständig vergessen. */
+    state.shoppingPromos = mergeShoppingPromosByRevision(
+      state.shoppingPromos,
+      data.shoppingPromos
+    );
+
     state.recipes = mergePersistentListWithTombstones(
       state.recipes, data.recipes, state.recipeTombstones
     );
@@ -19620,3 +19671,12 @@ setTimeout(()=>{
     });
   }, true);
 })();
+
+/* =========================================================
+   SYNC-AUDIT SCHRITT 1 – RABATTE & PICKERL
+   Cloud-Schreiben: vorhanden
+   Cloud-Einlesen: ergänzt
+   Konfliktauflösung: ID + updatedAt
+   Löschen: deleted:true bleibt synchronisierbar
+   ========================================================= */
+
