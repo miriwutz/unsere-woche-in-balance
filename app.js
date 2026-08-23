@@ -18136,3 +18136,363 @@ setTimeout(()=>{
 
 })();
 
+/* =========================================================
+   V69 – Kinder-Wochenplanung robust
+   1) Wochenansicht nach Reload immer vorhanden
+   2) oben nur tägliche Wiederholungen
+   3) einzelne Wochentage ausschließlich in der Wochenansicht
+   4) verlinkte Routinepunkte sind anklickbar
+   ========================================================= */
+(function(){
+
+  function v69WeekLabel(offset){
+    return offset===0 ? "Diese Woche"
+      : offset===1 ? "Nächste Woche"
+      : `+${offset} Wochen`;
+  }
+
+  function v69Monday(offset){
+    const monday=getMonday(new Date());
+    monday.setDate(monday.getDate()+Number(offset||0)*7);
+    monday.setHours(12,0,0,0);
+    return monday;
+  }
+
+  function v69PartLabel(store,item){
+    const labels=store.areaLabels||childRoutineDefaultAreas;
+    return labels[item.part]||childRoutineDefaultAreas[item.part]||"";
+  }
+
+  function v69ItemTopic(id,item){
+    return item.url
+      ? childRoutineVideoCategoryLabel(id,item.category||"none")
+      : "";
+  }
+
+  function v69OpenLink(url,event){
+    event?.preventDefault?.();
+    event?.stopPropagation?.();
+    if(!url) return;
+    window.open(url,"_blank","noopener,noreferrer");
+  }
+  window.v69OpenChildRoutineLink=v69OpenLink;
+
+  /* -------- Kinderansicht: Links in der Wochenansicht wirklich anklickbar -------- */
+  const renderChildBeforeV69=renderChildRoutineDialog;
+
+  renderChildRoutineDialog=function(){
+    renderChildBeforeV69();
+
+    const dialog=ensureChildRoutineDialog();
+    if(!dialog) return;
+
+    const id=String(activeChildRoutineId||"1");
+    const store=childRoutineStore(id);
+    const weekKey=childRoutineWeekKey(activeChildRoutineWeekOffset);
+    const planned=store.items
+      .filter(item=>childRoutineAppliesToWeek(item,weekKey))
+      .sort((a,b)=>Number(a.order||0)-Number(b.order||0));
+
+    const monday=v69Monday(activeChildRoutineWeekOffset);
+    const names=["Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag","Sonntag"];
+    const grid=dialog.querySelector("#childRoutineWeekGrid");
+
+    if(grid){
+      grid.innerHTML=names.map((name,index)=>{
+        const date=new Date(monday);
+        date.setDate(monday.getDate()+index);
+        const dayItems=planned.filter(item=>childRoutineAppliesToDate(item,date));
+
+        return `<section class="child-routine-day ${dateKey(date)===dateKey(new Date())?"is-today":""}">
+          <div class="child-routine-day-head">
+            <strong>${name}</strong>
+            <small>${String(date.getDate()).padStart(2,"0")}.${String(date.getMonth()+1).padStart(2,"0")}.</small>
+          </div>
+          <div class="child-routine-day-body">
+            ${dayItems.length ? dayItems.map(item=>{
+              const done=!!childRoutineCompletion(id,item.id,date)?.done;
+              return `<div class="child-routine-day-item ${done?"is-done":""}">
+                <input type="checkbox"
+                       data-child-routine-check="${escapeHtml(item.id)}"
+                       data-date="${dateKey(date)}"
+                       ${done?"checked":""}>
+                <span class="child-routine-day-item-symbol">${childRoutineSymbol(item.part||"morning")}</span>
+                <div class="child-routine-day-item-copy">
+                  ${item.url
+                    ? `<a class="child-routine-item-link"
+                          href="${escapeHtml(item.url)}"
+                          target="_blank"
+                          rel="noopener noreferrer">${escapeHtml(item.title)}</a>`
+                    : `<span>${escapeHtml(item.title)}</span>`}
+                  ${item.url
+                    ? `<small class="child-routine-video-topic">${escapeHtml(v69ItemTopic(id,item))}</small>`
+                    : ""}
+                </div>
+              </div>`;
+            }).join("") : `<div class="child-routine-day-empty" aria-label="Nichts geplant">☾ <span>✦</span></div>`}
+          </div>
+        </section>`;
+      }).join("");
+    }
+
+    dialog.querySelectorAll(".child-routine-item-link").forEach(a=>{
+      a.addEventListener("click",e=>e.stopPropagation());
+    });
+  };
+  window.renderChildRoutineDialog=renderChildRoutineDialog;
+
+  /* -------- Überblick: vollständige Wochenansicht + klare Trennung -------- */
+  const renderOverviewBeforeV69=renderChildRoutineOverviewEditor;
+
+  renderChildRoutineOverviewEditor=function(){
+    renderOverviewBeforeV69();
+
+    const section=document.querySelector("#childRoutineOverviewEditor");
+    if(!section) return;
+
+    const id=String(activeChildRoutineEditorId||"1");
+    const offset=Number(activeChildRoutineEditorWeekOffset||0);
+    const store=childRoutineStore(id);
+    const weekKey=childRoutineWeekKey(offset);
+    const planned=store.items
+      .filter(item=>childRoutineAppliesToWeek(item,weekKey))
+      .sort((a,b)=>Number(a.order||0)-Number(b.order||0));
+
+    section.dataset.child=id;
+
+    /* Überschrift/Rückweg auch nach einem Reload zuverlässig setzen */
+    const head=section.querySelector(".personal-subject-settings-head");
+    if(head){
+      head.classList.add("child-routine-overview-head-v69");
+
+      let title=head.querySelector(".v69-overview-title");
+      if(!title){
+        head.innerHTML=`
+          <div class="v69-overview-copy">
+            <strong class="v69-overview-title"></strong>
+            <small>
+              Hier planst du die zusätzlichen Wochenpunkte. Tägliche Wiederholungen
+              bleiben oben sichtbar; einzelne Tage erscheinen nur in der Wochenansicht.
+            </small>
+          </div>
+          <button type="button" id="backToChildFromRoutineOverview" class="child-routine-back-to-child"></button>
+        `;
+      }
+      head.querySelector(".v69-overview-title").textContent=`Wochenplanung – ${childRoutinePersonName(id)}`;
+      const back=head.querySelector("#backToChildFromRoutineOverview");
+      if(back){
+        back.textContent=`← Zurück zu ${childRoutinePersonName(id)}`;
+        back.onclick=()=>{
+          document.querySelector('[data-view="school"]')?.click();
+          setTimeout(()=>{
+            renderSchoolChildDashboard(id);
+            document.querySelector("#schoolChildDashboard")?.scrollIntoView({behavior:"smooth",block:"start"});
+          },70);
+        };
+      }
+    }
+
+    /* Liste über der Woche: NUR tägliche Wiederholungen.
+       Einzelne Montag/Mittwoch/Samstag-Punkte gehören ausschließlich ins Raster. */
+    const list=section.querySelector(".child-routine-editor-list");
+    if(list){
+      const daily=planned.filter(item=>(item.day||"daily")==="daily");
+
+      list.innerHTML=daily.length ? `
+        <div class="v69-daily-heading">
+          <strong>Tägliche Wiederholungen</strong>
+          <small>Diese Punkte gelten an jedem Tag der gewählten Woche.</small>
+        </div>
+        ${daily.map(item=>`
+          <div class="child-routine-editor-row" data-routine-id="${escapeHtml(item.id)}">
+            <span class="child-routine-editor-row-symbol">${childRoutineSymbol(item.part||"morning")}</span>
+            <div>
+              ${item.url
+                ? `<a class="v69-overview-item-link"
+                      href="${escapeHtml(item.url)}"
+                      target="_blank"
+                      rel="noopener noreferrer"><strong>${escapeHtml(item.title)}</strong></a>`
+                : `<strong>${escapeHtml(item.title)}</strong>`}
+              <small>
+                ${escapeHtml(v69PartLabel(store,item))}
+                ${item.url?` · ${escapeHtml(v69ItemTopic(id,item))}`:""}
+                ${item.sticky?" · jede Woche":""}
+              </small>
+            </div>
+            <button type="button" data-v69-edit="${escapeHtml(item.id)}" title="Bearbeiten">✎</button>
+            <button type="button" data-v69-delete="${escapeHtml(item.id)}" title="Löschen">×</button>
+          </div>
+        `).join("")}
+      ` : `
+        <div class="v69-daily-empty">
+          <strong>Keine täglichen Wiederholungen</strong>
+          <small>Einzelne Wochentage siehst du direkt unten in der Wochenansicht.</small>
+        </div>
+      `;
+    }
+
+    /* Alte Vorschau sicher entfernen und IMMER frisch neu aufbauen. */
+    section.querySelector("#childRoutineOverviewWeekPreview")?.remove();
+
+    const monday=v69Monday(offset);
+    const names=["Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag","Sonntag"];
+
+    const preview=document.createElement("section");
+    preview.id="childRoutineOverviewWeekPreview";
+    preview.className="child-routine-overview-week-preview v69-week-preview";
+    preview.innerHTML=`
+      <div class="child-routine-overview-week-preview-head">
+        <div>
+          <strong>Wochenansicht – ${escapeHtml(childRoutinePersonName(id))}</strong>
+          <small>${v69WeekLabel(offset)}</small>
+        </div>
+        <span class="child-routine-overview-preview-hint">
+          Genau so erscheint die Einteilung bei ${escapeHtml(childRoutinePersonName(id))}.
+        </span>
+      </div>
+
+      <div class="child-routine-overview-week-grid">
+        ${names.map((name,index)=>{
+          const date=new Date(monday);
+          date.setDate(monday.getDate()+index);
+          const dayItems=planned.filter(item=>childRoutineAppliesToDate(item,date));
+
+          return `<section class="child-routine-overview-day ${dateKey(date)===dateKey(new Date())?"is-today":""}">
+            <header>
+              <strong>${name}</strong>
+              <small>${String(date.getDate()).padStart(2,"0")}.${String(date.getMonth()+1).padStart(2,"0")}.</small>
+            </header>
+            <div class="child-routine-overview-day-body">
+              ${dayItems.length ? dayItems.map(item=>`
+                <div class="child-routine-overview-preview-item" data-preview-routine-id="${escapeHtml(item.id)}">
+                  <span class="child-routine-overview-preview-symbol">${childRoutineSymbol(item.part||"morning")}</span>
+                  <div class="v69-preview-copy">
+                    ${item.url
+                      ? `<a class="v69-overview-item-link"
+                            href="${escapeHtml(item.url)}"
+                            target="_blank"
+                            rel="noopener noreferrer"><strong>${escapeHtml(item.title||"Routinepunkt")}</strong></a>`
+                      : `<strong>${escapeHtml(item.title||"Routinepunkt")}</strong>`}
+                    <small>
+                      ${escapeHtml(v69PartLabel(store,item))}
+                      ${item.url?` · ${escapeHtml(v69ItemTopic(id,item))}`:""}
+                      ${item.sticky?" · jede Woche":""}
+                    </small>
+                  </div>
+                  <div class="v69-preview-actions">
+                    <button type="button" data-v69-edit="${escapeHtml(item.id)}" title="Bearbeiten">✎</button>
+                    <button type="button" data-v69-delete="${escapeHtml(item.id)}" title="Löschen">×</button>
+                  </div>
+                </div>
+              `).join("") : `
+                <div class="child-routine-overview-empty" aria-label="Nichts geplant">
+                  <span>☾</span><small>✦</small>
+                </div>
+              `}
+            </div>
+          </section>`;
+        }).join("")}
+      </div>
+    `;
+
+    (list||section).insertAdjacentElement("afterend",preview);
+
+    /* Link-Klick darf nie den Edit-/Checkbox-Klick auslösen. */
+    section.querySelectorAll(".v69-overview-item-link").forEach(a=>{
+      a.addEventListener("click",e=>e.stopPropagation());
+    });
+
+    /* Editieren aus täglicher Liste UND direkt aus dem Wochenraster */
+    section.querySelectorAll("[data-v69-edit]").forEach(btn=>{
+      btn.onclick=()=>{
+        const item=store.items.find(x=>x.id===btn.dataset.v69Edit);
+        if(!item) return;
+
+        editingChildRoutineItemId=item.id;
+        section.querySelector("#childRoutineEditorPart").value=item.part||"morning";
+        section.querySelector("#childRoutineEditorTitle").value=item.title||"";
+        section.querySelector("#childRoutineEditorUrl").value=item.url||"";
+        const cat=section.querySelector("#childRoutineEditorCategory");
+        if(cat) cat.value=item.category||"none";
+        section.querySelector("#childRoutineEditorDay").value=item.day||"daily";
+        section.querySelector("#childRoutineEditorSticky").checked=!!item.sticky;
+
+        const saveBtn=section.querySelector("#saveChildRoutineEditorItem");
+        if(saveBtn) saveBtn.textContent="Änderung speichern";
+        section.querySelector("#cancelChildRoutineEditorEdit")?.classList.remove("hidden");
+        section.querySelector("#childRoutineEditorTitle")?.focus();
+      };
+    });
+
+    /* Löschen ebenfalls direkt aus der Wochenansicht */
+    section.querySelectorAll("[data-v69-delete]").forEach(btn=>{
+      btn.onclick=()=>{
+        const itemId=btn.dataset.v69Delete;
+        const item=store.items.find(x=>x.id===itemId);
+        if(!item) return;
+        if(!confirm(`Routinepunkt „${item.title||"Routinepunkt"}“ löschen?`)) return;
+
+        store.tombstones[itemId]=Date.now();
+        store.items=store.items.filter(x=>x.id!==itemId);
+        Object.keys(store.completions||{}).forEach(key=>{
+          if(key.startsWith(`${itemId}__`)) delete store.completions[key];
+        });
+
+        childRoutineTouch(id);
+        renderChildRoutineOverviewEditor();
+      };
+    });
+
+    /* aktuelle Woche sichtbar markieren */
+    section.querySelectorAll("[data-child-routine-editor-week]").forEach(btn=>{
+      btn.classList.toggle("active",Number(btn.dataset.childRoutineEditorWeek||0)===offset);
+      btn.setAttribute("aria-current",
+        Number(btn.dataset.childRoutineEditorWeek||0)===offset ? "true" : "false"
+      );
+    });
+  };
+
+  window.renderChildRoutineOverviewEditor=renderChildRoutineOverviewEditor;
+
+  /* -------- Reload-Bug:
+     Manche View-Renderer bauen den Basisblock NACH unserem ersten Render erneut auf.
+     Beobachter setzt dann automatisch die vollständige Wochenansicht wieder ein. -------- */
+  let v69RepairQueued=false;
+
+  function v69RepairOverviewIfNeeded(){
+    const section=document.querySelector("#childRoutineOverviewEditor");
+    if(!section) return;
+
+    if(!section.querySelector("#childRoutineOverviewWeekPreview")){
+      if(v69RepairQueued) return;
+      v69RepairQueued=true;
+      requestAnimationFrame(()=>{
+        v69RepairQueued=false;
+        if(document.querySelector("#childRoutineOverviewEditor") &&
+           !document.querySelector("#childRoutineOverviewWeekPreview")){
+          renderChildRoutineOverviewEditor();
+        }
+      });
+    }
+  }
+
+  const v69Observer=new MutationObserver(v69RepairOverviewIfNeeded);
+  v69Observer.observe(document.body,{childList:true,subtree:true});
+
+  window.addEventListener("pageshow",()=>{
+    setTimeout(v69RepairOverviewIfNeeded,50);
+    setTimeout(v69RepairOverviewIfNeeded,250);
+  });
+
+  document.addEventListener("click",e=>{
+    if(e.target.closest('[data-view="archive"]')){
+      setTimeout(v69RepairOverviewIfNeeded,80);
+      setTimeout(v69RepairOverviewIfNeeded,300);
+    }
+  },true);
+
+  setTimeout(v69RepairOverviewIfNeeded,60);
+  setTimeout(v69RepairOverviewIfNeeded,280);
+
+})();
+
