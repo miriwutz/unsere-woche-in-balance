@@ -28409,3 +28409,109 @@ button.day-meal-list-item:hover,a.day-meal-list-item:hover{background:rgba(164,1
   }
 }
 
+
+/* =========================================================
+   V95 – HANDY: Mehrtagestermine + aktueller Tag
+   ========================================================= */
+@media(max-width:700px){
+
+  /* Mehrtagestermine am Handy genau EINMAL als kompakte Übersicht
+     oberhalb der Tageskarten. Die Desktop-Verbindungsleisten in jedem
+     einzelnen Tag werden komplett ausgeblendet. */
+  #mobileMultidaySummary,
+  .mobile-multiday-summary{
+    display:grid !important;
+    width:100% !important;
+    max-width:100% !important;
+    min-width:0 !important;
+    gap:7px !important;
+    margin:0 0 12px !important;
+  }
+
+  #mobileMultidaySummary:empty,
+  .mobile-multiday-summary:empty{
+    display:none !important;
+    margin:0 !important;
+  }
+
+  .mobile-multiday-item{
+    width:100% !important;
+    max-width:100% !important;
+    min-width:0 !important;
+    display:grid !important;
+    grid-template-columns:8px auto minmax(0,1fr) auto !important;
+    align-items:center !important;
+    gap:7px !important;
+    padding:9px 11px !important;
+    border-radius:12px !important;
+  }
+
+  .mobile-multiday-title{
+    min-width:0 !important;
+    overflow:hidden !important;
+    text-overflow:ellipsis !important;
+    white-space:nowrap !important;
+  }
+
+  .mobile-multiday-range{
+    white-space:nowrap !important;
+    margin-left:0 !important;
+  }
+
+  /* Spätere Desktop-Regeln hatten diese Leisten wieder eingeblendet.
+     Hier endgültig nur für Mobile ausschalten. */
+  .week-band-events .multiday-event-lanes,
+  .day .multiday-event-lanes,
+  .week-band-events .multiday-event-lane,
+  .day .multiday-event-lane,
+  .week-band-events .multiday-event-placeholder,
+  .day .multiday-event-placeholder,
+  .multiday-continuous-segment{
+    display:none !important;
+  }
+
+  /* Wenn an einem Tag ausschließlich ein Mehrtagestermin steckte,
+     darf nach dem Ausblenden auch kein leeres Terminband übrig bleiben. */
+  .week-band-events:has(.multiday-event-lanes):not(:has(.single-event-lane)){
+    display:none !important;
+    min-height:0 !important;
+    height:0 !important;
+    margin:0 !important;
+    padding:0 !important;
+  }
+
+  /* Gibt es zusätzlich einen normalen Einzeltagstermin, bleibt nur dieser
+     sichtbar und das Band schrumpft auf seine echte Höhe. */
+  .week-band-events:has(.single-event-lane){
+    min-height:0 !important;
+    height:auto !important;
+    padding-bottom:9px !important;
+  }
+
+  /* Aktueller Tag: gut sichtbar, aber zum dunklen Handytheme passend.
+     Die bestehende .today-Klasse kommt bereits zuverlässig aus app.js. */
+  .week-grid .day.today{
+    border:3px solid rgba(196,145,42,.82) !important;
+    box-shadow:0 0 0 1px rgba(196,145,42,.15),
+               0 8px 24px rgba(163,116,28,.16) !important;
+    scroll-margin-top:14px !important;
+  }
+
+  .week-grid .day.today h3::after{
+    content:"HEUTE" !important;
+    display:inline-flex !important;
+    position:absolute !important;
+    top:16px !important;
+    right:14px !important;
+    margin:0 !important;
+    padding:3px 7px !important;
+    border-radius:999px !important;
+    background:#7d5918 !important;
+    color:#f5e8c3 !important;
+    font-family:"DM Sans",system-ui,sans-serif !important;
+    font-size:.61rem !important;
+    font-weight:800 !important;
+    letter-spacing:.05em !important;
+  }
+}
+
