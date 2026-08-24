@@ -32417,3 +32417,72 @@ button.day-meal-list-item:hover,a.day-meal-list-item:hover{background:rgba(164,1
   }
 }
 
+
+/* =========================================================
+   V138 – NUR HANDY: HIER TERMIN EINTIPPEN klar sichtbar
+   NICHT die To-do/Termin-Auswahl.
+   Gemeint ist das große Texteingabefeld für den Namen/Inhalt.
+   ========================================================= */
+@media (max-width:700px){
+
+  /* Haupt-Texteingabe im Wochenplan deutlich markieren.
+     Mehrere Selektoren absichtlich gemeinsam, damit die aktuelle
+     Feld-ID/Klasse zuverlässig getroffen wird. */
+  #todos #todoText,
+  #todos #entryText,
+  #todos input[name="todoText"],
+  #todos input[name="text"],
+  #todos .entry-main-input,
+  #todos .todo-main-input{
+    min-height:48px !important;
+    padding:10px 13px !important;
+    box-sizing:border-box !important;
+
+    font-size:1rem !important;
+    font-weight:650 !important;
+    color:#514b55 !important;
+
+    border:2px solid transparent !important;
+    border-radius:14px !important;
+
+    background:
+      linear-gradient(rgba(255,255,255,.94),rgba(255,255,255,.94)) padding-box,
+      linear-gradient(90deg,
+        #c5aceb,
+        #e8a7c7,
+        #efae89,
+        #e5cf6d,
+        #95cba6,
+        #7fbcdf,
+        #aa98df) border-box !important;
+
+    box-shadow:0 4px 13px rgba(102,78,116,.09) !important;
+    outline:none !important;
+  }
+
+  /* Solange noch nichts eingegeben wurde, soll man sofort sehen,
+     WO der Terminname hineingehört. */
+  #todos #todoText::placeholder,
+  #todos #entryText::placeholder,
+  #todos input[name="todoText"]::placeholder,
+  #todos input[name="text"]::placeholder,
+  #todos .entry-main-input::placeholder,
+  #todos .todo-main-input::placeholder{
+    color:#76617f !important;
+    opacity:1 !important;
+    font-size:.92rem !important;
+    font-weight:850 !important;
+    letter-spacing:.08em !important;
+    text-transform:uppercase !important;
+  }
+
+  #todos #todoText:focus,
+  #todos #entryText:focus,
+  #todos input[name="todoText"]:focus,
+  #todos input[name="text"]:focus,
+  #todos .entry-main-input:focus,
+  #todos .todo-main-input:focus{
+    box-shadow:0 0 0 3px rgba(189,164,225,.16),0 5px 15px rgba(102,78,116,.10) !important;
+  }
+}
+
