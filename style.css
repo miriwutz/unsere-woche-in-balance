@@ -31291,3 +31291,75 @@ button.day-meal-list-item:hover,a.day-meal-list-item:hover{background:rgba(164,1
 .v121-gem-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start}.v121-gem-dots{display:flex;flex-wrap:wrap;gap:6px;padding:8px 0}.v121-gem-dots span{color:#ddd3c5;font-size:1.15rem}.v121-gem-dots span.on{color:#c59a48}.v121-gem-bar{height:9px;background:#eee7dc;border-radius:999px;overflow:hidden}.v121-gem-bar i{display:block;height:100%;background:#c7a45f}.v121-reward{display:grid;grid-template-columns:1fr 1fr 95px;gap:8px}.v121-reward label:nth-child(2){grid-column:auto}.v121-gem-actions{grid-template-columns:1fr auto auto auto;margin-top:12px}.v121-gem-actions button:disabled{opacity:.45}
 @media(max-width:650px){.v121-save-grid,.v121-gem-grid,.v121-reward{grid-template-columns:1fr}.v121-save-actions,.v121-gem-actions{grid-template-columns:1fr 1fr}.v121-save-actions input,.v121-gem-actions input{grid-column:1/-1}}
 
+/* =========================================================
+   V122 – Geld: Wochen-/Monatsrhythmus + schöneres Sparziel
+   ========================================================= */
+.money-frequency{
+  display:inline-block;
+  width:auto;
+  min-width:104px;
+  margin-top:5px;
+  padding:4px 24px 4px 8px;
+  border-radius:999px;
+  font-size:.72rem;
+  color:var(--muted);
+  background:var(--paper);
+}
+.v122-save-orb{
+  position:relative;
+  width:74px;
+  height:74px;
+  flex:0 0 74px;
+  overflow:hidden;
+  border:1.5px solid #d6b86f;
+  border-radius:50%;
+  background:linear-gradient(180deg,#fffdf8,#f5ead1);
+  box-shadow:inset 0 0 0 5px rgba(255,255,255,.55);
+}
+.v122-save-orb i{
+  position:absolute;
+  left:0;right:0;bottom:0;
+  background:linear-gradient(180deg,#e9cf8d,#cfaa54);
+  opacity:.78;
+  transition:height .25s ease;
+}
+.v122-save-orb span{
+  position:absolute;
+  inset:0;
+  display:grid;
+  place-items:center;
+  font-size:1.35rem;
+  color:#9c7a35;
+}
+.v122-save-copy{flex:1;min-width:0}
+.v122-save-copy strong{display:block;font-size:1.05rem}
+.v122-save-track{
+  height:9px;
+  margin:8px 0 7px;
+  border-radius:999px;
+  overflow:hidden;
+  background:#eee7dc;
+}
+.v122-save-track i{
+  display:block;
+  height:100%;
+  border-radius:999px;
+  background:linear-gradient(90deg,#d9bf7d,#b88e3f);
+  transition:width .25s ease;
+}
+.v122-saving-history-row{
+  grid-template-columns:1fr auto 32px !important;
+  align-items:center;
+}
+.v122-saving-history-row button{
+  width:28px;height:28px;padding:0;
+  border:0;border-radius:50%;
+  background:transparent;color:#a58f83;
+  font-size:1rem;
+}
+.v122-saving-history-row button:hover{background:#f3e8e3;color:#8b5f56}
+@media(max-width:650px){
+  .money-frequency{min-width:96px}
+  .v122-saving-history-row{grid-template-columns:1fr auto 30px !important}
+}
+
