@@ -8683,7 +8683,7 @@ document.querySelector("#saveVideoBtn").addEventListener("click", async () => {
 
 function resetTodoEditor() {
   editingTodoId = null;
-  document.querySelector("#entryType").value = "todo";
+  document.querySelector("#entryType").value = window.matchMedia("(max-width:700px)").matches ? "event" : "todo";
   document.querySelector("#superImportant").checked = false;
   document.querySelector("#todoText").value = "";
   document.querySelector("#todoPriority").value = "medium";
@@ -8917,6 +8917,12 @@ const recurrence = document.querySelector("#recurrence").value;
 
   updateSchoolyearNoeUI();
   updateWeeklyEventDateHint();
+}
+
+if (window.matchMedia("(max-width:700px)").matches && !editingTodoId) {
+  const mobileType = document.querySelector("#entryType");
+  if (mobileType) mobileType.value = "event";
+  updateEntryTypeUI();
 }
 
 document.querySelector("#entryType").addEventListener("change", updateEntryTypeUI);
