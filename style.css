@@ -31568,128 +31568,279 @@ button.day-meal-list-item:hover,a.day-meal-list-item:hover{background:rgba(164,1
   transform:rotate(90deg);
 }
 
+
+
 /* =========================================================
-   V127 FINAL – Kinderbereich / Mein Geld
-   1) sechs Kacheln am PC wirklich in EINER Zeile
-   2) Geld- und Edelstein-Hinweise leichter und freundlicher
-   3) beige/braune Flächen durch sehr sanfte Regenbogenflächen
+   V128 – MEIN GELD: Regenbogen, klarere Struktur, schönere Buttons
    ========================================================= */
 
-/* WICHTIG: Der echte Container heißt .school-dashboard-tiles,
-   nicht .school-dashboard-grid. */
-@media (min-width:1050px){
-  .school-child-dashboard .school-dashboard-tiles,
-  .school-dashboard-tiles{
-    display:grid !important;
-    grid-template-columns:repeat(6,minmax(0,1fr)) !important;
-    gap:10px !important;
-    align-items:stretch !important;
-  }
-
-  .school-child-dashboard .school-dashboard-tile,
-  .school-dashboard-tiles .school-dashboard-tile{
-    width:auto !important;
-    min-width:0 !important;
-    max-width:none !important;
-    margin:0 !important;
-    padding:11px 10px !important;
-  }
-
-  .school-dashboard-tile strong{
-    font-size:.82rem !important;
-    line-height:1.15 !important;
-    white-space:nowrap !important;
-  }
-
-  .school-dashboard-tile small{
-    font-size:.64rem !important;
-    line-height:1.2 !important;
-  }
+/* Der gesamte Geldbereich bekommt nur einen ganz leichten Farbhauch. */
+.child-money-v121 .child-money-card{
+  background:
+    linear-gradient(120deg,
+      rgba(255,253,251,.96) 0%,
+      rgba(250,247,255,.94) 38%,
+      rgba(247,252,249,.94) 72%,
+      rgba(255,250,244,.95) 100%) !important;
+  border-color:rgba(189,175,194,.28) !important;
+  box-shadow:0 7px 22px rgba(93,78,88,.035) !important;
 }
 
-/* Auf kleineren Geräten weiterhin sauber umbrechen. */
-@media (min-width:700px) and (max-width:1049px){
-  .school-dashboard-tiles{
-    grid-template-columns:repeat(3,minmax(0,1fr)) !important;
-  }
+/* Überschriften etwas lockerer und besser erfassbar. */
+.child-money-v121 .child-money-section-head > div > strong{
+  font-family:"DM Sans",system-ui,sans-serif !important;
+  font-size:1.03rem !important;
+  font-weight:650 !important;
+  letter-spacing:.005em !important;
+  color:#514b55 !important;
+}
+.child-money-v121 .child-money-section-head small{
+  margin-top:4px !important;
+  line-height:1.4 !important;
 }
 
-/* Geld-Spruch: lockerer, weniger "beige Kasten". */
+/* Geld-Spruch */
 .v121-quote{
-  font-family:"DM Sans",system-ui,sans-serif !important;
-  font-size:.91rem !important;
-  font-weight:500 !important;
-  line-height:1.45 !important;
-  color:#665f68 !important;
-  border:1px solid rgba(190,177,211,.28) !important;
-  background:
-    linear-gradient(100deg,
-      rgba(218,204,243,.34) 0%,
-      rgba(248,211,226,.30) 24%,
-      rgba(255,226,197,.28) 45%,
-      rgba(224,237,198,.28) 68%,
-      rgba(199,225,239,.30) 100%) !important;
-  box-shadow:none !important;
-}
-
-/* Edelstein-Erklärung: freundlich, luftig, nicht braun. */
-.v121-gem-explain{
-  font-family:"DM Sans",system-ui,sans-serif !important;
-  font-size:.88rem !important;
-  font-weight:400 !important;
-  line-height:1.55 !important;
-  color:#6f686d !important;
-  border:1px solid rgba(190,177,211,.25) !important;
-  background:
-    linear-gradient(105deg,
-      rgba(221,210,244,.28),
-      rgba(250,216,229,.24),
-      rgba(255,229,202,.23),
-      rgba(219,238,211,.24),
-      rgba(202,226,241,.27)) !important;
-}
-
-.v121-gem-explain b{
-  color:#555056 !important;
-  font-weight:600 !important;
-}
-
-/* Wertschätzungsspruch ebenfalls leichter statt beige/braun. */
-.v121-gem-quote{
+  padding:11px 14px !important;
+  border-radius:14px !important;
   font-family:"DM Sans",system-ui,sans-serif !important;
   font-size:.9rem !important;
-  font-weight:500 !important;
-  letter-spacing:.01em !important;
-  color:#665f68 !important;
-  border:1px solid rgba(190,177,211,.22) !important;
-  background:
-    linear-gradient(90deg,
-      rgba(248,216,231,.27),
-      rgba(255,230,203,.25),
-      rgba(225,239,210,.25),
-      rgba(204,227,241,.27),
-      rgba(222,211,244,.27)) !important;
+  font-weight:550 !important;
+  line-height:1.4 !important;
+  color:#625969 !important;
+  border:1px solid rgba(185,166,213,.22) !important;
+  background:linear-gradient(
+    90deg,
+    rgba(221,209,246,.38),
+    rgba(249,216,231,.32),
+    rgba(255,230,202,.30),
+    rgba(226,239,211,.30),
+    rgba(205,229,243,.34)
+  ) !important;
 }
 
-/* Untertitel des gewählten Wertschätzungszeichens ruhig und lesbar. */
-.v125-appreciation-subtitle{
+/* Wöchentlich/monatlich als kleine Pastell-Pille */
+.money-frequency{
+  border:1px solid rgba(178,163,198,.28) !important;
+  background:linear-gradient(90deg,rgba(239,232,252,.72),rgba(235,247,240,.72)) !important;
+  color:#71677a !important;
+}
+
+/* Statusknöpfe: jeweils sanfter Regenbogen statt beige. */
+.child-money-pay-row button{
+  border-color:rgba(175,157,205,.28) !important;
+  color:#625471 !important;
+  background:linear-gradient(100deg,
+    rgba(223,210,249,.86),
+    rgba(249,220,235,.82),
+    rgba(255,234,207,.80)) !important;
+  box-shadow:0 3px 10px rgba(105,88,120,.05) !important;
+}
+.child-money-pay-row button:hover{
+  filter:saturate(1.08) brightness(.995);
+}
+.child-money-pay-row button.is-paid{
+  border-color:rgba(114,177,147,.30) !important;
+  color:#4f7562 !important;
+  background:linear-gradient(100deg,
+    rgba(205,239,220,.88),
+    rgba(213,236,246,.82),
+    rgba(235,228,250,.80)) !important;
+}
+
+/* Monatspfeile */
+.v121-monthbar button{
+  border-color:rgba(180,163,205,.28) !important;
+  color:#685778 !important;
+  background:linear-gradient(145deg,rgba(239,231,252,.9),rgba(248,241,255,.88)) !important;
+}
+
+/* Geliehen */
+#childMoneyAddLoan,
+.child-money-loan-form button,
+.child-money-loan-row button{
+  border-color:rgba(232,169,188,.30) !important;
+  color:#85576a !important;
+  background:linear-gradient(100deg,rgba(253,220,235,.82),rgba(255,232,206,.82)) !important;
+}
+
+/* Sparziel-Karte mit ganz leichtem blau/lila/rosa Hintergrund. */
+#savingGoal,
+#savingTarget,
+#savingAmount{
+  background:rgba(255,255,255,.84) !important;
+}
+.v122-save-orb{
+  border-color:rgba(162,130,221,.52) !important;
+  background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(245,240,255,.86)) !important;
+  box-shadow:inset 0 0 0 5px rgba(255,255,255,.62),0 4px 14px rgba(116,88,164,.06) !important;
+}
+.v122-save-orb i{
+  background:linear-gradient(180deg,#c9b4ef 0%,#e9b9d5 24%,#f6c1a3 45%,#e9d986 64%,#a9d6b3 82%,#9ccde5 100%) !important;
+}
+.v122-save-orb span{
+  color:#7d63ad !important;
+}
+.v122-save-track{
+  background:rgba(193,184,204,.25) !important;
+}
+.v122-save-track i{
+  background:linear-gradient(90deg,#c3a9ed 0%,#ecaac9 18%,#f3b48f 36%,#ebd269 52%,#98cda8 68%,#82bedf 84%,#ae9ee4 100%) !important;
+}
+
+/* Sparen / Entnehmen bewusst verschieden, aber beide freundlich. */
+.v121-save-actions button[data-save="plus"]{
+  border-color:rgba(111,190,163,.34) !important;
+  color:#37745f !important;
+  background:linear-gradient(105deg,rgba(200,236,248,.88),rgba(212,242,207,.88),rgba(240,239,198,.82)) !important;
+}
+.v121-save-actions button[data-save="minus"]{
+  border-color:rgba(230,157,188,.32) !important;
+  color:#8a5268 !important;
+  background:linear-gradient(105deg,rgba(249,210,234,.88),rgba(255,223,203,.86)) !important;
+}
+
+/* Edelsteinbereich – zarter Regenbogenrahmen / Hintergrund. */
+.child-money-card.v121-gems{
+  border-color:transparent !important;
+  background:
+    linear-gradient(#fffdfb,#fffdfb) padding-box,
+    linear-gradient(90deg,#d5c2f2,#f1bfd5,#f3c9a8,#e8dc91,#acd6b2,#9dcce4,#c2afe9) border-box !important;
+  border:1.5px solid transparent !important;
+}
+
+/* Erklärung klar gegliedert */
+.v128-gem-explain{
+  display:grid !important;
+  gap:10px !important;
+  padding:14px 15px !important;
+  border-radius:15px !important;
+  border:1px solid rgba(177,163,201,.18) !important;
+  background:linear-gradient(105deg,
+    rgba(222,211,245,.28),
+    rgba(250,218,232,.24),
+    rgba(255,231,206,.23),
+    rgba(222,239,213,.24),
+    rgba(204,228,241,.27)) !important;
+  color:#625c64 !important;
+}
+.v128-gem-explain-main{
+  display:grid !important;
+  grid-template-columns:38px minmax(0,1fr) !important;
+  align-items:start !important;
+  gap:11px !important;
+}
+.v128-gem-explain-icon{
+  width:34px !important;
+  height:34px !important;
+  display:grid !important;
+  place-items:center !important;
+  border-radius:50% !important;
+  background:linear-gradient(135deg,rgba(233,201,245,.75),rgba(190,226,247,.75)) !important;
+  font-size:1.05rem !important;
+}
+.v128-gem-explain-main strong{
+  display:block !important;
+  margin-bottom:4px !important;
   font-family:"DM Sans",system-ui,sans-serif !important;
-  font-size:.78rem !important;
-  color:#7b7379 !important;
-  background:
-    linear-gradient(90deg,
-      rgba(218,204,243,.20),
-      rgba(248,211,226,.18),
-      rgba(224,237,198,.18),
-      rgba(199,225,239,.20)) !important;
-  border:1px solid rgba(190,177,211,.18) !important;
+  font-weight:650 !important;
+  color:#514b55 !important;
+}
+.v128-gem-explain-main span:not(.v128-gem-explain-icon){
+  display:block !important;
+  font-size:.88rem !important;
+  line-height:1.48 !important;
+}
+.v128-gem-explain-note{
+  margin-left:49px !important;
+  padding-top:8px !important;
+  border-top:1px solid rgba(176,163,194,.18) !important;
+  font-size:.82rem !important;
+  color:#847b84 !important;
 }
 
-/* Die Gold-/Braunwirkung der Sparanzeige vollständig entfernen. */
-.v122-save-copy strong{
-  color:#5f5963 !important;
+/* Wertschätzungsspruch */
+.v121-gem-quote{
+  padding:10px 13px !important;
+  border-radius:14px !important;
+  font-family:"DM Sans",system-ui,sans-serif !important;
+  font-size:.88rem !important;
+  font-weight:550 !important;
+  color:#675c72 !important;
+  border:1px solid rgba(180,164,205,.18) !important;
+  background:linear-gradient(90deg,
+    rgba(250,215,231,.30),
+    rgba(255,230,203,.28),
+    rgba(225,239,211,.28),
+    rgba(205,229,243,.30),
+    rgba(223,212,245,.30)) !important;
 }
-.v122-save-copy small{
-  color:var(--muted) !important;
+
+/* Auswahl + Untertitel */
+.v124-appreciation-picker select{
+  background:linear-gradient(90deg,rgba(248,244,255,.92),rgba(244,251,247,.92)) !important;
+  border-color:rgba(177,163,200,.25) !important;
+}
+.v125-appreciation-subtitle{
+  background:linear-gradient(90deg,
+    rgba(222,211,245,.22),
+    rgba(249,217,232,.20),
+    rgba(224,239,212,.20),
+    rgba(204,228,241,.22)) !important;
+  border-color:rgba(178,165,201,.15) !important;
+}
+
+/* Edelsteine und Balken farbig */
+.v121-gem-dots span:not(.on){color:#e6e0e1 !important}
+.v121-gem-dots span.on:nth-child(7n+1){color:#aa91df !important}
+.v121-gem-dots span.on:nth-child(7n+2){color:#e6a2c3 !important}
+.v121-gem-dots span.on:nth-child(7n+3){color:#efa986 !important}
+.v121-gem-dots span.on:nth-child(7n+4){color:#d5b94e !important}
+.v121-gem-dots span.on:nth-child(7n+5){color:#7fbc91 !important}
+.v121-gem-dots span.on:nth-child(7n+6){color:#72b5d8 !important}
+.v121-gem-dots span.on:nth-child(7n+7){color:#9988d5 !important}
+.v121-gem-bar{
+  background:rgba(194,185,205,.25) !important;
+}
+.v121-gem-bar i{
+  background:linear-gradient(90deg,#c0a6eb,#e9a7c7,#f0b08c,#e7d06d,#98cca8,#82bedf,#ac9be2) !important;
+}
+
+/* Edelstein-Aktionsleiste: die drei Knöpfe optisch zusammenhängend und farbig */
+.v121-gem-actions{
+  align-items:stretch !important;
+}
+.v121-gem-actions button{
+  min-width:58px !important;
+  border-radius:12px !important;
+  font-weight:600 !important;
+}
+.v121-gem-actions button[data-gem="plus"]{
+  border-color:rgba(128,183,216,.34) !important;
+  color:#4e6f91 !important;
+  background:linear-gradient(110deg,rgba(205,230,249,.92),rgba(225,214,249,.90)) !important;
+}
+.v121-gem-actions button[data-gem="minus"]{
+  border-color:rgba(228,159,190,.34) !important;
+  color:#8d536b !important;
+  background:linear-gradient(110deg,rgba(249,214,233,.92),rgba(255,226,208,.90)) !important;
+}
+#gemRedeem{
+  border-color:rgba(168,159,205,.28) !important;
+  color:#6d6384 !important;
+  background:linear-gradient(110deg,rgba(225,217,248,.88),rgba(213,237,245,.86),rgba(225,239,211,.84)) !important;
+}
+
+/* Zahlung, Geliehen, Sparen und Edelsteine: Hover minimal */
+.child-money-v121 button:not(.child-money-close):hover{
+  transform:translateY(-1px);
+  box-shadow:0 5px 13px rgba(91,74,100,.06);
+}
+
+/* Auf Handy bleibt der Text gut lesbar. */
+@media(max-width:650px){
+  .v128-gem-explain-main{grid-template-columns:32px minmax(0,1fr) !important}
+  .v128-gem-explain-icon{width:30px !important;height:30px !important}
+  .v128-gem-explain-note{margin-left:43px !important}
 }
 
