@@ -20407,7 +20407,7 @@ function ensureChildMoneyDialog(){
   let d=document.querySelector("#childMoneyDialog"); if(d)return d;
   d=document.createElement("dialog"); d.id="childMoneyDialog"; d.className="child-money-dialog child-money-v121";
   d.innerHTML=`<div class="child-money-shell">
-    <div class="child-money-head"><div><p class="small-label">MEIN GELD</p><h2 id="childMoneyTitle"></h2><p>Alles an einem Ort: bekommen, geliehen, sparen und Edelsteine.</p></div><button class="child-money-close" type="button">×</button></div>
+    <div class="child-money-head"><div><p class="small-label">MEIN GELD</p><h2 id="childMoneyTitle"></h2><p>Dein Überblick für Geld, Sparziele und Wertschätzungszeichen.</p></div><button class="child-money-close" type="button">×</button></div>
     <div id="moneyQuote" class="v121-quote"></div>
 
     <section class="child-money-card">
@@ -20456,7 +20456,16 @@ function ensureChildMoneyDialog(){
 
     <section class="child-money-card v121-gems">
       <div class="child-money-section-head"><div><strong>Meine Edelsteine 💎</strong><small>Besondere Extras für unser Familienleben.</small></div><strong id="gemCount"></strong></div>
-      <p class="v121-gem-explain"><b>Edelsteine gibt es für besondere Beiträge zu unserem Familienleben – wenn du von dir aus hilfst, jemanden unterstützt oder mithilfst, dass es für uns alle leichter wird.</b><br>Nicht für jeden Handgriff 😉 – sondern für die kleinen Extras, die richtig guttun.</p>
+      <div class="v121-gem-explain v128-gem-explain">
+        <div class="v128-gem-explain-main">
+          <span class="v128-gem-explain-icon" aria-hidden="true">💎</span>
+          <div>
+            <strong>Besondere Beiträge zu unserem Familienleben</strong>
+            <span>Du bekommst Edelsteine, wenn du von dir aus hilfst, jemanden unterstützt oder mithilfst, dass es für uns alle leichter wird.</span>
+          </div>
+        </div>
+        <div class="v128-gem-explain-note">😉 Nicht für jeden Handgriff – sondern für die kleinen Extras, die richtig guttun.</div>
+      </div>
       <div id="gemQuote" class="v121-gem-quote"></div>
       <div class="v124-appreciation-picker">
         <label>Wertschätzungszeichen
@@ -20631,7 +20640,7 @@ function renderChildMoneyDialog(){
   d.querySelector("#savingFill").style.height=sp+"%";
   d.querySelector("#savingTrackFill").style.width=sp+"%";
   d.querySelector("#savingStatus").textContent=s.savings.target?`${moneyEuro(s.savings.balance)} von ${moneyEuro(s.savings.target)} · ${sp}%`:`${moneyEuro(s.savings.balance)} gespart`;
-  d.querySelector("#savingText").textContent=sp>=100?"Geschafft! ✨":sp>=50?"Mehr als die Hälfte – dein Ziel kommt näher.":"Jeder gesparte Euro bringt dich näher.";
+  d.querySelector("#savingText").textContent=sp>=100?"Geschafft! ✨ Du hast für etwas gespart, das dir wirklich wichtig war.":sp>=50?"Mehr als die Hälfte geschafft – dein Ziel kommt näher. ✨":"Jeder gesparte Euro bringt dich deinem Wunsch ein Stück näher.";
 
   const g=s.gems,cost=Math.max(1,g.rewardCost),gp=Math.min(100,Math.round(g.count/cost*100));
   d.querySelector("#gemCount").textContent=`${g.count} 💎`;
