@@ -3168,11 +3168,24 @@ function renderTodos() {
   const list = document.querySelector("#todoList");
   renderTodoTrash();
 
-  const todoSearchVisible = todoFilter === "done" || todoFilter === "event";
+  /* V118: Suche in ALLEN To-do-/Termin-Ansichten verfügbar */
+  const todoSearchVisible = true;
+
+  const todoSearchPlaceholders = {
+    all: "Alle Einträge suchen …",
+    todo: "To-dos suchen …",
+    event: "Termine suchen …",
+    work: "Arbeit suchen …",
+    private: "Privates suchen …",
+    week: "Wochenplan-To-dos suchen …",
+    newest: "Neueste Einträge suchen …",
+    done: "Fertige To-dos suchen …"
+  };
+
   const todoSearchBar = ensureCollectionSearchBar({
     anchor:list,
     id:"todoCollectionSearch",
-    placeholder: todoFilter === "event" ? "Termine suchen …" : "Fertige To-dos suchen …",
+    placeholder: todoSearchPlaceholders[todoFilter] || "To-dos & Termine suchen …",
     value:collectionSearchState.todos,
     visible:todoSearchVisible,
     onInput:value=>{
@@ -3236,13 +3249,21 @@ function renderTodos() {
       t.time,
       t.area,
       t.priority,
-      t.eventCategory
+      t.eventCategory,
+      Array.isArray(t.family) ? t.family.join(" ") : t.family,
+      t.recurrence,
+      t.type
     ]));
+
+    const noun = todoFilter === "event"
+      ? "Termine"
+      : (todoFilter === "all" ? "Einträge" : "To-dos");
+
     updateCollectionSearchCount(
       todoSearchBar,
       todos.length,
       totalBeforeSearch,
-      todoFilter === "event" ? "Termine" : "To-dos"
+      noun
     );
   }
 
