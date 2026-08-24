@@ -31363,3 +31363,54 @@ button.day-meal-list-item:hover,a.day-meal-list-item:hover{background:rgba(164,1
   .v122-saving-history-row{grid-template-columns:1fr auto 30px !important}
 }
 
+/* =========================================================
+   V123 – Historie überall korrigierbar
+   ========================================================= */
+.v123-history-x,
+.v123-history-actions button{
+  width:26px;
+  height:26px;
+  min-width:26px;
+  padding:0;
+  margin-left:5px;
+  border:0;
+  border-radius:50%;
+  background:transparent;
+  color:#a58f83;
+  line-height:1;
+  vertical-align:middle;
+}
+.v123-history-x:hover,
+.v123-history-actions button:hover{
+  background:#f3e8e3;
+  color:#8b5f56;
+}
+.v123-loan-history-row{
+  grid-template-columns:1fr auto auto auto !important;
+  align-items:center;
+}
+.v123-history-actions{
+  display:inline-flex;
+  justify-content:flex-end;
+  gap:2px;
+}
+.v123-gem-history-row{
+  grid-template-columns:60px 1fr auto 30px !important;
+  align-items:center;
+}
+.child-money-history-row .is-paid{
+  display:flex;
+  align-items:center;
+  gap:3px;
+}
+@media(max-width:650px){
+  .v123-loan-history-row,
+  .v123-gem-history-row{
+    grid-template-columns:1fr auto !important;
+  }
+  .v123-loan-history-row > span:first-child,
+  .v123-gem-history-row > span:nth-child(2){
+    grid-column:1/-1;
+  }
+}
+
