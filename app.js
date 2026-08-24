@@ -20475,7 +20475,7 @@ function ensureChildMoneyDialog(){
       <div class="v121-gem-actions"><input id="gemWhy" placeholder="Wofür? (optional)"><button type="button" data-gem="plus">+ 💎</button><button type="button" data-gem="minus">− 💎</button><button type="button" id="gemRedeem">Einlösen</button></div>
     </section>
 
-    <details class="child-money-history"><summary><span>Historie</span><small>Bezahlt, gespart, zurückgegeben & Edelsteine</small></summary><div id="childMoneyWeeklyHistory"></div><div id="childMoneyLoanHistory"></div><div id="savingHistory"></div><div id="gemHistory"></div></details>
+    <details class="child-money-history"><summary><span>Historie</span><small>Bezahlt, gespart & zurückgegeben</small></summary><div id="childMoneyWeeklyHistory"></div><div id="childMoneyLoanHistory"></div><div id="savingHistory"></div><div id="gemHistory"></div></details>
   </div>`;
   document.body.appendChild(d);
   d.querySelector(".child-money-close").onclick=()=>d.close();
@@ -20659,8 +20659,19 @@ function renderChildMoneyDialog(){
     rows.push(`<div class="child-money-history-row"><span>${moneyWeekLabel(k)}</span><span class="${qp?.paid?"is-paid":""}">${qp?.paid?"✓":"○"} Taschengeld${s.weekly.pocketFrequency==="monthly"?" · Monat":""}${pDel}</span><span class="${qs?.paid?"is-paid":""}">${qs?.paid?"✓":"○"} Jause${s.weekly.snackFrequency==="monthly"?" · Monat":""}${sDel}</span></div>`);
   }
   d.querySelector("#childMoneyWeeklyHistory").innerHTML=`<h4>Letzte Wochen</h4>${rows.join("")}`;
-  const done=s.loans.filter(x=>x.done).sort((a,b)=>(b.doneAt||0)-(a.doneAt||0));d.querySelector("#childMoneyLoanHistory").innerHTML=`<h4>Zurückbezahlt</h4>${done.length?done.map(x=>`<div class="child-money-history-row v123-loan-history-row"><span>✓ ${escapeHtml(moneyPersonName(x.from))} → ${escapeHtml(moneyPersonName(x.to))}</span><b>${moneyEuro(x.amount)}</b><small>${new Date(x.doneAt).toLocaleDateString("de-AT")}</small><span class="v123-history-actions"><button type="button" data-loan-reopen="${escapeHtml(x.id)}" title="Wieder als offen anzeigen">↩</button><button type="button" data-loan-delete="${escapeHtml(x.id)}" title="Eintrag löschen">×</button></span></div>`).join(""):`<div class="child-money-empty">Noch keine erledigten Einträge.</div>`}`;
-  d.querySelector("#savingHistory").innerHTML=`<h4>Sparen</h4>${s.savings.history.length?s.savings.history.slice(0,20).map(x=>`<div class="child-money-history-row v122-saving-history-row"><span>${x.amount>=0?"+":"−"} ${moneyEuro(Math.abs(x.amount))}</span><small>${new Date(x.at).toLocaleDateString("de-AT")}</small><button type="button" data-saving-delete="${escapeHtml(x.id)}" title="Sparbewegung löschen">×</button></div>`).join(""):`<div class="child-money-empty">Noch keine Sparbewegung.</div>`}`;
-  d.querySelector("#gemHistory").innerHTML=`<h4>Edelsteine</h4>${g.history.length?g.history.slice(0,20).map(x=>`<div class="child-money-history-row v123-gem-history-row"><span>${x.delta>0?"+":""}${x.delta} 💎</span><span>${escapeHtml(x.why||"")}</span><small>${new Date(x.at).toLocaleDateString("de-AT")}</small><button class="v123-history-x" type="button" data-gem-history-delete="${escapeHtml(x.id)}" title="Edelstein-Eintrag löschen">×</button></div>`).join(""):`<div class="child-money-empty">Noch keine Edelsteine gesammelt.</div>`}`;
+  const done=s.loans.filter(x=>x.done).sort((a,b)=>(b.doneAt||0)-(a.doneAt||0));{
+    const visibleDone=done.slice(0,20);
+    const olderDone=done.slice(20);
+    const row=x=>`<div class="child-money-history-row v123-loan-history-row"><span>✓ ${escapeHtml(moneyPersonName(x.from))} → ${escapeHtml(moneyPersonName(x.to))}</span><b>${moneyEuro(x.amount)}</b><small>${new Date(x.doneAt).toLocaleDateString("de-AT")}</small><span class="v123-history-actions"><button type="button" data-loan-reopen="${escapeHtml(x.id)}" title="Wieder als offen anzeigen">↩</button><button type="button" data-loan-delete="${escapeHtml(x.id)}" title="Eintrag löschen">×</button></span></div>`;
+    d.querySelector("#childMoneyLoanHistory").innerHTML=`<h4>Zurückbezahlt</h4>${visibleDone.length?visibleDone.map(row).join(""):`<div class="child-money-empty">Noch keine erledigten Einträge.</div>`}${olderDone.length?`<details class="v126-older-history"><summary>${olderDone.length} ältere Einträge anzeigen</summary>${olderDone.map(row).join("")}</details>`:""}`;
+  }
+  {
+    const savingRow=x=>`<div class="child-money-history-row v122-saving-history-row"><span>${x.amount>=0?"+":"−"} ${moneyEuro(Math.abs(x.amount))}</span><small>${new Date(x.at).toLocaleDateString("de-AT")}</small><button type="button" data-saving-delete="${escapeHtml(x.id)}" title="Sparbewegung löschen">×</button></div>`;
+    const visibleSaving=s.savings.history.slice(0,20);
+    const olderSaving=s.savings.history.slice(20);
+    d.querySelector("#savingHistory").innerHTML=`<h4>Sparen</h4>${visibleSaving.length?visibleSaving.map(savingRow).join(""):`<div class="child-money-empty">Noch keine Sparbewegung.</div>`}${olderSaving.length?`<details class="v126-older-history"><summary>${olderSaving.length} ältere Einträge anzeigen</summary>${olderSaving.map(savingRow).join("")}</details>`:""}`;
+  }
+  const gemHistoryHost=d.querySelector("#gemHistory");
+  if(gemHistoryHost) gemHistoryHost.innerHTML="";
 }
 document.addEventListener("click",e=>{const b=e.target.closest("[data-school-open-money]");if(!b)return;activeChildMoneyId=String(b.dataset.schoolOpenMoney||"1");activeMoneyMonth=moneyMonthKey();renderChildMoneyDialog();const d=ensureChildMoneyDialog();typeof d.showModal==="function"?d.showModal():d.setAttribute("open","");});
