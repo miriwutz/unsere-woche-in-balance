@@ -31513,3 +31513,58 @@ button.day-meal-list-item:hover,a.day-meal-list-item:hover{background:rgba(164,1
   color:#e4dfdc !important;
 }
 
+/* =========================================================
+   V126 – Kinderbereich: 6 Kacheln sauber in EINER Zeile
+   + lange Historien ab 20 Einträgen einklappen
+   ========================================================= */
+@media (min-width:1050px){
+  .school-dashboard-grid{
+    display:grid !important;
+    grid-template-columns:repeat(6,minmax(0,1fr)) !important;
+    gap:10px !important;
+  }
+  .school-dashboard-tile{
+    min-width:0 !important;
+    width:auto !important;
+    padding:11px 10px !important;
+  }
+  .school-dashboard-tile .school-tile-icon{
+    flex:0 0 auto !important;
+  }
+  .school-dashboard-tile strong{
+    font-size:.84rem !important;
+    line-height:1.15 !important;
+    white-space:nowrap !important;
+  }
+  .school-dashboard-tile small{
+    font-size:.66rem !important;
+    line-height:1.2 !important;
+  }
+  .school-dashboard-tile .school-tile-arrow{
+    margin-left:auto !important;
+  }
+}
+
+.v126-older-history{
+  margin-top:8px;
+  padding-top:4px;
+  border-top:1px dashed var(--line);
+}
+.v126-older-history > summary{
+  cursor:pointer;
+  color:var(--muted);
+  font-size:.76rem;
+  padding:8px 0;
+  list-style:none;
+}
+.v126-older-history > summary::-webkit-details-marker{display:none}
+.v126-older-history > summary::before{
+  content:"›";
+  display:inline-block;
+  margin-right:6px;
+  transition:transform .18s ease;
+}
+.v126-older-history[open] > summary::before{
+  transform:rotate(90deg);
+}
+
