@@ -20392,15 +20392,15 @@ const MONEY_QUOTES=["Ich wähle, was mir wirklich wichtig ist.","Nicht alles, wa
 const GEM_QUOTES=["Wenn jeder ein bisschen mithilft, bleibt mehr Zeit füreinander.","Was du für uns tust, sehen wir.","Zusammen geht vieles leichter.","Kleine Hilfe. Große Wirkung für uns alle."];
 
 const GEM_APPRECIATION_PRESETS=[
-  {cost:5,title:"Nur ich & du! 💛",text:"Exklusive Mama- oder Papa-Zeit"},
-  {cost:6,title:"Eis geht immer! 🍦",text:"Gemeinsam Eis essen"},
-  {cost:8,title:"Heute bestimme ICH! 🎲",text:"Spieleabend – du suchst aus"},
-  {cost:10,title:"Sofa, Snacks & mein Film! 🍿",text:"Wunsch-Filmabend"},
-  {cost:12,title:"Küchenchaos erlaubt! 🧁",text:"Gemeinsam backen oder kochen"},
-  {cost:15,title:"Schnapp dir mich! 💛",text:"Kleiner Ausflug allein mit Mama oder Papa"},
-  {cost:18,title:"Heute bin ich Familienboss! 👑",text:"Familienunternehmung aussuchen"},
-  {cost:20,title:"Ab ins Kino! 🎬",text:"Kino gemeinsam"},
-  {cost:25,title:"Überrasch mich! ✨",text:"Besonderer gemeinsamer Ausflug"}
+  {cost:5,title:"Nur ich & du! 💛",text:"Mini-Date mit Mama oder Papa · ca. 30–45 Min."},
+  {cost:6,title:"Eis geht immer! 🍦",text:"Gemeinsam ein Eis essen gehen"},
+  {cost:8,title:"Heute bestimme ICH! 🎲",text:"Kleiner Wunschabend · Spiel oder gemeinsame Beschäftigung aussuchen"},
+  {cost:10,title:"Sofa, Snacks & mein Film! 🍿",text:"Wunsch-Filmabend mit Snacks"},
+  {cost:12,title:"Küchenchaos erlaubt! 🧁",text:"Gemeinsam backen oder kochen · du suchst aus"},
+  {cost:15,title:"Schnapp dir mich! 💛",text:"Großes Mama-/Papa-Date · kleine Unternehmung · ca. 2–3 Std."},
+  {cost:18,title:"Heute bin ich Familienboss! 👑",text:"Familienunternehmung für einen halben Tag aussuchen"},
+  {cost:20,title:"Ab ins Kino! 🎬",text:"Gemeinsamer Kinobesuch · du suchst den Film mit aus"},
+  {cost:25,title:"Überrasch mich! ✨",text:"Mama/Papa planen einen besonderen Überraschungsausflug"}
 ];
 
 function ensureChildMoneyDialog(){
@@ -20462,6 +20462,7 @@ function ensureChildMoneyDialog(){
         <label>Wertschätzungszeichen
           <select id="gemPresetSelect" aria-label="Wertschätzungszeichen auswählen"></select>
         </label>
+        <div id="gemPresetHint" class="v125-appreciation-subtitle"></div>
       </div>
       <div class="v121-gem-grid">
         <div><div id="gemDots" class="v121-gem-dots"></div><div class="v121-gem-bar"><i id="gemFill"></i></div></div>
@@ -20639,6 +20640,10 @@ function renderChildMoneyDialog(){
   presetSelect.innerHTML=`<option value="">Wertschätzungszeichen auswählen …</option>`+GEM_APPRECIATION_PRESETS.map((x,i)=>`<option value="${i}">${x.cost} 💎 · ${escapeHtml(x.title)}</option>`).join("");
   const presetIndex=GEM_APPRECIATION_PRESETS.findIndex(x=>x.cost===cost&&x.title===g.rewardTitle&&x.text===g.rewardText);
   presetSelect.value=presetIndex>=0?String(presetIndex):"";
+  const hint=d.querySelector("#gemPresetHint");
+  if(hint){
+    hint.textContent=presetIndex>=0 ? GEM_APPRECIATION_PRESETS[presetIndex].text : (g.rewardText||"");
+  }
   d.querySelector("#gemRewardTitle").value=g.rewardTitle;
   d.querySelector("#gemRewardText").value=g.rewardText;
   d.querySelector("#gemRewardCost").value=cost;d.querySelector("#gemDots").innerHTML=Array.from({length:cost},(_,i)=>`<span class="${i<g.count?"on":""}">◆</span>`).join("");d.querySelector("#gemFill").style.width=gp+"%";const rb=d.querySelector("#gemRedeem");rb.disabled=g.count<cost;rb.textContent=g.count>=cost?`🎉 ${g.rewardTitle} einlösen`:`Noch ${Math.max(0,cost-g.count)} 💎`;
