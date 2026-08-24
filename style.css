@@ -31434,3 +31434,82 @@ button.day-meal-list-item:hover,a.day-meal-list-item:hover{background:rgba(164,1
   color:var(--ink);
 }
 
+/* =========================================================
+   V125 – Wertschätzungszeichen mit Untertitel + Regenbogen
+   ========================================================= */
+.v125-appreciation-subtitle{
+  margin-top:7px;
+  padding:7px 10px;
+  border-radius:10px;
+  background:rgba(255,255,255,.55);
+  color:var(--muted);
+  font-size:.76rem;
+  line-height:1.35;
+}
+
+/* Sparziel: statt beige/braun ein sanfter Regenbogen */
+.v122-save-orb{
+  border-color:rgba(184,151,219,.75) !important;
+  background:
+    linear-gradient(180deg,rgba(255,255,255,.95),rgba(255,255,255,.72)) !important;
+}
+.v122-save-orb i{
+  background:linear-gradient(
+    180deg,
+    #d8c4f2 0%,
+    #f5c6df 22%,
+    #ffd0b1 43%,
+    #f5e29f 63%,
+    #bfe3c1 82%,
+    #b9d9f3 100%
+  ) !important;
+  opacity:.88 !important;
+}
+.v122-save-orb span{
+  color:#8d6fb1 !important;
+}
+.v122-save-track{
+  background:rgba(189,181,205,.22) !important;
+}
+.v122-save-track i{
+  background:linear-gradient(
+    90deg,
+    #c9b5ee 0%,
+    #f1b7d2 18%,
+    #ffc59f 35%,
+    #f3dc83 52%,
+    #a9d9b3 69%,
+    #9bcfe9 84%,
+    #c0b3ee 100%
+  ) !important;
+}
+
+/* Edelsteine: Fortschrittsbalken als Regenbogen */
+.v121-gem-bar{
+  background:rgba(189,181,205,.22) !important;
+}
+.v121-gem-bar i{
+  background:linear-gradient(
+    90deg,
+    #c9b5ee 0%,
+    #f1b7d2 18%,
+    #ffc59f 35%,
+    #f3dc83 52%,
+    #a9d9b3 69%,
+    #9bcfe9 84%,
+    #c0b3ee 100%
+  ) !important;
+}
+
+/* Gefüllte Edelsteine wechseln sanft durch Regenbogenfarben */
+.v121-gem-dots span.on:nth-child(7n+1){color:#b69de5 !important}
+.v121-gem-dots span.on:nth-child(7n+2){color:#e9a8c8 !important}
+.v121-gem-dots span.on:nth-child(7n+3){color:#f0ad87 !important}
+.v121-gem-dots span.on:nth-child(7n+4){color:#d9bd55 !important}
+.v121-gem-dots span.on:nth-child(7n+5){color:#87bf96 !important}
+.v121-gem-dots span.on:nth-child(7n+6){color:#77b7d9 !important}
+.v121-gem-dots span.on:nth-child(7n+7){color:#9f91d9 !important}
+.v121-gem-dots span:not(.on){
+  color:#e4dfdc !important;
+}
+
