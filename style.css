@@ -32350,3 +32350,70 @@ button.day-meal-list-item:hover,a.day-meal-list-item:hover{background:rgba(164,1
   }
 }
 
+
+/* =========================================================
+   V136 – NUR HANDY: Termineingabe noch klarer
+   Terminbereich auffälliger + Start/Ende/Von/Bis in EINER Zeile.
+   Desktop/Tablet bleiben unverändert.
+   ========================================================= */
+@media (max-width:700px){
+
+  /* Der eigentliche Terminblock soll sofort ins Auge springen. */
+  #todos #eventFields.event-fields:not(.hidden){
+    display:grid !important;
+    grid-template-columns:
+      minmax(0,1.22fr)
+      minmax(0,1.22fr)
+      minmax(0,.78fr)
+      minmax(0,.78fr) !important;
+    gap:5px !important;
+    align-items:end !important;
+    width:100% !important;
+    padding:9px !important;
+    margin-top:4px !important;
+    box-sizing:border-box !important;
+    border:2px solid rgba(184,145,79,.48) !important;
+    border-radius:14px !important;
+    background:
+      linear-gradient(90deg,
+        rgba(238,225,255,.52),
+        rgba(255,231,225,.48),
+        rgba(255,244,204,.48),
+        rgba(224,244,230,.50),
+        rgba(222,237,255,.48)) !important;
+    box-shadow:0 3px 12px rgba(88,68,48,.08) !important;
+  }
+
+  #todos #eventFields.event-fields.hidden{
+    display:none !important;
+  }
+
+  #todos #eventFields > label{
+    min-width:0 !important;
+    width:100% !important;
+    margin:0 !important;
+    gap:3px !important;
+    font-size:.66rem !important;
+    font-weight:700 !important;
+    color:#665b55 !important;
+  }
+
+  #todos #eventFields .date-control-wrap{
+    min-width:0 !important;
+    width:100% !important;
+    box-sizing:border-box !important;
+    padding:6px 5px !important;
+    border-radius:9px !important;
+    background:rgba(255,255,255,.84) !important;
+  }
+
+  #todos #eventFields input[type="date"],
+  #todos #eventFields input[type="time"]{
+    min-width:0 !important;
+    width:100% !important;
+    box-sizing:border-box !important;
+    font-size:.72rem !important;
+    letter-spacing:-.02em !important;
+  }
+}
+
