@@ -20391,6 +20391,18 @@ let activeMoneyMonth=moneyMonthKey();
 const MONEY_QUOTES=["Ich wähle, was mir wirklich wichtig ist.","Nicht alles, was mir gefällt, muss mir gehören.","Weniger Dinge – mehr Platz für Wichtiges.","Ich kaufe nicht einfach – ich entscheide.","Ich überlege: Brauche ich das wirklich?","Was ich habe, darf genug sein.","Ich spare für Dinge, die mir wirklich wichtig sind.","Viele Kleinigkeiten machen nicht lange glücklich.","Lieber etwas Besonderes als ganz viel Kleinkram.","Ich passe gut auf mein Geld und meine Sachen auf.","Ich darf etwas schön finden, ohne es zu kaufen.","Mein Geld gibt mir Möglichkeiten – ich entscheide, wofür."];
 const GEM_QUOTES=["Wenn jeder ein bisschen mithilft, bleibt mehr Zeit füreinander.","Was du für uns tust, sehen wir.","Zusammen geht vieles leichter.","Kleine Hilfe. Große Wirkung für uns alle."];
 
+const GEM_APPRECIATION_PRESETS=[
+  {cost:5,title:"Nur ich & du! 💛",text:"Exklusive Mama- oder Papa-Zeit"},
+  {cost:6,title:"Eis geht immer! 🍦",text:"Gemeinsam Eis essen"},
+  {cost:8,title:"Heute bestimme ICH! 🎲",text:"Spieleabend – du suchst aus"},
+  {cost:10,title:"Sofa, Snacks & mein Film! 🍿",text:"Wunsch-Filmabend"},
+  {cost:12,title:"Küchenchaos erlaubt! 🧁",text:"Gemeinsam backen oder kochen"},
+  {cost:15,title:"Schnapp dir mich! 💛",text:"Kleiner Ausflug allein mit Mama oder Papa"},
+  {cost:18,title:"Heute bin ich Familienboss! 👑",text:"Familienunternehmung aussuchen"},
+  {cost:20,title:"Ab ins Kino! 🎬",text:"Kino gemeinsam"},
+  {cost:25,title:"Überrasch mich! ✨",text:"Besonderer gemeinsamer Ausflug"}
+];
+
 function ensureChildMoneyDialog(){
   let d=document.querySelector("#childMoneyDialog"); if(d)return d;
   d=document.createElement("dialog"); d.id="childMoneyDialog"; d.className="child-money-dialog child-money-v121";
@@ -20446,7 +20458,19 @@ function ensureChildMoneyDialog(){
       <div class="child-money-section-head"><div><strong>Meine Edelsteine 💎</strong><small>Besondere Extras für unser Familienleben.</small></div><strong id="gemCount"></strong></div>
       <p class="v121-gem-explain"><b>Edelsteine gibt es für besondere Beiträge zu unserem Familienleben – wenn du von dir aus hilfst, jemanden unterstützt oder mithilfst, dass es für uns alle leichter wird.</b><br>Nicht für jeden Handgriff 😉 – sondern für die kleinen Extras, die richtig guttun.</p>
       <div id="gemQuote" class="v121-gem-quote"></div>
-      <div class="v121-gem-grid"><div><div id="gemDots" class="v121-gem-dots"></div><div class="v121-gem-bar"><i id="gemFill"></i></div></div><div class="v121-reward"><label>Belohnung<input id="gemRewardTitle"></label><label>Was genau?<input id="gemRewardText"></label><label>Edelsteine<input id="gemRewardCost" type="number" min="1"></label></div></div>
+      <div class="v124-appreciation-picker">
+        <label>Wertschätzungszeichen
+          <select id="gemPresetSelect" aria-label="Wertschätzungszeichen auswählen"></select>
+        </label>
+      </div>
+      <div class="v121-gem-grid">
+        <div><div id="gemDots" class="v121-gem-dots"></div><div class="v121-gem-bar"><i id="gemFill"></i></div></div>
+        <div class="v121-reward">
+          <label>Titel<input id="gemRewardTitle"></label>
+          <label>Was genau?<input id="gemRewardText"></label>
+          <label>Edelsteine<input id="gemRewardCost" type="number" min="1"></label>
+        </div>
+      </div>
       <div class="v121-gem-actions"><input id="gemWhy" placeholder="Wofür? (optional)"><button type="button" data-gem="plus">+ 💎</button><button type="button" data-gem="minus">− 💎</button><button type="button" id="gemRedeem">Einlösen</button></div>
     </section>
 
@@ -20479,8 +20503,19 @@ function ensureChildMoneyDialog(){
   ["savingGoal","savingTarget"].forEach(id=>d.querySelector("#"+id).onchange=e=>{const s=childMoneyStore(activeChildMoneyId);if(id==="savingGoal")s.savings.goal=e.target.value.trim();else s.savings.target=moneyNumber(e.target.value);moneyTouch(activeChildMoneyId);renderChildMoneyDialog();});
   d.querySelectorAll("[data-save]").forEach(b=>b.onclick=()=>{const s=childMoneyStore(activeChildMoneyId),a=moneyNumber(d.querySelector("#savingAmount").value);if(!a)return;const delta=b.dataset.save==="minus"?-a:a;s.savings.balance=Math.max(0,Math.round((s.savings.balance+delta)*100)/100);s.savings.history.unshift({id:`save-${Date.now()}`,amount:delta,at:Date.now()});d.querySelector("#savingAmount").value="";moneyTouch(activeChildMoneyId);renderChildMoneyDialog();});
   ["gemRewardTitle","gemRewardText","gemRewardCost"].forEach(id=>d.querySelector("#"+id).onchange=e=>{const g=childMoneyStore(activeChildMoneyId).gems;if(id==="gemRewardTitle")g.rewardTitle=e.target.value.trim();if(id==="gemRewardText")g.rewardText=e.target.value.trim();if(id==="gemRewardCost")g.rewardCost=Math.max(1,Number(e.target.value||1));moneyTouch(activeChildMoneyId);renderChildMoneyDialog();});
+  d.querySelector("#gemPresetSelect").onchange=e=>{
+    const idx=Number(e.target.value);
+    const preset=GEM_APPRECIATION_PRESETS[idx];
+    if(!preset) return;
+    const g=childMoneyStore(activeChildMoneyId).gems;
+    g.rewardTitle=preset.title;
+    g.rewardText=preset.text;
+    g.rewardCost=preset.cost;
+    moneyTouch(activeChildMoneyId);
+    renderChildMoneyDialog();
+  };
   d.querySelectorAll("[data-gem]").forEach(b=>b.onclick=()=>{const g=childMoneyStore(activeChildMoneyId).gems,plus=b.dataset.gem==="plus",why=d.querySelector("#gemWhy").value.trim();if(!plus&&g.count<=0)return;g.count+=plus?1:-1;g.history.unshift({id:`gem-${Date.now()}`,delta:plus?1:-1,why:why||(plus?"Besonderes Extra":"zurückgenommen"),at:Date.now()});d.querySelector("#gemWhy").value="";moneyTouch(activeChildMoneyId);renderChildMoneyDialog();});
-  d.querySelector("#gemRedeem").onclick=()=>{const g=childMoneyStore(activeChildMoneyId).gems;if(g.count<g.rewardCost)return;g.count-=g.rewardCost;g.history.unshift({id:`gem-${Date.now()}`,delta:-g.rewardCost,why:`Eingelöst: ${g.rewardTitle}`,at:Date.now()});moneyTouch(activeChildMoneyId);renderChildMoneyDialog();};
+  d.querySelector("#gemRedeem").onclick=()=>{const g=childMoneyStore(activeChildMoneyId).gems;if(g.count<g.rewardCost)return;g.count-=g.rewardCost;g.history.unshift({id:`gem-${Date.now()}`,delta:-g.rewardCost,why:`Wertschätzungszeichen eingelöst: ${g.rewardTitle}`,at:Date.now()});moneyTouch(activeChildMoneyId);renderChildMoneyDialog();};
   d.addEventListener("click",e=>{
     const b=e.target.closest("[data-money-loan-done]");
     if(b){
@@ -20597,7 +20632,16 @@ function renderChildMoneyDialog(){
   d.querySelector("#savingStatus").textContent=s.savings.target?`${moneyEuro(s.savings.balance)} von ${moneyEuro(s.savings.target)} · ${sp}%`:`${moneyEuro(s.savings.balance)} gespart`;
   d.querySelector("#savingText").textContent=sp>=100?"Geschafft! ✨":sp>=50?"Mehr als die Hälfte – dein Ziel kommt näher.":"Jeder gesparte Euro bringt dich näher.";
 
-  const g=s.gems,cost=Math.max(1,g.rewardCost),gp=Math.min(100,Math.round(g.count/cost*100));d.querySelector("#gemCount").textContent=`${g.count} 💎`;d.querySelector("#gemQuote").textContent="✨ "+GEM_QUOTES[(new Date().getDate()+Number(activeChildMoneyId))%GEM_QUOTES.length];d.querySelector("#gemRewardTitle").value=g.rewardTitle;d.querySelector("#gemRewardText").value=g.rewardText;d.querySelector("#gemRewardCost").value=cost;d.querySelector("#gemDots").innerHTML=Array.from({length:cost},(_,i)=>`<span class="${i<g.count?"on":""}">◆</span>`).join("");d.querySelector("#gemFill").style.width=gp+"%";const rb=d.querySelector("#gemRedeem");rb.disabled=g.count<cost;rb.textContent=g.count>=cost?`🎉 ${g.rewardTitle} einlösen`:`Noch ${Math.max(0,cost-g.count)} 💎`;
+  const g=s.gems,cost=Math.max(1,g.rewardCost),gp=Math.min(100,Math.round(g.count/cost*100));
+  d.querySelector("#gemCount").textContent=`${g.count} 💎`;
+  d.querySelector("#gemQuote").textContent="✨ "+GEM_QUOTES[(new Date().getDate()+Number(activeChildMoneyId))%GEM_QUOTES.length];
+  const presetSelect=d.querySelector("#gemPresetSelect");
+  presetSelect.innerHTML=`<option value="">Wertschätzungszeichen auswählen …</option>`+GEM_APPRECIATION_PRESETS.map((x,i)=>`<option value="${i}">${x.cost} 💎 · ${escapeHtml(x.title)}</option>`).join("");
+  const presetIndex=GEM_APPRECIATION_PRESETS.findIndex(x=>x.cost===cost&&x.title===g.rewardTitle&&x.text===g.rewardText);
+  presetSelect.value=presetIndex>=0?String(presetIndex):"";
+  d.querySelector("#gemRewardTitle").value=g.rewardTitle;
+  d.querySelector("#gemRewardText").value=g.rewardText;
+  d.querySelector("#gemRewardCost").value=cost;d.querySelector("#gemDots").innerHTML=Array.from({length:cost},(_,i)=>`<span class="${i<g.count?"on":""}">◆</span>`).join("");d.querySelector("#gemFill").style.width=gp+"%";const rb=d.querySelector("#gemRedeem");rb.disabled=g.count<cost;rb.textContent=g.count>=cost?`🎉 ${g.rewardTitle} einlösen`:`Noch ${Math.max(0,cost-g.count)} 💎`;
 
   let rows=[];const cur=new Date(w+"T12:00:00");
   for(let i=0;i<8;i++){
