@@ -32119,3 +32119,92 @@ button.day-meal-list-item:hover,a.day-meal-list-item:hover{background:rgba(164,1
   }
 }
 
+/* =========================================================
+   V133 – gezielte Korrektur
+   1) NUR HANDY: Reihenfolge im Tageskopf
+      Wochentag/Datum -> spätestens zuhause -> Mehrtagestermin
+   2) PC/TABLET: Wochenplan-Text wieder zuverlässig lesbar
+   Sonst keine Layout-/Farbänderungen.
+   ========================================================= */
+
+/* ---------------------------------------------------------
+   HANDY: Zuhause-Zeit VOR die kleine Mehrtagestermin-Zeile
+   --------------------------------------------------------- */
+@media (max-width:700px){
+
+  .week-grid .week-day-topband{
+    display:flex !important;
+    flex-direction:column !important;
+    align-items:stretch !important;
+  }
+
+  /* h3 enthält Wochentag + Datum */
+  .week-grid .week-day-topband > h3{
+    order:1 !important;
+  }
+
+  .week-grid .week-day-topband .day-home-times{
+    order:2 !important;
+    margin:4px 0 1px !important;
+  }
+
+  .week-grid .week-day-topband .mobile-day-multiday-notes{
+    order:3 !important;
+    margin:3px 0 1px !important;
+  }
+}
+
+
+/* ---------------------------------------------------------
+   PC / TABLET:
+   Text im Wochenplan bleibt über Hintergründen und Bändern
+   klar sichtbar. Handy wird davon NICHT berührt.
+   --------------------------------------------------------- */
+@media (min-width:701px){
+
+  /* normale Tagesinhalte nicht unbeabsichtigt durchsichtig */
+  .week-grid .day:not(.past-day) .day-name,
+  .week-grid .day:not(.past-day) .day-date,
+  .week-grid .day:not(.past-day) .todo-mini,
+  .week-grid .day:not(.past-day) .todo-mini > span,
+  .week-grid .day:not(.past-day) .event-mini,
+  .week-grid .day:not(.past-day) .event-copy,
+  .week-grid .day:not(.past-day) .school-week-item,
+  .week-grid .day:not(.past-day) .day-todos,
+  .week-grid .day:not(.past-day) .day-school{
+    opacity:1 !important;
+  }
+
+  /* Mehrtagestermin: Schrift sicher ÜBER dem farbigen Band */
+  .week-grid .multiday-continuous-segment{
+    isolation:isolate !important;
+  }
+
+  .week-grid .multiday-center-label,
+  .week-grid .multiday-continuous-label,
+  .week-grid .multiday-continuous-end,
+  .week-grid .multiday-center-label .multiday-person,
+  .week-grid .multiday-center-label .multiday-title,
+  .week-grid .multiday-center-label .multiday-sep{
+    position:relative !important;
+    z-index:6 !important;
+    opacity:1 !important;
+    color:#4f4946 !important;
+    text-shadow:0 1px 0 rgba(255,255,255,.72) !important;
+  }
+
+  .week-grid .multiday-center-label .multiday-person{
+    font-weight:700 !important;
+  }
+
+  .week-grid .multiday-center-label .multiday-title{
+    font-weight:600 !important;
+  }
+
+  /* Vergangene Tage dürfen weiterhin bewusst ruhiger bleiben. */
+  .week-grid .day.past-day{
+    opacity:.74 !important;
+    filter:saturate(.88) !important;
+  }
+}
+
