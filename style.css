@@ -31414,3 +31414,23 @@ button.day-meal-list-item:hover,a.day-meal-list-item:hover{background:rgba(164,1
   }
 }
 
+/* =========================================================
+   V124 – Wertschätzungszeichen auswählbar
+   ========================================================= */
+.v124-appreciation-picker{
+  margin:12px 0 10px;
+}
+.v124-appreciation-picker label{
+  font-size:.78rem;
+  color:var(--muted);
+}
+.v124-appreciation-picker select{
+  margin-top:5px;
+  width:100%;
+  padding:10px 12px;
+  border-radius:12px;
+  border:1px solid var(--line);
+  background:var(--paper);
+  color:var(--ink);
+}
+
