@@ -20339,7 +20339,13 @@ function normalizeChildMoneyStore(raw){
   const savings=raw.savings&&typeof raw.savings==="object"?raw.savings:{};
   const gems=raw.gems&&typeof raw.gems==="object"?raw.gems:{};
   return {
-    weekly:{pocketAmount:moneyNumber(w.pocketAmount),snackAmount:moneyNumber(w.snackAmount),payments:w.payments&&typeof w.payments==="object"?w.payments:{}},
+    weekly:{
+      pocketAmount:moneyNumber(w.pocketAmount),
+      snackAmount:moneyNumber(w.snackAmount),
+      pocketFrequency:w.pocketFrequency==="monthly"?"monthly":"weekly",
+      snackFrequency:w.snackFrequency==="monthly"?"monthly":"weekly",
+      payments:w.payments&&typeof w.payments==="object"?w.payments:{}
+    },
     loans:Array.isArray(raw.loans)?raw.loans:[],
     savings:{goal:String(savings.goal||""),target:moneyNumber(savings.target),balance:moneyNumber(savings.balance),history:Array.isArray(savings.history)?savings.history:[]},
     gems:{count:Math.max(0,Number(gems.count||0)),rewardTitle:String(gems.rewardTitle||"Eis geht immer!"),rewardText:String(gems.rewardText||"Gemeinsam Eis essen"),rewardCost:Math.max(1,Number(gems.rewardCost||6)),history:Array.isArray(gems.history)?gems.history:[]},
@@ -20353,6 +20359,28 @@ function moneyTouch(id){childMoneyStore(id).updatedAt=Date.now();save();}
 function mergeChildMoneyStore(localValue,cloudValue){const a=normalizeChildMoneyStore(localValue),b=normalizeChildMoneyStore(cloudValue);if(!a.updatedAt)return b;if(!b.updatedAt)return a;return b.updatedAt>a.updatedAt?b:a;}
 function moneyMonthKey(d=new Date()){return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`;}
 function moneyMonthLabel(k){const [y,m]=k.split("-").map(Number);return new Date(y,m-1,1).toLocaleDateString("de-AT",{month:"long",year:"numeric"});}
+function moneyPeriodKey(kind,store,date=new Date()){
+  const freq=kind==="pocket"?store.weekly.pocketFrequency:store.weekly.snackFrequency;
+  return freq==="monthly" ? `M:${moneyMonthKey(date)}` : `W:${moneyWeekKey(date)}`;
+}
+function moneyPeriodLabel(kind,store,date=new Date()){
+  const freq=kind==="pocket"?store.weekly.pocketFrequency:store.weekly.snackFrequency;
+  return freq==="monthly" ? moneyMonthLabel(moneyMonthKey(date)) : moneyWeekLabel(moneyWeekKey(date));
+}
+function moneyPaymentAt(store,kind,date=new Date()){
+  const key=moneyPeriodKey(kind,store,date);
+  if(store.weekly.payments[key]) return store.weekly.payments[key];
+  /* Rückwärtskompatibilität: alte Wochenstände lagen direkt unter YYYY-MM-DD */
+  if(key.startsWith("W:")){
+    const legacy=key.slice(2);
+    return store.weekly.payments[legacy] || null;
+  }
+  return null;
+}
+function setMoneyPayment(store,kind,paid,date=new Date()){
+  const key=moneyPeriodKey(kind,store,date);
+  store.weekly.payments[key]={paid:!!paid,paidAt:paid?Date.now():0,updatedAt:Date.now()};
+}
 let activeMoneyMonth=moneyMonthKey();
 
 const MONEY_QUOTES=["Ich wähle, was mir wirklich wichtig ist.","Nicht alles, was mir gefällt, muss mir gehören.","Weniger Dinge – mehr Platz für Wichtiges.","Ich kaufe nicht einfach – ich entscheide.","Ich überlege: Brauche ich das wirklich?","Was ich habe, darf genug sein.","Ich spare für Dinge, die mir wirklich wichtig sind.","Viele Kleinigkeiten machen nicht lange glücklich.","Lieber etwas Besonderes als ganz viel Kleinkram.","Ich passe gut auf mein Geld und meine Sachen auf.","Ich darf etwas schön finden, ohne es zu kaufen.","Mein Geld gibt mir Möglichkeiten – ich entscheide, wofür."];
@@ -20367,8 +20395,24 @@ function ensureChildMoneyDialog(){
 
     <section class="child-money-card">
       <div class="child-money-section-head"><div><strong>Diese Woche</strong><small id="childMoneyWeekLabel"></small></div><span class="money-star">✦</span></div>
-      <div class="child-money-pay-row"><div><strong>Taschengeld</strong><small>wöchentlich</small></div><label><input id="childPocketAmount" inputmode="decimal"> €</label><button data-money-pay="pocket"></button></div>
-      <div class="child-money-pay-row"><div><strong>Jausengeld</strong><small>wöchentlich</small></div><label><input id="childSnackAmount" inputmode="decimal"> €</label><button data-money-pay="snack"></button></div>
+      <div class="child-money-pay-row">
+        <div><strong>Taschengeld</strong>
+          <select id="childPocketFrequency" class="money-frequency" aria-label="Rhythmus Taschengeld">
+            <option value="weekly">wöchentlich</option>
+            <option value="monthly">monatlich</option>
+          </select>
+        </div>
+        <label><input id="childPocketAmount" inputmode="decimal"> €</label><button data-money-pay="pocket"></button>
+      </div>
+      <div class="child-money-pay-row">
+        <div><strong>Jausengeld</strong>
+          <select id="childSnackFrequency" class="money-frequency" aria-label="Rhythmus Jausengeld">
+            <option value="weekly">wöchentlich</option>
+            <option value="monthly">monatlich</option>
+          </select>
+        </div>
+        <label><input id="childSnackAmount" inputmode="decimal"> €</label><button data-money-pay="snack"></button>
+      </div>
       <div class="v121-monthbar"><button type="button" data-month="-1">‹</button><strong id="moneyMonthTitle"></strong><button type="button" data-month="1">›</button></div>
       <div id="moneyMonthHistory"></div>
     </section>
@@ -20382,7 +20426,14 @@ function ensureChildMoneyDialog(){
     <section class="child-money-card">
       <div class="child-money-section-head"><div><strong>Mein Sparziel</strong><small>Ich spare für etwas, das mir wirklich wichtig ist.</small></div><span>🌱</span></div>
       <div class="v121-save-grid"><label>Ziel<input id="savingGoal" placeholder="z. B. etwas Besonderes"></label><label>Zielbetrag<input id="savingTarget" inputmode="decimal" placeholder="0"> €</label></div>
-      <div class="v121-save-progress"><div class="v121-save-jar"><i id="savingFill"></i><b>✦</b></div><div><strong id="savingStatus"></strong><small id="savingText"></small></div></div>
+      <div class="v121-save-progress">
+        <div class="v122-save-orb" aria-hidden="true"><i id="savingFill"></i><span>✦</span></div>
+        <div class="v122-save-copy">
+          <strong id="savingStatus"></strong>
+          <div class="v122-save-track"><i id="savingTrackFill"></i></div>
+          <small id="savingText"></small>
+        </div>
+      </div>
       <div class="v121-save-actions"><input id="savingAmount" inputmode="decimal" placeholder="Betrag"><button type="button" data-save="plus">+ Sparen</button><button type="button" data-save="minus">− Entnehmen</button></div>
     </section>
 
@@ -20400,9 +20451,24 @@ function ensureChildMoneyDialog(){
   d.querySelector(".child-money-close").onclick=()=>d.close();
   d.addEventListener("click",e=>{if(e.target===d)d.close();});
   d.querySelector("#childMoneyAddLoan").onclick=()=>d.querySelector("#childMoneyLoanForm").classList.toggle("hidden");
-  d.querySelectorAll("[data-money-pay]").forEach(b=>b.onclick=()=>{const s=childMoneyStore(activeChildMoneyId),w=moneyWeekKey(),k=b.dataset.moneyPay;s.weekly.payments[w]=s.weekly.payments[w]||{};const old=s.weekly.payments[w][k];s.weekly.payments[w][k]={paid:!old?.paid,paidAt:!old?.paid?Date.now():0,updatedAt:Date.now()};moneyTouch(activeChildMoneyId);renderChildMoneyDialog();});
+  d.querySelectorAll("[data-money-pay]").forEach(b=>b.onclick=()=>{
+    const s=childMoneyStore(activeChildMoneyId),k=b.dataset.moneyPay;
+    const old=moneyPaymentAt(s,k,new Date());
+    setMoneyPayment(s,k,!old?.paid,new Date());
+    moneyTouch(activeChildMoneyId);renderChildMoneyDialog();
+  });
   d.querySelector("#childPocketAmount").onchange=e=>{childMoneyStore(activeChildMoneyId).weekly.pocketAmount=moneyNumber(e.target.value);moneyTouch(activeChildMoneyId);renderChildMoneyDialog();};
   d.querySelector("#childSnackAmount").onchange=e=>{childMoneyStore(activeChildMoneyId).weekly.snackAmount=moneyNumber(e.target.value);moneyTouch(activeChildMoneyId);renderChildMoneyDialog();};
+  d.querySelector("#childPocketFrequency").onchange=e=>{
+    const s=childMoneyStore(activeChildMoneyId);
+    s.weekly.pocketFrequency=e.target.value==="monthly"?"monthly":"weekly";
+    moneyTouch(activeChildMoneyId);renderChildMoneyDialog();
+  };
+  d.querySelector("#childSnackFrequency").onchange=e=>{
+    const s=childMoneyStore(activeChildMoneyId);
+    s.weekly.snackFrequency=e.target.value==="monthly"?"monthly":"weekly";
+    moneyTouch(activeChildMoneyId);renderChildMoneyDialog();
+  };
   d.querySelectorAll("[data-month]").forEach(b=>b.onclick=()=>{const [y,m]=activeMoneyMonth.split("-").map(Number),x=new Date(y,m-1+Number(b.dataset.month),1);activeMoneyMonth=moneyMonthKey(x);renderChildMoneyDialog();});
   d.querySelector("#childMoneyLoanForm").onsubmit=e=>{e.preventDefault();const f=d.querySelector("#childMoneyFrom").value,t=d.querySelector("#childMoneyTo").value,a=moneyNumber(d.querySelector("#childMoneyLoanAmount").value),n=d.querySelector("#childMoneyLoanNote").value.trim();if(!a||f===t)return;const now=Date.now();childMoneyStore(activeChildMoneyId).loans.unshift({id:`money-${now}-${Math.random().toString(36).slice(2,7)}`,from:f,to:t,amount:a,note:n,createdAt:now,updatedAt:now,done:false,doneAt:0});d.querySelector("#childMoneyLoanAmount").value="";d.querySelector("#childMoneyLoanNote").value="";d.querySelector("#childMoneyLoanForm").classList.add("hidden");moneyTouch(activeChildMoneyId);renderChildMoneyDialog();};
   ["savingGoal","savingTarget"].forEach(id=>d.querySelector("#"+id).onchange=e=>{const s=childMoneyStore(activeChildMoneyId);if(id==="savingGoal")s.savings.goal=e.target.value.trim();else s.savings.target=moneyNumber(e.target.value);moneyTouch(activeChildMoneyId);renderChildMoneyDialog();});
@@ -20410,32 +20476,91 @@ function ensureChildMoneyDialog(){
   ["gemRewardTitle","gemRewardText","gemRewardCost"].forEach(id=>d.querySelector("#"+id).onchange=e=>{const g=childMoneyStore(activeChildMoneyId).gems;if(id==="gemRewardTitle")g.rewardTitle=e.target.value.trim();if(id==="gemRewardText")g.rewardText=e.target.value.trim();if(id==="gemRewardCost")g.rewardCost=Math.max(1,Number(e.target.value||1));moneyTouch(activeChildMoneyId);renderChildMoneyDialog();});
   d.querySelectorAll("[data-gem]").forEach(b=>b.onclick=()=>{const g=childMoneyStore(activeChildMoneyId).gems,plus=b.dataset.gem==="plus",why=d.querySelector("#gemWhy").value.trim();if(!plus&&g.count<=0)return;g.count+=plus?1:-1;g.history.unshift({id:`gem-${Date.now()}`,delta:plus?1:-1,why:why||(plus?"Besonderes Extra":"zurückgenommen"),at:Date.now()});d.querySelector("#gemWhy").value="";moneyTouch(activeChildMoneyId);renderChildMoneyDialog();});
   d.querySelector("#gemRedeem").onclick=()=>{const g=childMoneyStore(activeChildMoneyId).gems;if(g.count<g.rewardCost)return;g.count-=g.rewardCost;g.history.unshift({id:`gem-${Date.now()}`,delta:-g.rewardCost,why:`Eingelöst: ${g.rewardTitle}`,at:Date.now()});moneyTouch(activeChildMoneyId);renderChildMoneyDialog();};
-  d.addEventListener("click",e=>{const b=e.target.closest("[data-money-loan-done]");if(!b)return;const x=childMoneyStore(activeChildMoneyId).loans.find(v=>v.id===b.dataset.moneyLoanDone);if(!x)return;x.done=true;x.doneAt=Date.now();x.updatedAt=Date.now();moneyTouch(activeChildMoneyId);renderChildMoneyDialog();});
+  d.addEventListener("click",e=>{
+    const b=e.target.closest("[data-money-loan-done]");
+    if(b){
+      const x=childMoneyStore(activeChildMoneyId).loans.find(v=>v.id===b.dataset.moneyLoanDone);
+      if(!x)return;
+      x.done=true;x.doneAt=Date.now();x.updatedAt=Date.now();
+      moneyTouch(activeChildMoneyId);renderChildMoneyDialog();return;
+    }
+    const del=e.target.closest("[data-saving-delete]");
+    if(del){
+      const s=childMoneyStore(activeChildMoneyId);
+      const x=s.savings.history.find(v=>v.id===del.dataset.savingDelete);
+      if(!x)return;
+      if(!confirm("Diese Sparbewegung wirklich löschen?")) return;
+      s.savings.balance=Math.max(0,Math.round((s.savings.balance-Number(x.amount||0))*100)/100);
+      s.savings.history=s.savings.history.filter(v=>v.id!==x.id);
+      moneyTouch(activeChildMoneyId);renderChildMoneyDialog();
+    }
+  });
   return d;
 }
 function renderChildMoneyDialog(){
-  const d=ensureChildMoneyDialog(),s=childMoneyStore(activeChildMoneyId),w=moneyWeekKey(),p=s.weekly.payments[w]||{};
+  const d=ensureChildMoneyDialog(),s=childMoneyStore(activeChildMoneyId),w=moneyWeekKey();
   d.querySelector("#childMoneyTitle").textContent=moneyPersonName(activeChildMoneyId);
   d.querySelector("#childMoneyWeekLabel").textContent=moneyWeekLabel(w);
-  d.querySelector("#childPocketAmount").value=s.weekly.pocketAmount||""; d.querySelector("#childSnackAmount").value=s.weekly.snackAmount||"";
-  ["pocket","snack"].forEach(k=>{const b=d.querySelector(`[data-money-pay="${k}"]`),ok=!!p[k]?.paid;b.classList.toggle("is-paid",ok);b.textContent=ok?"✓ erhalten":"○ noch offen";});
+  d.querySelector("#childPocketAmount").value=s.weekly.pocketAmount||"";
+  d.querySelector("#childSnackAmount").value=s.weekly.snackAmount||"";
+  d.querySelector("#childPocketFrequency").value=s.weekly.pocketFrequency||"weekly";
+  d.querySelector("#childSnackFrequency").value=s.weekly.snackFrequency||"weekly";
+  ["pocket","snack"].forEach(k=>{
+    const b=d.querySelector(`[data-money-pay="${k}"]`);
+    const pay=moneyPaymentAt(s,k,new Date());
+    const ok=!!pay?.paid;
+    b.classList.toggle("is-paid",ok);
+    b.textContent=ok?"✓ erhalten":"○ noch offen";
+    b.title=moneyPeriodLabel(k,s,new Date());
+  });
   d.querySelector("#moneyQuote").textContent="✦ "+MONEY_QUOTES[(new Date().getDate()+Number(activeChildMoneyId))%MONEY_QUOTES.length];
 
   d.querySelector("#moneyMonthTitle").textContent=moneyMonthLabel(activeMoneyMonth);
   const [yy,mm]=activeMoneyMonth.split("-").map(Number); let monthRows=[];
-  for(let day=1;day<=31;day++){const dt=new Date(yy,mm-1,day,12);if(dt.getMonth()!==mm-1)break;if(dt.getDay()===1){const k=moneyWeekKey(dt),q=s.weekly.payments[k]||{};monthRows.push(`<div class="child-money-history-row"><span>${moneyWeekLabel(k)}</span><span class="${q.pocket?.paid?"is-paid":""}">${q.pocket?.paid?"✓":"○"} Taschengeld</span><span class="${q.snack?.paid?"is-paid":""}">${q.snack?.paid?"✓":"○"} Jause</span></div>`);}}
+  for(let day=1;day<=31;day++){
+    const dt=new Date(yy,mm-1,day,12);
+    if(dt.getMonth()!==mm-1) break;
+    if(dt.getDay()===1){
+      const k=moneyWeekKey(dt);
+      const pocket=s.weekly.pocketFrequency==="monthly"
+        ? (moneyMonthKey(dt)===activeMoneyMonth?moneyPaymentAt(s,"pocket",dt):null)
+        : moneyPaymentAt(s,"pocket",dt);
+      const snack=s.weekly.snackFrequency==="monthly"
+        ? (moneyMonthKey(dt)===activeMoneyMonth?moneyPaymentAt(s,"snack",dt):null)
+        : moneyPaymentAt(s,"snack",dt);
+      const pocketText=s.weekly.pocketFrequency==="monthly"
+        ? `${pocket?.paid?"✓":"○"} Taschengeld · monatlich`
+        : `${pocket?.paid?"✓":"○"} Taschengeld`;
+      const snackText=s.weekly.snackFrequency==="monthly"
+        ? `${snack?.paid?"✓":"○"} Jause · monatlich`
+        : `${snack?.paid?"✓":"○"} Jause`;
+      monthRows.push(`<div class="child-money-history-row"><span>${moneyWeekLabel(k)}</span><span class="${pocket?.paid?"is-paid":""}">${pocketText}</span><span class="${snack?.paid?"is-paid":""}">${snackText}</span></div>`);
+      if(s.weekly.pocketFrequency==="monthly" || s.weekly.snackFrequency==="monthly") break;
+    }
+  }
   d.querySelector("#moneyMonthHistory").innerHTML=monthRows.join("");
 
   const open=s.loans.filter(x=>!x.done); d.querySelector("#childMoneyOpenLoans").innerHTML=open.length?open.map(x=>`<div class="child-money-loan-row"><span><strong>${escapeHtml(moneyPersonName(x.from))}</strong> → <strong>${escapeHtml(moneyPersonName(x.to))}</strong>${x.note?`<small>${escapeHtml(x.note)}</small>`:""}</span><b>${moneyEuro(x.amount)}</b><button data-money-loan-done="${escapeHtml(x.id)}">✓ zurück</button></div>`).join(""):`<div class="child-money-empty">Alles ausgeglichen. ✦</div>`;
 
   d.querySelector("#savingGoal").value=s.savings.goal||"";d.querySelector("#savingTarget").value=s.savings.target||"";
-  const sp=s.savings.target?Math.min(100,Math.round(s.savings.balance/s.savings.target*100)):0;d.querySelector("#savingFill").style.height=sp+"%";d.querySelector("#savingStatus").textContent=s.savings.target?`${moneyEuro(s.savings.balance)} von ${moneyEuro(s.savings.target)} · ${sp}%`:`${moneyEuro(s.savings.balance)} gespart`;d.querySelector("#savingText").textContent=sp>=100?"Geschafft! ✨":sp>=50?"Mehr als die Hälfte – dein Ziel kommt näher.":"Jeder gesparte Euro bringt dich näher.";
+  const sp=s.savings.target?Math.min(100,Math.round(s.savings.balance/s.savings.target*100)):0;
+  d.querySelector("#savingFill").style.height=sp+"%";
+  d.querySelector("#savingTrackFill").style.width=sp+"%";
+  d.querySelector("#savingStatus").textContent=s.savings.target?`${moneyEuro(s.savings.balance)} von ${moneyEuro(s.savings.target)} · ${sp}%`:`${moneyEuro(s.savings.balance)} gespart`;
+  d.querySelector("#savingText").textContent=sp>=100?"Geschafft! ✨":sp>=50?"Mehr als die Hälfte – dein Ziel kommt näher.":"Jeder gesparte Euro bringt dich näher.";
 
   const g=s.gems,cost=Math.max(1,g.rewardCost),gp=Math.min(100,Math.round(g.count/cost*100));d.querySelector("#gemCount").textContent=`${g.count} 💎`;d.querySelector("#gemQuote").textContent="✨ "+GEM_QUOTES[(new Date().getDate()+Number(activeChildMoneyId))%GEM_QUOTES.length];d.querySelector("#gemRewardTitle").value=g.rewardTitle;d.querySelector("#gemRewardText").value=g.rewardText;d.querySelector("#gemRewardCost").value=cost;d.querySelector("#gemDots").innerHTML=Array.from({length:cost},(_,i)=>`<span class="${i<g.count?"on":""}">◆</span>`).join("");d.querySelector("#gemFill").style.width=gp+"%";const rb=d.querySelector("#gemRedeem");rb.disabled=g.count<cost;rb.textContent=g.count>=cost?`🎉 ${g.rewardTitle} einlösen`:`Noch ${Math.max(0,cost-g.count)} 💎`;
 
-  let rows=[];const cur=new Date(w+"T12:00:00");for(let i=0;i<8;i++){const z=new Date(cur);z.setDate(cur.getDate()-7*i);const k=moneyWeekKey(z),q=s.weekly.payments[k]||{};rows.push(`<div class="child-money-history-row"><span>${moneyWeekLabel(k)}</span><span class="${q.pocket?.paid?"is-paid":""}">${q.pocket?.paid?"✓":"○"} Taschengeld</span><span class="${q.snack?.paid?"is-paid":""}">${q.snack?.paid?"✓":"○"} Jause</span></div>`);}d.querySelector("#childMoneyWeeklyHistory").innerHTML=`<h4>Letzte Wochen</h4>${rows.join("")}`;
+  let rows=[];const cur=new Date(w+"T12:00:00");
+  for(let i=0;i<8;i++){
+    const z=new Date(cur);z.setDate(cur.getDate()-7*i);
+    const k=moneyWeekKey(z);
+    const qp=moneyPaymentAt(s,"pocket",z), qs=moneyPaymentAt(s,"snack",z);
+    rows.push(`<div class="child-money-history-row"><span>${moneyWeekLabel(k)}</span><span class="${qp?.paid?"is-paid":""}">${qp?.paid?"✓":"○"} Taschengeld${s.weekly.pocketFrequency==="monthly"?" · Monat":""}</span><span class="${qs?.paid?"is-paid":""}">${qs?.paid?"✓":"○"} Jause${s.weekly.snackFrequency==="monthly"?" · Monat":""}</span></div>`);
+  }
+  d.querySelector("#childMoneyWeeklyHistory").innerHTML=`<h4>Letzte Wochen</h4>${rows.join("")}`;
   const done=s.loans.filter(x=>x.done).sort((a,b)=>(b.doneAt||0)-(a.doneAt||0));d.querySelector("#childMoneyLoanHistory").innerHTML=`<h4>Zurückbezahlt</h4>${done.length?done.map(x=>`<div class="child-money-history-row"><span>✓ ${escapeHtml(moneyPersonName(x.from))} → ${escapeHtml(moneyPersonName(x.to))}</span><b>${moneyEuro(x.amount)}</b><small>${new Date(x.doneAt).toLocaleDateString("de-AT")}</small></div>`).join(""):`<div class="child-money-empty">Noch keine erledigten Einträge.</div>`}`;
-  d.querySelector("#savingHistory").innerHTML=`<h4>Sparen</h4>${s.savings.history.length?s.savings.history.slice(0,20).map(x=>`<div class="child-money-history-row"><span>${x.amount>=0?"+":"−"} ${moneyEuro(Math.abs(x.amount))}</span><small>${new Date(x.at).toLocaleDateString("de-AT")}</small></div>`).join(""):`<div class="child-money-empty">Noch keine Sparbewegung.</div>`}`;
+  d.querySelector("#savingHistory").innerHTML=`<h4>Sparen</h4>${s.savings.history.length?s.savings.history.slice(0,20).map(x=>`<div class="child-money-history-row v122-saving-history-row"><span>${x.amount>=0?"+":"−"} ${moneyEuro(Math.abs(x.amount))}</span><small>${new Date(x.at).toLocaleDateString("de-AT")}</small><button type="button" data-saving-delete="${escapeHtml(x.id)}" title="Sparbewegung löschen">×</button></div>`).join(""):`<div class="child-money-empty">Noch keine Sparbewegung.</div>`}`;
   d.querySelector("#gemHistory").innerHTML=`<h4>Edelsteine</h4>${g.history.length?g.history.slice(0,20).map(x=>`<div class="child-money-history-row"><span>${x.delta>0?"+":""}${x.delta} 💎</span><span>${escapeHtml(x.why||"")}</span><small>${new Date(x.at).toLocaleDateString("de-AT")}</small></div>`).join(""):`<div class="child-money-empty">Noch keine Edelsteine gesammelt.</div>`}`;
 }
 document.addEventListener("click",e=>{const b=e.target.closest("[data-school-open-money]");if(!b)return;activeChildMoneyId=String(b.dataset.schoolOpenMoney||"1");activeMoneyMonth=moneyMonthKey();renderChildMoneyDialog();const d=ensureChildMoneyDialog();typeof d.showModal==="function"?d.showModal():d.setAttribute("open","");});
