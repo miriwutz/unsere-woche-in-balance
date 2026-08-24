@@ -20716,3 +20716,17 @@ function renderChildMoneyDialog(){
   if(gemHistoryHost) gemHistoryHost.innerHTML="";
 }
 document.addEventListener("click",e=>{const b=e.target.closest("[data-school-open-money]");if(!b)return;activeChildMoneyId=String(b.dataset.schoolOpenMoney||"1");activeMoneyMonth=moneyMonthKey();renderChildMoneyDialog();const d=ensureChildMoneyDialog();typeof d.showModal==="function"?d.showModal():d.setAttribute("open","");});
+
+
+// V138 – nur Handy: Das eigentliche Texteingabefeld klar als TERMIN markieren.
+(function(){
+  const field=document.querySelector("#todoText");
+  if(!field) return;
+  const desktopPlaceholder=field.getAttribute("placeholder") || "";
+  const setMobileTerminPlaceholder=()=>{
+    field.setAttribute("placeholder", window.matchMedia("(max-width:700px)").matches ? "TERMIN HIER EINGEBEN …" : desktopPlaceholder);
+  };
+  setMobileTerminPlaceholder();
+  window.addEventListener("resize", setMobileTerminPlaceholder);
+})();
+
