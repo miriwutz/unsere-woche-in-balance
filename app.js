@@ -1,4 +1,12 @@
 /* =========================================================
+   V140 – SYNC-FIX "FÜR EUCH"
+   - Lou/Fina-Schulaufgaben bekommen echte Löschmarker
+   - bestehende tombstone-fähige Schul-Merge-Logik wird verwendet
+   - neue Schulaufgaben/Links erhalten Zeitstempel
+   - keine optischen Änderungen
+   ========================================================= */
+
+/* =========================================================
    V139 – SYNC-HÄRTUNG
    - Einkauf: shoppingItems-Collection ist einzige Cloud-Wahrheit
    - Einmalige Einkaufsmigration kann gelöschte Listen nicht neu beleben
@@ -1819,6 +1827,8 @@ state.school = (() => {
   state.school.children[id].tasks=Array.isArray(state.school.children[id].tasks)?state.school.children[id].tasks:[];
   state.school.children[id].links=Array.isArray(state.school.children[id].links)?state.school.children[id].links:[];
   state.school.children[id].interestLinks=Array.isArray(state.school.children[id].interestLinks)?state.school.children[id].interestLinks:[];
+  state.school.children[id].deletedTaskIds=Array.isArray(state.school.children[id].deletedTaskIds)?state.school.children[id].deletedTaskIds:[];
+  state.school.children[id].deletedLinkIds=Array.isArray(state.school.children[id].deletedLinkIds)?state.school.children[id].deletedLinkIds:[];
   state.school.children[id].spotifyUrl=typeof state.school.children[id].spotifyUrl==="string"?state.school.children[id].spotifyUrl:"";
   state.school.children[id].interestLinks.forEach(link=>{
     if(!["gut","mittel","schlecht"].includes(link.rating)) link.rating="mittel";
@@ -4344,10 +4354,21 @@ function renderSchool(){
   }));
   document.querySelectorAll(".school-del").forEach(x=>x.addEventListener("click",e=>{
     const d=e.currentTarget.dataset,c=state.school.children[d.child];
-    if(d.kind==="task") c.tasks=c.tasks.filter(z=>z.id!==d.id);
-    else if(d.kind==="find") c.interestLinks=(c.interestLinks||[]).filter(z=>z.id!==d.id);
-    else c.links=c.links.filter(z=>z.id!==d.id);
-    save();renderSchool();
+
+    if(d.kind==="task"){
+      c.deletedTaskIds=Array.isArray(c.deletedTaskIds)?c.deletedTaskIds:[];
+      if(!c.deletedTaskIds.includes(d.id)) c.deletedTaskIds.push(d.id);
+      c.tasks=c.tasks.filter(z=>z.id!==d.id);
+    }else if(d.kind==="find"){
+      c.interestLinks=(c.interestLinks||[]).filter(z=>z.id!==d.id);
+    }else{
+      c.deletedLinkIds=Array.isArray(c.deletedLinkIds)?c.deletedLinkIds:[];
+      if(!c.deletedLinkIds.includes(d.id)) c.deletedLinkIds.push(d.id);
+      c.links=c.links.filter(z=>z.id!==d.id);
+    }
+
+    save();
+    renderSchool();
   }));
 }
 function addSchoolTask(id){
@@ -4369,7 +4390,9 @@ function addSchoolTask(id){
     due:d.value,
     type:y.value,
     icon:taskIcon,
-    done:false
+    done:false,
+    createdAt:Date.now(),
+    updatedAt:Date.now()
   });
 
   t.value="";
@@ -4390,7 +4413,7 @@ function addSchoolTask(id){
 function addSchoolLink(id){
   const n=document.querySelector(`#schoolLinkName${id}`),u=document.querySelector(`#schoolLinkUrl${id}`);let url=u.value.trim();
   if(!n.value.trim()||!url)return;if(!/^https?:\/\//i.test(url))url="https://"+url;
-  state.school.children[id].links.push({id:uid(),name:n.value.trim(),url});n.value="";u.value="";save();renderSchool();
+  state.school.children[id].links.push({id:uid(),name:n.value.trim(),url,createdAt:Date.now(),updatedAt:Date.now()});n.value="";u.value="";save();renderSchool();
 }
 
 function addSchoolFind(id){
@@ -13619,7 +13642,10 @@ function applyCloudData(data) {
     }
 
     state.workroom = guardedWorkroomMerge(state.workroom, data.workroom);
-    state.school = mergeSchoolSafely(state.school, data.school);
+    /* Schule: vorhandene tombstone-fähige Merge-Logik verwenden.
+       Dadurch können unter "Für euch" gelöschte Lou/Fina-Aufgaben
+       nicht beim nächsten Cloud-Reload wieder auftauchen. */
+    state.school = mergeSchool(state.school, data.school);
 
     const localFamilySettings = state.familySettings || {};
     const cloudFamilySettings = data.familySettings || {};
