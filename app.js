@@ -1,3 +1,12 @@
+/* =========================================================
+   V139 – SYNC-HÄRTUNG
+   - Einkauf: shoppingItems-Collection ist einzige Cloud-Wahrheit
+   - Einmalige Einkaufsmigration kann gelöschte Listen nicht neu beleben
+   - Schule: ID-Listen werden elementweise statt komplett überschrieben
+   - persönliche familySettings werden gezielter zusammengeführt
+   - keine optischen Änderungen
+   ========================================================= */
+
 // Stabilitätsmodus: alte Service Worker automatisch entfernen.
 // LocalStorage und App-Daten werden dabei NICHT berührt.
 if ("serviceWorker" in navigator) {
@@ -9400,8 +9409,7 @@ function makeLocalSafetySnapshot(reason = "auto", force = false) {
       pinboardTombstones: state.pinboardTombstones || {},
       trashTombstones: state.trashTombstones || {},
       archive: state.archive,
-      shopping: state.shopping,
-      recipes: state.recipes,
+        recipes: state.recipes,
       meals: state.meals,
       pinboard: state.pinboard,
       recipeLinkFeedback: state.recipeLinkFeedback,
@@ -9643,39 +9651,61 @@ function guardedWorkroomMerge(localValue, cloudValue) {
   };
 }
 
-function mergeSchoolSafely(localSchool, cloudSchool) {
-  if (!cloudSchool || typeof cloudSchool !== "object") return localSchool;
-  const local = localSchool && typeof localSchool === "object" ? localSchool : {};
+function mergeSchoolArraySafely(localValue, cloudValue) {
+  const local = Array.isArray(localValue) ? localValue : [];
+  const remote = Array.isArray(cloudValue) ? cloudValue : [];
 
-  const children = {
-    ...(local.children || {}),
-    ...(cloudSchool.children || {})
-  };
+  /* Bei Listen mit IDs nie mehr den kompletten Geräte-Stand überschreiben. */
+  if ([...local, ...remote].some(item => item && typeof item === "object" && item.id)) {
+    const map = new Map();
+    local.forEach(item => { if (item?.id) map.set(item.id, item); });
+    remote.forEach(item => {
+      if (!item?.id) return;
+      const old = map.get(item.id);
+      if (!old || itemTimestamp(item) >= itemTimestamp(old)) map.set(item.id, item);
+    });
+    return [...map.values()];
+  }
 
-  Object.keys(children).forEach(key => {
-    children[key] = {
-      ...(local.children?.[key] || {}),
-      ...(cloudSchool.children?.[key] || {}),
-      timetableByYear: {
-        ...(local.children?.[key]?.timetableByYear || {}),
-        ...(cloudSchool.children?.[key]?.timetableByYear || {})
-      }
-    };
+  /* Primitive/alte Listen ohne IDs: Cloud nur übernehmen, wenn lokal nichts da ist.
+     Das ist absichtlich konservativ, damit kein vorhandener Geräte-Stand verloren geht. */
+  return local.length ? local : remote;
+}
+
+function mergeSchoolObjectSafely(localValue, cloudValue) {
+  if (Array.isArray(localValue) || Array.isArray(cloudValue)) {
+    return mergeSchoolArraySafely(localValue, cloudValue);
+  }
+
+  const local = localValue && typeof localValue === "object" ? localValue : {};
+  const remote = cloudValue && typeof cloudValue === "object" ? cloudValue : {};
+  const result = {...local};
+
+  Object.keys(remote).forEach(key => {
+    const a = local[key];
+    const b = remote[key];
+
+    if (Array.isArray(a) || Array.isArray(b)) {
+      result[key] = mergeSchoolArraySafely(a, b);
+    } else if (a && b && typeof a === "object" && typeof b === "object") {
+      result[key] = mergeSchoolObjectSafely(a, b);
+    } else if (a === undefined || a === null || a === "") {
+      result[key] = b;
+    } else if (b === undefined || b === null || b === "") {
+      result[key] = a;
+    } else {
+      /* Für einzelne Werte bleibt der Cloud-Stand maßgeblich wie bisher.
+         Listen werden jetzt aber nicht mehr als Ganzes überschrieben. */
+      result[key] = b;
+    }
   });
 
-  return {
-    ...local,
-    ...cloudSchool,
-    mama: {
-      ...(local.mama || {}),
-      ...(cloudSchool.mama || {}),
-      timetableByYear: {
-        ...(local.mama?.timetableByYear || {}),
-        ...(cloudSchool.mama?.timetableByYear || {})
-      }
-    },
-    children
-  };
+  return result;
+}
+
+function mergeSchoolSafely(localSchool, cloudSchool) {
+  if (!cloudSchool || typeof cloudSchool !== "object") return localSchool;
+  return mergeSchoolObjectSafely(localSchool, cloudSchool);
 }
 
 /* CODE-AUDIT: frühere, überschriebene Definition von applyCloudData entfernt. */
@@ -9708,24 +9738,37 @@ function startShoppingSync() {
 
 // ===== EINKAUF – vorhandene Liste einmalig übernehmen =====
 
+const SHOPPING_COLLECTION_MIGRATION_KEY = "balanceProd.shoppingCollectionMigrated.v1";
+
 async function migrateShoppingToCollection() {
+  /* Einmalige Altbestandsmigration.
+     Nach erfolgreicher Prüfung wird sie auf DIESEM Gerät dauerhaft als erledigt
+     markiert. So kann eine später bewusst geleerte Einkaufsliste nicht aus einem
+     alten state.shopping wiederauferstehen. */
+  if (localStorage.getItem(SHOPPING_COLLECTION_MIGRATION_KEY) === "1") return;
+
   const snapshot = await shoppingCollection().get();
 
-  // Wenn im neuen Einkaufsbereich schon Artikel liegen,
-  // wird nichts mehr übernommen.
-  if (!snapshot.empty) return;
+  if (!snapshot.empty) {
+    localStorage.setItem(SHOPPING_COLLECTION_MIGRATION_KEY, "1");
+    return;
+  }
 
-  // Wenn die alte Liste leer ist, gibt es nichts zu übertragen.
-  if (!shoppingItems.length) return;
+  if (!shoppingItems.length) {
+    localStorage.setItem(SHOPPING_COLLECTION_MIGRATION_KEY, "1");
+    return;
+  }
 
   const batch = firebase.firestore().batch();
 
   shoppingItems.forEach(item => {
+    if (!item?.id) return;
     const { id, ...data } = item;
     batch.set(shoppingCollection().doc(id), data);
   });
 
   await batch.commit();
+  localStorage.setItem(SHOPPING_COLLECTION_MIGRATION_KEY, "1");
 }
 
 function startCloudSync() {
@@ -13470,6 +13513,39 @@ function mergeShoppingPromosByRevision(localValue, cloudValue) {
   return [...byId.values(), ...withoutId];
 }
 
+function mergeFamilySettingsSection(localValue, cloudValue) {
+  if (localValue == null) return cloudValue;
+  if (cloudValue == null) return localValue;
+
+  if (Array.isArray(localValue) || Array.isArray(cloudValue)) {
+    const a = Array.isArray(localValue) ? localValue : [];
+    const b = Array.isArray(cloudValue) ? cloudValue : [];
+    if ([...a,...b].some(item => item && typeof item === "object" && item.id)) {
+      return guardedMergeById(a,b,"Familieneinstellungen");
+    }
+    return a.length ? a : b;
+  }
+
+  if (typeof localValue === "object" && typeof cloudValue === "object") {
+    const localTs = Number(localValue.updatedAt || 0);
+    const cloudTs = Number(cloudValue.updatedAt || 0);
+    if (localTs || cloudTs) return cloudTs > localTs ? cloudValue : localValue;
+
+    const out = {...localValue};
+    Object.keys(cloudValue).forEach(key => {
+      if (!(key in out)) out[key] = cloudValue[key];
+      else if (
+        out[key] && cloudValue[key] &&
+        typeof out[key] === "object" &&
+        typeof cloudValue[key] === "object"
+      ) out[key] = mergeFamilySettingsSection(out[key], cloudValue[key]);
+    });
+    return out;
+  }
+
+  return localValue;
+}
+
 function applyCloudData(data) {
   cloudApplying = true;
   try {
@@ -13499,7 +13575,8 @@ function applyCloudData(data) {
     state.archive = mergePersistentListWithTombstones(
       state.archive, data.archive, state.archiveTombstones
     );
-    state.shopping = guardedMergeById(state.shopping, data.shopping, "Einkauf");
+    /* Einkauf selbst wird ausschließlich über /shoppingItems synchronisiert.
+       NICHT mehr aus dem großen Familien-Dokument zurückholen. */
     shoppingItems = state.shopping;
 
     /* Rabatte wurden bisher zwar in die Cloud GESCHRIEBEN,
@@ -13564,9 +13641,29 @@ function applyCloudData(data) {
       quickLinkTombstones
     );
 
-    state.familySettings = {
+    const mergedFamilySettingsBase = {
       ...cloudFamilySettings,
       ...localFamilySettings,
+      timetableSubjects: mergeFamilySettingsSection(
+        localFamilySettings.timetableSubjects,
+        cloudFamilySettings.timetableSubjects
+      ),
+      personalDailyFocus: mergeFamilySettingsSection(
+        localFamilySettings.personalDailyFocus,
+        cloudFamilySettings.personalDailyFocus
+      ),
+      childDailyFocusSelections: mergeFamilySettingsSection(
+        localFamilySettings.childDailyFocusSelections,
+        cloudFamilySettings.childDailyFocusSelections
+      ),
+      myWeekAppearance: mergeFamilySettingsSection(
+        localFamilySettings.myWeekAppearance,
+        cloudFamilySettings.myWeekAppearance
+      )
+    };
+
+    state.familySettings = {
+      ...mergedFamilySettingsBase,
 
       /* Namen/Farben je Person nach Änderungszeit zusammenführen.
          So kann ein älterer Cloud-Stand eine neue lokale Farbauswahl
@@ -20729,4 +20826,3 @@ document.addEventListener("click",e=>{const b=e.target.closest("[data-school-ope
   setMobileTerminPlaceholder();
   window.addEventListener("resize", setMobileTerminPlaceholder);
 })();
-
