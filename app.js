@@ -20381,6 +20381,11 @@ function setMoneyPayment(store,kind,paid,date=new Date()){
   const key=moneyPeriodKey(kind,store,date);
   store.weekly.payments[key]={paid:!!paid,paidAt:paid?Date.now():0,updatedAt:Date.now()};
 }
+function clearMoneyPayment(store,kind,date=new Date()){
+  const key=moneyPeriodKey(kind,store,date);
+  delete store.weekly.payments[key];
+  if(key.startsWith("W:")) delete store.weekly.payments[key.slice(2)];
+}
 let activeMoneyMonth=moneyMonthKey();
 
 const MONEY_QUOTES=["Ich wähle, was mir wirklich wichtig ist.","Nicht alles, was mir gefällt, muss mir gehören.","Weniger Dinge – mehr Platz für Wichtiges.","Ich kaufe nicht einfach – ich entscheide.","Ich überlege: Brauche ich das wirklich?","Was ich habe, darf genug sein.","Ich spare für Dinge, die mir wirklich wichtig sind.","Viele Kleinigkeiten machen nicht lange glücklich.","Lieber etwas Besonderes als ganz viel Kleinkram.","Ich passe gut auf mein Geld und meine Sachen auf.","Ich darf etwas schön finden, ohne es zu kaufen.","Mein Geld gibt mir Möglichkeiten – ich entscheide, wofür."];
@@ -20492,7 +20497,47 @@ function ensureChildMoneyDialog(){
       if(!confirm("Diese Sparbewegung wirklich löschen?")) return;
       s.savings.balance=Math.max(0,Math.round((s.savings.balance-Number(x.amount||0))*100)/100);
       s.savings.history=s.savings.history.filter(v=>v.id!==x.id);
-      moneyTouch(activeChildMoneyId);renderChildMoneyDialog();
+      moneyTouch(activeChildMoneyId);renderChildMoneyDialog();return;
+    }
+
+    const reopen=e.target.closest("[data-loan-reopen]");
+    if(reopen){
+      const s=childMoneyStore(activeChildMoneyId);
+      const x=s.loans.find(v=>v.id===reopen.dataset.loanReopen);
+      if(!x)return;
+      x.done=false;x.doneAt=0;x.updatedAt=Date.now();
+      moneyTouch(activeChildMoneyId);renderChildMoneyDialog();return;
+    }
+
+    const loanDel=e.target.closest("[data-loan-delete]");
+    if(loanDel){
+      const s=childMoneyStore(activeChildMoneyId);
+      const x=s.loans.find(v=>v.id===loanDel.dataset.loanDelete);
+      if(!x)return;
+      if(!confirm("Diesen geliehenen Geld-Eintrag wirklich löschen?")) return;
+      s.loans=s.loans.filter(v=>v.id!==x.id);
+      moneyTouch(activeChildMoneyId);renderChildMoneyDialog();return;
+    }
+
+    const gemDel=e.target.closest("[data-gem-history-delete]");
+    if(gemDel){
+      const s=childMoneyStore(activeChildMoneyId),g=s.gems;
+      const x=g.history.find(v=>v.id===gemDel.dataset.gemHistoryDelete);
+      if(!x)return;
+      if(!confirm("Diesen Edelstein-Eintrag wirklich löschen?")) return;
+      g.count=Math.max(0,Number(g.count||0)-Number(x.delta||0));
+      g.history=g.history.filter(v=>v.id!==x.id);
+      moneyTouch(activeChildMoneyId);renderChildMoneyDialog();return;
+    }
+
+    const paymentDel=e.target.closest("[data-payment-delete-kind]");
+    if(paymentDel){
+      const s=childMoneyStore(activeChildMoneyId);
+      const kind=paymentDel.dataset.paymentDeleteKind;
+      const when=new Date(paymentDel.dataset.paymentDeleteDate+"T12:00:00");
+      if(!confirm("Diese Zahlung wieder auf offen setzen?")) return;
+      clearMoneyPayment(s,kind,when);
+      moneyTouch(activeChildMoneyId);renderChildMoneyDialog();return;
     }
   });
   return d;
@@ -20528,13 +20573,16 @@ function renderChildMoneyDialog(){
       const snack=s.weekly.snackFrequency==="monthly"
         ? (moneyMonthKey(dt)===activeMoneyMonth?moneyPaymentAt(s,"snack",dt):null)
         : moneyPaymentAt(s,"snack",dt);
+      const dateKeyForButton=dateKey(dt);
       const pocketText=s.weekly.pocketFrequency==="monthly"
         ? `${pocket?.paid?"✓":"○"} Taschengeld · monatlich`
         : `${pocket?.paid?"✓":"○"} Taschengeld`;
       const snackText=s.weekly.snackFrequency==="monthly"
         ? `${snack?.paid?"✓":"○"} Jause · monatlich`
         : `${snack?.paid?"✓":"○"} Jause`;
-      monthRows.push(`<div class="child-money-history-row"><span>${moneyWeekLabel(k)}</span><span class="${pocket?.paid?"is-paid":""}">${pocketText}</span><span class="${snack?.paid?"is-paid":""}">${snackText}</span></div>`);
+      const pocketDelete=pocket?.paid?`<button class="v123-history-x" type="button" data-payment-delete-kind="pocket" data-payment-delete-date="${dateKeyForButton}" title="Zahlung wieder auf offen setzen">×</button>`:"";
+      const snackDelete=snack?.paid?`<button class="v123-history-x" type="button" data-payment-delete-kind="snack" data-payment-delete-date="${dateKeyForButton}" title="Zahlung wieder auf offen setzen">×</button>`:"";
+      monthRows.push(`<div class="child-money-history-row"><span>${moneyWeekLabel(k)}</span><span class="${pocket?.paid?"is-paid":""}">${pocketText}${pocketDelete}</span><span class="${snack?.paid?"is-paid":""}">${snackText}${snackDelete}</span></div>`);
       if(s.weekly.pocketFrequency==="monthly" || s.weekly.snackFrequency==="monthly") break;
     }
   }
@@ -20556,11 +20604,14 @@ function renderChildMoneyDialog(){
     const z=new Date(cur);z.setDate(cur.getDate()-7*i);
     const k=moneyWeekKey(z);
     const qp=moneyPaymentAt(s,"pocket",z), qs=moneyPaymentAt(s,"snack",z);
-    rows.push(`<div class="child-money-history-row"><span>${moneyWeekLabel(k)}</span><span class="${qp?.paid?"is-paid":""}">${qp?.paid?"✓":"○"} Taschengeld${s.weekly.pocketFrequency==="monthly"?" · Monat":""}</span><span class="${qs?.paid?"is-paid":""}">${qs?.paid?"✓":"○"} Jause${s.weekly.snackFrequency==="monthly"?" · Monat":""}</span></div>`);
+    const zKey=dateKey(z);
+    const pDel=qp?.paid?`<button class="v123-history-x" type="button" data-payment-delete-kind="pocket" data-payment-delete-date="${zKey}" title="Zahlung wieder auf offen setzen">×</button>`:"";
+    const sDel=qs?.paid?`<button class="v123-history-x" type="button" data-payment-delete-kind="snack" data-payment-delete-date="${zKey}" title="Zahlung wieder auf offen setzen">×</button>`:"";
+    rows.push(`<div class="child-money-history-row"><span>${moneyWeekLabel(k)}</span><span class="${qp?.paid?"is-paid":""}">${qp?.paid?"✓":"○"} Taschengeld${s.weekly.pocketFrequency==="monthly"?" · Monat":""}${pDel}</span><span class="${qs?.paid?"is-paid":""}">${qs?.paid?"✓":"○"} Jause${s.weekly.snackFrequency==="monthly"?" · Monat":""}${sDel}</span></div>`);
   }
   d.querySelector("#childMoneyWeeklyHistory").innerHTML=`<h4>Letzte Wochen</h4>${rows.join("")}`;
-  const done=s.loans.filter(x=>x.done).sort((a,b)=>(b.doneAt||0)-(a.doneAt||0));d.querySelector("#childMoneyLoanHistory").innerHTML=`<h4>Zurückbezahlt</h4>${done.length?done.map(x=>`<div class="child-money-history-row"><span>✓ ${escapeHtml(moneyPersonName(x.from))} → ${escapeHtml(moneyPersonName(x.to))}</span><b>${moneyEuro(x.amount)}</b><small>${new Date(x.doneAt).toLocaleDateString("de-AT")}</small></div>`).join(""):`<div class="child-money-empty">Noch keine erledigten Einträge.</div>`}`;
+  const done=s.loans.filter(x=>x.done).sort((a,b)=>(b.doneAt||0)-(a.doneAt||0));d.querySelector("#childMoneyLoanHistory").innerHTML=`<h4>Zurückbezahlt</h4>${done.length?done.map(x=>`<div class="child-money-history-row v123-loan-history-row"><span>✓ ${escapeHtml(moneyPersonName(x.from))} → ${escapeHtml(moneyPersonName(x.to))}</span><b>${moneyEuro(x.amount)}</b><small>${new Date(x.doneAt).toLocaleDateString("de-AT")}</small><span class="v123-history-actions"><button type="button" data-loan-reopen="${escapeHtml(x.id)}" title="Wieder als offen anzeigen">↩</button><button type="button" data-loan-delete="${escapeHtml(x.id)}" title="Eintrag löschen">×</button></span></div>`).join(""):`<div class="child-money-empty">Noch keine erledigten Einträge.</div>`}`;
   d.querySelector("#savingHistory").innerHTML=`<h4>Sparen</h4>${s.savings.history.length?s.savings.history.slice(0,20).map(x=>`<div class="child-money-history-row v122-saving-history-row"><span>${x.amount>=0?"+":"−"} ${moneyEuro(Math.abs(x.amount))}</span><small>${new Date(x.at).toLocaleDateString("de-AT")}</small><button type="button" data-saving-delete="${escapeHtml(x.id)}" title="Sparbewegung löschen">×</button></div>`).join(""):`<div class="child-money-empty">Noch keine Sparbewegung.</div>`}`;
-  d.querySelector("#gemHistory").innerHTML=`<h4>Edelsteine</h4>${g.history.length?g.history.slice(0,20).map(x=>`<div class="child-money-history-row"><span>${x.delta>0?"+":""}${x.delta} 💎</span><span>${escapeHtml(x.why||"")}</span><small>${new Date(x.at).toLocaleDateString("de-AT")}</small></div>`).join(""):`<div class="child-money-empty">Noch keine Edelsteine gesammelt.</div>`}`;
+  d.querySelector("#gemHistory").innerHTML=`<h4>Edelsteine</h4>${g.history.length?g.history.slice(0,20).map(x=>`<div class="child-money-history-row v123-gem-history-row"><span>${x.delta>0?"+":""}${x.delta} 💎</span><span>${escapeHtml(x.why||"")}</span><small>${new Date(x.at).toLocaleDateString("de-AT")}</small><button class="v123-history-x" type="button" data-gem-history-delete="${escapeHtml(x.id)}" title="Edelstein-Eintrag löschen">×</button></div>`).join(""):`<div class="child-money-empty">Noch keine Edelsteine gesammelt.</div>`}`;
 }
 document.addEventListener("click",e=>{const b=e.target.closest("[data-school-open-money]");if(!b)return;activeChildMoneyId=String(b.dataset.schoolOpenMoney||"1");activeMoneyMonth=moneyMonthKey();renderChildMoneyDialog();const d=ensureChildMoneyDialog();typeof d.showModal==="function"?d.showModal():d.setAttribute("open","");});
