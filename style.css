@@ -32280,3 +32280,73 @@ button.day-meal-list-item:hover,a.day-meal-list-item:hover{background:rgba(164,1
   }
 }
 
+
+/* =========================================================
+   V135 – NUR HANDY: Termineingabe kompakter
+   - Standard = Termin
+   - Priorität + Bereich + Pling unsichtbar
+   - Start/Ende sowie Von/Bis je nebeneinander
+   PC/Tablet bleiben unverändert.
+   ========================================================= */
+@media (max-width:700px){
+
+  /* Diese Metadaten brauchen wir am Handy bei der schnellen Eingabe nicht. */
+  #todos .todo-quick-meta-row,
+  #todos .pling-field{
+    display:none !important;
+  }
+
+  /* V132 blendet bereits Wiederholung, Terminart und Superwichtig mobil aus.
+     Diese Regeln bleiben absichtlich bestehen. */
+  #todos .recurrence-top-field,
+  #todos .event-category-top-field,
+  #todos #eventCategoryTopField,
+  #todos .super-important-control{
+    display:none !important;
+  }
+
+  /* Termin-Felder wieder kompakt in zwei Spalten:
+     Startdatum | Enddatum
+     Von        | Bis */
+  #todos #eventFields.event-fields{
+    display:grid !important;
+    grid-template-columns:minmax(0,1fr) minmax(0,1fr) !important;
+    gap:8px !important;
+    align-items:end !important;
+  }
+
+  #todos #eventFields.event-fields.hidden{
+    display:none !important;
+  }
+
+  #todos #eventFields > label{
+    min-width:0 !important;
+    gap:4px !important;
+    font-size:.72rem !important;
+  }
+
+  #todos #eventFields .date-control-wrap{
+    min-width:0 !important;
+    padding:7px 8px !important;
+    border-radius:10px !important;
+  }
+
+  #todos #eventFields input[type="date"],
+  #todos #eventFields input[type="time"]{
+    min-width:0 !important;
+    width:100% !important;
+    padding:0 !important;
+    font-size:.82rem !important;
+  }
+
+  /* Die Eingabe oben wird nach dem Wegfall der Zusatzfelder ruhiger. */
+  #todos .entry-top-row{
+    grid-template-columns:1fr !important;
+    gap:8px !important;
+  }
+
+  #todos .family-picker-top{
+    margin-top:0 !important;
+  }
+}
+
