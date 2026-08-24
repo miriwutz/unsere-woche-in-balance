@@ -20332,368 +20332,110 @@ function moneyWeekKey(date=new Date()){const d=new Date(date);const day=(d.getDa
 function moneyWeekLabel(key){const a=new Date(key+"T12:00:00"),b=new Date(a);b.setDate(a.getDate()+6);const f=d=>`${String(d.getDate()).padStart(2,"0")}.${String(d.getMonth()+1).padStart(2,"0")}.`;return `${f(a)}–${f(b)}`;}
 function moneyNumber(v){const n=Number(String(v??"").replace(",","."));return Number.isFinite(n)&&n>=0?Math.round(n*100)/100:0;}
 function moneyEuro(v){return `${moneyNumber(v).toLocaleString("de-AT",{minimumFractionDigits:2,maximumFractionDigits:2})} €`;}
-function normalizeChildMoneyStore(raw){raw=raw&&typeof raw==="object"?raw:{};const w=raw.weekly&&typeof raw.weekly==="object"?raw.weekly:{};return {weekly:{pocketAmount:moneyNumber(w.pocketAmount),snackAmount:moneyNumber(w.snackAmount),payments:w.payments&&typeof w.payments==="object"?w.payments:{}},loans:Array.isArray(raw.loans)?raw.loans:[],updatedAt:Number(raw.updatedAt||0)};}
+
+function normalizeChildMoneyStore(raw){
+  raw=raw&&typeof raw==="object"?raw:{};
+  const w=raw.weekly&&typeof raw.weekly==="object"?raw.weekly:{};
+  const savings=raw.savings&&typeof raw.savings==="object"?raw.savings:{};
+  const gems=raw.gems&&typeof raw.gems==="object"?raw.gems:{};
+  return {
+    weekly:{pocketAmount:moneyNumber(w.pocketAmount),snackAmount:moneyNumber(w.snackAmount),payments:w.payments&&typeof w.payments==="object"?w.payments:{}},
+    loans:Array.isArray(raw.loans)?raw.loans:[],
+    savings:{goal:String(savings.goal||""),target:moneyNumber(savings.target),balance:moneyNumber(savings.balance),history:Array.isArray(savings.history)?savings.history:[]},
+    gems:{count:Math.max(0,Number(gems.count||0)),rewardTitle:String(gems.rewardTitle||"Eis geht immer!"),rewardText:String(gems.rewardText||"Gemeinsam Eis essen"),rewardCost:Math.max(1,Number(gems.rewardCost||6)),history:Array.isArray(gems.history)?gems.history:[]},
+    updatedAt:Number(raw.updatedAt||0)
+  };
+}
 function ensureChildMoney(){state.familySettings=state.familySettings||{};state.familySettings.childMoney=state.familySettings.childMoney&&typeof state.familySettings.childMoney==="object"?state.familySettings.childMoney:{};["1","2"].forEach(id=>state.familySettings.childMoney[id]=normalizeChildMoneyStore(state.familySettings.childMoney[id]));return state.familySettings.childMoney;}
 function childMoneyStore(id){return ensureChildMoney()[String(id)];}
 function moneyPersonName(id){return ({mama:"Mama",papa:"Papa","1":"Lou","2":"Fina"})[String(id)]||String(id);}
 function moneyTouch(id){childMoneyStore(id).updatedAt=Date.now();save();}
 function mergeChildMoneyStore(localValue,cloudValue){const a=normalizeChildMoneyStore(localValue),b=normalizeChildMoneyStore(cloudValue);if(!a.updatedAt)return b;if(!b.updatedAt)return a;return b.updatedAt>a.updatedAt?b:a;}
-function ensureChildMoneyDialog(){let d=document.querySelector("#childMoneyDialog");if(d)return d;d=document.createElement("dialog");d.id="childMoneyDialog";d.className="child-money-dialog";d.innerHTML=`<div class="child-money-shell"><div class="child-money-head"><div><p class="small-label">MEIN GELD</p><h2 id="childMoneyTitle"></h2><p>Damit wir nicht zweimal zahlen – und nichts vergessen.</p></div><button class="child-money-close" type="button" aria-label="Schließen">×</button></div><section class="child-money-card"><div class="child-money-section-head"><div><strong>Diese Woche</strong><small id="childMoneyWeekLabel"></small></div><span class="money-star">✦</span></div><div class="child-money-pay-row"><div><strong>Taschengeld</strong><small>wöchentlich</small></div><label><input id="childPocketAmount" inputmode="decimal" aria-label="Taschengeld"> €</label><button data-money-pay="pocket"></button></div><div class="child-money-pay-row"><div><strong>Jausengeld</strong><small>wöchentlich</small></div><label><input id="childSnackAmount" inputmode="decimal" aria-label="Jausengeld"> €</label><button data-money-pay="snack"></button></div></section><section class="child-money-card"><div class="child-money-section-head"><div><strong>Geliehen</strong><small>Wer bekommt noch etwas zurück?</small></div><button id="childMoneyAddLoan" type="button">+ Eintragen</button></div><form id="childMoneyLoanForm" class="child-money-loan-form hidden"><label>Von<select id="childMoneyFrom"><option value="mama">Mama</option><option value="papa">Papa</option><option value="1">Lou</option><option value="2">Fina</option></select></label><span class="money-arrow">→</span><label>An<select id="childMoneyTo"><option value="1">Lou</option><option value="2">Fina</option><option value="mama">Mama</option><option value="papa">Papa</option></select></label><label>Betrag<input id="childMoneyLoanAmount" inputmode="decimal" required></label><label class="money-note">Notiz<input id="childMoneyLoanNote" placeholder="optional"></label><button type="submit">Speichern</button></form><div id="childMoneyOpenLoans"></div></section><details class="child-money-history"><summary><span>Historie</span><small>Was wurde schon bezahlt?</small></summary><div id="childMoneyWeeklyHistory"></div><div id="childMoneyLoanHistory"></div></details></div>`;document.body.appendChild(d);d.querySelector(".child-money-close").onclick=()=>d.close();d.addEventListener("click",e=>{if(e.target===d)d.close();});d.querySelector("#childMoneyAddLoan").onclick=()=>d.querySelector("#childMoneyLoanForm").classList.toggle("hidden");d.querySelectorAll("[data-money-pay]").forEach(b=>b.onclick=()=>{const s=childMoneyStore(activeChildMoneyId),w=moneyWeekKey(),k=b.dataset.moneyPay;s.weekly.payments[w]=s.weekly.payments[w]||{};const old=s.weekly.payments[w][k];s.weekly.payments[w][k]={paid:!old?.paid,paidAt:!old?.paid?Date.now():0,updatedAt:Date.now()};moneyTouch(activeChildMoneyId);renderChildMoneyDialog();});d.querySelector("#childPocketAmount").onchange=e=>{childMoneyStore(activeChildMoneyId).weekly.pocketAmount=moneyNumber(e.target.value);moneyTouch(activeChildMoneyId);renderChildMoneyDialog();};d.querySelector("#childSnackAmount").onchange=e=>{childMoneyStore(activeChildMoneyId).weekly.snackAmount=moneyNumber(e.target.value);moneyTouch(activeChildMoneyId);renderChildMoneyDialog();};d.querySelector("#childMoneyLoanForm").onsubmit=e=>{e.preventDefault();const f=d.querySelector("#childMoneyFrom").value,t=d.querySelector("#childMoneyTo").value,a=moneyNumber(d.querySelector("#childMoneyLoanAmount").value),n=d.querySelector("#childMoneyLoanNote").value.trim();if(!a||f===t)return;const now=Date.now();childMoneyStore(activeChildMoneyId).loans.unshift({id:`money-${now}-${Math.random().toString(36).slice(2,7)}`,from:f,to:t,amount:a,note:n,createdAt:now,updatedAt:now,done:false,doneAt:0});d.querySelector("#childMoneyLoanAmount").value="";d.querySelector("#childMoneyLoanNote").value="";d.querySelector("#childMoneyLoanForm").classList.add("hidden");moneyTouch(activeChildMoneyId);renderChildMoneyDialog();};d.addEventListener("click",e=>{const b=e.target.closest("[data-money-loan-done]");if(!b)return;const x=childMoneyStore(activeChildMoneyId).loans.find(v=>v.id===b.dataset.moneyLoanDone);if(!x)return;x.done=true;x.doneAt=Date.now();x.updatedAt=Date.now();moneyTouch(activeChildMoneyId);renderChildMoneyDialog();});return d;}
-function renderChildMoneyDialog(){const d=ensureChildMoneyDialog(),s=childMoneyStore(activeChildMoneyId),w=moneyWeekKey(),p=s.weekly.payments[w]||{};d.dataset.child=activeChildMoneyId;d.querySelector("#childMoneyTitle").textContent=moneyPersonName(activeChildMoneyId);d.querySelector("#childMoneyWeekLabel").textContent=moneyWeekLabel(w);d.querySelector("#childPocketAmount").value=s.weekly.pocketAmount||"";d.querySelector("#childSnackAmount").value=s.weekly.snackAmount||"";["pocket","snack"].forEach(k=>{const b=d.querySelector(`[data-money-pay="${k}"]`),ok=!!p[k]?.paid;b.classList.toggle("is-paid",ok);b.textContent=ok?"✓ erhalten":"○ noch offen";});const open=s.loans.filter(x=>!x.done);d.querySelector("#childMoneyOpenLoans").innerHTML=open.length?open.map(x=>`<div class="child-money-loan-row"><span><strong>${escapeHtml(moneyPersonName(x.from))}</strong> → <strong>${escapeHtml(moneyPersonName(x.to))}</strong>${x.note?`<small>${escapeHtml(x.note)}</small>`:""}</span><b>${moneyEuro(x.amount)}</b><button data-money-loan-done="${escapeHtml(x.id)}">✓ zurück</button></div>`).join(""):`<div class="child-money-empty">Alles ausgeglichen. ✦</div>`;let rows=[];const cur=new Date(w+"T12:00:00");for(let i=0;i<8;i++){const z=new Date(cur);z.setDate(cur.getDate()-7*i);const k=moneyWeekKey(z),q=s.weekly.payments[k]||{};rows.push(`<div class="child-money-history-row"><span>${moneyWeekLabel(k)}</span><span class="${q.pocket?.paid?"is-paid":""}">${q.pocket?.paid?"✓":"○"} Taschengeld</span><span class="${q.snack?.paid?"is-paid":""}">${q.snack?.paid?"✓":"○"} Jause</span></div>`);}d.querySelector("#childMoneyWeeklyHistory").innerHTML=`<h4>Letzte Wochen</h4>${rows.join("")}`;const done=s.loans.filter(x=>x.done).sort((a,b)=>(b.doneAt||0)-(a.doneAt||0));d.querySelector("#childMoneyLoanHistory").innerHTML=`<h4>Zurückbezahlt</h4>${done.length?done.map(x=>`<div class="child-money-history-row"><span>✓ ${escapeHtml(moneyPersonName(x.from))} → ${escapeHtml(moneyPersonName(x.to))}</span><b>${moneyEuro(x.amount)}</b><small>${new Date(x.doneAt).toLocaleDateString("de-AT")}</small></div>`).join(""):`<div class="child-money-empty">Noch keine erledigten Einträge.</div>`}`;}
-document.addEventListener("click",e=>{const b=e.target.closest("[data-school-open-money]");if(!b)return;activeChildMoneyId=String(b.dataset.schoolOpenMoney||"1");renderChildMoneyDialog();const d=ensureChildMoneyDialog();typeof d.showModal==="function"?d.showModal():d.setAttribute("open","");});
+function moneyMonthKey(d=new Date()){return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`;}
+function moneyMonthLabel(k){const [y,m]=k.split("-").map(Number);return new Date(y,m-1,1).toLocaleDateString("de-AT",{month:"long",year:"numeric"});}
+let activeMoneyMonth=moneyMonthKey();
 
+const MONEY_QUOTES=["Ich wähle, was mir wirklich wichtig ist.","Nicht alles, was mir gefällt, muss mir gehören.","Weniger Dinge – mehr Platz für Wichtiges.","Ich kaufe nicht einfach – ich entscheide.","Ich überlege: Brauche ich das wirklich?","Was ich habe, darf genug sein.","Ich spare für Dinge, die mir wirklich wichtig sind.","Viele Kleinigkeiten machen nicht lange glücklich.","Lieber etwas Besonderes als ganz viel Kleinkram.","Ich passe gut auf mein Geld und meine Sachen auf.","Ich darf etwas schön finden, ohne es zu kaufen.","Mein Geld gibt mir Möglichkeiten – ich entscheide, wofür."];
+const GEM_QUOTES=["Wenn jeder ein bisschen mithilft, bleibt mehr Zeit füreinander.","Was du für uns tust, sehen wir.","Zusammen geht vieles leichter.","Kleine Hilfe. Große Wirkung für uns alle."];
 
-/* =========================================================
-   V120 – GELD + EDELSTEINE
-   ========================================================= */
+function ensureChildMoneyDialog(){
+  let d=document.querySelector("#childMoneyDialog"); if(d)return d;
+  d=document.createElement("dialog"); d.id="childMoneyDialog"; d.className="child-money-dialog child-money-v121";
+  d.innerHTML=`<div class="child-money-shell">
+    <div class="child-money-head"><div><p class="small-label">MEIN GELD</p><h2 id="childMoneyTitle"></h2><p>Alles an einem Ort: bekommen, geliehen, sparen und Edelsteine.</p></div><button class="child-money-close" type="button">×</button></div>
+    <div id="moneyQuote" class="v121-quote"></div>
 
-const V120_MONEY_QUOTES = [
-  "Ich wähle, was mir wirklich wichtig ist.",
-  "Nicht alles, was mir gefällt, muss mir gehören.",
-  "Weniger Dinge – mehr Platz für Wichtiges.",
-  "Ich kaufe nicht einfach – ich entscheide.",
-  "Ich überlege: Brauche ich das wirklich?",
-  "Was ich habe, darf genug sein.",
-  "Ich spare für Dinge, die mir wirklich wichtig sind.",
-  "Viele Kleinigkeiten machen nicht lange glücklich.",
-  "Lieber etwas Besonderes als ganz viel Kleinkram.",
-  "Ich passe gut auf mein Geld und meine Sachen auf.",
-  "Ich darf etwas schön finden, ohne es zu kaufen.",
-  "Mein Geld gibt mir Möglichkeiten – ich entscheide, wofür."
-];
+    <section class="child-money-card">
+      <div class="child-money-section-head"><div><strong>Diese Woche</strong><small id="childMoneyWeekLabel"></small></div><span class="money-star">✦</span></div>
+      <div class="child-money-pay-row"><div><strong>Taschengeld</strong><small>wöchentlich</small></div><label><input id="childPocketAmount" inputmode="decimal"> €</label><button data-money-pay="pocket"></button></div>
+      <div class="child-money-pay-row"><div><strong>Jausengeld</strong><small>wöchentlich</small></div><label><input id="childSnackAmount" inputmode="decimal"> €</label><button data-money-pay="snack"></button></div>
+      <div class="v121-monthbar"><button type="button" data-month="-1">‹</button><strong id="moneyMonthTitle"></strong><button type="button" data-month="1">›</button></div>
+      <div id="moneyMonthHistory"></div>
+    </section>
 
-const V120_GEM_QUOTES = [
-  "Wenn jeder ein bisschen mithilft, bleibt mehr Zeit füreinander.",
-  "Was du für uns tust, sehen wir.",
-  "Zusammen geht vieles leichter.",
-  "Kleine Hilfe. Große Wirkung für uns alle.",
-  "Du hast heute etwas für uns alle leichter gemacht.",
-  "Wir helfen einander, weil wir zusammengehören.",
-  "Zeit miteinander ist etwas Besonderes."
-];
+    <section class="child-money-card">
+      <div class="child-money-section-head"><div><strong>Geliehen</strong><small>Von wem – an wen – und was ist noch offen?</small></div><button id="childMoneyAddLoan" type="button">+ Eintragen</button></div>
+      <form id="childMoneyLoanForm" class="child-money-loan-form hidden"><label>Von<select id="childMoneyFrom"><option value="mama">Mama</option><option value="papa">Papa</option><option value="1">Lou</option><option value="2">Fina</option></select></label><span class="money-arrow">→</span><label>An<select id="childMoneyTo"><option value="1">Lou</option><option value="2">Fina</option><option value="mama">Mama</option><option value="papa">Papa</option></select></label><label>Betrag<input id="childMoneyLoanAmount" inputmode="decimal" required></label><label class="money-note">Notiz<input id="childMoneyLoanNote" placeholder="optional"></label><button type="submit">Speichern</button></form>
+      <div id="childMoneyOpenLoans"></div>
+    </section>
 
-const V120_DEFAULT_REWARDS = [
-  {title:"Nur ich & du!", desc:"Exklusive Mama- oder Papa-Zeit", cost:5, emoji:"💛"},
-  {title:"Eis geht immer!", desc:"Gemeinsam Eis essen", cost:6, emoji:"🍦"},
-  {title:"Heute bestimme ICH!", desc:"Spieleabend – du suchst aus", cost:8, emoji:"🎲"},
-  {title:"Sofa, Snacks & mein Film!", desc:"Wunsch-Filmabend", cost:10, emoji:"🍿"},
-  {title:"Küchenchaos erlaubt!", desc:"Gemeinsam backen oder kochen", cost:12, emoji:"🧁"},
-  {title:"Schnapp dir mich!", desc:"Kleiner Ausflug nur mit Mama oder Papa", cost:15, emoji:"💛"},
-  {title:"Heute bin ich Familienboss!", desc:"Familienunternehmung aussuchen", cost:18, emoji:"👑"},
-  {title:"Ab ins Kino!", desc:"Gemeinsam ins Kino", cost:20, emoji:"🎬"},
-  {title:"Überrasch mich!", desc:"Besonderer gemeinsamer Ausflug", cost:25, emoji:"✨"}
-];
+    <section class="child-money-card">
+      <div class="child-money-section-head"><div><strong>Mein Sparziel</strong><small>Ich spare für etwas, das mir wirklich wichtig ist.</small></div><span>🌱</span></div>
+      <div class="v121-save-grid"><label>Ziel<input id="savingGoal" placeholder="z. B. etwas Besonderes"></label><label>Zielbetrag<input id="savingTarget" inputmode="decimal" placeholder="0"> €</label></div>
+      <div class="v121-save-progress"><div class="v121-save-jar"><i id="savingFill"></i><b>✦</b></div><div><strong id="savingStatus"></strong><small id="savingText"></small></div></div>
+      <div class="v121-save-actions"><input id="savingAmount" inputmode="decimal" placeholder="Betrag"><button type="button" data-save="plus">+ Sparen</button><button type="button" data-save="minus">− Entnehmen</button></div>
+    </section>
 
-function v120Id(prefix="v120"){
-  return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2,7)}`;
-}
-function v120Esc(v){
-  return typeof escapeHtml==="function" ? escapeHtml(String(v??"")) :
-    String(v??"").replace(/[&<>"']/g,s=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[s]));
-}
-function v120Date(v){
-  return v ? new Date(v).toLocaleDateString("de-AT") : "";
-}
-function v120MonthKey(d=new Date()){
-  d=new Date(d); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`;
-}
-function v120MonthLabel(key){
-  const [y,m]=String(key).split("-").map(Number);
-  return new Date(y,m-1,1).toLocaleDateString("de-AT",{month:"long",year:"numeric"});
-}
-function v120ShiftMonth(key,delta){
-  const [y,m]=String(key).split("-").map(Number);
-  const d=new Date(y,m-1+delta,1);
-  return v120MonthKey(d);
-}
-function v120WeeksForMonth(key){
-  const [y,m]=String(key).split("-").map(Number);
-  const first=new Date(y,m-1,1,12);
-  const last=new Date(y,m,0,12);
-  const start=new Date(first);
-  start.setDate(first.getDate()-((first.getDay()+6)%7));
-  const out=[];
-  for(let d=new Date(start); d<=last; d.setDate(d.getDate()+7)){
-    out.push(moneyWeekKey(d));
-  }
-  return [...new Set(out)];
-}
-function v120Persist(){
-  if(typeof persistFamilySettingsImmediately==="function") persistFamilySettingsImmediately();
-  if(typeof save==="function") save();
-}
-function v120NormalizeMoneyStore(id){
-  const s=childMoneyStore(id);
-  s.weekly=s.weekly||{pocketAmount:0,snackAmount:0,payments:{}};
-  s.weekly.payments=s.weekly.payments||{};
-  s.paymentHistory=Array.isArray(s.paymentHistory)?s.paymentHistory:[];
-  s.savings=s.savings&&typeof s.savings==="object"?s.savings:{goal:"",target:0,balance:0,entries:[]};
-  s.savings.goal=String(s.savings.goal||"");
-  s.savings.target=moneyNum(s.savings.target);
-  s.savings.balance=moneyNum(s.savings.balance);
-  s.savings.entries=Array.isArray(s.savings.entries)?s.savings.entries:[];
-  return s;
-}
-function v120PaymentRecord(id,week,kind){
-  const s=v120NormalizeMoneyStore(id);
-  return s.paymentHistory.find(x=>x.week===week&&x.kind===kind&&x.active!==false);
-}
-function v120SetPayment(id,kind,paid){
-  const s=v120NormalizeMoneyStore(id);
-  const week=moneyWeekKey();
-  const amount=kind==="pocket"?s.weekly.pocketAmount:s.weekly.snackAmount;
-  s.weekly.payments[week]=s.weekly.payments[week]||{};
-  s.weekly.payments[week][kind]={paid:!!paid,paidAt:paid?Date.now():0,updatedAt:Date.now()};
-  s.paymentHistory.forEach(x=>{
-    if(x.week===week&&x.kind===kind&&x.active!==false) x.active=false;
-  });
-  if(paid){
-    s.paymentHistory.unshift({
-      id:v120Id("pay"),week,kind,amount,paidAt:Date.now(),active:true
-    });
-  }
-  s.updatedAt=Date.now(); v120Persist();
-}
-function v120UndoPayment(id,recordId){
-  const s=v120NormalizeMoneyStore(id);
-  const r=s.paymentHistory.find(x=>x.id===recordId);
-  if(!r) return;
-  r.active=false;
-  s.weekly.payments[r.week]=s.weekly.payments[r.week]||{};
-  s.weekly.payments[r.week][r.kind]={paid:false,paidAt:0,updatedAt:Date.now()};
-  s.updatedAt=Date.now(); v120Persist();
-}
-function v120DeletePayment(id,recordId){
-  const s=v120NormalizeMoneyStore(id);
-  const r=s.paymentHistory.find(x=>x.id===recordId);
-  if(!r) return;
-  if(!confirm("Diesen Zahlungseintrag wirklich löschen?")) return;
-  s.paymentHistory=s.paymentHistory.filter(x=>x.id!==recordId);
-  if(r.active!==false){
-    s.weekly.payments[r.week]=s.weekly.payments[r.week]||{};
-    s.weekly.payments[r.week][r.kind]={paid:false,paidAt:0,updatedAt:Date.now()};
-  }
-  s.updatedAt=Date.now(); v120Persist();
-}
+    <section class="child-money-card v121-gems">
+      <div class="child-money-section-head"><div><strong>Meine Edelsteine 💎</strong><small>Besondere Extras für unser Familienleben.</small></div><strong id="gemCount"></strong></div>
+      <p class="v121-gem-explain"><b>Edelsteine gibt es für besondere Beiträge zu unserem Familienleben – wenn du von dir aus hilfst, jemanden unterstützt oder mithilfst, dass es für uns alle leichter wird.</b><br>Nicht für jeden Handgriff 😉 – sondern für die kleinen Extras, die richtig guttun.</p>
+      <div id="gemQuote" class="v121-gem-quote"></div>
+      <div class="v121-gem-grid"><div><div id="gemDots" class="v121-gem-dots"></div><div class="v121-gem-bar"><i id="gemFill"></i></div></div><div class="v121-reward"><label>Belohnung<input id="gemRewardTitle"></label><label>Was genau?<input id="gemRewardText"></label><label>Edelsteine<input id="gemRewardCost" type="number" min="1"></label></div></div>
+      <div class="v121-gem-actions"><input id="gemWhy" placeholder="Wofür? (optional)"><button type="button" data-gem="plus">+ 💎</button><button type="button" data-gem="minus">− 💎</button><button type="button" id="gemRedeem">Einlösen</button></div>
+    </section>
 
-let v120MoneyMonth=v120MonthKey();
-
-function v120UpgradeMoneyDialog(){
-  const d=ensureChildMoneyDialog();
-  if(d.dataset.v120Upgraded==="1") return d;
-  d.dataset.v120Upgraded="1";
-
-  const head=d.querySelector(".child-money-head");
-  if(head && !d.querySelector("#v120MoneyQuote")){
-    head.insertAdjacentHTML("afterend",`<div id="v120MoneyQuote" class="v120-money-quote"></div>`);
-  }
-
-  const weeklyCard=d.querySelector(".child-money-card");
-  if(weeklyCard && !d.querySelector("#v120SavingsCard")){
-    weeklyCard.insertAdjacentHTML("afterend",`
-      <section class="child-money-card v120-savings-card" id="v120SavingsCard">
-        <div class="child-money-section-head">
-          <div><strong>Mein Sparziel</strong><small>Etwas Besonderes statt ganz viel Kleinkram.</small></div>
-          <span class="v120-savings-spark">✦</span>
-        </div>
-        <div class="v120-savings-settings">
-          <label>Ziel<input id="v120SavingGoal" placeholder="z. B. Kopfhörer"></label>
-          <label>Zielbetrag<div><input id="v120SavingTarget" inputmode="decimal"><span>€</span></div></label>
-        </div>
-        <div class="v120-saving-visual">
-          <div class="v120-saving-jar"><div id="v120SavingFill" class="v120-saving-fill"></div><span>✦</span></div>
-          <div class="v120-saving-copy"><strong id="v120SavingProgress"></strong><small id="v120SavingMessage"></small></div>
-        </div>
-        <form id="v120SavingForm" class="v120-saving-form">
-          <input id="v120SavingAmount" inputmode="decimal" placeholder="Betrag">
-          <button type="button" data-saving-action="add">+ Sparen</button>
-          <button type="button" data-saving-action="take">− Entnehmen</button>
-        </form>
-        <details class="v120-saving-history"><summary>Spar-Historie</summary><div id="v120SavingHistory"></div></details>
-      </section>`);
-  }
-
-  const hist=d.querySelector(".child-money-history");
-  if(hist && !d.querySelector("#v120MonthNav")){
-    hist.insertAdjacentHTML("afterbegin",`
-      <div id="v120MonthNav" class="v120-month-nav">
-        <button type="button" data-month-shift="-1">‹</button>
-        <strong id="v120MonthLabel"></strong>
-        <button type="button" data-month-shift="1">›</button>
-      </div>
-      <div id="v120MonthSummary" class="v120-month-summary"></div>
-      <div id="v120PaymentHistory" class="v120-payment-history"></div>`);
-  }
-
-  d.querySelectorAll("[data-money-pay]").forEach(btn=>{
-    btn.replaceWith(btn.cloneNode(true));
-  });
-  d.querySelectorAll("[data-money-pay]").forEach(btn=>{
-    btn.addEventListener("click",()=>{
-      const kind=btn.dataset.moneyPay;
-      const s=v120NormalizeMoneyStore(activeChildMoneyId);
-      const paid=!!s.weekly.payments[moneyWeekKey()]?.[kind]?.paid;
-      v120SetPayment(activeChildMoneyId,kind,!paid);
-      renderChildMoneyDialog();
-    });
-  });
-
-  d.querySelectorAll("[data-month-shift]").forEach(b=>b.addEventListener("click",()=>{
-    v120MoneyMonth=v120ShiftMonth(v120MoneyMonth,Number(b.dataset.monthShift));
-    renderChildMoneyDialog();
-  }));
-
-  ["v120SavingGoal","v120SavingTarget"].forEach(id=>{
-    d.querySelector("#"+id)?.addEventListener("change",e=>{
-      const s=v120NormalizeMoneyStore(activeChildMoneyId);
-      if(id==="v120SavingGoal") s.savings.goal=e.target.value.trim();
-      else s.savings.target=moneyNum(e.target.value);
-      s.updatedAt=Date.now();v120Persist();renderChildMoneyDialog();
-    });
-  });
-
-  d.querySelectorAll("[data-saving-action]").forEach(b=>b.addEventListener("click",()=>{
-    const s=v120NormalizeMoneyStore(activeChildMoneyId);
-    const input=d.querySelector("#v120SavingAmount");
-    const amount=moneyNum(input.value);
-    if(!amount) return;
-    const delta=b.dataset.savingAction==="take"?-amount:amount;
-    s.savings.balance=Math.max(0,moneyNum(s.savings.balance+delta));
-    s.savings.entries.unshift({id:v120Id("save"),amount:delta,at:Date.now()});
-    s.updatedAt=Date.now();input.value="";v120Persist();renderChildMoneyDialog();
-  }));
-
-  d.addEventListener("click",e=>{
-    const undo=e.target.closest("[data-payment-undo]");
-    if(undo){v120UndoPayment(activeChildMoneyId,undo.dataset.paymentUndo);renderChildMoneyDialog();return}
-    const del=e.target.closest("[data-payment-delete]");
-    if(del){v120DeletePayment(activeChildMoneyId,del.dataset.paymentDelete);renderChildMoneyDialog();return}
-  });
-  return d;
-}
-
-const v119RenderChildMoneyDialog = renderChildMoneyDialog;
-renderChildMoneyDialog=function(){
-  const d=v120UpgradeMoneyDialog();
-  const s=v120NormalizeMoneyStore(activeChildMoneyId);
-  v119RenderChildMoneyDialog();
-
-  const q=d.querySelector("#v120MoneyQuote");
-  if(q){
-    const idx=(new Date().getDate()+Number(activeChildMoneyId))%V120_MONEY_QUOTES.length;
-    q.textContent=`✦ ${V120_MONEY_QUOTES[idx]}`;
-  }
-
-  const week=moneyWeekKey();
-  ["pocket","snack"].forEach(kind=>{
-    const b=d.querySelector(`[data-money-pay="${kind}"]`);
-    const paid=!!s.weekly.payments[week]?.[kind]?.paid;
-    if(b){b.classList.toggle("is-paid",paid);b.textContent=paid?"✓ erhalten":"○ noch offen"}
-  });
-
-  d.querySelector("#v120SavingGoal").value=s.savings.goal||"";
-  d.querySelector("#v120SavingTarget").value=s.savings.target||"";
-  const pct=s.savings.target?Math.min(100,Math.round(s.savings.balance/s.savings.target*100)):0;
-  d.querySelector("#v120SavingFill").style.height=`${pct}%`;
-  d.querySelector("#v120SavingProgress").textContent=s.savings.target
-    ? `${moneyEuro(s.savings.balance)} von ${moneyEuro(s.savings.target)} · ${pct}%`
-    : `${moneyEuro(s.savings.balance)} gespart`;
-  d.querySelector("#v120SavingMessage").textContent=
-    pct>=100?"Geschafft! Du hast für etwas gespart, das dir wirklich wichtig war. ✨":
-    pct>=50?"Halbzeit – dein Ziel kommt näher. ✦":"Schon ein Stück näher.";
-  d.querySelector("#v120SavingHistory").innerHTML=s.savings.entries.length
-    ? s.savings.entries.slice(0,12).map(x=>`<div><span>${x.amount>=0?"+":"−"} ${moneyEuro(Math.abs(x.amount))}</span><small>${v120Date(x.at)}</small></div>`).join("")
-    : `<div class="child-money-empty">Noch keine Sparbewegung.</div>`;
-
-  d.querySelector("#v120MonthLabel").textContent=v120MonthLabel(v120MoneyMonth);
-  const weeks=v120WeeksForMonth(v120MoneyMonth);
-  const records=s.paymentHistory.filter(x=>x.active!==false&&weeks.includes(x.week));
-  const pocket=records.filter(x=>x.kind==="pocket").reduce((a,x)=>a+moneyNum(x.amount),0);
-  const snack=records.filter(x=>x.kind==="snack").reduce((a,x)=>a+moneyNum(x.amount),0);
-  d.querySelector("#v120MonthSummary").innerHTML=`<span>Taschengeld <b>${moneyEuro(pocket)}</b></span><span>Jausengeld <b>${moneyEuro(snack)}</b></span><span>bezahlt <b>${moneyEuro(pocket+snack)}</b></span>`;
-  d.querySelector("#v120PaymentHistory").innerHTML=weeks.map(w=>{
-    const rp=records.find(x=>x.week===w&&x.kind==="pocket");
-    const rs=records.find(x=>x.week===w&&x.kind==="snack");
-    const cell=(r,label)=>r?`<span class="is-paid">✓ ${label} ${moneyEuro(r.amount)} <button data-payment-undo="${r.id}" title="Zurückholen">↩</button><button data-payment-delete="${r.id}" title="Löschen">×</button></span>`:`<span>○ ${label}</span>`;
-    return `<div class="v120-payment-week"><strong>${moneyWeekLabel(w)}</strong>${cell(rp,"Taschengeld")}${cell(rs,"Jause")}</div>`;
-  }).join("");
-};
-
-function v120EnsureGemStore(id){
-  state.familySettings=state.familySettings||{};
-  state.familySettings.childGems=state.familySettings.childGems||{};
-  let g=state.familySettings.childGems[String(id)];
-  if(!g){
-    g={count:0,selectedReward:1,rewards:V120_DEFAULT_REWARDS.map((x,i)=>({...x,id:`r${i+1}`})),history:[],updatedAt:0};
-    state.familySettings.childGems[String(id)]=g;
-  }
-  g.rewards=Array.isArray(g.rewards)&&g.rewards.length?g.rewards:V120_DEFAULT_REWARDS.map((x,i)=>({...x,id:`r${i+1}`}));
-  g.history=Array.isArray(g.history)?g.history:[];
-  g.count=Math.max(0,Number(g.count||0));
-  return g;
-}
-let v120GemChild="1";
-function v120GemDialog(){
-  let d=document.querySelector("#v120GemDialog");if(d)return d;
-  d=document.createElement("dialog");d.id="v120GemDialog";d.className="v120-gem-dialog";
-  d.innerHTML=`<div class="v120-gem-shell">
-    <div class="v120-gem-head"><div><p class="small-label">MEINE EDELSTEINE</p><h2 id="v120GemTitle"></h2></div><button type="button" class="v120-gem-close">×</button></div>
-    <div class="v120-gem-explain"><strong>Edelsteine gibt es für besondere Beiträge zu unserem Familienleben – wenn du von dir aus hilfst, jemanden unterstützt oder mithilfst, dass es für uns alle leichter wird.</strong><span>Nicht für jeden Handgriff 😉 – sondern für die kleinen Extras, die richtig guttun.</span></div>
-    <div id="v120GemQuote" class="v120-gem-quote"></div>
-    <section class="v120-gem-main"><div id="v120GemVisual"></div><div id="v120GemReward"></div></section>
-    <form id="v120GemAddForm" class="v120-gem-add"><input id="v120GemWhy" placeholder="Wofür? (optional)"><button type="submit">+ Edelstein</button><button type="button" data-gem-minus>− zurück</button></form>
-    <details class="v120-gem-rewards"><summary>Belohnungen auswählen & verändern</summary><div id="v120RewardList"></div><button type="button" id="v120AddReward">+ Eigene Belohnung</button></details>
-    <details class="v120-gem-history"><summary>Edelstein-Historie</summary><div id="v120GemHistory"></div></details>
+    <details class="child-money-history"><summary><span>Historie</span><small>Bezahlt, gespart, zurückgegeben & Edelsteine</small></summary><div id="childMoneyWeeklyHistory"></div><div id="childMoneyLoanHistory"></div><div id="savingHistory"></div><div id="gemHistory"></div></details>
   </div>`;
   document.body.appendChild(d);
-  d.querySelector(".v120-gem-close").onclick=()=>d.close();
-  d.querySelector("#v120GemAddForm").onsubmit=e=>{
-    e.preventDefault();const g=v120EnsureGemStore(v120GemChild),why=d.querySelector("#v120GemWhy").value.trim();
-    g.count++;g.history.unshift({id:v120Id("gem"),delta:1,why,at:Date.now()});g.updatedAt=Date.now();d.querySelector("#v120GemWhy").value="";v120Persist();v120RenderGems();
-  };
-  d.querySelector("[data-gem-minus]").onclick=()=>{
-    const g=v120EnsureGemStore(v120GemChild);if(g.count<=0)return;g.count--;g.history.unshift({id:v120Id("gem"),delta:-1,why:"zurückgenommen",at:Date.now()});g.updatedAt=Date.now();v120Persist();v120RenderGems();
-  };
-  d.querySelector("#v120AddReward").onclick=()=>{
-    const g=v120EnsureGemStore(v120GemChild);g.rewards.push({id:v120Id("reward"),title:"Meine Belohnung",desc:"Gemeinsame Zeit",cost:10,emoji:"✨"});g.selectedReward=g.rewards.length-1;g.updatedAt=Date.now();v120Persist();v120RenderGems();
-  };
-  d.addEventListener("change",e=>{
-    const row=e.target.closest("[data-reward-index]");if(!row)return;
-    const g=v120EnsureGemStore(v120GemChild),i=Number(row.dataset.rewardIndex),r=g.rewards[i];if(!r)return;
-    if(e.target.matches("[data-reward-title]"))r.title=e.target.value;
-    if(e.target.matches("[data-reward-desc]"))r.desc=e.target.value;
-    if(e.target.matches("[data-reward-cost]"))r.cost=Math.max(1,Number(e.target.value||1));
-    if(e.target.matches("[data-reward-emoji]"))r.emoji=e.target.value||"✨";
-    if(e.target.matches("[data-reward-select]"))g.selectedReward=i;
-    g.updatedAt=Date.now();v120Persist();v120RenderGems();
-  });
-  d.addEventListener("click",e=>{
-    const redeem=e.target.closest("[data-gem-redeem]");
-    if(redeem){const g=v120EnsureGemStore(v120GemChild),r=g.rewards[g.selectedReward]||g.rewards[0];if(g.count<r.cost)return;g.count-=r.cost;g.history.unshift({id:v120Id("gem"),delta:-r.cost,why:`Eingelöst: ${r.title}`,at:Date.now()});g.updatedAt=Date.now();v120Persist();v120RenderGems()}
-    const del=e.target.closest("[data-reward-delete]");
-    if(del){const g=v120EnsureGemStore(v120GemChild),i=Number(del.dataset.rewardDelete);if(g.rewards.length<=1)return;g.rewards.splice(i,1);g.selectedReward=Math.min(g.selectedReward,g.rewards.length-1);g.updatedAt=Date.now();v120Persist();v120RenderGems()}
-  });
+  d.querySelector(".child-money-close").onclick=()=>d.close();
+  d.addEventListener("click",e=>{if(e.target===d)d.close();});
+  d.querySelector("#childMoneyAddLoan").onclick=()=>d.querySelector("#childMoneyLoanForm").classList.toggle("hidden");
+  d.querySelectorAll("[data-money-pay]").forEach(b=>b.onclick=()=>{const s=childMoneyStore(activeChildMoneyId),w=moneyWeekKey(),k=b.dataset.moneyPay;s.weekly.payments[w]=s.weekly.payments[w]||{};const old=s.weekly.payments[w][k];s.weekly.payments[w][k]={paid:!old?.paid,paidAt:!old?.paid?Date.now():0,updatedAt:Date.now()};moneyTouch(activeChildMoneyId);renderChildMoneyDialog();});
+  d.querySelector("#childPocketAmount").onchange=e=>{childMoneyStore(activeChildMoneyId).weekly.pocketAmount=moneyNumber(e.target.value);moneyTouch(activeChildMoneyId);renderChildMoneyDialog();};
+  d.querySelector("#childSnackAmount").onchange=e=>{childMoneyStore(activeChildMoneyId).weekly.snackAmount=moneyNumber(e.target.value);moneyTouch(activeChildMoneyId);renderChildMoneyDialog();};
+  d.querySelectorAll("[data-month]").forEach(b=>b.onclick=()=>{const [y,m]=activeMoneyMonth.split("-").map(Number),x=new Date(y,m-1+Number(b.dataset.month),1);activeMoneyMonth=moneyMonthKey(x);renderChildMoneyDialog();});
+  d.querySelector("#childMoneyLoanForm").onsubmit=e=>{e.preventDefault();const f=d.querySelector("#childMoneyFrom").value,t=d.querySelector("#childMoneyTo").value,a=moneyNumber(d.querySelector("#childMoneyLoanAmount").value),n=d.querySelector("#childMoneyLoanNote").value.trim();if(!a||f===t)return;const now=Date.now();childMoneyStore(activeChildMoneyId).loans.unshift({id:`money-${now}-${Math.random().toString(36).slice(2,7)}`,from:f,to:t,amount:a,note:n,createdAt:now,updatedAt:now,done:false,doneAt:0});d.querySelector("#childMoneyLoanAmount").value="";d.querySelector("#childMoneyLoanNote").value="";d.querySelector("#childMoneyLoanForm").classList.add("hidden");moneyTouch(activeChildMoneyId);renderChildMoneyDialog();};
+  ["savingGoal","savingTarget"].forEach(id=>d.querySelector("#"+id).onchange=e=>{const s=childMoneyStore(activeChildMoneyId);if(id==="savingGoal")s.savings.goal=e.target.value.trim();else s.savings.target=moneyNumber(e.target.value);moneyTouch(activeChildMoneyId);renderChildMoneyDialog();});
+  d.querySelectorAll("[data-save]").forEach(b=>b.onclick=()=>{const s=childMoneyStore(activeChildMoneyId),a=moneyNumber(d.querySelector("#savingAmount").value);if(!a)return;const delta=b.dataset.save==="minus"?-a:a;s.savings.balance=Math.max(0,Math.round((s.savings.balance+delta)*100)/100);s.savings.history.unshift({id:`save-${Date.now()}`,amount:delta,at:Date.now()});d.querySelector("#savingAmount").value="";moneyTouch(activeChildMoneyId);renderChildMoneyDialog();});
+  ["gemRewardTitle","gemRewardText","gemRewardCost"].forEach(id=>d.querySelector("#"+id).onchange=e=>{const g=childMoneyStore(activeChildMoneyId).gems;if(id==="gemRewardTitle")g.rewardTitle=e.target.value.trim();if(id==="gemRewardText")g.rewardText=e.target.value.trim();if(id==="gemRewardCost")g.rewardCost=Math.max(1,Number(e.target.value||1));moneyTouch(activeChildMoneyId);renderChildMoneyDialog();});
+  d.querySelectorAll("[data-gem]").forEach(b=>b.onclick=()=>{const g=childMoneyStore(activeChildMoneyId).gems,plus=b.dataset.gem==="plus",why=d.querySelector("#gemWhy").value.trim();if(!plus&&g.count<=0)return;g.count+=plus?1:-1;g.history.unshift({id:`gem-${Date.now()}`,delta:plus?1:-1,why:why||(plus?"Besonderes Extra":"zurückgenommen"),at:Date.now()});d.querySelector("#gemWhy").value="";moneyTouch(activeChildMoneyId);renderChildMoneyDialog();});
+  d.querySelector("#gemRedeem").onclick=()=>{const g=childMoneyStore(activeChildMoneyId).gems;if(g.count<g.rewardCost)return;g.count-=g.rewardCost;g.history.unshift({id:`gem-${Date.now()}`,delta:-g.rewardCost,why:`Eingelöst: ${g.rewardTitle}`,at:Date.now()});moneyTouch(activeChildMoneyId);renderChildMoneyDialog();};
+  d.addEventListener("click",e=>{const b=e.target.closest("[data-money-loan-done]");if(!b)return;const x=childMoneyStore(activeChildMoneyId).loans.find(v=>v.id===b.dataset.moneyLoanDone);if(!x)return;x.done=true;x.doneAt=Date.now();x.updatedAt=Date.now();moneyTouch(activeChildMoneyId);renderChildMoneyDialog();});
   return d;
 }
-function v120RenderGems(){
-  const d=v120GemDialog(),g=v120EnsureGemStore(v120GemChild),r=g.rewards[g.selectedReward]||g.rewards[0],cost=Math.max(1,Number(r.cost||1)),pct=Math.min(100,Math.round(g.count/cost*100));
-  d.querySelector("#v120GemTitle").textContent=moneyName(v120GemChild);
-  d.querySelector("#v120GemQuote").textContent=`✨ ${V120_GEM_QUOTES[(new Date().getDate()+Number(v120GemChild))%V120_GEM_QUOTES.length]}`;
-  const slots=Array.from({length:cost},(_,i)=>`<span class="${i<g.count?"filled":""}">◆</span>`).join("");
-  d.querySelector("#v120GemVisual").innerHTML=`<div class="v120-gem-slots">${slots}</div><strong>${g.count} von ${cost} Edelsteinen</strong><div class="v120-gem-bar"><i style="width:${pct}%"></i></div>`;
-  d.querySelector("#v120GemReward").innerHTML=`<div class="v120-reward-emoji">${v120Esc(r.emoji)}</div><strong>${v120Esc(r.title)}</strong><small>${v120Esc(r.desc)}</small><p>${g.count>=cost?"JAAAA! Geschafft! 🎉":`Noch ${Math.max(0,cost-g.count)} 💎 bis dahin.`}</p>${g.count>=cost?`<button type="button" data-gem-redeem>Belohnung einlösen</button>`:""}`;
-  d.querySelector("#v120RewardList").innerHTML=g.rewards.map((x,i)=>`<div class="v120-reward-edit" data-reward-index="${i}">
-    <input type="radio" name="v120RewardPick" data-reward-select ${i===g.selectedReward?"checked":""}>
-    <input data-reward-emoji value="${v120Esc(x.emoji)}" aria-label="Emoji">
-    <input data-reward-title value="${v120Esc(x.title)}" aria-label="Belohnung">
-    <input data-reward-desc value="${v120Esc(x.desc)}" aria-label="Beschreibung">
-    <label><input type="number" min="1" data-reward-cost value="${Number(x.cost||1)}"> 💎</label>
-    <button type="button" data-reward-delete="${i}" title="Belohnung löschen">×</button>
-  </div>`).join("");
-  d.querySelector("#v120GemHistory").innerHTML=g.history.length?g.history.slice(0,30).map(x=>`<div><b>${x.delta>0?"+":""}${x.delta} ◆</b><span>${v120Esc(x.why||"Besonderes Extra")}</span><small>${v120Date(x.at)}</small></div>`).join(""):`<div class="child-money-empty">Noch keine Edelsteine gesammelt.</div>`;
-}
-document.addEventListener("click",e=>{
-  const b=e.target.closest("[data-school-open-gems]");if(!b)return;
-  v120GemChild=String(b.dataset.schoolOpenGems||"1");v120RenderGems();const d=v120GemDialog();typeof d.showModal==="function"?d.showModal():d.setAttribute("open","");
-});
+function renderChildMoneyDialog(){
+  const d=ensureChildMoneyDialog(),s=childMoneyStore(activeChildMoneyId),w=moneyWeekKey(),p=s.weekly.payments[w]||{};
+  d.querySelector("#childMoneyTitle").textContent=moneyPersonName(activeChildMoneyId);
+  d.querySelector("#childMoneyWeekLabel").textContent=moneyWeekLabel(w);
+  d.querySelector("#childPocketAmount").value=s.weekly.pocketAmount||""; d.querySelector("#childSnackAmount").value=s.weekly.snackAmount||"";
+  ["pocket","snack"].forEach(k=>{const b=d.querySelector(`[data-money-pay="${k}"]`),ok=!!p[k]?.paid;b.classList.toggle("is-paid",ok);b.textContent=ok?"✓ erhalten":"○ noch offen";});
+  d.querySelector("#moneyQuote").textContent="✦ "+MONEY_QUOTES[(new Date().getDate()+Number(activeChildMoneyId))%MONEY_QUOTES.length];
 
+  d.querySelector("#moneyMonthTitle").textContent=moneyMonthLabel(activeMoneyMonth);
+  const [yy,mm]=activeMoneyMonth.split("-").map(Number); let monthRows=[];
+  for(let day=1;day<=31;day++){const dt=new Date(yy,mm-1,day,12);if(dt.getMonth()!==mm-1)break;if(dt.getDay()===1){const k=moneyWeekKey(dt),q=s.weekly.payments[k]||{};monthRows.push(`<div class="child-money-history-row"><span>${moneyWeekLabel(k)}</span><span class="${q.pocket?.paid?"is-paid":""}">${q.pocket?.paid?"✓":"○"} Taschengeld</span><span class="${q.snack?.paid?"is-paid":""}">${q.snack?.paid?"✓":"○"} Jause</span></div>`);}}
+  d.querySelector("#moneyMonthHistory").innerHTML=monthRows.join("");
+
+  const open=s.loans.filter(x=>!x.done); d.querySelector("#childMoneyOpenLoans").innerHTML=open.length?open.map(x=>`<div class="child-money-loan-row"><span><strong>${escapeHtml(moneyPersonName(x.from))}</strong> → <strong>${escapeHtml(moneyPersonName(x.to))}</strong>${x.note?`<small>${escapeHtml(x.note)}</small>`:""}</span><b>${moneyEuro(x.amount)}</b><button data-money-loan-done="${escapeHtml(x.id)}">✓ zurück</button></div>`).join(""):`<div class="child-money-empty">Alles ausgeglichen. ✦</div>`;
+
+  d.querySelector("#savingGoal").value=s.savings.goal||"";d.querySelector("#savingTarget").value=s.savings.target||"";
+  const sp=s.savings.target?Math.min(100,Math.round(s.savings.balance/s.savings.target*100)):0;d.querySelector("#savingFill").style.height=sp+"%";d.querySelector("#savingStatus").textContent=s.savings.target?`${moneyEuro(s.savings.balance)} von ${moneyEuro(s.savings.target)} · ${sp}%`:`${moneyEuro(s.savings.balance)} gespart`;d.querySelector("#savingText").textContent=sp>=100?"Geschafft! ✨":sp>=50?"Mehr als die Hälfte – dein Ziel kommt näher.":"Jeder gesparte Euro bringt dich näher.";
+
+  const g=s.gems,cost=Math.max(1,g.rewardCost),gp=Math.min(100,Math.round(g.count/cost*100));d.querySelector("#gemCount").textContent=`${g.count} 💎`;d.querySelector("#gemQuote").textContent="✨ "+GEM_QUOTES[(new Date().getDate()+Number(activeChildMoneyId))%GEM_QUOTES.length];d.querySelector("#gemRewardTitle").value=g.rewardTitle;d.querySelector("#gemRewardText").value=g.rewardText;d.querySelector("#gemRewardCost").value=cost;d.querySelector("#gemDots").innerHTML=Array.from({length:cost},(_,i)=>`<span class="${i<g.count?"on":""}">◆</span>`).join("");d.querySelector("#gemFill").style.width=gp+"%";const rb=d.querySelector("#gemRedeem");rb.disabled=g.count<cost;rb.textContent=g.count>=cost?`🎉 ${g.rewardTitle} einlösen`:`Noch ${Math.max(0,cost-g.count)} 💎`;
+
+  let rows=[];const cur=new Date(w+"T12:00:00");for(let i=0;i<8;i++){const z=new Date(cur);z.setDate(cur.getDate()-7*i);const k=moneyWeekKey(z),q=s.weekly.payments[k]||{};rows.push(`<div class="child-money-history-row"><span>${moneyWeekLabel(k)}</span><span class="${q.pocket?.paid?"is-paid":""}">${q.pocket?.paid?"✓":"○"} Taschengeld</span><span class="${q.snack?.paid?"is-paid":""}">${q.snack?.paid?"✓":"○"} Jause</span></div>`);}d.querySelector("#childMoneyWeeklyHistory").innerHTML=`<h4>Letzte Wochen</h4>${rows.join("")}`;
+  const done=s.loans.filter(x=>x.done).sort((a,b)=>(b.doneAt||0)-(a.doneAt||0));d.querySelector("#childMoneyLoanHistory").innerHTML=`<h4>Zurückbezahlt</h4>${done.length?done.map(x=>`<div class="child-money-history-row"><span>✓ ${escapeHtml(moneyPersonName(x.from))} → ${escapeHtml(moneyPersonName(x.to))}</span><b>${moneyEuro(x.amount)}</b><small>${new Date(x.doneAt).toLocaleDateString("de-AT")}</small></div>`).join(""):`<div class="child-money-empty">Noch keine erledigten Einträge.</div>`}`;
+  d.querySelector("#savingHistory").innerHTML=`<h4>Sparen</h4>${s.savings.history.length?s.savings.history.slice(0,20).map(x=>`<div class="child-money-history-row"><span>${x.amount>=0?"+":"−"} ${moneyEuro(Math.abs(x.amount))}</span><small>${new Date(x.at).toLocaleDateString("de-AT")}</small></div>`).join(""):`<div class="child-money-empty">Noch keine Sparbewegung.</div>`}`;
+  d.querySelector("#gemHistory").innerHTML=`<h4>Edelsteine</h4>${g.history.length?g.history.slice(0,20).map(x=>`<div class="child-money-history-row"><span>${x.delta>0?"+":""}${x.delta} 💎</span><span>${escapeHtml(x.why||"")}</span><small>${new Date(x.at).toLocaleDateString("de-AT")}</small></div>`).join(""):`<div class="child-money-empty">Noch keine Edelsteine gesammelt.</div>`}`;
+}
+document.addEventListener("click",e=>{const b=e.target.closest("[data-school-open-money]");if(!b)return;activeChildMoneyId=String(b.dataset.schoolOpenMoney||"1");activeMoneyMonth=moneyMonthKey();renderChildMoneyDialog();const d=ensureChildMoneyDialog();typeof d.showModal==="function"?d.showModal():d.setAttribute("open","");});
