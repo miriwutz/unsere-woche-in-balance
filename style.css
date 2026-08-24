@@ -31844,3 +31844,94 @@ button.day-meal-list-item:hover,a.day-meal-list-item:hover{background:rgba(164,1
   .v128-gem-explain-note{margin-left:43px !important}
 }
 
+
+/* =========================================================
+   V129 – Kinderbuttons endgültig stabil + "Mein Geld" Regenbogen
+   ========================================================= */
+
+/* Frühere Regeln setzen den Bereich teils auf 5 bzw. 3 Spalten.
+   Diese LETZTE Regel überschreibt sie am PC zuverlässig. */
+@media (min-width:1000px){
+  .school-child-dashboard .school-dashboard-tiles,
+  .school-dashboard-tiles{
+    display:grid !important;
+    grid-template-columns:repeat(6,minmax(0,1fr)) !important;
+    gap:9px !important;
+    align-items:stretch !important;
+  }
+
+  .school-child-dashboard .school-dashboard-tile,
+  .school-dashboard-tiles .school-dashboard-tile{
+    width:100% !important;
+    min-width:0 !important;
+    max-width:none !important;
+    margin:0 !important;
+    padding:10px 9px !important;
+    grid-template-columns:38px minmax(0,1fr) 13px !important;
+    gap:7px !important;
+  }
+
+  .school-dashboard-tile .school-tile-icon{
+    width:36px !important;
+    height:36px !important;
+    border-radius:12px !important;
+    font-size:1rem !important;
+  }
+
+  .school-dashboard-tile strong{
+    font-size:.79rem !important;
+    line-height:1.15 !important;
+    white-space:nowrap !important;
+  }
+
+  .school-dashboard-tile small{
+    font-size:.60rem !important;
+    line-height:1.22 !important;
+    margin-top:2px !important;
+  }
+
+  .school-dashboard-tile .school-tile-arrow{
+    font-size:.85rem !important;
+    margin-left:auto !important;
+  }
+}
+
+/* "Mein Geld" als sechste, passende Pastell-Regenbogen-Kachel */
+.school-tile-money{
+  background:
+    linear-gradient(115deg,
+      rgba(226,214,250,.88) 0%,
+      rgba(249,217,233,.84) 24%,
+      rgba(255,230,204,.82) 43%,
+      rgba(229,240,207,.82) 63%,
+      rgba(205,230,243,.84) 82%,
+      rgba(224,214,247,.86) 100%) !important;
+  border-color:rgba(180,162,207,.24) !important;
+}
+
+.school-tile-money .school-tile-icon{
+  background:rgba(255,255,255,.66) !important;
+  color:#78649b !important;
+  border:1px solid rgba(181,162,207,.18) !important;
+}
+
+.school-tile-money strong{
+  color:#5c5266 !important;
+}
+
+.school-tile-money small{
+  color:#817682 !important;
+}
+
+/* Tablet bleibt bewusst mehrspaltig, Handy einspaltig. */
+@media (min-width:700px) and (max-width:999px){
+  .school-dashboard-tiles{
+    grid-template-columns:repeat(3,minmax(0,1fr)) !important;
+  }
+}
+@media (max-width:699px){
+  .school-dashboard-tiles{
+    grid-template-columns:1fr !important;
+  }
+}
+
