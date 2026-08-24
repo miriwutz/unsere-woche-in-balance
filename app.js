@@ -2628,6 +2628,32 @@ const eventHtml = (multiDayLaneHtml || singleEventHtml) ? `
         return holiday ? `<div class="week-holiday-label">✦ ${escapeHtml(holiday)}</div>` : "";
       })()}
       ${(() => {
+        const currentKey = dateKey(date);
+        const items = multiDayEventsThisWeek.filter(item => {
+          const start = item.date || "";
+          const end = item.endDate || start;
+          return currentKey >= start && currentKey <= end;
+        });
+        if (!items.length) return "";
+
+        return `<div class="mobile-day-multiday-notes">
+          ${items.map(item => {
+            const end = item.endDate || item.date;
+            const person = todoGroupKey(item) === "general" ? "" : familySelectionLabel(item);
+            const endDate = parseLocalDate(end);
+            const endLabel = endDate
+              ? `${["So","Mo","Di","Mi","Do","Fr","Sa"][endDate.getDay()]} ${String(endDate.getDate()).padStart(2,"0")}.${String(endDate.getMonth()+1).padStart(2,"0")}.`
+              : "";
+            return `<div class="mobile-day-multiday-note">
+              <span aria-hidden="true">↔</span>
+              ${person ? `<span class="mobile-day-multiday-person">${escapeHtml(person)}</span><span>·</span>` : ""}
+              <span class="mobile-day-multiday-text">${item.superImportant ? "★ " : ""}${escapeHtml(item.text || "")}</span>
+              ${endLabel ? `<span class="mobile-day-multiday-until">· bis ${escapeHtml(endLabel)}</span>` : ""}
+            </div>`;
+          }).join("")}
+        </div>`;
+      })()}
+      ${(() => {
         const schoolFree = noeSchoolFreeLabel(date);
         if (schoolFree) {
           return `<div class="day-home-times day-school-free" aria-label="${schoolFree}">
