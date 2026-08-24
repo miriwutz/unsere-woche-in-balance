@@ -32208,3 +32208,75 @@ button.day-meal-list-item:hover,a.day-meal-list-item:hover{background:rgba(164,1
   }
 }
 
+/* =========================================================
+   V134 – NUR DESKTOP: Wochenplan-Text wirklich lesbar
+   Handy bleibt vollständig unverändert.
+   ========================================================= */
+@media (min-width:701px){
+
+  /* WICHTIG:
+     Eine spätere Altregel setzte den kompletten vergangenen Tag
+     wieder auf opacity:.74. Das macht ALLES darin blass, auch wenn
+     einzelne Texte opacity:1 haben. Deshalb hier final neutralisieren. */
+  #weekGrid .day.past-day,
+  .week-grid .day.past-day{
+    opacity:1 !important;
+    filter:none !important;
+  }
+
+  #weekGrid .day.past-day:hover,
+  .week-grid .day.past-day:hover{
+    opacity:1 !important;
+    filter:none !important;
+  }
+
+  /* Nur Datum/Tagesname vergangener Tage bleiben bewusst etwas ruhiger. */
+  .week-grid .day.past-day .day-name,
+  .week-grid .day.past-day .day-date{
+    color:#786f69 !important;
+    opacity:1 !important;
+  }
+
+  /* Normale Inhalte vergangener Tage wieder klar lesbar. */
+  .week-grid .day.past-day .todo-mini,
+  .week-grid .day.past-day .todo-mini > span,
+  .week-grid .day.past-day .event-mini,
+  .week-grid .day.past-day .event-copy,
+  .week-grid .day.past-day .school-week-item,
+  .week-grid .day.past-day .day-todos,
+  .week-grid .day.past-day .day-school{
+    opacity:1 !important;
+  }
+
+  /* Mehrtagestermin:
+     Das Segment, das den mittigen Text trägt, muss über den
+     Nachbarsegmenten liegen. Sonst übermalt das nächste Tagessegment
+     den Text an der Spaltengrenze. */
+  .week-grid .multiday-continuous-segment{
+    z-index:2 !important;
+    overflow:visible !important;
+  }
+
+  .week-grid .multiday-continuous-segment:has(.multiday-center-label){
+    z-index:30 !important;
+  }
+
+  .week-grid .multiday-event-lane{
+    overflow:visible !important;
+  }
+
+  .week-grid .multiday-center-label{
+    z-index:31 !important;
+    opacity:1 !important;
+    color:#4f4946 !important;
+    text-shadow:0 1px 0 rgba(255,255,255,.78) !important;
+  }
+
+  .week-grid .multiday-center-label .multiday-person,
+  .week-grid .multiday-center-label .multiday-title,
+  .week-grid .multiday-center-label .multiday-sep{
+    opacity:1 !important;
+    color:#4f4946 !important;
+  }
+}
+
