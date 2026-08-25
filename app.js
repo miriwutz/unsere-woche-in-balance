@@ -8218,6 +8218,158 @@ document.querySelector("#saveSchoolPrintEmailBtn")?.addEventListener("click",()=
 });
 
 // =============================
+// V155 – WERKRAUM: MATERIALGELD – SCHRITT 3A
+// =============================
+
+let activeWorkroomMaterialClassId = "";
+
+function workroomMaterialMoneyStore(){
+  state.workroom=normalizeWorkroom(state.workroom);
+  state.workroom.materialMoney=state.workroom.materialMoney&&typeof state.workroom.materialMoney==="object"
+    ? state.workroom.materialMoney
+    : {classes:[]};
+  state.workroom.materialMoney.classes=Array.isArray(state.workroom.materialMoney.classes)
+    ? state.workroom.materialMoney.classes
+    : [];
+  return state.workroom.materialMoney;
+}
+
+function renderWorkroomMaterialMoney(){
+  const tabs=document.querySelector("#workroomMaterialClassTabs");
+  const editor=document.querySelector("#workroomMaterialClassEditor");
+  if(!tabs || !editor) return;
+
+  const store=workroomMaterialMoneyStore();
+  const classes=[...store.classes].sort((a,b)=>
+    String(a.name||"").localeCompare(String(b.name||""),"de-AT",{numeric:true,sensitivity:"base"})
+  );
+
+  if(!classes.length){
+    activeWorkroomMaterialClassId="";
+    tabs.innerHTML="";
+    editor.innerHTML=`<div class="workroom-empty">Noch keine Klasse angelegt.</div>`;
+    return;
+  }
+
+  if(!classes.some(x=>String(x.id)===String(activeWorkroomMaterialClassId))){
+    activeWorkroomMaterialClassId=String(classes[0].id);
+  }
+
+  tabs.innerHTML=classes.map(item=>`
+    <button type="button"
+            class="${String(item.id)===String(activeWorkroomMaterialClassId)?"active":""}"
+            data-material-class-tab="${escapeHtml(item.id)}">
+      ${escapeHtml(item.name||"Klasse")}
+    </button>
+  `).join("");
+
+  const current=classes.find(x=>String(x.id)===String(activeWorkroomMaterialClassId));
+  if(!current) return;
+
+  const total=Math.round(Number(current.childrenCount||0)*Number(current.contribution||0)*100)/100;
+
+  editor.innerHTML=`
+    <div class="workroom-material-class-head">
+      <strong>${escapeHtml(current.name||"Klasse")}</strong>
+      <span>Eingenommen gesamt: <b>${moneyEuro(total)}</b></span>
+    </div>
+
+    <div class="workroom-material-class-fields">
+      <label>
+        Klasse
+        <input type="text"
+               data-material-class-name="${escapeHtml(current.id)}"
+               value="${escapeHtml(current.name||"")}"
+               placeholder="z. B. 3a">
+      </label>
+
+      <label>
+        Kinder
+        <input type="number"
+               min="0"
+               step="1"
+               data-material-class-children="${escapeHtml(current.id)}"
+               value="${Number(current.childrenCount||0)}">
+      </label>
+
+      <label>
+        Beitrag pro Kind
+        <span class="workroom-material-euro-input">
+          <input type="text"
+                 inputmode="decimal"
+                 data-material-class-contribution="${escapeHtml(current.id)}"
+                 value="${current.contribution?String(current.contribution).replace(".",","):""}"
+                 placeholder="0,00">
+          <span>€</span>
+        </span>
+      </label>
+    </div>
+
+    <div class="workroom-material-income">
+      <span>${Number(current.childrenCount||0)} Kinder × ${moneyEuro(current.contribution||0)}</span>
+      <strong>${moneyEuro(total)}</strong>
+    </div>
+  `;
+
+  tabs.querySelectorAll("[data-material-class-tab]").forEach(btn=>{
+    btn.onclick=()=>{
+      activeWorkroomMaterialClassId=String(btn.dataset.materialClassTab||"");
+      renderWorkroomMaterialMoney();
+    };
+  });
+
+  editor.querySelectorAll("[data-material-class-name],[data-material-class-children],[data-material-class-contribution]").forEach(input=>{
+    input.addEventListener("change",()=>{
+      const id=
+        input.dataset.materialClassName ||
+        input.dataset.materialClassChildren ||
+        input.dataset.materialClassContribution;
+      const item=workroomMaterialMoneyStore().classes.find(x=>String(x.id)===String(id));
+      if(!item) return;
+
+      if(input.dataset.materialClassName!==undefined){
+        item.name=String(input.value||"").trim() || "Klasse";
+      }else if(input.dataset.materialClassChildren!==undefined){
+        item.childrenCount=Math.max(0,Math.round(Number(input.value||0)));
+      }else{
+        item.contribution=moneyNumber(input.value);
+      }
+
+      item.updatedAt=Date.now();
+      save();
+      renderWorkroomMaterialMoney();
+    });
+  });
+}
+
+document.querySelector("#addWorkroomMaterialClassBtn")?.addEventListener("click",()=>{
+  const input=document.querySelector("#workroomMaterialClassName");
+  const name=String(input?.value||"").trim();
+  if(!name) return;
+
+  const store=workroomMaterialMoneyStore();
+  const now=Date.now();
+  const item={
+    id:`material-class-${now}-${Math.random().toString(36).slice(2,7)}`,
+    name,
+    childrenCount:0,
+    contribution:0,
+    createdAt:now,
+    updatedAt:now
+  };
+
+  store.classes.push(item);
+  activeWorkroomMaterialClassId=item.id;
+  if(input) input.value="";
+  save();
+  renderWorkroomMaterialMoney();
+});
+
+document.querySelector("#workroomMaterialMoneyDetails")?.addEventListener("toggle",e=>{
+  if(e.currentTarget.open) renderWorkroomMaterialMoney();
+});
+
+// =============================
 // WERKRAUM – LINKSAMMLUNG
 // =============================
 
@@ -9719,6 +9871,27 @@ function mergeWorkroomListWithTombstones(localValue, remoteValue, tombstones) {
   });
 }
 
+function mergeWorkroomMaterialMoney(localValue, remoteValue){
+  const local=localValue&&typeof localValue==="object"?localValue:{classes:[]};
+  const remote=remoteValue&&typeof remoteValue==="object"?remoteValue:{classes:[]};
+  const byId=new Map();
+
+  (Array.isArray(local.classes)?local.classes:[]).forEach(item=>{
+    if(item?.id) byId.set(String(item.id),item);
+  });
+
+  (Array.isArray(remote.classes)?remote.classes:[]).forEach(item=>{
+    if(!item?.id) return;
+    const id=String(item.id);
+    const current=byId.get(id);
+    if(!current || Number(item.updatedAt||item.createdAt||0)>=Number(current.updatedAt||current.createdAt||0)){
+      byId.set(id,item);
+    }
+  });
+
+  return {classes:[...byId.values()]};
+}
+
 function guardedWorkroomMerge(localValue, cloudValue) {
   const local = normalizeWorkroom(localValue);
   const remote = normalizeWorkroom(cloudValue);
@@ -9763,7 +9936,8 @@ function guardedWorkroomMerge(localValue, cloudValue) {
       ...(remote.plans || {}),
       week: guardedMergeById(local.plans?.week, remote.plans?.week, "Werkraum-Wochenplanung"),
       year: guardedMergeById(local.plans?.year, remote.plans?.year, "Werkraum-Jahresplanung")
-    }
+    },
+    materialMoney: mergeWorkroomMaterialMoney(local.materialMoney, remote.materialMoney)
   };
 }
 
@@ -12953,7 +13127,21 @@ function normalizeWorkroom(w) {
       : {items:[], completions:{}, inspirationChecks:{}, tombstones:{}},
     plans: src.plans && typeof src.plans === "object"
       ? src.plans
-      : {week:[], year:[]}
+      : {week:[], year:[]},
+    materialMoney: src.materialMoney && typeof src.materialMoney === "object"
+      ? {
+          classes: Array.isArray(src.materialMoney.classes)
+            ? src.materialMoney.classes.map((item,index)=>({
+                id:String(item?.id || `material-class-${index}`),
+                name:String(item?.name || "").trim(),
+                childrenCount:Math.max(0,Math.round(Number(item?.childrenCount || 0))),
+                contribution:moneyNumber(item?.contribution),
+                createdAt:Number(item?.createdAt || 0),
+                updatedAt:Number(item?.updatedAt || 0)
+              }))
+            : []
+        }
+      : {classes:[]}
   };
 }
 
@@ -13922,6 +14110,7 @@ function renderAll() {
   renderSchoolPrints();
   renderWorkroomShopping();
   renderWorkroomLinks();
+  renderWorkroomMaterialMoney();
   renderRoutines();
   renderRecipes();
   renderMealPlan();
@@ -20756,6 +20945,15 @@ window.addEventListener("resize", () => {
     }
   });
 })();
+
+/* =========================================================
+   V155 – WERKRAUM MATERIALGELD 3A
+   - einklappbarer Bereich unter der Linksammlung
+   - Klassen anlegen und durchschalten
+   - Kinderanzahl + Beitrag pro Kind
+   - Gesamteinnahmen automatisch berechnen
+   - Klassen werden über bestehenden Werkraum-Sync zusammengeführt
+   ========================================================= */
 
 /* =========================================================
    V154 – SPARZIEL-SYNC ROBUSTER
