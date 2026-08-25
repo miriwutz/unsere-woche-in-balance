@@ -33575,3 +33575,58 @@ button.day-meal-list-item:hover,a.day-meal-list-item:hover{background:rgba(164,1
     padding:2px 5px !important;
   }
 }
+
+
+/* =========================================================
+   V175 – Handy: Gemeinschaftstopf-Ausgabe wirklich zweizeilig
+   KORREKTUR: ✎ und × liegen gemeinsam in
+   .workroom-material-expense-actions.
+   PC/Tablet bleiben unverändert.
+   ========================================================= */
+@media (max-width:700px){
+  #workroomMaterialSharedList .workroom-material-shared-row{
+    display:grid !important;
+    grid-template-columns:auto minmax(0,1fr) !important;
+    grid-template-areas:
+      "date description"
+      "amount actions" !important;
+    align-items:center !important;
+    column-gap:12px !important;
+    row-gap:9px !important;
+    padding:12px 10px !important;
+  }
+
+  #workroomMaterialSharedList .workroom-material-shared-row > span:first-child{
+    grid-area:date !important;
+    align-self:start !important;
+    white-space:nowrap !important;
+  }
+
+  #workroomMaterialSharedList .workroom-material-expense-description{
+    grid-area:description !important;
+    min-width:0 !important;
+    align-self:start !important;
+  }
+
+  #workroomMaterialSharedList .workroom-material-expense-description > span,
+  #workroomMaterialSharedList .workroom-material-expense-description > small{
+    display:block !important;
+    white-space:normal !important;
+    word-break:normal !important;
+    overflow-wrap:break-word !important;
+  }
+
+  #workroomMaterialSharedList .workroom-material-shared-row > strong{
+    grid-area:amount !important;
+    justify-self:start !important;
+    white-space:nowrap !important;
+  }
+
+  #workroomMaterialSharedList .workroom-material-expense-actions{
+    grid-area:actions !important;
+    display:flex !important;
+    justify-self:end !important;
+    align-items:center !important;
+    gap:6px !important;
+  }
+}
