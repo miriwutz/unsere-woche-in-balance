@@ -8349,6 +8349,7 @@ function renderWorkroomMaterialMoney(){
       <div class="workroom-material-expense-entry">
         <input type="date" data-material-expense-date>
         <input type="text" data-material-expense-title placeholder="z. B. Action oder Winkler">
+        <input type="text" data-material-expense-note placeholder="Notiz (optional)">
         <span class="workroom-material-euro-input">
           <input type="text" inputmode="decimal" data-material-expense-amount placeholder="0,00">
           <span>€</span>
@@ -8363,7 +8364,10 @@ function renderWorkroomMaterialMoney(){
               .map(expense=>`
                 <div class="workroom-material-expense-row">
                   <span>${escapeHtml(expense.date ? expense.date.split("-").reverse().join(".") : "–")}</span>
-                  <span>${escapeHtml(expense.title||"Ausgabe")}</span>
+                  <span class="workroom-material-expense-description">
+                    <span>${escapeHtml(expense.title||"Ausgabe")}</span>
+                    ${expense.note?`<small>${escapeHtml(expense.note)}</small>`:""}
+                  </span>
                   <strong>${moneyEuro(expense.amount||0)}</strong>
                   <button type="button" class="workroom-material-expense-delete" data-material-expense-delete="${escapeHtml(expense.id)}" aria-label="Ausgabe löschen">×</button>
                 </div>
@@ -8386,6 +8390,7 @@ function renderWorkroomMaterialMoney(){
   editor.querySelector("[data-material-expense-add]")?.addEventListener("click",()=>{
     const date=String(editor.querySelector("[data-material-expense-date]")?.value||"");
     const title=String(editor.querySelector("[data-material-expense-title]")?.value||"").trim();
+    const note=String(editor.querySelector("[data-material-expense-note]")?.value||"").trim();
     const amount=moneyNumber(editor.querySelector("[data-material-expense-amount]")?.value);
 
     if(!date || !title || amount<=0) return;
@@ -8399,6 +8404,7 @@ function renderWorkroomMaterialMoney(){
       id:`material-expense-${now}-${Math.random().toString(36).slice(2,7)}`,
       date,
       title,
+      note,
       amount,
       createdAt:now,
       updatedAt:now
@@ -8509,7 +8515,10 @@ function renderWorkroomMaterialArchive(){
                         ? [...item.expenses].sort((a,b)=>String(b.date||"").localeCompare(String(a.date||""))).map(expense=>`
                             <div>
                               <span>${escapeHtml(expense.date?expense.date.split("-").reverse().join("."):"–")}</span>
-                              <span>${escapeHtml(expense.title||"Ausgabe")}</span>
+                              <span class="workroom-material-expense-description">
+                                <span>${escapeHtml(expense.title||"Ausgabe")}</span>
+                                ${expense.note?`<small>${escapeHtml(expense.note)}</small>`:""}
+                              </span>
                               <strong>${moneyEuro(expense.amount||0)}</strong>
                             </div>
                           `).join("")
@@ -13443,6 +13452,7 @@ function normalizeWorkroom(w) {
                       id:String(expense?.id || `material-expense-${expenseIndex}`),
                       date:String(expense?.date || ""),
                       title:String(expense?.title || "").trim(),
+                      note:String(expense?.note || "").trim(),
                       amount:moneyNumber(expense?.amount),
                       createdAt:Number(expense?.createdAt || 0),
                       updatedAt:Number(expense?.updatedAt || 0)
@@ -21263,6 +21273,13 @@ window.addEventListener("resize", () => {
     }
   });
 })();
+
+/* =========================================================
+   V164 – MATERIALGELD NOTIZEN
+   - optionale Notiz bei jeder Ausgabe
+   - geeignet für Sammelrechnungen und kurze Materialhinweise
+   - Notiz erscheint in Liste und Archiv nur, wenn sie befüllt ist
+   ========================================================= */
 
 /* =========================================================
    V163 – MATERIALGELD BEDIENUNG
