@@ -8236,6 +8236,11 @@ function workroomMaterialMoneyStore(){
   mm.deletedClasses=mm.deletedClasses&&typeof mm.deletedClasses==="object"?mm.deletedClasses:{};
   mm.archive=Array.isArray(mm.archive)?mm.archive:[];
   mm.deletedArchive=mm.deletedArchive&&typeof mm.deletedArchive==="object"?mm.deletedArchive:{};
+  mm.sharedFund=mm.sharedFund&&typeof mm.sharedFund==="object"?mm.sharedFund:{};
+  mm.sharedFund.startAmount=moneyNumber(mm.sharedFund.startAmount);
+  mm.sharedFund.updatedAt=Number(mm.sharedFund.updatedAt||0);
+  mm.sharedFund.deletedExpenses=mm.sharedFund.deletedExpenses&&typeof mm.sharedFund.deletedExpenses==="object"?mm.sharedFund.deletedExpenses:{};
+  mm.sharedFund.expenses=Array.isArray(mm.sharedFund.expenses)?mm.sharedFund.expenses:[];
   mm.classes=Array.isArray(mm.classes)?mm.classes:[];
   return state.workroom.materialMoney;
 }
@@ -8508,6 +8513,132 @@ function renderWorkroomMaterialMoney(){
   });
 }
 
+let editingWorkroomSharedExpenseId="";
+
+function renderWorkroomMaterialSharedFund(){
+  const store=workroomMaterialMoneyStore();
+  const fund=store.sharedFund;
+  const startInput=document.querySelector("#workroomMaterialSharedStart");
+  const list=document.querySelector("#workroomMaterialSharedList");
+  const balance=document.querySelector("#workroomMaterialSharedBalance");
+  if(!startInput || !list || !balance) return;
+
+  if(document.activeElement!==startInput){
+    startInput.value=fund.startAmount?String(fund.startAmount).replace(".",","):"";
+  }
+
+  const spent=(fund.expenses||[]).reduce((sum,x)=>sum+moneyNumber(x.amount),0);
+  balance.textContent=moneyEuro(moneyNumber(fund.startAmount)-spent);
+
+  const editing=(fund.expenses||[]).find(x=>String(x.id)===String(editingWorkroomSharedExpenseId));
+  if(editing){
+    const date=document.querySelector("#workroomMaterialSharedDate");
+    const title=document.querySelector("#workroomMaterialSharedTitle");
+    const note=document.querySelector("#workroomMaterialSharedNote");
+    const amount=document.querySelector("#workroomMaterialSharedAmount");
+    const btn=document.querySelector("#workroomMaterialSharedAddBtn");
+    if(date) date.value=editing.date||"";
+    if(title) title.value=editing.title||"";
+    if(note) note.value=editing.note||"";
+    if(amount) amount.value=String(editing.amount||"").replace(".",",");
+    if(btn) btn.textContent="✓ Speichern";
+  }else{
+    const btn=document.querySelector("#workroomMaterialSharedAddBtn");
+    if(btn) btn.textContent="+ Ausgabe";
+  }
+
+  list.innerHTML=(fund.expenses||[]).length
+    ? [...fund.expenses].sort((a,b)=>String(b.date||"").localeCompare(String(a.date||""))).map(expense=>`
+        <div class="workroom-material-shared-row">
+          <span>${escapeHtml(expense.date?expense.date.split("-").reverse().join("."):"–")}</span>
+          <span class="workroom-material-expense-description">
+            <span>${escapeHtml(expense.title||"Ausgabe")}</span>
+            ${expense.note?`<small>${escapeHtml(expense.note)}</small>`:""}
+          </span>
+          <strong>${moneyEuro(expense.amount||0)}</strong>
+          <span class="workroom-material-expense-actions">
+            <button type="button" class="workroom-material-expense-edit" data-shared-expense-edit="${escapeHtml(expense.id)}" aria-label="Ausgabe bearbeiten">✎</button>
+            <button type="button" class="workroom-material-expense-delete" data-shared-expense-delete="${escapeHtml(expense.id)}" aria-label="Ausgabe löschen">×</button>
+          </span>
+        </div>
+      `).join("")
+    : `<div class="workroom-empty">Noch keine gemeinsamen Ausgaben eingetragen.</div>`;
+
+  list.querySelectorAll("[data-shared-expense-edit]").forEach(btn=>{
+    btn.addEventListener("click",()=>{
+      editingWorkroomSharedExpenseId=String(btn.dataset.sharedExpenseEdit||"");
+      renderWorkroomMaterialSharedFund();
+      document.querySelector("#workroomMaterialSharedTitle")?.focus();
+    });
+  });
+
+  list.querySelectorAll("[data-shared-expense-delete]").forEach(btn=>{
+    btn.addEventListener("click",()=>{
+      const id=String(btn.dataset.sharedExpenseDelete||"");
+      const expense=fund.expenses.find(x=>String(x.id)===id);
+      if(!expense) return;
+      if(!confirm(`${expense.title||"Ausgabe"} wirklich löschen?`)) return;
+      const now=Date.now();
+      fund.deletedExpenses[id]=now;
+      fund.expenses=fund.expenses.filter(x=>String(x.id)!==id);
+      fund.updatedAt=now;
+      if(editingWorkroomSharedExpenseId===id) editingWorkroomSharedExpenseId="";
+      save();
+      renderWorkroomMaterialSharedFund();
+    });
+  });
+}
+
+document.querySelector("#workroomMaterialSharedStart")?.addEventListener("change",e=>{
+  const fund=workroomMaterialMoneyStore().sharedFund;
+  fund.startAmount=moneyNumber(e.target.value);
+  fund.updatedAt=Date.now();
+  save();
+  renderWorkroomMaterialSharedFund();
+});
+
+document.querySelector("#workroomMaterialSharedAddBtn")?.addEventListener("click",()=>{
+  const fund=workroomMaterialMoneyStore().sharedFund;
+  const date=String(document.querySelector("#workroomMaterialSharedDate")?.value||"");
+  const title=String(document.querySelector("#workroomMaterialSharedTitle")?.value||"").trim();
+  const note=String(document.querySelector("#workroomMaterialSharedNote")?.value||"").trim();
+  const amount=moneyNumber(document.querySelector("#workroomMaterialSharedAmount")?.value);
+
+  if(!title){
+    alert("Bitte eine Bezeichnung eintragen.");
+    return;
+  }
+  if(amount<=0){
+    alert("Bitte einen Betrag größer als 0 eintragen.");
+    return;
+  }
+
+  const now=Date.now();
+  if(editingWorkroomSharedExpenseId){
+    const expense=fund.expenses.find(x=>String(x.id)===String(editingWorkroomSharedExpenseId));
+    if(!expense) return;
+    expense.date=date;
+    expense.title=title;
+    expense.note=note;
+    expense.amount=amount;
+    expense.updatedAt=now;
+    editingWorkroomSharedExpenseId="";
+  }else{
+    fund.expenses.push({
+      id:`shared-expense-${now}-${Math.random().toString(36).slice(2,7)}`,
+      date,title,note,amount,createdAt:now,updatedAt:now
+    });
+  }
+  fund.updatedAt=now;
+  save();
+
+  ["#workroomMaterialSharedDate","#workroomMaterialSharedTitle","#workroomMaterialSharedNote","#workroomMaterialSharedAmount"].forEach(sel=>{
+    const el=document.querySelector(sel);
+    if(el) el.value="";
+  });
+  renderWorkroomMaterialSharedFund();
+});
+
 function renderWorkroomMaterialArchive(){
   const store=workroomMaterialMoneyStore();
   const semesterInput=document.querySelector("#workroomMaterialSemester");
@@ -8661,6 +8792,7 @@ document.querySelector("#workroomMaterialMoneyDetails")?.addEventListener("toggl
   });
 
   renderWorkroomMaterialMoney();
+  renderWorkroomMaterialSharedFund();
   renderWorkroomMaterialArchive();
 });
 
@@ -10214,13 +10346,41 @@ function mergeWorkroomMaterialMoney(localValue, remoteValue){
     ? String(remote.semester||"")
     : String(local.semester||"");
 
+  const localShared=local.sharedFund&&typeof local.sharedFund==="object"?local.sharedFund:{};
+  const remoteShared=remote.sharedFund&&typeof remote.sharedFund==="object"?remote.sharedFund:{};
+  const sharedDeleted={...(localShared.deletedExpenses||{}),...(remoteShared.deletedExpenses||{})};
+  for(const [id,at] of Object.entries(localShared.deletedExpenses||{})){
+    sharedDeleted[id]=Math.max(Number(sharedDeleted[id]||0),Number(at||0));
+  }
+  for(const [id,at] of Object.entries(remoteShared.deletedExpenses||{})){
+    sharedDeleted[id]=Math.max(Number(sharedDeleted[id]||0),Number(at||0));
+  }
+  const sharedById=new Map();
+  [...(Array.isArray(localShared.expenses)?localShared.expenses:[]),...(Array.isArray(remoteShared.expenses)?remoteShared.expenses:[])].forEach(expense=>{
+    if(!expense?.id)return;
+    const id=String(expense.id), old=sharedById.get(id);
+    if(!old || Number(expense.updatedAt||expense.createdAt||0)>=Number(old.updatedAt||old.createdAt||0)) sharedById.set(id,expense);
+  });
+  const sharedExpenses=[...sharedById.values()].filter(expense=>
+    Number(sharedDeleted[expense.id]||0)<Number(expense.updatedAt||expense.createdAt||0)
+  );
+  const localSharedAt=Number(localShared.updatedAt||0);
+  const remoteSharedAt=Number(remoteShared.updatedAt||0);
+  const sharedFund={
+    startAmount:remoteSharedAt>=localSharedAt?moneyNumber(remoteShared.startAmount):moneyNumber(localShared.startAmount),
+    updatedAt:Math.max(localSharedAt,remoteSharedAt),
+    deletedExpenses:sharedDeleted,
+    expenses:sharedExpenses
+  };
+
   return {
     semester,
     semesterUpdatedAt:Math.max(localSemesterAt,remoteSemesterAt),
     deletedClasses,
     classes,
     deletedArchive,
-    archive
+    archive,
+    sharedFund
   };
 }
 
@@ -13478,6 +13638,26 @@ function normalizeWorkroom(w) {
           deletedArchive:src.materialMoney.deletedArchive&&typeof src.materialMoney.deletedArchive==="object"
             ? src.materialMoney.deletedArchive
             : {},
+          sharedFund:src.materialMoney.sharedFund&&typeof src.materialMoney.sharedFund==="object"
+            ? {
+                startAmount:moneyNumber(src.materialMoney.sharedFund.startAmount),
+                updatedAt:Number(src.materialMoney.sharedFund.updatedAt||0),
+                deletedExpenses:src.materialMoney.sharedFund.deletedExpenses&&typeof src.materialMoney.sharedFund.deletedExpenses==="object"
+                  ? src.materialMoney.sharedFund.deletedExpenses
+                  : {},
+                expenses:Array.isArray(src.materialMoney.sharedFund.expenses)
+                  ? src.materialMoney.sharedFund.expenses.map((expense,index)=>({
+                      id:String(expense?.id || `shared-expense-${index}`),
+                      date:String(expense?.date || ""),
+                      title:String(expense?.title || "").trim(),
+                      note:String(expense?.note || "").trim(),
+                      amount:moneyNumber(expense?.amount),
+                      createdAt:Number(expense?.createdAt || 0),
+                      updatedAt:Number(expense?.updatedAt || expense?.createdAt || 0)
+                    }))
+                  : []
+              }
+            : {startAmount:0,updatedAt:0,deletedExpenses:{},expenses:[]},
           classes: Array.isArray(src.materialMoney.classes)
             ? src.materialMoney.classes.map((item,index)=>({
                 id:String(item?.id || `material-class-${index}`),
@@ -13500,7 +13680,7 @@ function normalizeWorkroom(w) {
               }))
             : []
         }
-      : {semester:"",semesterUpdatedAt:0,deletedClasses:{},archive:[],deletedArchive:{},classes:[]}
+      : {semester:"",semesterUpdatedAt:0,deletedClasses:{},archive:[],deletedArchive:{},sharedFund:{startAmount:0,updatedAt:0,deletedExpenses:{},expenses:[]},classes:[]}
   };
 }
 
@@ -14470,6 +14650,7 @@ function renderAll() {
   renderWorkroomShopping();
   renderWorkroomLinks();
   renderWorkroomMaterialMoney();
+  renderWorkroomMaterialSharedFund();
   renderWorkroomMaterialArchive();
   renderRoutines();
   renderRecipes();
@@ -21310,6 +21491,15 @@ window.addEventListener("resize", () => {
     }
   });
 })();
+
+/* =========================================================
+   V166 – GEMEINSCHAFTSTOPF / WINKLER-GUTHABEN
+   - eigener Startbetrag für klassenübergreifende Anschaffungen
+   - gemeinsame Ausgaben mit Datum, Bezeichnung, optionaler Notiz und Betrag
+   - Restbetrag wird automatisch berechnet
+   - Ausgaben bearbeitbar und löschbar
+   - eigener Sync-Merge inkl. Löschmarkern
+   ========================================================= */
 
 /* =========================================================
    V165 – AUSGABEN BEARBEITEN
