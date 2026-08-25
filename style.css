@@ -32644,3 +32644,16 @@ button.day-meal-list-item:hover,a.day-meal-list-item:hover{background:rgba(164,1
   }
 }
 
+
+
+/* =========================================================
+   V151 – Routinen-Kachel: Symbolgröße wieder an Nachbarkacheln angleichen
+   Nur Optik, keine Funktion.
+   ========================================================= */
+@media (min-width:651px){
+  .school-tile-routines .school-tile-icon{
+    width:44px !important;
+    height:44px !important;
+    min-width:44px !important;
+  }
+}
