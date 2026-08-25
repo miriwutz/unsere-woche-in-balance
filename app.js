@@ -1,4 +1,10 @@
 /* =========================================================
+   V144 – KINDER-ROUTINEN LIVE-ANZEIGE
+   - offene Lou/Fina-Routinen werden bei Cloud-Änderungen sofort neu gerendert
+   - keine Änderung an Routine-Daten, Merge-Logik oder Optik
+   ========================================================= */
+
+/* =========================================================
    V143 – PINNWAND-TON ZUVERLÄSSIGER
    - AudioContext wird bei normalen Benutzeraktionen erneut aktiviert
    - kein wiederholter Extra-Klick auf "Benachrichtigungen aktiv" nötig
@@ -13804,6 +13810,15 @@ function applyCloudData(data) {
     refreshTodoSyncFingerprints();
     saveLocal();
     renderAll();
+
+    /* V144 – Kinder-Routinen: bereits geöffnetes Dialogfenster live aktualisieren.
+       renderAll() aktualisiert die Hauptansicht, aber nicht den dynamisch erzeugten
+       childRoutineDialog. Dadurch waren Cloud-Häkchen erst nach der nächsten lokalen
+       Aktion sichtbar. Nur bei offenem Dialog neu rendern. */
+    const openChildRoutineDialog=document.querySelector("#childRoutineDialog");
+    if(openChildRoutineDialog?.open && ["1","2"].includes(String(activeChildRoutineId))){
+      renderChildRoutineDialog();
+    }
   } finally {
     cloudApplying = false;
   }
