@@ -32932,3 +32932,117 @@ button.day-meal-list-item:hover,a.day-meal-list-item:hover{background:rgba(164,1
     grid-template-columns:90px minmax(0,1fr) 90px 32px;
   }
 }
+
+
+/* =========================================================
+   V162 – Materialgeld 3C: Semester & Archiv
+   ========================================================= */
+.workroom-material-semester-row{
+  display:flex;
+  align-items:end;
+  gap:8px;
+  margin:4px 0 10px;
+}
+.workroom-material-semester-row label{
+  width:220px;
+}
+.workroom-material-class-head-actions{
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+.workroom-material-class-delete,
+.workroom-material-archive-delete{
+  border:1px solid #ead7d2;
+  border-radius:999px;
+  background:#fff8f6;
+  color:#9a625c;
+  padding:6px 10px;
+}
+.workroom-material-archive{
+  margin-top:16px;
+  border-top:1px solid var(--line);
+  padding-top:12px;
+}
+.workroom-material-archive > summary{
+  cursor:pointer;
+  color:var(--ink);
+  font-weight:600;
+}
+#workroomMaterialArchiveList{
+  display:grid;
+  gap:8px;
+  margin-top:10px;
+}
+.workroom-material-archive-semester{
+  border:1px solid var(--line);
+  border-radius:13px;
+  padding:0 12px;
+  background:rgba(255,255,255,.38);
+}
+.workroom-material-archive-semester > summary{
+  display:flex;
+  justify-content:space-between;
+  gap:14px;
+  padding:11px 0;
+  cursor:pointer;
+  color:var(--muted);
+  font-size:.84rem;
+}
+.workroom-material-archive-content{
+  border-top:1px solid var(--line);
+  padding:10px 0 12px;
+}
+.workroom-material-archive-reminder{
+  margin-bottom:9px;
+  padding:8px 10px;
+  border-radius:10px;
+  background:#fbf5e9;
+  color:#8a6c42;
+  font-size:.8rem;
+}
+.workroom-material-archive-class{
+  padding:10px 0;
+  border-bottom:1px solid var(--line);
+}
+.workroom-material-archive-class-head{
+  display:flex;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom:6px;
+}
+.workroom-material-archive-class-head span{
+  color:var(--muted);
+  font-size:.8rem;
+}
+.workroom-material-archive-expenses{
+  display:grid;
+  gap:4px;
+}
+.workroom-material-archive-expenses > div{
+  display:grid;
+  grid-template-columns:100px minmax(160px,1fr) 100px;
+  gap:8px;
+  font-size:.8rem;
+}
+.workroom-material-archive-expenses strong{
+  text-align:right;
+}
+.workroom-material-archive-delete{
+  margin-top:12px;
+}
+@media(max-width:700px){
+  .workroom-material-semester-row{
+    align-items:stretch;
+    flex-direction:column;
+  }
+  .workroom-material-semester-row label{
+    width:100%;
+  }
+  .workroom-material-class-head-actions,
+  .workroom-material-archive-semester > summary,
+  .workroom-material-archive-class-head{
+    align-items:flex-start;
+    flex-direction:column;
+  }
+}
