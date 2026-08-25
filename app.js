@@ -1,4 +1,20 @@
 /* =========================================================
+   V187 – EFFIZIENZRUNDE 3 · 26.08.2026
+   GEZIELTE RENDERS OHNE SYNC-ÄNDERUNG
+
+   - save(), Firestore, Tombstones und Cloud-Merge NICHT verändert
+   - Archiv/Materialgeld NICHT verändert
+   - renderAll() selbst NICHT verändert
+   - bei klar abgegrenzten Bedienaktionen werden nur noch die
+     tatsächlich betroffenen Ansichten neu gezeichnet
+   - Cloud-Snapshots, Start, Backup-Restore und komplexe globale
+     Einstellungen verwenden weiterhin das vollständige renderAll()
+
+   Dadurch sinkt DOM-Arbeit bei typischen Klicks deutlich, ohne
+   die Synchronisationslogik anzufassen.
+   ========================================================= */
+
+/* =========================================================
    V186 – EFFIZIENZRUNDE 2 · 26.08.2026
    SICHERE JS-BEREINIGUNG
 
@@ -3012,7 +3028,7 @@ const eventHtml = (multiDayLaneHtml || singleEventHtml) ? `
       item.completedAt = e.target.checked ? now : null;
     }
     save();
-    renderAll();
+    renderTodoSurfaces();
 
     if (!wasDone && e.target.checked) showMotivation(todoMotivationalMessage());
   }));
@@ -3049,7 +3065,7 @@ const eventHtml = (multiDayLaneHtml || singleEventHtml) ? `
     item.updatedAt = Date.now();
 
     save();
-    renderAll();
+    renderTodoSurfaces();
     showMotivation("Auf heute verschoben ✓");
   }));
 
@@ -3077,7 +3093,7 @@ const eventHtml = (multiDayLaneHtml || singleEventHtml) ? `
     task.done = !task.done;
 
     save();
-    renderAll();
+    renderSchoolSurfaces();
 
     if (!wasDone && task.done) {
       showMotivation(schoolMotivationalMessage(childHasNoOpenHomework(child)));
@@ -3090,7 +3106,7 @@ const eventHtml = (multiDayLaneHtml || singleEventHtml) ? `
     state.videos = state.videos.filter(v => v.id !== id);
     save();
     persistTopLevelDeletionImmediately("videos");
-    renderAll();
+    renderVideoSurfaces();
   }));
 
   document.querySelectorAll(".rate-btn").forEach(btn => btn.addEventListener("click", e => {
@@ -3109,7 +3125,7 @@ const eventHtml = (multiDayLaneHtml || singleEventHtml) ? `
     };
 
     save();
-    renderAll();
+    renderVideoSurfaces();
     showMotivation(ratingText[rating]);
   }));
 }
@@ -3616,11 +3632,11 @@ if (isExpanded) {
   item.completedAt = null;
 }
     save();
-    renderAll();
+    renderTodoSurfaces();
     if (!wasDone && item.done) {
       showMotivation(todoMotivationalMessage());
       const id=item.id;
-      showUndo("To-do erledigt",()=>{const x=state.todos.find(t=>t.id===id);if(!x)return;x.done=false;x.completedAt=null;x.updatedAt=Date.now();save();renderAll();});
+      showUndo("To-do erledigt",()=>{const x=state.todos.find(t=>t.id===id);if(!x)return;x.done=false;x.completedAt=null;x.updatedAt=Date.now();save();renderTodoSurfaces();});
     }
   }));
 
@@ -3671,7 +3687,7 @@ document.querySelector("#recurrence").value = item.recurrence || "none";
     if(editingTodoId===id)resetTodoEditor();
     save();
     persistTodoDeletionImmediately(id);
-    renderAll();
+    renderTodoSurfaces();
     showUndo("To-do gelöscht",()=>restoreTrashEntry(trashId));
   }));
 }
@@ -4162,7 +4178,7 @@ function saveTTMatrix(id) {
     });
 
   save();
-  renderAll();
+  renderWeek();
   closeManualTimetableEditor(id);
 }
 function timetableSubjectDisplay(subject,id){
@@ -4461,7 +4477,7 @@ function renderSchool(){
     const was=t.done;
     t.done=!t.done;
     save();
-    renderAll();
+    renderSchoolSurfaces();
     if(!was && t.done) showMotivation(schoolMotivationalMessage(childHasNoOpenHomework(c)));
   }));
   document.querySelectorAll(".school-del").forEach(x=>x.addEventListener("click",e=>{
@@ -9774,7 +9790,7 @@ document.querySelector("#saveVideoBtn").addEventListener("click", async () => {
   document.querySelector("#videoUrl").value = "";
   detectedVideoTitle = "";
   document.querySelector("#videoDialog").close();
-  renderAll();
+  renderVideoSurfaces();
 });
 
 function resetTodoEditor() {
@@ -10155,7 +10171,7 @@ showMotivation(type === "event" ? "Termin hinzugefügt ✓" : "To-do hinzugefüg
   }
 
   save();
-  renderAll();
+  renderTodoSurfaces();
 });
 
 document.querySelectorAll(".filter").forEach(btn => btn.addEventListener("click", () => {
@@ -15023,6 +15039,29 @@ function openMamaTimetableEditorDirectRestored() {
 }
 document.querySelector("#openWorkTimetableBtn")?.addEventListener("click", openMamaTimetableEditorDirectRestored);
 
+
+/* =========================================================
+   V187 – gezielte UI-Aktualisierung
+   Speichern/Cloud-Sync bleiben vollständig unverändert.
+   Diese Helfer ersetzen nur unnötige Voll-Renderings nach
+   klar abgegrenzten lokalen Bedienaktionen.
+   ========================================================= */
+function renderTodoSurfaces(){
+  renderWeek();
+  renderTodos();
+  renderArchive();
+}
+
+function renderSchoolSurfaces(){
+  renderWeek();
+  renderSchool();
+}
+
+function renderVideoSurfaces(){
+  renderWeek();
+  renderArchive();
+}
+
 function renderAll() {
   pruneTrash();
   renderTrash();
@@ -16360,7 +16399,7 @@ document.addEventListener("click", e => {
   const wasDone = !!task.done;
   task.done = !task.done;
   save();
-  renderAll();
+  renderSchoolSurfaces();
 
   if (!wasDone && task.done) {
     showMotivation(schoolMotivationalMessage(childHasNoOpenHomework(child)));
