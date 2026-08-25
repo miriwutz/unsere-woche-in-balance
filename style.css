@@ -33417,3 +33417,56 @@ button.day-meal-list-item:hover,a.day-meal-list-item:hover{background:rgba(164,1
     flex:0 0 auto !important;
   }
 }
+
+
+/* =========================================================
+   V172 – Materialgeld-Leisten farbiger, weiterhin gedeckt/elegant
+   ========================================================= */
+
+/* Klassenbudget */
+.workroom-material-class-progress{
+  background:linear-gradient(
+    90deg,
+    rgba(201,224,186,.52) 0%,
+    rgba(190,224,217,.48) 25%,
+    rgba(195,211,235,.48) 50%,
+    rgba(218,198,230,.46) 72%,
+    rgba(238,211,190,.48) 100%
+  ) !important;
+}
+.workroom-material-class-progress-fill{
+  background:linear-gradient(
+    90deg,
+    #93bd72 0%,
+    #6fb9ad 24%,
+    #7fa8d4 49%,
+    #a987c5 70%,
+    #cb8cae 85%,
+    #d4aa63 100%
+  ) !important;
+  filter:saturate(.98) !important;
+}
+
+/* Gemeinschaftstopf */
+.workroom-material-shared-progress{
+  background:linear-gradient(
+    90deg,
+    rgba(201,224,186,.48) 0%,
+    rgba(190,224,217,.44) 25%,
+    rgba(195,211,235,.44) 50%,
+    rgba(218,198,230,.43) 72%,
+    rgba(238,211,190,.46) 100%
+  ) !important;
+}
+.workroom-material-shared-progress-fill{
+  background:linear-gradient(
+    90deg,
+    #8fba70 0%,
+    #69b6ac 24%,
+    #789fd0 49%,
+    #a57fc2 70%,
+    #c986aa 85%,
+    #d2a35e 100%
+  ) !important;
+  filter:saturate(.96) !important;
+}
