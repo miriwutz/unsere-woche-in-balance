@@ -8227,10 +8227,14 @@ function workroomMaterialMoneyStore(){
   state.workroom=normalizeWorkroom(state.workroom);
   state.workroom.materialMoney=state.workroom.materialMoney&&typeof state.workroom.materialMoney==="object"
     ? state.workroom.materialMoney
-    : {classes:[]};
-  state.workroom.materialMoney.classes=Array.isArray(state.workroom.materialMoney.classes)
-    ? state.workroom.materialMoney.classes
-    : [];
+    : {};
+  const mm=state.workroom.materialMoney;
+  mm.semester=String(mm.semester||"");
+  mm.semesterUpdatedAt=Number(mm.semesterUpdatedAt||0);
+  mm.deletedClasses=mm.deletedClasses&&typeof mm.deletedClasses==="object"?mm.deletedClasses:{};
+  mm.archive=Array.isArray(mm.archive)?mm.archive:[];
+  mm.deletedArchive=mm.deletedArchive&&typeof mm.deletedArchive==="object"?mm.deletedArchive:{};
+  mm.classes=Array.isArray(mm.classes)?mm.classes:[];
   return state.workroom.materialMoney;
 }
 
@@ -8277,7 +8281,10 @@ function renderWorkroomMaterialMoney(){
   editor.innerHTML=`
     <div class="workroom-material-class-head">
       <strong>${escapeHtml(current.name||"Klasse")}</strong>
-      <span>Eingenommen gesamt: <b>${moneyEuro(total)}</b></span>
+      <div class="workroom-material-class-head-actions">
+        <span>Eingenommen gesamt: <b>${moneyEuro(total)}</b></span>
+        <button type="button" class="workroom-material-class-delete" data-material-class-delete="${escapeHtml(current.id)}">× Klasse</button>
+      </div>
     </div>
 
     <div class="workroom-material-class-fields">
@@ -8432,7 +8439,136 @@ function renderWorkroomMaterialMoney(){
       renderWorkroomMaterialMoney();
     });
   });
+
+  editor.querySelector("[data-material-class-delete]")?.addEventListener("click",()=>{
+    const store=workroomMaterialMoneyStore();
+    const item=store.classes.find(x=>String(x.id)===String(current.id));
+    if(!item) return;
+    if(!confirm(`${item.name||"Klasse"} wirklich löschen?`)) return;
+
+    const now=Date.now();
+    store.deletedClasses[item.id]=now;
+    store.classes=store.classes.filter(x=>String(x.id)!==String(item.id));
+    activeWorkroomMaterialClassId="";
+    save();
+    renderWorkroomMaterialMoney();
+    renderWorkroomMaterialArchive();
+  });
 }
+
+function renderWorkroomMaterialArchive(){
+  const store=workroomMaterialMoneyStore();
+  const semesterInput=document.querySelector("#workroomMaterialSemester");
+  if(semesterInput && document.activeElement!==semesterInput) semesterInput.value=store.semester||"";
+
+  const count=document.querySelector("#workroomMaterialArchiveCount");
+  const list=document.querySelector("#workroomMaterialArchiveList");
+  if(count) count.textContent=store.archive.length?`(${store.archive.length})`:"";
+  if(!list) return;
+
+  const now=Date.now();
+  list.innerHTML=store.archive.length
+    ? [...store.archive].sort((a,b)=>Number(b.archivedAt||0)-Number(a.archivedAt||0)).map(entry=>{
+        const classes=Array.isArray(entry.classes)?entry.classes:[];
+        let income=0,expenses=0;
+        classes.forEach(item=>{
+          income+=Number(item.childrenCount||0)*Number(item.contribution||0);
+          expenses+=(Array.isArray(item.expenses)?item.expenses:[]).reduce((sum,x)=>sum+Number(x.amount||0),0);
+        });
+        const old=Number(entry.archivedAt||0)>0 && now-Number(entry.archivedAt||0)>=365*24*60*60*1000;
+
+        return `
+          <details class="workroom-material-archive-semester">
+            <summary>
+              <span><strong>${escapeHtml(entry.semester||"Semester")}</strong> · ${classes.length} ${classes.length===1?"Klasse":"Klassen"}</span>
+              <span>${moneyEuro(income)} Einnahmen · ${moneyEuro(expenses)} Ausgaben · ${moneyEuro(income-expenses)} Rest</span>
+            </summary>
+            <div class="workroom-material-archive-content">
+              ${old?`<div class="workroom-material-archive-reminder">Älter als 1 Jahr – prüfen, ob du es noch brauchst.</div>`:""}
+              ${classes.map(item=>{
+                const itemIncome=Number(item.childrenCount||0)*Number(item.contribution||0);
+                const itemExpenses=(Array.isArray(item.expenses)?item.expenses:[]).reduce((sum,x)=>sum+Number(x.amount||0),0);
+                return `
+                  <div class="workroom-material-archive-class">
+                    <div class="workroom-material-archive-class-head">
+                      <strong>${escapeHtml(item.name||"Klasse")}</strong>
+                      <span>${Number(item.childrenCount||0)} Kinder · ${moneyEuro(item.contribution||0)} pro Kind · Rest ${moneyEuro(itemIncome-itemExpenses)}</span>
+                    </div>
+                    <div class="workroom-material-archive-expenses">
+                      ${(Array.isArray(item.expenses)&&item.expenses.length)
+                        ? [...item.expenses].sort((a,b)=>String(b.date||"").localeCompare(String(a.date||""))).map(expense=>`
+                            <div>
+                              <span>${escapeHtml(expense.date?expense.date.split("-").reverse().join("."):"–")}</span>
+                              <span>${escapeHtml(expense.title||"Ausgabe")}</span>
+                              <strong>${moneyEuro(expense.amount||0)}</strong>
+                            </div>
+                          `).join("")
+                        : `<span class="workroom-empty">Keine Ausgaben.</span>`
+                      }
+                    </div>
+                  </div>
+                `;
+              }).join("")}
+              <button type="button" class="workroom-material-archive-delete" data-material-archive-delete="${escapeHtml(entry.id)}">Archiv löschen</button>
+            </div>
+          </details>
+        `;
+      }).join("")
+    : `<div class="workroom-empty">Noch keine Semester archiviert.</div>`;
+
+  list.querySelectorAll("[data-material-archive-delete]").forEach(btn=>{
+    btn.addEventListener("click",()=>{
+      const id=String(btn.dataset.materialArchiveDelete||"");
+      const entry=store.archive.find(x=>String(x.id)===id);
+      if(!entry) return;
+      if(!confirm(`${entry.semester||"Semester"} wirklich dauerhaft aus dem Archiv löschen?`)) return;
+      store.deletedArchive[id]=Date.now();
+      store.archive=store.archive.filter(x=>String(x.id)!==id);
+      save();
+      renderWorkroomMaterialArchive();
+    });
+  });
+}
+
+document.querySelector("#workroomMaterialSemester")?.addEventListener("change",e=>{
+  const store=workroomMaterialMoneyStore();
+  store.semester=String(e.target.value||"").trim();
+  store.semesterUpdatedAt=Date.now();
+  save();
+  renderWorkroomMaterialArchive();
+});
+
+document.querySelector("#archiveWorkroomMaterialSemesterBtn")?.addEventListener("click",()=>{
+  const store=workroomMaterialMoneyStore();
+  const semester=String(store.semester||document.querySelector("#workroomMaterialSemester")?.value||"").trim();
+  if(!semester){
+    alert("Bitte zuerst ein Semester eintragen, z. B. WS 26/27.");
+    return;
+  }
+  if(!store.classes.length){
+    alert("Es sind noch keine Klassen für dieses Semester angelegt.");
+    return;
+  }
+  if(!confirm(`${semester} mit allen Klassen und Ausgaben archivieren?`)) return;
+
+  const now=Date.now();
+  const snapshot=JSON.parse(JSON.stringify(store.classes));
+  store.archive.push({
+    id:`material-archive-${now}-${Math.random().toString(36).slice(2,7)}`,
+    semester,
+    archivedAt:now,
+    classes:snapshot
+  });
+
+  store.classes.forEach(item=>{ store.deletedClasses[item.id]=now; });
+  store.classes=[];
+  store.semester="";
+  store.semesterUpdatedAt=now;
+  activeWorkroomMaterialClassId="";
+  save();
+  renderWorkroomMaterialMoney();
+  renderWorkroomMaterialArchive();
+});
 
 document.querySelector("#addWorkroomMaterialClassBtn")?.addEventListener("click",()=>{
   const input=document.querySelector("#workroomMaterialClassName");
@@ -8468,6 +8604,7 @@ document.querySelector("#workroomMaterialMoneyDetails")?.addEventListener("toggl
   });
 
   renderWorkroomMaterialMoney();
+  renderWorkroomMaterialArchive();
 });
 
 /* V157: Werkraum-Akkordeon direkt mit den vorhandenen .workroom-fold-card-Strukturen verbunden. */
@@ -9975,24 +10112,59 @@ function mergeWorkroomListWithTombstones(localValue, remoteValue, tombstones) {
 }
 
 function mergeWorkroomMaterialMoney(localValue, remoteValue){
-  const local=localValue&&typeof localValue==="object"?localValue:{classes:[]};
-  const remote=remoteValue&&typeof remoteValue==="object"?remoteValue:{classes:[]};
+  const local=localValue&&typeof localValue==="object"?localValue:{};
+  const remote=remoteValue&&typeof remoteValue==="object"?remoteValue:{};
+
+  const deletedClasses={...(local.deletedClasses||{}),...(remote.deletedClasses||{})};
+  for(const [id,at] of Object.entries(local.deletedClasses||{})){
+    deletedClasses[id]=Math.max(Number(deletedClasses[id]||0),Number(at||0));
+  }
+  for(const [id,at] of Object.entries(remote.deletedClasses||{})){
+    deletedClasses[id]=Math.max(Number(deletedClasses[id]||0),Number(at||0));
+  }
+
   const byId=new Map();
-
-  (Array.isArray(local.classes)?local.classes:[]).forEach(item=>{
-    if(item?.id) byId.set(String(item.id),item);
+  [...(Array.isArray(local.classes)?local.classes:[]),...(Array.isArray(remote.classes)?remote.classes:[])].forEach(item=>{
+    if(!item?.id)return;
+    const id=String(item.id), old=byId.get(id);
+    if(!old || Number(item.updatedAt||item.createdAt||0)>=Number(old.updatedAt||old.createdAt||0)) byId.set(id,item);
   });
+  const classes=[...byId.values()].filter(item=>
+    Number(deletedClasses[item.id]||0)<Number(item.updatedAt||item.createdAt||0)
+  );
 
-  (Array.isArray(remote.classes)?remote.classes:[]).forEach(item=>{
-    if(!item?.id) return;
-    const id=String(item.id);
-    const current=byId.get(id);
-    if(!current || Number(item.updatedAt||item.createdAt||0)>=Number(current.updatedAt||current.createdAt||0)){
-      byId.set(id,item);
-    }
+  const deletedArchive={...(local.deletedArchive||{}),...(remote.deletedArchive||{})};
+  for(const [id,at] of Object.entries(local.deletedArchive||{})){
+    deletedArchive[id]=Math.max(Number(deletedArchive[id]||0),Number(at||0));
+  }
+  for(const [id,at] of Object.entries(remote.deletedArchive||{})){
+    deletedArchive[id]=Math.max(Number(deletedArchive[id]||0),Number(at||0));
+  }
+
+  const archiveById=new Map();
+  [...(Array.isArray(local.archive)?local.archive:[]),...(Array.isArray(remote.archive)?remote.archive:[])].forEach(entry=>{
+    if(!entry?.id)return;
+    const id=String(entry.id), old=archiveById.get(id);
+    if(!old || Number(entry.archivedAt||0)>=Number(old.archivedAt||0)) archiveById.set(id,entry);
   });
+  const archive=[...archiveById.values()].filter(entry=>
+    Number(deletedArchive[entry.id]||0)<Number(entry.archivedAt||0)
+  );
 
-  return {classes:[...byId.values()]};
+  const localSemesterAt=Number(local.semesterUpdatedAt||0);
+  const remoteSemesterAt=Number(remote.semesterUpdatedAt||0);
+  const semester=remoteSemesterAt>=localSemesterAt
+    ? String(remote.semester||"")
+    : String(local.semester||"");
+
+  return {
+    semester,
+    semesterUpdatedAt:Math.max(localSemesterAt,remoteSemesterAt),
+    deletedClasses,
+    classes,
+    deletedArchive,
+    archive
+  };
 }
 
 function guardedWorkroomMerge(localValue, cloudValue) {
@@ -13233,6 +13405,22 @@ function normalizeWorkroom(w) {
       : {week:[], year:[]},
     materialMoney: src.materialMoney && typeof src.materialMoney === "object"
       ? {
+          semester:String(src.materialMoney.semester || ""),
+          semesterUpdatedAt:Number(src.materialMoney.semesterUpdatedAt || 0),
+          deletedClasses:src.materialMoney.deletedClasses&&typeof src.materialMoney.deletedClasses==="object"
+            ? src.materialMoney.deletedClasses
+            : {},
+          archive:Array.isArray(src.materialMoney.archive)
+            ? src.materialMoney.archive.map((entry,index)=>({
+                id:String(entry?.id || `material-archive-${index}`),
+                semester:String(entry?.semester || "Semester"),
+                archivedAt:Number(entry?.archivedAt || 0),
+                classes:Array.isArray(entry?.classes) ? entry.classes : []
+              }))
+            : [],
+          deletedArchive:src.materialMoney.deletedArchive&&typeof src.materialMoney.deletedArchive==="object"
+            ? src.materialMoney.deletedArchive
+            : {},
           classes: Array.isArray(src.materialMoney.classes)
             ? src.materialMoney.classes.map((item,index)=>({
                 id:String(item?.id || `material-class-${index}`),
@@ -13254,7 +13442,7 @@ function normalizeWorkroom(w) {
               }))
             : []
         }
-      : {classes:[]}
+      : {semester:"",semesterUpdatedAt:0,deletedClasses:{},archive:[],deletedArchive:{},classes:[]}
   };
 }
 
@@ -14224,6 +14412,7 @@ function renderAll() {
   renderWorkroomShopping();
   renderWorkroomLinks();
   renderWorkroomMaterialMoney();
+  renderWorkroomMaterialArchive();
   renderRoutines();
   renderRecipes();
   renderMealPlan();
@@ -21063,6 +21252,16 @@ window.addEventListener("resize", () => {
     }
   });
 })();
+
+/* =========================================================
+   V162 – WERKRAUM MATERIALGELD 3C
+   - Semesterbezeichnung + vollständiges Semesterarchiv
+   - archivierte Daten bleiben lesbar, aber unveränderbar
+   - keine automatische Löschung; Hinweis erst nach 12 Monaten
+   - Klassen und Archive nur manuell mit Bestätigung löschbar
+   - Löschmarker für Geräte-Sync
+   - Symbol bei Materialgeld entfernt
+   ========================================================= */
 
 /* =========================================================
    V161 – WERKRAUM MATERIALGELD 3B
