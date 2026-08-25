@@ -33096,3 +33096,40 @@ button.day-meal-list-item:hover,a.day-meal-list-item:hover{background:rgba(164,1
     grid-template-columns:1fr;
   }
 }
+
+
+/* =========================================================
+   V165 – Materialgeld: Ausgaben bearbeiten
+   ========================================================= */
+.workroom-material-expense-row{
+  grid-template-columns:110px minmax(180px,1fr) 110px 74px;
+}
+.workroom-material-expense-actions{
+  display:flex;
+  justify-content:flex-end;
+  gap:5px;
+}
+.workroom-material-expense-edit,
+.workroom-material-expense-delete{
+  width:30px;
+  height:30px;
+  padding:0;
+  border-radius:50%;
+}
+.workroom-material-expense-edit{
+  border:1px solid #d9d2e6;
+  background:#faf8fd;
+  color:#6f617e;
+}
+.workroom-material-expense-cancel{
+  border:1px solid var(--line);
+  border-radius:999px;
+  background:var(--paper);
+  color:var(--muted);
+  padding:8px 11px;
+}
+@media(max-width:700px){
+  .workroom-material-expense-row{
+    grid-template-columns:90px minmax(0,1fr) 90px 70px;
+  }
+}
