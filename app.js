@@ -1,4 +1,9 @@
 /* =========================================================
+   V148 – EDELSTEIN-UNTERZEILE ENTFERNT
+   - graue Unterzeile „Besondere Extras für unser Familienleben.“ entfernt
+   ========================================================= */
+
+/* =========================================================
    V147 – GELDBEREICH BEREINIGT
    - Taschengeld und Jausengeld technisch getrennt
    - monatliche Zahlungen als Monat statt Kalenderwoche
@@ -20887,7 +20892,7 @@ function ensureChildMoneyDialog(){
         <span class="v140-gems-summary-icons" aria-hidden="true">💎🌈</span>
       </summary>
       <div class="v140-gems-body">
-        <div class="child-money-section-head"><div><strong>Meine Edelsteine 💎</strong><small>Besondere Extras für unser Familienleben.</small></div><strong id="gemCount"></strong></div>
+        <div class="child-money-section-head"><div><strong>Meine Edelsteine 💎</strong></div><strong id="gemCount"></strong></div>
         <div class="v121-gem-explain v128-gem-explain">
           <div class="v128-gem-explain-main">
             <span class="v128-gem-explain-icon" aria-hidden="true">💎</span>
