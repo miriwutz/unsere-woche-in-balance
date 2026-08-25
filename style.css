@@ -33376,3 +33376,44 @@ button.day-meal-list-item:hover,a.day-meal-list-item:hover{background:rgba(164,1
   font-size:.72rem;
   text-align:right;
 }
+
+
+/* =========================================================
+   V171 – Handy: Gemeinschaftstopf-Ausgabezeile sauber trennen
+   Nur Mobile. PC und Tablet bleiben unverändert.
+   ========================================================= */
+@media (max-width:700px){
+  #workroomMaterialSharedList > div{
+    display:grid !important;
+    grid-template-columns:minmax(92px,auto) minmax(0,1fr) auto auto auto !important;
+    align-items:center !important;
+    column-gap:10px !important;
+    row-gap:4px !important;
+  }
+
+  #workroomMaterialSharedList > div > span:first-child{
+    white-space:nowrap !important;
+  }
+
+  #workroomMaterialSharedList .workroom-material-expense-description{
+    min-width:0 !important;
+    overflow-wrap:anywhere !important;
+  }
+
+  #workroomMaterialSharedList .workroom-material-expense-description > span,
+  #workroomMaterialSharedList .workroom-material-expense-description > small{
+    display:block !important;
+    min-width:0 !important;
+    white-space:normal !important;
+    overflow-wrap:anywhere !important;
+  }
+
+  #workroomMaterialSharedList > div > strong{
+    white-space:nowrap !important;
+    justify-self:end !important;
+  }
+
+  #workroomMaterialSharedList > div > button{
+    flex:0 0 auto !important;
+  }
+}
