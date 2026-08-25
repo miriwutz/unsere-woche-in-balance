@@ -33838,3 +33838,163 @@ button.day-meal-list-item:hover,a.day-meal-list-item:hover{background:rgba(164,1
   backdrop-filter:blur(5px);
   -webkit-backdrop-filter:blur(5px);
 }
+
+
+/* =========================================================
+   V179 – Archivdialoge endgültig blickdicht + moderne Buttons
+   Nur Optik, keine Funktionsänderung.
+   ========================================================= */
+
+/* Beide Archiv-Dialoge selbst vollständig blickdicht.
+   var(--card) war in diesem Theme teilweise transparent, daher feste
+   helle Flächen für Light Mode. */
+#workroomMaterialArchivePicker .workroom-material-picker,
+#workroomSharedFundArchiveChoice .workroom-material-picker{
+  background:#fffdfb !important;
+  background-color:#fffdfb !important;
+  opacity:1 !important;
+  backdrop-filter:none !important;
+  -webkit-backdrop-filter:none !important;
+  box-shadow:0 22px 65px rgba(53,42,35,.22) !important;
+}
+
+/* Auch Listenzeilen blickdicht */
+#workroomMaterialArchivePicker .workroom-material-picker-list label{
+  background:#fffdfb !important;
+}
+#workroomMaterialArchivePicker .workroom-material-picker-list label:has(input:checked){
+  background:#edf3e8 !important;
+}
+
+/* Die zwei Topf-Entscheidungen blickdicht */
+#workroomSharedFundArchiveChoice
+.workroom-shared-archive-choice-buttons button[data-shared-choice="carry"]{
+  background:#edf4e8 !important;
+}
+#workroomSharedFundArchiveChoice
+.workroom-shared-archive-choice-buttons button[data-shared-choice="archive"]{
+  background:#f5eee8 !important;
+}
+
+/* Hintergrund NUR außerhalb der Dialoge abdunkeln/verwischen */
+#workroomMaterialArchivePicker.workroom-material-picker-overlay,
+#workroomSharedFundArchiveChoice.workroom-material-picker-overlay{
+  background:rgba(48,42,38,.46) !important;
+  backdrop-filter:blur(6px) !important;
+  -webkit-backdrop-filter:blur(6px) !important;
+}
+
+/* Kleine Auswahl-Helfer: ruhig, modern, nicht Browser-Standard */
+#workroomMaterialArchivePicker .workroom-material-picker-tools button{
+  appearance:none;
+  -webkit-appearance:none;
+  border:1px solid rgba(107,126,97,.30) !important;
+  border-radius:999px !important;
+  background:#f7f9f5 !important;
+  color:#596652 !important;
+  padding:8px 13px !important;
+  font:inherit !important;
+  font-size:.78rem !important;
+  box-shadow:none !important;
+}
+
+/* Untere Aktionsleiste */
+#workroomMaterialArchivePicker .workroom-material-picker-actions{
+  display:flex !important;
+  align-items:center;
+  justify-content:flex-end;
+  gap:10px;
+}
+
+/* Abbrechen dezent */
+#workroomMaterialArchivePicker .workroom-material-picker-cancel{
+  appearance:none;
+  -webkit-appearance:none;
+  border:1px solid rgba(137,118,105,.24) !important;
+  border-radius:999px !important;
+  background:#fffdfb !important;
+  color:#806f65 !important;
+  padding:10px 17px !important;
+  font:inherit !important;
+  font-size:.84rem !important;
+  box-shadow:none !important;
+}
+
+/* Auswahl archivieren als klare Hauptaktion */
+#workroomMaterialArchivePicker .workroom-material-picker-confirm{
+  appearance:none;
+  -webkit-appearance:none;
+  border:1px solid rgba(104,132,91,.34) !important;
+  border-radius:999px !important;
+  background:#e7efe2 !important;
+  color:#52644a !important;
+  padding:10px 18px !important;
+  font:inherit !important;
+  font-size:.84rem !important;
+  font-weight:600 !important;
+  box-shadow:none !important;
+}
+
+/* Zurück im Gemeinschaftstopf-Dialog:
+   gut sichtbar, aber bewusst sekundär */
+#workroomSharedFundArchiveChoice .workroom-shared-archive-choice-cancel{
+  appearance:none;
+  -webkit-appearance:none;
+  display:block !important;
+  margin:14px auto 0 !important;
+  border:1px solid rgba(107,126,97,.28) !important;
+  border-radius:999px !important;
+  background:#fffdfb !important;
+  color:#64725e !important;
+  padding:9px 18px !important;
+  font:inherit !important;
+  font-size:.82rem !important;
+  box-shadow:none !important;
+}
+
+/* Dark Mode: ebenso blickdicht, aber passend zum bestehenden dunklen Theme */
+@media (prefers-color-scheme: dark){
+  #workroomMaterialArchivePicker .workroom-material-picker,
+  #workroomSharedFundArchiveChoice .workroom-material-picker{
+    background:#211e1b !important;
+    background-color:#211e1b !important;
+  }
+
+  #workroomMaterialArchivePicker .workroom-material-picker-list label{
+    background:#282522 !important;
+  }
+  #workroomMaterialArchivePicker .workroom-material-picker-list label:has(input:checked){
+    background:#293126 !important;
+  }
+
+  #workroomSharedFundArchiveChoice
+  .workroom-shared-archive-choice-buttons button[data-shared-choice="carry"]{
+    background:#293126 !important;
+  }
+  #workroomSharedFundArchiveChoice
+  .workroom-shared-archive-choice-buttons button[data-shared-choice="archive"]{
+    background:#302924 !important;
+  }
+
+  #workroomMaterialArchivePicker .workroom-material-picker-tools button,
+  #workroomMaterialArchivePicker .workroom-material-picker-cancel,
+  #workroomSharedFundArchiveChoice .workroom-shared-archive-choice-cancel{
+    background:#282522 !important;
+    color:#ded8d2 !important;
+  }
+
+  #workroomMaterialArchivePicker .workroom-material-picker-confirm{
+    background:#33402f !important;
+    color:#e4ecdf !important;
+  }
+}
+
+@media(max-width:700px){
+  #workroomMaterialArchivePicker .workroom-material-picker-actions{
+    display:grid !important;
+    grid-template-columns:1fr 1.25fr !important;
+  }
+  #workroomMaterialArchivePicker .workroom-material-picker-actions button{
+    width:100% !important;
+  }
+}
