@@ -33305,3 +33305,25 @@ button.day-meal-list-item:hover,a.day-meal-list-item:hover{background:rgba(164,1
     white-space:nowrap !important;
   }
 }
+
+
+/* =========================================================
+   V169 – Ferienhinweis PC/Tablet dezenter
+   Handyansicht bleibt unverändert.
+   ========================================================= */
+@media (min-width:701px){
+  #weekGrid .school-free-badge{
+    font-size:.58rem !important;
+    line-height:1 !important;
+    padding:3px 7px !important;
+    gap:3px !important;
+    opacity:.72 !important;
+    font-weight:500 !important;
+    letter-spacing:.01em !important;
+    white-space:nowrap !important;
+  }
+
+  #weekGrid .school-free-badge::before{
+    font-size:.62rem !important;
+  }
+}
