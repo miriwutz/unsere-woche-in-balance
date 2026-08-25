@@ -1,4 +1,11 @@
 /* =========================================================
+   V146 – GELD-HISTORIE KOMPAKT
+   - "Letzte Zahlungen" standardmäßig eingeklappt
+   - nur tatsächlich erhaltene Taschengeld-/Jausenzahlungen anzeigen
+   - keine Änderung an Zahlungs- oder Sync-Logik
+   ========================================================= */
+
+/* =========================================================
    V145 – MEIN GELD LIVE-ANZEIGE
    - offenes Lou/Fina-Geldfenster aktualisiert sich bei Cloud-Änderungen sofort
    - gilt für Taschengeld/Jausengeld, Zahlstatus, Monatsübersicht,
@@ -17426,6 +17433,31 @@ function ensurePersonalRoutineSentenceStyle(){
       gap:6px;
       padding:0 9px 9px;
     }
+    .v146-payment-history{
+      margin:0;
+    }
+    .v146-payment-history > summary{
+      cursor:pointer;
+      list-style:none;
+      font-weight:700;
+      padding:2px 0 8px;
+    }
+    .v146-payment-history > summary::-webkit-details-marker{
+      display:none;
+    }
+    .v146-payment-history > summary::before{
+      content:"▸";
+      display:inline-block;
+      width:18px;
+      color:var(--muted);
+    }
+    .v146-payment-history[open] > summary::before{
+      content:"▾";
+    }
+    .v146-payment-history-body{
+      padding-top:2px;
+    }
+
     .personal-routine-sentence-row{
       display:grid;
       grid-template-columns:24px minmax(0,1fr) 34px;
@@ -21039,7 +21071,17 @@ function renderChildMoneyDialog(){
     const sDel=qs?.paid?`<button class="v123-history-x" type="button" data-payment-delete-kind="snack" data-payment-delete-date="${zKey}" title="Zahlung wieder auf offen setzen">×</button>`:"";
     rows.push(`<div class="child-money-history-row"><span>${moneyWeekLabel(k)}</span><span class="${qp?.paid?"is-paid":""}">${qp?.paid?"✓":"○"} Taschengeld${s.weekly.pocketFrequency==="monthly"?" · Monat":""}${pDel}</span><span class="${qs?.paid?"is-paid":""}">${qs?.paid?"✓":"○"} Jause${s.weekly.snackFrequency==="monthly"?" · Monat":""}${sDel}</span></div>`);
   }
-  d.querySelector("#childMoneyWeeklyHistory").innerHTML=`<h4>Letzte Wochen</h4>${rows.join("")}`;
+  /* V146 – Historie kompakt:
+     Nur Wochen mit tatsächlich verbuchter Zahlung anzeigen und standardmäßig einklappen.
+     Zahlungs-/Sync-Logik bleibt unverändert. */
+  const paidRows=rows.filter(row=>row.includes("✓"));
+  d.querySelector("#childMoneyWeeklyHistory").innerHTML=`
+    <details class="v146-payment-history">
+      <summary>Letzte Zahlungen</summary>
+      <div class="v146-payment-history-body">
+        ${paidRows.length?paidRows.join(""):`<div class="child-money-empty">Noch keine Zahlungen.</div>`}
+      </div>
+    </details>`;
   const done=s.loans.filter(x=>x.done).sort((a,b)=>(b.doneAt||0)-(a.doneAt||0));{
     const visibleDone=done.slice(0,20);
     const olderDone=done.slice(20);
