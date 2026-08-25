@@ -32657,3 +32657,14 @@ button.day-meal-list-item:hover,a.day-meal-list-item:hover{background:rgba(164,1
     min-width:44px !important;
   }
 }
+
+
+/* =========================================================
+   V152 – Routinen-Kachel: Abstand zwischen Symbol und Text
+   Nur Optik, keine Funktion.
+   ========================================================= */
+@media (min-width:651px){
+  .school-tile-routines .school-tile-icon{
+    margin-right:10px !important;
+  }
+}
