@@ -1,3 +1,6 @@
+/* V179 – Archivdialoge: nur optischer Feinschliff.
+   Funktion gegenüber V178 unverändert. */
+
 /* V178 – nur optische Korrektur des Gemeinschaftstopf-Archivdialogs.
    Funktion gegenüber V177 unverändert. */
 
