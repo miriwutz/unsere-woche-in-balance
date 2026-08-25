@@ -33763,3 +33763,44 @@ button.day-meal-list-item:hover,a.day-meal-list-item:hover{background:rgba(164,1
     width:100%;
   }
 }
+
+
+/* V177 – Gemeinschaftstopf: klare Archiv-Auswahl */
+.workroom-shared-archive-choice{width:min(560px,100%);}
+.workroom-shared-archive-choice-text{margin:4px 0 14px;color:var(--ink);}
+.workroom-shared-archive-choice-buttons{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+}
+.workroom-shared-archive-choice-buttons button{
+  min-height:108px;
+  padding:14px;
+  text-align:left;
+  border-radius:16px;
+  white-space:normal;
+}
+.workroom-shared-archive-choice-buttons strong,
+.workroom-shared-archive-choice-buttons small{display:block;}
+.workroom-shared-archive-choice-buttons strong{
+  margin-bottom:5px;color:var(--ink);font-size:.9rem;
+}
+.workroom-shared-archive-choice-buttons small{
+  color:var(--muted);line-height:1.35;
+}
+.workroom-shared-archive-choice-buttons button[data-shared-choice="carry"]{
+  background:rgba(221,233,214,.58);
+  border-color:rgba(126,153,111,.28);
+}
+.workroom-shared-archive-choice-buttons button[data-shared-choice="archive"]{
+  background:rgba(232,223,213,.45);
+  border-color:rgba(155,132,112,.22);
+}
+.workroom-shared-archive-choice-cancel{
+  display:block;margin:12px auto 0;padding:7px 14px;
+  color:var(--muted);background:transparent;
+}
+@media(max-width:700px){
+  .workroom-shared-archive-choice-buttons{grid-template-columns:1fr;}
+  .workroom-shared-archive-choice-buttons button{min-height:0;}
+}
