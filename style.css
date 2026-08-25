@@ -1,3 +1,12 @@
+/* =========================================================
+   MASTER V182 – 26.08.2026
+   STABILER STYLE-STAND
+   - Archivdialoge blickdicht im hellen App-Design
+   - moderne Archiv-Aktionsbuttons
+   - Ferienhinweise PC/Tablet dezent
+   - Materialgeld-Leisten und Mobile-Ansichten enthalten
+   ========================================================= */
+
 @import url("https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Playfair+Display:wght@500;600&display=swap");
 :root{--bg:#f6f1ee;--paper:#fffdfb;--ink:#4f4a48;--muted:#8f8580;--line:#e7ddd8;--rose:#d8b4ad;--rose-soft:#f1ded9;--sage:#bfcbbd;--sage-soft:#e9efe7;--lavender:#c9c1d7;--lavender-soft:#efebf4;--sand:#dfcfb9;--shadow:0 12px 30px rgba(89,72,66,.07)}
 *{box-sizing:border-box}
