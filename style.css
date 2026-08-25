@@ -33630,3 +33630,136 @@ button.day-meal-list-item:hover,a.day-meal-list-item:hover{background:rgba(164,1
     gap:6px !important;
   }
 }
+
+
+/* =========================================================
+   V176 – Materialgeld: Archiv-Auswahl + Wiederherstellen
+   ========================================================= */
+.workroom-material-picker-overlay{
+  position:fixed;
+  inset:0;
+  z-index:10000;
+  display:grid;
+  place-items:center;
+  padding:18px;
+  background:rgba(49,42,38,.28);
+  backdrop-filter:blur(3px);
+}
+.workroom-material-picker{
+  width:min(520px,100%);
+  max-height:min(720px,88vh);
+  overflow:auto;
+  padding:20px;
+  border:1px solid var(--line);
+  border-radius:22px;
+  background:var(--card);
+  box-shadow:0 18px 55px rgba(53,42,35,.16);
+}
+.workroom-material-picker-head{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:16px;
+  margin-bottom:14px;
+}
+.workroom-material-picker-head strong{
+  display:block;
+  color:var(--ink);
+  font-size:1.02rem;
+}
+.workroom-material-picker-head small{
+  display:block;
+  margin-top:3px;
+  color:var(--muted);
+}
+.workroom-material-picker-close{
+  width:34px;
+  height:34px;
+  padding:0;
+  border-radius:50%;
+}
+.workroom-material-picker-tools{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  margin-bottom:12px;
+}
+.workroom-material-picker-tools button{
+  padding:7px 11px;
+  font-size:.78rem;
+}
+.workroom-material-picker-list{
+  display:grid;
+  gap:8px;
+}
+.workroom-material-picker-list label{
+  display:flex;
+  align-items:center;
+  gap:11px;
+  padding:11px 12px;
+  border:1px solid var(--line);
+  border-radius:14px;
+  cursor:pointer;
+  background:rgba(255,255,255,.28);
+}
+.workroom-material-picker-list label:has(input:checked){
+  background:rgba(222,232,214,.62);
+  border-color:rgba(137,159,123,.36);
+}
+.workroom-material-picker-list input{
+  width:18px;
+  height:18px;
+  flex:0 0 auto;
+  accent-color:#829a75;
+}
+.workroom-material-picker-list span{
+  min-width:0;
+}
+.workroom-material-picker-list strong,
+.workroom-material-picker-list small{
+  display:block;
+}
+.workroom-material-picker-list small{
+  margin-top:2px;
+  color:var(--muted);
+}
+.workroom-material-picker-actions{
+  display:flex;
+  justify-content:flex-end;
+  gap:9px;
+  margin-top:18px;
+}
+.workroom-material-picker-confirm{
+  background:rgba(222,232,214,.7);
+}
+.workroom-material-archive-actions{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  margin-top:10px;
+}
+.workroom-material-archive-restore{
+  color:#66775e;
+  border-color:rgba(115,139,103,.28);
+  background:rgba(224,233,217,.38);
+}
+
+@media(max-width:700px){
+  .workroom-material-picker-overlay{
+    align-items:end;
+    padding:10px;
+  }
+  .workroom-material-picker{
+    width:100%;
+    max-height:82vh;
+    padding:17px;
+    border-radius:20px;
+  }
+  .workroom-material-picker-actions{
+    display:grid;
+    grid-template-columns:1fr 1.35fr;
+  }
+  .workroom-material-picker-actions button{
+    width:100%;
+  }
+}
