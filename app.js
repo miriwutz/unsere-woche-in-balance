@@ -8528,7 +8528,22 @@ function renderWorkroomMaterialSharedFund(){
   }
 
   const spent=(fund.expenses||[]).reduce((sum,x)=>sum+moneyNumber(x.amount),0);
-  balance.textContent=moneyEuro(moneyNumber(fund.startAmount)-spent);
+  const start=moneyNumber(fund.startAmount);
+  const rest=moneyNumber(start-spent);
+  balance.textContent=moneyEuro(rest);
+
+  const progress=document.querySelector("#workroomMaterialSharedProgress");
+  const fill=document.querySelector("#workroomMaterialSharedProgressFill");
+  const caption=document.querySelector("#workroomMaterialSharedProgressCaption");
+  const percent=start>0 ? Math.max(0,Math.min(100,(rest/start)*100)) : 0;
+  if(fill) fill.style.width=`${percent}%`;
+  if(progress) progress.classList.toggle("is-negative",rest<0);
+  if(balance) balance.classList.toggle("is-negative",rest<0);
+  if(caption){
+    caption.textContent=start>0
+      ? (rest<0 ? `${moneyEuro(Math.abs(rest))} über dem Guthaben` : `${Math.round(percent)} % des Startguthabens übrig`)
+      : "Noch kein Startguthaben eingetragen.";
+  }
 
   const editing=(fund.expenses||[]).find(x=>String(x.id)===String(editingWorkroomSharedExpenseId));
   if(editing){
@@ -8658,6 +8673,11 @@ function renderWorkroomMaterialArchive(){
           income+=Number(item.childrenCount||0)*Number(item.contribution||0);
           expenses+=(Array.isArray(item.expenses)?item.expenses:[]).reduce((sum,x)=>sum+Number(x.amount||0),0);
         });
+        const archivedShared=entry.sharedFund&&typeof entry.sharedFund==="object"?entry.sharedFund:null;
+        const archivedSharedExpenses=archivedShared&&Array.isArray(archivedShared.expenses)?archivedShared.expenses:[];
+        const archivedSharedSpent=archivedSharedExpenses.reduce((sum,x)=>sum+moneyNumber(x.amount),0);
+        const archivedSharedStart=archivedShared?moneyNumber(archivedShared.startAmount):0;
+        const archivedSharedRest=moneyNumber(archivedSharedStart-archivedSharedSpent);
         const old=Number(entry.archivedAt||0)>0 && now-Number(entry.archivedAt||0)>=365*24*60*60*1000;
 
         return `
@@ -8668,6 +8688,29 @@ function renderWorkroomMaterialArchive(){
             </summary>
             <div class="workroom-material-archive-content">
               ${old?`<div class="workroom-material-archive-reminder">Älter als 1 Jahr – prüfen, ob du es noch brauchst.</div>`:""}
+              ${archivedShared?`
+                <div class="workroom-material-archive-class workroom-material-archive-shared">
+                  <div class="workroom-material-archive-class-head">
+                    <strong>✧ Gemeinschaftstopf</strong>
+                    <span>${moneyEuro(archivedSharedStart)} Start · ${moneyEuro(archivedSharedSpent)} Ausgaben · ${moneyEuro(archivedSharedRest)} Rest</span>
+                  </div>
+                  <div class="workroom-material-archive-expenses">
+                    ${archivedSharedExpenses.length
+                      ? [...archivedSharedExpenses].sort((a,b)=>String(b.date||"").localeCompare(String(a.date||""))).map(expense=>`
+                          <div>
+                            <span>${escapeHtml(expense.date?expense.date.split("-").reverse().join("."):"–")}</span>
+                            <span class="workroom-material-expense-description">
+                              <span>${escapeHtml(expense.title||"Ausgabe")}</span>
+                              ${expense.note?`<small>${escapeHtml(expense.note)}</small>`:""}
+                            </span>
+                            <strong>${moneyEuro(expense.amount||0)}</strong>
+                          </div>
+                        `).join("")
+                      : `<span class="workroom-empty">Keine gemeinsamen Ausgaben.</span>`
+                    }
+                  </div>
+                </div>
+              `:""}
               ${classes.map(item=>{
                 const itemIncome=Number(item.childrenCount||0)*Number(item.contribution||0);
                 const itemExpenses=(Array.isArray(item.expenses)?item.expenses:[]).reduce((sum,x)=>sum+Number(x.amount||0),0);
@@ -8737,24 +8780,67 @@ document.querySelector("#archiveWorkroomMaterialSemesterBtn")?.addEventListener(
   }
   if(!confirm(`${semester} mit allen Klassen und Ausgaben archivieren?`)) return;
 
+  const fund=store.sharedFund;
+  const sharedSpent=(fund.expenses||[]).reduce((sum,x)=>sum+moneyNumber(x.amount),0);
+  const sharedRest=moneyNumber(fund.startAmount)-sharedSpent;
+  const hasShared=moneyNumber(fund.startAmount)!==0 || (fund.expenses||[]).length>0;
+
+  let carryShared=true;
+  if(hasShared){
+    carryShared=confirm(
+      `Gemeinschaftstopf: ${moneyEuro(sharedRest)} Rest.\n\n` +
+      `OK = Restguthaben ins neue Semester übernehmen.\n` +
+      `Abbrechen = Gemeinschaftstopf mit ${semester} archivieren und neu bei 0,00 € beginnen.`
+    );
+  }
+
   const now=Date.now();
   const snapshot=JSON.parse(JSON.stringify(store.classes));
+  const archivedShared=hasShared && !carryShared
+    ? JSON.parse(JSON.stringify(fund))
+    : null;
+
   store.archive.push({
     id:`material-archive-${now}-${Math.random().toString(36).slice(2,7)}`,
     semester,
     archivedAt:now,
-    classes:snapshot
+    classes:snapshot,
+    sharedFund:archivedShared
   });
 
   store.classes.forEach(item=>{ store.deletedClasses[item.id]=now; });
   store.classes=[];
   store.semester="";
   store.semesterUpdatedAt=now;
+
+  if(hasShared){
+    if(carryShared){
+      /* Nur der tatsächliche Rest wird als neues Startguthaben übernommen.
+         Alte gemeinsame Ausgaben bleiben damit im abgeschlossenen Semester
+         nicht als laufende Buchungen stehen. */
+      (fund.expenses||[]).forEach(expense=>{
+        fund.deletedExpenses[String(expense.id)]=now;
+      });
+      fund.startAmount=sharedRest;
+      fund.expenses=[];
+      fund.updatedAt=now;
+    }else{
+      (fund.expenses||[]).forEach(expense=>{
+        fund.deletedExpenses[String(expense.id)]=now;
+      });
+      fund.startAmount=0;
+      fund.expenses=[];
+      fund.updatedAt=now;
+    }
+  }
+
   activeWorkroomMaterialClassId="";
   editingWorkroomMaterialClassId="";
   editingWorkroomMaterialExpenseId="";
+  editingWorkroomSharedExpenseId="";
   save();
   renderWorkroomMaterialMoney();
+  renderWorkroomMaterialSharedFund();
   renderWorkroomMaterialArchive();
 });
 
@@ -13632,7 +13718,10 @@ function normalizeWorkroom(w) {
                 id:String(entry?.id || `material-archive-${index}`),
                 semester:String(entry?.semester || "Semester"),
                 archivedAt:Number(entry?.archivedAt || 0),
-                classes:Array.isArray(entry?.classes) ? entry.classes : []
+                classes:Array.isArray(entry?.classes) ? entry.classes : [],
+                sharedFund:entry?.sharedFund&&typeof entry.sharedFund==="object"
+                  ? entry.sharedFund
+                  : null
               }))
             : [],
           deletedArchive:src.materialMoney.deletedArchive&&typeof src.materialMoney.deletedArchive==="object"
@@ -21491,6 +21580,15 @@ window.addEventListener("resize", () => {
     }
   });
 })();
+
+/* =========================================================
+   V167 – GEMEINSCHAFTSTOPF SEMESTER + RESTLEISTE
+   - gedeckte Restguthaben-Leiste: voll bei Start, sinkt mit Ausgaben
+   - Minusstand mit dezenter Warnanzeige
+   - beim Semesterarchiv Wahl: Rest übernehmen oder Topf mitarchivieren
+   - bei Übernahme startet das neue Semester mit dem tatsächlichen Rest
+   - bei Archivierung bleibt der komplette Gemeinschaftstopf im Semesterarchiv
+   ========================================================= */
 
 /* =========================================================
    V166 – GEMEINSCHAFTSTOPF / WINKLER-GUTHABEN
