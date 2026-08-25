@@ -8223,6 +8223,7 @@ document.querySelector("#saveSchoolPrintEmailBtn")?.addEventListener("click",()=
 
 let activeWorkroomMaterialClassId = "";
 let editingWorkroomMaterialClassId = "";
+let editingWorkroomMaterialExpenseId = "";
 
 function workroomMaterialMoneyStore(){
   state.workroom=normalizeWorkroom(state.workroom);
@@ -8278,6 +8279,7 @@ function renderWorkroomMaterialMoney(){
   const restPerChild=current.childrenCount
     ? Math.round((rest/Number(current.childrenCount))*100)/100
     : 0;
+  const editingExpense=current.expenses.find(x=>String(x.id)===String(editingWorkroomMaterialExpenseId)) || null;
 
   editor.innerHTML=`
     <div class="workroom-material-class-head">
@@ -8347,14 +8349,15 @@ function renderWorkroomMaterialMoney(){
       </div>
 
       <div class="workroom-material-expense-entry">
-        <input type="date" data-material-expense-date>
-        <input type="text" data-material-expense-title placeholder="z. B. Action oder Winkler">
-        <input type="text" data-material-expense-note placeholder="Notiz (optional)">
+        <input type="date" data-material-expense-date value="${editingExpense?escapeHtml(editingExpense.date||""):""}">
+        <input type="text" data-material-expense-title placeholder="z. B. Action oder Winkler" value="${editingExpense?escapeHtml(editingExpense.title||""):""}">
+        <input type="text" data-material-expense-note placeholder="Notiz (optional)" value="${editingExpense?escapeHtml(editingExpense.note||""):""}">
         <span class="workroom-material-euro-input">
-          <input type="text" inputmode="decimal" data-material-expense-amount placeholder="0,00">
+          <input type="text" inputmode="decimal" data-material-expense-amount placeholder="0,00" value="${editingExpense?escapeHtml(String(editingExpense.amount||"").replace(".",",")):""}">
           <span>€</span>
         </span>
-        <button type="button" class="secondary-btn" data-material-expense-add>+ Ausgabe</button>
+        <button type="button" class="secondary-btn" data-material-expense-add>${editingExpense?"✓ Speichern":"+ Ausgabe"}</button>
+        ${editingExpense?`<button type="button" class="workroom-material-expense-cancel" data-material-expense-cancel>Abbrechen</button>`:""}
       </div>
 
       <div class="workroom-material-expense-list">
@@ -8369,7 +8372,10 @@ function renderWorkroomMaterialMoney(){
                     ${expense.note?`<small>${escapeHtml(expense.note)}</small>`:""}
                   </span>
                   <strong>${moneyEuro(expense.amount||0)}</strong>
-                  <button type="button" class="workroom-material-expense-delete" data-material-expense-delete="${escapeHtml(expense.id)}" aria-label="Ausgabe löschen">×</button>
+                  <span class="workroom-material-expense-actions">
+                    <button type="button" class="workroom-material-expense-edit" data-material-expense-edit="${escapeHtml(expense.id)}" aria-label="Ausgabe bearbeiten">✎</button>
+                    <button type="button" class="workroom-material-expense-delete" data-material-expense-delete="${escapeHtml(expense.id)}" aria-label="Ausgabe löschen">×</button>
+                  </span>
                 </div>
               `).join("")
           : `<div class="workroom-empty">Noch keine Ausgaben eingetragen.</div>`
@@ -8382,6 +8388,7 @@ function renderWorkroomMaterialMoney(){
     btn.onclick=()=>{
       activeWorkroomMaterialClassId=String(btn.dataset.materialClassTab||"");
       editingWorkroomMaterialClassId="";
+      editingWorkroomMaterialExpenseId="";
       renderWorkroomMaterialMoney();
     };
   });
@@ -8400,17 +8407,45 @@ function renderWorkroomMaterialMoney(){
 
     const now=Date.now();
     item.expenses=Array.isArray(item.expenses)?item.expenses:[];
-    item.expenses.push({
-      id:`material-expense-${now}-${Math.random().toString(36).slice(2,7)}`,
-      date,
-      title,
-      note,
-      amount,
-      createdAt:now,
-      updatedAt:now
-    });
+
+    if(editingWorkroomMaterialExpenseId){
+      const expense=item.expenses.find(x=>String(x.id)===String(editingWorkroomMaterialExpenseId));
+      if(!expense) return;
+      expense.date=date;
+      expense.title=title;
+      expense.note=note;
+      expense.amount=amount;
+      expense.updatedAt=now;
+      editingWorkroomMaterialExpenseId="";
+    }else{
+      item.expenses.push({
+        id:`material-expense-${now}-${Math.random().toString(36).slice(2,7)}`,
+        date,
+        title,
+        note,
+        amount,
+        createdAt:now,
+        updatedAt:now
+      });
+    }
+
     item.updatedAt=now;
     save();
+    renderWorkroomMaterialMoney();
+  });
+
+  editor.querySelectorAll("[data-material-expense-edit]").forEach(btn=>{
+    btn.addEventListener("click",()=>{
+      editingWorkroomMaterialExpenseId=String(btn.dataset.materialExpenseEdit||"");
+      renderWorkroomMaterialMoney();
+      requestAnimationFrame(()=>{
+        document.querySelector("[data-material-expense-title]")?.focus();
+      });
+    });
+  });
+
+  editor.querySelector("[data-material-expense-cancel]")?.addEventListener("click",()=>{
+    editingWorkroomMaterialExpenseId="";
     renderWorkroomMaterialMoney();
   });
 
@@ -8451,6 +8486,7 @@ function renderWorkroomMaterialMoney(){
     item.updatedAt=Date.now();
 
     editingWorkroomMaterialClassId="";
+    editingWorkroomMaterialExpenseId="";
     save();
     renderWorkroomMaterialMoney();
   });
@@ -8585,6 +8621,7 @@ document.querySelector("#archiveWorkroomMaterialSemesterBtn")?.addEventListener(
   store.semesterUpdatedAt=now;
   activeWorkroomMaterialClassId="";
   editingWorkroomMaterialClassId="";
+  editingWorkroomMaterialExpenseId="";
   save();
   renderWorkroomMaterialMoney();
   renderWorkroomMaterialArchive();
@@ -21273,6 +21310,14 @@ window.addEventListener("resize", () => {
     }
   });
 })();
+
+/* =========================================================
+   V165 – AUSGABEN BEARBEITEN
+   - ✎ Bearbeiten neben jeder bestehenden Ausgabe
+   - bestehende Werte werden oben in die Eingabe geladen
+   - ✓ Speichern aktualisiert Datum, Bezeichnung, Notiz und Betrag
+   - Abbrechen verlässt den Bearbeitungsmodus ohne Änderung
+   ========================================================= */
 
 /* =========================================================
    V164 – MATERIALGELD NOTIZEN
