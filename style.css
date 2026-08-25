@@ -33470,3 +33470,64 @@ button.day-meal-list-item:hover,a.day-meal-list-item:hover{background:rgba(164,1
   ) !important;
   filter:saturate(.96) !important;
 }
+
+
+/* =========================================================
+   V173 – Handy: gespeicherte Gemeinschaftstopf-Ausgaben zweizeilig
+   Zeile 1: Datum + Bezeichnung/Notiz
+   Zeile 2: Betrag + Bearbeiten + Löschen
+   PC und Tablet bleiben unverändert.
+   ========================================================= */
+@media (max-width:700px){
+  #workroomMaterialSharedList > div{
+    display:grid !important;
+    grid-template-columns:auto minmax(0,1fr) auto auto !important;
+    grid-template-areas:
+      "date description description description"
+      ". amount edit delete" !important;
+    align-items:center !important;
+    column-gap:10px !important;
+    row-gap:9px !important;
+    padding-top:14px !important;
+    padding-bottom:14px !important;
+  }
+
+  #workroomMaterialSharedList > div > span:first-child{
+    grid-area:date !important;
+    align-self:start !important;
+    white-space:nowrap !important;
+  }
+
+  #workroomMaterialSharedList .workroom-material-expense-description{
+    grid-area:description !important;
+    min-width:0 !important;
+    align-self:start !important;
+    overflow-wrap:normal !important;
+    word-break:normal !important;
+  }
+
+  #workroomMaterialSharedList .workroom-material-expense-description > span,
+  #workroomMaterialSharedList .workroom-material-expense-description > small{
+    display:block !important;
+    min-width:0 !important;
+    white-space:normal !important;
+    overflow-wrap:break-word !important;
+    word-break:normal !important;
+  }
+
+  #workroomMaterialSharedList > div > strong{
+    grid-area:amount !important;
+    justify-self:end !important;
+    white-space:nowrap !important;
+  }
+
+  #workroomMaterialSharedList > div > button:nth-last-child(2){
+    grid-area:edit !important;
+    justify-self:end !important;
+  }
+
+  #workroomMaterialSharedList > div > button:last-child{
+    grid-area:delete !important;
+    justify-self:end !important;
+  }
+}
