@@ -1,3 +1,6 @@
+/* V180 – Archivdialoge unabhängig vom Geräte-Dark-Mode.
+   Funktion gegenüber V179 unverändert. */
+
 /* V179 – Archivdialoge: nur optischer Feinschliff.
    Funktion gegenüber V178 unverändert. */
 
