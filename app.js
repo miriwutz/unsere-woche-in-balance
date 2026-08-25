@@ -1,4 +1,13 @@
 /* =========================================================
+   V176 – MATERIALGELD ARCHIV SICHERER
+   - beim Archivieren Klassen per Checkbox auswählen
+   - Alle auswählen / Auswahl aufheben
+   - einzelne Klasse archivieren möglich
+   - Archiv kann vollständig wiederhergestellt werden
+   - Gemeinschaftstopf wird nur beim Archivieren der letzten aktiven Klasse abgeschlossen
+   ========================================================= */
+
+/* =========================================================
    V170 – KLASSENBUDGET-LEISTE
    - Fortschrittsleiste auch bei den Klassen
    - zeigt verbleibendes Budget relativ zum eingenommenen Gesamtbetrag
@@ -8774,12 +8783,99 @@ function renderWorkroomMaterialArchive(){
                   </div>
                 `;
               }).join("")}
-              <button type="button" class="workroom-material-archive-delete" data-material-archive-delete="${escapeHtml(entry.id)}">Archiv löschen</button>
+              <div class="workroom-material-archive-actions">
+                <button type="button" class="workroom-material-archive-restore" data-material-archive-restore="${escapeHtml(entry.id)}">↶ Wiederherstellen</button>
+                <button type="button" class="workroom-material-archive-delete" data-material-archive-delete="${escapeHtml(entry.id)}">Archiv löschen</button>
+              </div>
             </div>
           </details>
         `;
       }).join("")
     : `<div class="workroom-empty">Noch keine Semester archiviert.</div>`;
+
+  list.querySelectorAll("[data-material-archive-restore]").forEach(btn=>{
+    btn.addEventListener("click",()=>{
+      const id=String(btn.dataset.materialArchiveRestore||"");
+      const entry=store.archive.find(x=>String(x.id)===id);
+      if(!entry) return;
+
+      const archivedClasses=Array.isArray(entry.classes)?entry.classes:[];
+      if(!archivedClasses.length){
+        alert("In diesem Archiv sind keine Klassen zum Wiederherstellen.");
+        return;
+      }
+
+      const existingIds=new Set(store.classes.map(x=>String(x.id)));
+      const existingNames=new Set(store.classes.map(x=>String(x.name||"").trim().toLowerCase()));
+      const conflicts=archivedClasses.filter(x=>
+        existingIds.has(String(x.id)) ||
+        existingNames.has(String(x.name||"").trim().toLowerCase())
+      );
+
+      if(conflicts.length){
+        alert(
+          "Diese Klasse(n) sind im aktiven Bereich bereits vorhanden:\\n" +
+          conflicts.map(x=>`• ${x.name||"Klasse"}`).join("\\n") +
+          "\\n\\nBitte zuerst die Dublette bearbeiten oder löschen."
+        );
+        return;
+      }
+
+      if(!confirm(
+        `${entry.semester||"Semester"} wiederherstellen?\\n\\n` +
+        `${archivedClasses.length} ${archivedClasses.length===1?"Klasse wird":"Klassen werden"} wieder in den aktiven Bereich verschoben.`
+      )) return;
+
+      const now=Date.now();
+
+      archivedClasses.forEach(item=>{
+        const restored=JSON.parse(JSON.stringify(item));
+        restored.updatedAt=now;
+        store.classes.push(restored);
+        if(store.deletedClasses) delete store.deletedClasses[String(restored.id)];
+      });
+
+      /* Falls der Gemeinschaftstopf gemeinsam mit diesem Archiv abgelegt wurde,
+         wird er nur zurückgeholt, wenn der laufende Topf leer ist. */
+      if(entry.sharedFund && typeof entry.sharedFund==="object"){
+        const currentFund=store.sharedFund;
+        const currentHasData=
+          moneyNumber(currentFund?.startAmount)!==0 ||
+          (Array.isArray(currentFund?.expenses) && currentFund.expenses.length>0);
+
+        if(!currentHasData){
+          store.sharedFund=JSON.parse(JSON.stringify(entry.sharedFund));
+          store.sharedFund.updatedAt=now;
+          if(store.sharedFund.deletedExpenses){
+            (store.sharedFund.expenses||[]).forEach(exp=>{
+              delete store.sharedFund.deletedExpenses[String(exp.id)];
+            });
+          }
+        }else{
+          alert("Die Klassen wurden wiederhergestellt. Der archivierte Gemeinschaftstopf blieb im Archiv, weil der aktuelle Gemeinschaftstopf bereits Daten enthält.");
+          entry.sharedFund=JSON.parse(JSON.stringify(entry.sharedFund));
+        }
+      }
+
+      if(!store.semester){
+        store.semester=String(entry.semester||"");
+        store.semesterUpdatedAt=now;
+      }
+
+      store.deletedArchive[id]=now;
+      store.archive=store.archive.filter(x=>String(x.id)!==id);
+
+      activeWorkroomMaterialClassId=store.classes[0]?.id||"";
+      editingWorkroomMaterialClassId="";
+      editingWorkroomMaterialExpenseId="";
+      editingWorkroomSharedExpenseId="";
+
+      save();
+      renderWorkroomMaterialMoney();
+      renderWorkroomMaterialSharedFund();
+      renderWorkroomMaterialArchive();
+    });
+  });
 
   list.querySelectorAll("[data-material-archive-delete]").forEach(btn=>{
     btn.addEventListener("click",()=>{
@@ -8806,6 +8902,7 @@ document.querySelector("#workroomMaterialSemester")?.addEventListener("change",e
 document.querySelector("#archiveWorkroomMaterialSemesterBtn")?.addEventListener("click",()=>{
   const store=workroomMaterialMoneyStore();
   const semester=String(store.semester||document.querySelector("#workroomMaterialSemester")?.value||"").trim();
+
   if(!semester){
     alert("Bitte zuerst ein Semester eintragen, z. B. WS 26/27.");
     return;
@@ -8814,70 +8911,143 @@ document.querySelector("#archiveWorkroomMaterialSemesterBtn")?.addEventListener(
     alert("Es sind noch keine Klassen für dieses Semester angelegt.");
     return;
   }
-  if(!confirm(`${semester} mit allen Klassen und Ausgaben archivieren?`)) return;
 
-  const fund=store.sharedFund;
-  const sharedSpent=(fund.expenses||[]).reduce((sum,x)=>sum+moneyNumber(x.amount),0);
-  const sharedRest=moneyNumber(fund.startAmount)-sharedSpent;
-  const hasShared=moneyNumber(fund.startAmount)!==0 || (fund.expenses||[]).length>0;
+  document.querySelector("#workroomMaterialArchivePicker")?.remove();
 
-  let carryShared=true;
-  if(hasShared){
-    carryShared=confirm(
-      `Gemeinschaftstopf: ${moneyEuro(sharedRest)} Rest.\n\n` +
-      `OK = Restguthaben ins neue Semester übernehmen.\n` +
-      `Abbrechen = Gemeinschaftstopf mit ${semester} archivieren und neu bei 0,00 € beginnen.`
-    );
-  }
+  const overlay=document.createElement("div");
+  overlay.id="workroomMaterialArchivePicker";
+  overlay.className="workroom-material-picker-overlay";
 
-  const now=Date.now();
-  const snapshot=JSON.parse(JSON.stringify(store.classes));
-  const archivedShared=hasShared && !carryShared
-    ? JSON.parse(JSON.stringify(fund))
-    : null;
+  overlay.innerHTML=`
+    <div class="workroom-material-picker" role="dialog" aria-modal="true" aria-labelledby="workroomMaterialPickerTitle">
+      <div class="workroom-material-picker-head">
+        <div>
+          <strong id="workroomMaterialPickerTitle">Welche Klassen möchtest du archivieren?</strong>
+          <small>${escapeHtml(semester)}</small>
+        </div>
+        <button type="button" class="workroom-material-picker-close" aria-label="Schließen">×</button>
+      </div>
 
-  store.archive.push({
-    id:`material-archive-${now}-${Math.random().toString(36).slice(2,7)}`,
-    semester,
-    archivedAt:now,
-    classes:snapshot,
-    sharedFund:archivedShared
+      <div class="workroom-material-picker-tools">
+        <button type="button" data-picker-all>Alle auswählen</button>
+        <button type="button" data-picker-none>Auswahl aufheben</button>
+      </div>
+
+      <div class="workroom-material-picker-list">
+        ${store.classes.map((item,index)=>`
+          <label>
+            <input type="checkbox" value="${escapeHtml(item.id)}">
+            <span>
+              <strong>${escapeHtml(item.name||`Klasse ${index+1}`)}</strong>
+              <small>${Number(item.childrenCount||0)} Kinder · ${moneyEuro(item.contribution||0)} pro Kind</small>
+            </span>
+          </label>
+        `).join("")}
+      </div>
+
+      <div class="workroom-material-picker-actions">
+        <button type="button" class="workroom-material-picker-cancel">Abbrechen</button>
+        <button type="button" class="workroom-material-picker-confirm">Auswahl archivieren</button>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(overlay);
+
+  const close=()=>overlay.remove();
+  overlay.querySelector(".workroom-material-picker-close")?.addEventListener("click",close);
+  overlay.querySelector(".workroom-material-picker-cancel")?.addEventListener("click",close);
+  overlay.addEventListener("click",e=>{ if(e.target===overlay) close(); });
+
+  overlay.querySelector("[data-picker-all]")?.addEventListener("click",()=>{
+    overlay.querySelectorAll('input[type="checkbox"]').forEach(cb=>cb.checked=true);
+  });
+  overlay.querySelector("[data-picker-none]")?.addEventListener("click",()=>{
+    overlay.querySelectorAll('input[type="checkbox"]').forEach(cb=>cb.checked=false);
   });
 
-  store.classes.forEach(item=>{ store.deletedClasses[item.id]=now; });
-  store.classes=[];
-  store.semester="";
-  store.semesterUpdatedAt=now;
+  overlay.querySelector(".workroom-material-picker-confirm")?.addEventListener("click",()=>{
+    const selectedIds=[...overlay.querySelectorAll('input[type="checkbox"]:checked')].map(cb=>String(cb.value));
+    if(!selectedIds.length){
+      alert("Bitte mindestens eine Klasse auswählen.");
+      return;
+    }
 
-  if(hasShared){
-    if(carryShared){
-      /* Nur der tatsächliche Rest wird als neues Startguthaben übernommen.
-         Alte gemeinsame Ausgaben bleiben damit im abgeschlossenen Semester
-         nicht als laufende Buchungen stehen. */
+    const selected=store.classes.filter(item=>selectedIds.includes(String(item.id)));
+    if(!selected.length) return;
+
+    if(!confirm(
+      `${selected.length} ${selected.length===1?"Klasse":"Klassen"} als „${semester}“ archivieren?\\n\\n` +
+      selected.map(x=>`• ${x.name||"Klasse"}`).join("\\n")
+    )) return;
+
+    const archivingAll=selected.length===store.classes.length;
+    const fund=store.sharedFund;
+    const sharedSpent=(fund.expenses||[]).reduce((sum,x)=>sum+moneyNumber(x.amount),0);
+    const sharedRest=moneyNumber(fund.startAmount)-sharedSpent;
+    const hasShared=moneyNumber(fund.startAmount)!==0 || (fund.expenses||[]).length>0;
+
+    let carryShared=true;
+    let archivedShared=null;
+
+    /* Gemeinschaftstopf ist semesterweit. Deshalb wird er nur abgeschlossen,
+       wenn mit dieser Auswahl auch die letzte aktive Klasse archiviert wird. */
+    if(archivingAll && hasShared){
+      carryShared=confirm(
+        `Gemeinschaftstopf: ${moneyEuro(sharedRest)} Rest.\\n\\n` +
+        `OK = Restguthaben ins neue Semester übernehmen.\\n` +
+        `Abbrechen = Gemeinschaftstopf mit ${semester} archivieren und neu bei 0,00 € beginnen.`
+      );
+      if(!carryShared) archivedShared=JSON.parse(JSON.stringify(fund));
+    }
+
+    const now=Date.now();
+    const snapshot=JSON.parse(JSON.stringify(selected));
+
+    store.archive.push({
+      id:`material-archive-${now}-${Math.random().toString(36).slice(2,7)}`,
+      semester,
+      archivedAt:now,
+      classes:snapshot,
+      sharedFund:archivedShared
+    });
+
+    selected.forEach(item=>{
+      store.deletedClasses[item.id]=now;
+    });
+    store.classes=store.classes.filter(item=>!selectedIds.includes(String(item.id)));
+
+    /* Semestername bleibt stehen, solange noch aktive Klassen vorhanden sind. */
+    if(!store.classes.length){
+      store.semester="";
+      store.semesterUpdatedAt=now;
+    }
+
+    if(archivingAll && hasShared){
       (fund.expenses||[]).forEach(expense=>{
         fund.deletedExpenses[String(expense.id)]=now;
       });
-      fund.startAmount=sharedRest;
-      fund.expenses=[];
-      fund.updatedAt=now;
-    }else{
-      (fund.expenses||[]).forEach(expense=>{
-        fund.deletedExpenses[String(expense.id)]=now;
-      });
-      fund.startAmount=0;
+
+      if(carryShared){
+        fund.startAmount=sharedRest;
+      }else{
+        fund.startAmount=0;
+      }
       fund.expenses=[];
       fund.updatedAt=now;
     }
-  }
 
-  activeWorkroomMaterialClassId="";
-  editingWorkroomMaterialClassId="";
-  editingWorkroomMaterialExpenseId="";
-  editingWorkroomSharedExpenseId="";
-  save();
-  renderWorkroomMaterialMoney();
-  renderWorkroomMaterialSharedFund();
-  renderWorkroomMaterialArchive();
+    activeWorkroomMaterialClassId=store.classes[0]?.id||"";
+    editingWorkroomMaterialClassId="";
+    editingWorkroomMaterialExpenseId="";
+    editingWorkroomSharedExpenseId="";
+
+    close();
+    save();
+    renderWorkroomMaterialMoney();
+    renderWorkroomMaterialSharedFund();
+    renderWorkroomMaterialArchive();
+  });
 });
 
 document.querySelector("#addWorkroomMaterialClassBtn")?.addEventListener("click",()=>{
