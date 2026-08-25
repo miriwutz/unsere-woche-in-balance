@@ -33804,3 +33804,37 @@ button.day-meal-list-item:hover,a.day-meal-list-item:hover{background:rgba(164,1
   .workroom-shared-archive-choice-buttons{grid-template-columns:1fr;}
   .workroom-shared-archive-choice-buttons button{min-height:0;}
 }
+
+
+/* =========================================================
+   V178 – Archivdialog: lesbar / blickdicht
+   Nur Optik, keine Funktionsänderung.
+   ========================================================= */
+#workroomSharedFundArchiveChoice .workroom-shared-archive-choice{
+  background:var(--card) !important;
+  opacity:1 !important;
+  backdrop-filter:none !important;
+  -webkit-backdrop-filter:none !important;
+  box-shadow:0 22px 65px rgba(53,42,35,.22);
+}
+
+#workroomSharedFundArchiveChoice .workroom-shared-archive-choice-buttons button{
+  opacity:1 !important;
+  backdrop-filter:none !important;
+  -webkit-backdrop-filter:none !important;
+}
+
+#workroomSharedFundArchiveChoice .workroom-shared-archive-choice-buttons button[data-shared-choice="carry"]{
+  background:#eef3e9 !important;
+}
+
+#workroomSharedFundArchiveChoice .workroom-shared-archive-choice-buttons button[data-shared-choice="archive"]{
+  background:#f3ede7 !important;
+}
+
+/* Nur die Seite hinter dem Dialog bleibt weich abgedunkelt. */
+#workroomSharedFundArchiveChoice.workroom-material-picker-overlay{
+  background:rgba(49,42,38,.42);
+  backdrop-filter:blur(5px);
+  -webkit-backdrop-filter:blur(5px);
+}
