@@ -1,4 +1,10 @@
 /* =========================================================
+   V177 – GEMEINSCHAFTSTOPF ARCHIV-AUSWAHL
+   - klare Schaltflächen „Rest übernehmen“ / „Topf archivieren“
+   - „Zurück“ bricht den Vorgang ab
+   ========================================================= */
+
+/* =========================================================
    V176 – MATERIALGELD ARCHIV SICHERER
    - beim Archivieren Klassen per Checkbox auswählen
    - Alle auswählen / Auswahl aufheben
@@ -8899,6 +8905,62 @@ document.querySelector("#workroomMaterialSemester")?.addEventListener("change",e
   renderWorkroomMaterialArchive();
 });
 
+
+function chooseWorkroomSharedFundArchiveAction({semester,rest}){
+  return new Promise(resolve=>{
+    document.querySelector("#workroomSharedFundArchiveChoice")?.remove();
+
+    const overlay=document.createElement("div");
+    overlay.id="workroomSharedFundArchiveChoice";
+    overlay.className="workroom-material-picker-overlay";
+
+    overlay.innerHTML=`
+      <div class="workroom-material-picker workroom-shared-archive-choice" role="dialog" aria-modal="true">
+        <div class="workroom-material-picker-head">
+          <div>
+            <strong>Gemeinschaftstopf abschließen</strong>
+            <small>${escapeHtml(semester||"Semester")} · ${moneyEuro(rest)} Rest</small>
+          </div>
+          <button type="button" class="workroom-material-picker-close" aria-label="Schließen">×</button>
+        </div>
+
+        <p class="workroom-shared-archive-choice-text">
+          Was soll mit dem verbleibenden Gemeinschaftstopf passieren?
+        </p>
+
+        <div class="workroom-shared-archive-choice-buttons">
+          <button type="button" data-shared-choice="carry">
+            <strong>Rest übernehmen</strong>
+            <small>${moneyEuro(rest)} werden Startguthaben des nächsten Semesters.</small>
+          </button>
+          <button type="button" data-shared-choice="archive">
+            <strong>Topf archivieren</strong>
+            <small>Topf und Ausgaben bleiben bei ${escapeHtml(semester||"diesem Semester")}; neu startet er bei 0,00 €.</small>
+          </button>
+        </div>
+
+        <button type="button" class="workroom-shared-archive-choice-cancel">Zurück</button>
+      </div>
+    `;
+
+    document.body.appendChild(overlay);
+
+    const finish=value=>{
+      overlay.remove();
+      resolve(value);
+    };
+
+    overlay.querySelector(".workroom-material-picker-close")?.addEventListener("click",()=>finish(null));
+    overlay.querySelector(".workroom-shared-archive-choice-cancel")?.addEventListener("click",()=>finish(null));
+    overlay.querySelectorAll("[data-shared-choice]").forEach(btn=>{
+      btn.addEventListener("click",()=>finish(String(btn.dataset.sharedChoice||"")));
+    });
+    overlay.addEventListener("click",e=>{
+      if(e.target===overlay) finish(null);
+    });
+  });
+}
+
 document.querySelector("#archiveWorkroomMaterialSemesterBtn")?.addEventListener("click",()=>{
   const store=workroomMaterialMoneyStore();
   const semester=String(store.semester||document.querySelector("#workroomMaterialSemester")?.value||"").trim();
@@ -8966,7 +9028,7 @@ document.querySelector("#archiveWorkroomMaterialSemesterBtn")?.addEventListener(
     overlay.querySelectorAll('input[type="checkbox"]').forEach(cb=>cb.checked=false);
   });
 
-  overlay.querySelector(".workroom-material-picker-confirm")?.addEventListener("click",()=>{
+  overlay.querySelector(".workroom-material-picker-confirm")?.addEventListener("click",async ()=>{
     const selectedIds=[...overlay.querySelectorAll('input[type="checkbox"]:checked')].map(cb=>String(cb.value));
     if(!selectedIds.length){
       alert("Bitte mindestens eine Klasse auswählen.");
@@ -8990,15 +9052,16 @@ document.querySelector("#archiveWorkroomMaterialSemesterBtn")?.addEventListener(
     let carryShared=true;
     let archivedShared=null;
 
-    /* Gemeinschaftstopf ist semesterweit. Deshalb wird er nur abgeschlossen,
-       wenn mit dieser Auswahl auch die letzte aktive Klasse archiviert wird. */
+    /* Gemeinschaftstopf ist semesterweit. Beim Archivieren der letzten
+       aktiven Klasse folgt eine eindeutige Auswahl. */
     if(archivingAll && hasShared){
-      carryShared=confirm(
-        `Gemeinschaftstopf: ${moneyEuro(sharedRest)} Rest.\\n\\n` +
-        `OK = Restguthaben ins neue Semester übernehmen.\\n` +
-        `Abbrechen = Gemeinschaftstopf mit ${semester} archivieren und neu bei 0,00 € beginnen.`
-      );
-      if(!carryShared) archivedShared=JSON.parse(JSON.stringify(fund));
+      const choice=await chooseWorkroomSharedFundArchiveAction({
+        semester,
+        rest:sharedRest
+      });
+      if(!choice) return;
+      carryShared=choice==="carry";
+      if(choice==="archive") archivedShared=JSON.parse(JSON.stringify(fund));
     }
 
     const now=Date.now();
