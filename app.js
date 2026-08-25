@@ -1,4 +1,14 @@
 /* =========================================================
+   V168 – FERIEN + MEHRTAGESTEXT
+   - Sommerferien 04.07.–06.09.2026 im Wochenplan sichtbar
+   - Ferienblöcke erhalten konkrete Namen (Sommer-, Herbst-, Weihnachts-,
+     Semester-, Oster- und Pfingstferien)
+   - 2027/28+ verwenden nun wirklich die vorhandene automatische
+     Schuljahr-Generierung statt leerer Platzhalter
+   - Mehrtagestext am PC/Tablet wieder über die gesamte Dauer lesbar
+   ========================================================= */
+
+/* =========================================================
    V148 – EDELSTEIN-UNTERZEILE ENTFERNT
    - graue Unterzeile „Besondere Extras für unser Familienleben.“ entfernt
    ========================================================= */
@@ -1660,17 +1670,21 @@ const NOE_SCHOOL_YEARS = {
     start:"2026-09-07",
     end:"2027-07-02",
     freeRanges:[
-      ["2026-10-26","2026-10-31"],
-      ["2026-11-01","2026-11-02"],
-      ["2026-11-15","2026-11-15"],
-      ["2026-12-08","2026-12-08"],
-      ["2026-12-24","2027-01-06"],
-      ["2027-02-01","2027-02-06"],
-      ["2027-03-20","2027-03-29"],
-      ["2027-05-01","2027-05-01"],
-      ["2027-05-06","2027-05-06"],
-      ["2027-05-15","2027-05-17"],
-      ["2027-05-27","2027-05-27"]
+      ["2026-07-04","2026-09-06","Sommerferien"],
+      ["2026-10-26","2026-10-26","Schulfrei"],
+      ["2026-10-27","2026-10-31","Herbstferien"],
+      ["2026-11-01","2026-11-01","Schulfrei"],
+      ["2026-11-02","2026-11-02","Schulfrei"],
+      ["2026-11-15","2026-11-15","Schulfrei"],
+      ["2026-12-08","2026-12-08","Schulfrei"],
+      ["2026-12-24","2027-01-06","Weihnachtsferien"],
+      ["2027-02-01","2027-02-06","Semesterferien"],
+      ["2027-03-20","2027-03-29","Osterferien"],
+      ["2027-05-01","2027-05-01","Schulfrei"],
+      ["2027-05-06","2027-05-06","Schulfrei"],
+      ["2027-05-15","2027-05-17","Pfingstferien"],
+      ["2027-05-27","2027-05-27","Schulfrei"],
+      ["2027-07-03","2027-09-05","Sommerferien"]
     ]
   },
   "2027-28":{
@@ -1685,7 +1699,9 @@ state.settings = state.settings || {};
 state.settings.schoolYear = localStorage.getItem("balanceProd.schoolYear") || "2026-27";
 
 function activeSchoolYear(){
-  return NOE_SCHOOL_YEARS[state.settings.schoolYear] || NOE_SCHOOL_YEARS["2026-27"];
+  /* V168: Auch Platzhalterjahre wie 2027/28 werden über schoolYearConfig()
+     tatsächlich erzeugt; zuvor kamen dort start:null/end:null zurück. */
+  return schoolYearConfig(state.settings.schoolYear);
 }
 
 function parseLocalDate(key) {
@@ -1717,8 +1733,8 @@ function noeSchoolFreeLabel(date) {
   );
   if (!range) return "";
 
-  const [start, end] = range;
-  // Mehrtägige Bereiche sind Ferienblöcke; einzelne Tage werden neutral als schulfrei markiert.
+  const [start, end, label] = range;
+  if (label) return label;
   return start === end ? "Schulfrei" : "Ferien";
 }
 
@@ -13590,22 +13606,30 @@ function generatedNoeSchoolYear(startYear) {
   const easter = easterSunday(nextYear);
   const semesterStart = firstWeekdayOfMonth(nextYear, 1, 1); // erster Montag im Februar
 
+  const previousJulyFirstSaturday = firstWeekdayOfMonth(startYear, 6, 6);
+  const nextSchoolStart = firstWeekdayOfMonth(nextYear, 8, 1);
+
   return {
     label: `${startYear}/${String(nextYear).slice(-2)}`,
     start: dateKey(start),
     end: dateKey(end),
     generated: true,
     freeRanges: [
-      [`${startYear}-10-26`, `${startYear}-11-02`],
-      [`${startYear}-11-15`, `${startYear}-11-15`], // Hl. Leopold, NÖ
-      [`${startYear}-12-08`, `${startYear}-12-08`],
-      [`${startYear}-12-24`, `${nextYear}-01-06`],
-      [dateKey(semesterStart), dateKey(addDays(semesterStart, 5))],
-      [dateKey(addDays(easter, -8)), dateKey(addDays(easter, 1))],
-      [`${nextYear}-05-01`, `${nextYear}-05-01`],
-      [dateKey(addDays(easter, 39)), dateKey(addDays(easter, 39))],
-      [dateKey(addDays(easter, 48)), dateKey(addDays(easter, 50))],
-      [dateKey(addDays(easter, 60)), dateKey(addDays(easter, 60))]
+      [dateKey(previousJulyFirstSaturday), dateKey(addDays(start,-1)), "Sommerferien"],
+      [`${startYear}-10-26`, `${startYear}-10-26`, "Schulfrei"],
+      [`${startYear}-10-27`, `${startYear}-10-31`, "Herbstferien"],
+      [`${startYear}-11-01`, `${startYear}-11-01`, "Schulfrei"],
+      [`${startYear}-11-02`, `${startYear}-11-02`, "Schulfrei"],
+      [`${startYear}-11-15`, `${startYear}-11-15`, "Schulfrei"],
+      [`${startYear}-12-08`, `${startYear}-12-08`, "Schulfrei"],
+      [`${startYear}-12-24`, `${nextYear}-01-06`, "Weihnachtsferien"],
+      [dateKey(semesterStart), dateKey(addDays(semesterStart, 5)), "Semesterferien"],
+      [dateKey(addDays(easter, -8)), dateKey(addDays(easter, 1)), "Osterferien"],
+      [`${nextYear}-05-01`, `${nextYear}-05-01`, "Schulfrei"],
+      [dateKey(addDays(easter, 39)), dateKey(addDays(easter, 39)), "Schulfrei"],
+      [dateKey(addDays(easter, 48)), dateKey(addDays(easter, 50)), "Pfingstferien"],
+      [dateKey(addDays(easter, 60)), dateKey(addDays(easter, 60)), "Schulfrei"],
+      [dateKey(julyFirstSaturday), dateKey(addDays(nextSchoolStart,-1)), "Sommerferien"]
     ]
   };
 }
