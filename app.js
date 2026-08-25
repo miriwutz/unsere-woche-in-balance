@@ -1,3 +1,11 @@
+/* =========================================================
+   V181 – MATERIALGELD RETTUNG + ARCHIV-SYNC-FIX
+   - vorhandene lokale Sicherungen werden nutzbar gemacht
+   - Rettung betrifft ausschließlich Materialgeld & Ausgaben
+   - Archivieren/Wiederherstellen schreibt materialMoney exakt in Firestore
+   - alte Klassen-Tombstones werden nach erfolgreicher Wiederherstellung bereinigt
+   ========================================================= */
+
 /* V180 – Archivdialoge unabhängig vom Geräte-Dark-Mode.
    Funktion gegenüber V179 unverändert. */
 
@@ -8886,6 +8894,7 @@ function renderWorkroomMaterialArchive(){
       editingWorkroomSharedExpenseId="";
 
       save();
+      persistMaterialMoneyExactly();
       renderWorkroomMaterialMoney();
       renderWorkroomMaterialSharedFund();
       renderWorkroomMaterialArchive();
@@ -9116,6 +9125,7 @@ document.querySelector("#archiveWorkroomMaterialSemesterBtn")?.addEventListener(
 
     close();
     save();
+    persistMaterialMoneyExactly();
     renderWorkroomMaterialMoney();
     renderWorkroomMaterialSharedFund();
     renderWorkroomMaterialArchive();
@@ -10686,6 +10696,15 @@ function mergeWorkroomMaterialMoney(localValue, remoteValue){
     Number(deletedClasses[item.id]||0)<Number(item.updatedAt||item.createdAt||0)
   );
 
+  /* V181: Wenn eine wiederhergestellte Klasse neuer als ihr alter
+     Archiv-Tombstone ist, ist dieser Tombstone erledigt und darf nicht
+     dauerhaft aus der Cloud zurückkommen. */
+  classes.forEach(item=>{
+    const deletedAt=Number(deletedClasses[item.id]||0);
+    const itemAt=Number(item.updatedAt||item.createdAt||0);
+    if(deletedAt && itemAt>deletedAt) delete deletedClasses[item.id];
+  });
+
   const deletedArchive={...(local.deletedArchive||{}),...(remote.deletedArchive||{})};
   for(const [id,at] of Object.entries(local.deletedArchive||{})){
     deletedArchive[id]=Math.max(Number(deletedArchive[id]||0),Number(at||0));
@@ -10746,6 +10765,23 @@ function mergeWorkroomMaterialMoney(localValue, remoteValue){
     archive,
     sharedFund
   };
+}
+
+
+async function persistMaterialMoneyExactly(){
+  try{
+    if(!firebase.auth().currentUser) return false;
+    const store=workroomMaterialMoneyStore();
+    const exact=JSON.parse(JSON.stringify(store));
+    await firebase.firestore()
+      .collection("families")
+      .doc("shared")
+      .update({"workroom.materialMoney": exact});
+    return true;
+  }catch(err){
+    console.warn("Materialgeld konnte nicht exakt in die Cloud geschrieben werden:",err);
+    return false;
+  }
 }
 
 function guardedWorkroomMerge(localValue, cloudValue) {
@@ -22551,4 +22587,212 @@ document.addEventListener("click",e=>{const b=e.target.closest("[data-school-ope
   };
   setMobileTerminPlaceholder();
   window.addEventListener("resize", setMobileTerminPlaceholder);
+})();
+
+/* =========================================================
+   V181 – MATERIALGELD DATENRETTUNG
+   Temporäre, sichere Rettung aus vorhandenen LocalStorage-Sicherungen.
+   ========================================================= */
+(function installMaterialMoneyRescue(){
+  function rescueCandidates(){
+    const candidates=[];
+
+    const add=(key,label)=>{
+      const raw=localStorage.getItem(key);
+      if(!raw) return;
+      try{
+        const data=JSON.parse(raw);
+        const mm=data?.workroom?.materialMoney;
+        if(!mm || typeof mm!=="object") return;
+        const classes=Array.isArray(mm.classes)?mm.classes:[];
+        const archive=Array.isArray(mm.archive)?mm.archive:[];
+        const shared=mm.sharedFund&&typeof mm.sharedFund==="object"?mm.sharedFund:{};
+        const classExpenses=classes.reduce((sum,c)=>sum+(Array.isArray(c.expenses)?c.expenses.length:0),0);
+        const archivedClasses=archive.reduce((sum,a)=>sum+(Array.isArray(a.classes)?a.classes.length:0),0);
+        const sharedExpenses=Array.isArray(shared.expenses)?shared.expenses.length:0;
+
+        candidates.push({
+          key,label,
+          savedAt:Number(data.savedAt||0),
+          mm,
+          classes:classes.length,
+          archive:archive.length,
+          archivedClasses,
+          expenses:classExpenses+sharedExpenses,
+          sharedAmount:Number(shared.startAmount||0)
+        });
+      }catch(_){}
+    };
+
+    for(let i=1;i<=5;i++) add(`balanceProd.autoSafety.${i}`,`Auto-Sicherung ${i}`);
+    for(let i=1;i<=3;i++) add(`balanceProd.safetyBackup.${i}`,`Sicherheitskopie ${i}`);
+
+    return candidates.sort((a,b)=>b.savedAt-a.savedAt);
+  }
+
+  function formatWhen(ts){
+    if(!ts) return "Zeit unbekannt";
+    try{return new Date(ts).toLocaleString("de-AT");}
+    catch(_){return "Zeit unbekannt";}
+  }
+
+  function rescueMaterialMoney(candidate){
+    if(!candidate?.mm) return;
+
+    const current=workroomMaterialMoneyStore();
+    try{
+      localStorage.setItem(
+        `balanceProd.materialMoney.beforeRescue.${Date.now()}`,
+        JSON.stringify({savedAt:Date.now(),materialMoney:current})
+      );
+    }catch(_){}
+
+    const normalized=normalizeWorkroom({materialMoney:candidate.mm}).materialMoney;
+
+    /* Bei einer Rettung gewinnen vorhandene Daten bewusst gegen alte
+       Löschmarker. Jede gerettete aktive Klasse bekommt einen frischen
+       Zeitstempel. */
+    const now=Date.now();
+    normalized.classes=(normalized.classes||[]).map(item=>({
+      ...item,
+      updatedAt:now
+    }));
+    normalized.classes.forEach(item=>{
+      delete normalized.deletedClasses?.[String(item.id)];
+    });
+
+    state.workroom.materialMoney=normalized;
+    saveLocal();
+
+    const finish=()=>{
+      renderAll();
+      renderWorkroomMaterialMoney?.();
+      renderWorkroomMaterialSharedFund?.();
+      renderWorkroomMaterialArchive?.();
+      document.querySelector("#materialMoneyRescueOverlay")?.remove();
+      alert("Materialgeld wurde aus der Sicherung wiederhergestellt.");
+    };
+
+    if(firebase.auth().currentUser){
+      firebase.firestore()
+        .collection("families")
+        .doc("shared")
+        .update({"workroom.materialMoney":JSON.parse(JSON.stringify(normalized))})
+        .then(finish)
+        .catch(err=>{
+          console.warn("Cloud-Rettung fehlgeschlagen, lokale Rettung bleibt erhalten:",err);
+          finish();
+        });
+    }else{
+      finish();
+    }
+  }
+
+  function openRescue(){
+    document.querySelector("#materialMoneyRescueOverlay")?.remove();
+    const items=rescueCandidates();
+
+    const overlay=document.createElement("div");
+    overlay.id="materialMoneyRescueOverlay";
+    overlay.style.cssText=[
+      "position:fixed","inset:0","z-index:20000","display:grid","place-items:center",
+      "padding:18px","background:rgba(45,40,36,.48)","backdrop-filter:blur(5px)"
+    ].join(";");
+
+    const card=document.createElement("div");
+    card.style.cssText=[
+      "width:min(620px,100%)","max-height:86vh","overflow:auto","padding:20px",
+      "border-radius:22px","background:#fffaf6","color:#4f4640",
+      "border:1px solid rgba(126,105,92,.20)","box-shadow:0 22px 65px rgba(53,42,35,.22)"
+    ].join(";");
+
+    card.innerHTML=`
+      <div style="display:flex;justify-content:space-between;gap:16px;align-items:flex-start">
+        <div>
+          <strong style="font-size:1.05rem">Materialgeld retten</strong>
+          <div style="margin-top:4px;color:#84766e;font-size:.82rem">
+            Wähle eine Sicherung aus. Es wird nur „Materialgeld & Ausgaben“ zurückgeholt.
+          </div>
+        </div>
+        <button type="button" data-rescue-close
+          style="width:34px;height:34px;border-radius:50%;border:1px solid #d9cec6;background:#fffdfb">×</button>
+      </div>
+
+      <div style="display:grid;gap:8px;margin-top:16px">
+        ${items.length ? items.map((x,i)=>`
+          <label style="display:flex;gap:10px;align-items:flex-start;padding:11px 12px;border:1px solid #e4dad3;border-radius:14px;background:#fffdfb">
+            <input type="radio" name="materialRescue" value="${i}" ${i===0?"checked":""} style="margin-top:3px">
+            <span>
+              <strong>${escapeHtml(x.label)} · ${escapeHtml(formatWhen(x.savedAt))}</strong>
+              <small style="display:block;margin-top:3px;color:#84766e">
+                ${x.classes} aktive Klassen · ${x.archivedClasses} archivierte Klassen ·
+                ${x.expenses} Ausgaben · Gemeinschaftstopf ${moneyEuro(x.sharedAmount)}
+              </small>
+            </span>
+          </label>
+        `).join("") : `
+          <div style="padding:14px;border-radius:14px;background:#f6eee8">
+            Keine Materialgeld-Sicherung gefunden.
+          </div>
+        `}
+      </div>
+
+      <div style="display:flex;justify-content:flex-end;gap:9px;margin-top:16px">
+        <button type="button" data-rescue-close
+          style="padding:9px 15px;border-radius:999px;border:1px solid #d9cec6;background:#fffdfb;color:#756860">
+          Abbrechen
+        </button>
+        <button type="button" data-rescue-restore ${items.length?"":"disabled"}
+          style="padding:9px 16px;border-radius:999px;border:1px solid #b7c8ad;background:#e7efe2;color:#52644a;font-weight:600">
+          Diese Sicherung wiederherstellen
+        </button>
+      </div>
+    `;
+
+    overlay.appendChild(card);
+    document.body.appendChild(overlay);
+
+    overlay.querySelectorAll("[data-rescue-close]").forEach(btn=>btn.onclick=()=>overlay.remove());
+    overlay.addEventListener("click",e=>{if(e.target===overlay)overlay.remove();});
+
+    overlay.querySelector("[data-rescue-restore]")?.addEventListener("click",()=>{
+      const selected=overlay.querySelector('input[name="materialRescue"]:checked');
+      if(!selected) return;
+      const candidate=items[Number(selected.value)];
+      if(!candidate) return;
+      if(!confirm(
+        `Materialgeld aus „${candidate.label}“ (${formatWhen(candidate.savedAt)}) wiederherstellen?\n\n`+
+        `Aktive Klassen: ${candidate.classes}\nArchivierte Klassen: ${candidate.archivedClasses}`
+      )) return;
+      rescueMaterialMoney(candidate);
+    });
+  }
+
+  function installButton(){
+    if(document.querySelector("#materialMoneyRescueBtn")) return;
+    const details=document.querySelector("#workroomMaterialMoneyDetails");
+    if(!details) return;
+
+    const btn=document.createElement("button");
+    btn.id="materialMoneyRescueBtn";
+    btn.type="button";
+    btn.textContent="↶ Sicherung prüfen";
+    btn.title="Materialgeld aus einer lokalen Sicherung wiederherstellen";
+    btn.style.cssText=[
+      "margin:10px 0 0","padding:7px 12px","border-radius:999px",
+      "border:1px solid rgba(126,105,92,.22)","background:#fffaf6",
+      "color:#756860","font:inherit","font-size:.78rem"
+    ].join(";");
+    btn.addEventListener("click",openRescue);
+
+    const body=details.querySelector(".workroom-material-money-body") || details;
+    body.appendChild(btn);
+  }
+
+  window.materialMoneyRescue={list:rescueCandidates,open:openRescue};
+  if(document.readyState==="loading"){
+    document.addEventListener("DOMContentLoaded",installButton,{once:true});
+  }else{
+    installButton();
+  }
 })();
