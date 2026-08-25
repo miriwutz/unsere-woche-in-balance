@@ -33133,3 +33133,88 @@ button.day-meal-list-item:hover,a.day-meal-list-item:hover{background:rgba(164,1
     grid-template-columns:90px minmax(0,1fr) 90px 70px;
   }
 }
+
+
+/* =========================================================
+   V166 – Gemeinschaftstopf / Winkler-Guthaben
+   ========================================================= */
+.workroom-material-shared-fund{
+  margin-top:16px;
+  padding:14px 16px;
+  border:1px solid var(--line);
+  border-radius:14px;
+  background:rgba(250,248,244,.55);
+}
+.workroom-material-shared-head{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:16px;
+}
+.workroom-material-shared-head > div{
+  display:flex;
+  flex-direction:column;
+  gap:3px;
+}
+.workroom-material-shared-head span{
+  color:var(--muted);
+  font-size:.8rem;
+}
+.workroom-material-shared-balance{
+  white-space:nowrap;
+}
+.workroom-material-shared-start{
+  margin-top:12px;
+}
+.workroom-material-shared-start label{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  color:var(--muted);
+  font-size:.82rem;
+}
+.workroom-material-shared-start .workroom-material-euro-input{
+  width:150px;
+}
+.workroom-material-shared-entry{
+  display:grid;
+  grid-template-columns:150px minmax(190px,1fr) minmax(170px,.8fr) 145px auto;
+  gap:8px;
+  align-items:center;
+  margin-top:10px;
+}
+#workroomMaterialSharedList{
+  display:grid;
+  gap:5px;
+  margin-top:10px;
+}
+.workroom-material-shared-row{
+  display:grid;
+  grid-template-columns:110px minmax(180px,1fr) 110px 74px;
+  gap:10px;
+  align-items:center;
+  padding:8px 10px;
+  border-radius:10px;
+  background:rgba(255,255,255,.45);
+}
+.workroom-material-shared-row > strong{
+  text-align:right;
+}
+@media(max-width:900px){
+  .workroom-material-shared-entry{
+    grid-template-columns:140px minmax(180px,1fr) minmax(160px,1fr);
+  }
+}
+@media(max-width:700px){
+  .workroom-material-shared-head,
+  .workroom-material-shared-start label{
+    align-items:flex-start;
+    flex-direction:column;
+  }
+  .workroom-material-shared-entry{
+    grid-template-columns:1fr;
+  }
+  .workroom-material-shared-row{
+    grid-template-columns:90px minmax(0,1fr) 90px 70px;
+  }
+}
