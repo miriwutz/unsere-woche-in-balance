@@ -1,4 +1,18 @@
 /* =========================================================
+   V143 – PINNWAND-TON ZUVERLÄSSIGER
+   - AudioContext wird bei normalen Benutzeraktionen erneut aktiviert
+   - kein wiederholter Extra-Klick auf "Benachrichtigungen aktiv" nötig
+   - keine Änderung am Pinnwand-Sync
+   ========================================================= */
+
+/* =========================================================
+   V142 – ROUTINEN SORTIEREN NUR AM PC
+   - Mama/Lou/Fina: Reihenfolge per Maus innerhalb eines Tagesbereichs verschiebbar
+   - Handy/Tablet: keine Drag-Funktion, Reihenfolge wird nur übernommen
+   - keine Änderung an Sync- oder Routinen-Inhalten
+   ========================================================= */
+
+/* =========================================================
    V140 – SYNC-FIX "FÜR EUCH"
    - Lou/Fina-Schulaufgaben bekommen echte Löschmarker
    - bestehende tombstone-fähige Schul-Merge-Logik wird verwendet
@@ -736,6 +750,44 @@ const pinboardSeenIds = new Set();
 let pinboardCloudInitialized = false;
 let pinboardAudioContext = null;
 
+/* V143 – Pinnwand-Ton auf mobilen Browsern zuverlässiger aktiv halten.
+   Wenn Benachrichtigungen auf diesem Gerät aktiviert sind, wird der
+   AudioContext bei normalen Benutzeraktionen erneut aufgenommen.
+   So ist kein wiederholter Klick auf "Benachrichtigungen aktiv" nötig. */
+async function keepPinboardAudioReady(){
+  if(!pinboardDeviceEnabled()) return false;
+  try{
+    pinboardAudioContext =
+      pinboardAudioContext ||
+      new (window.AudioContext || window.webkitAudioContext)();
+
+    if(pinboardAudioContext.state === "suspended"){
+      await pinboardAudioContext.resume();
+    }
+
+    return pinboardAudioContext.state === "running";
+  }catch(err){
+    console.warn("Pinnwand-Audio konnte nicht erneut aktiviert werden:", err);
+    return false;
+  }
+}
+
+["pointerdown","touchstart","keydown"].forEach(type=>{
+  document.addEventListener(type,()=>{
+    keepPinboardAudioReady();
+  },{passive:true});
+});
+
+document.addEventListener("visibilitychange",()=>{
+  if(document.visibilityState === "visible"){
+    keepPinboardAudioReady();
+  }
+});
+
+window.addEventListener("focus",()=>{
+  keepPinboardAudioReady();
+});
+
 function pinboardRecipientName(key) {
   if (key === "all") return "Alle";
   return familyName(key) || "Familie";
@@ -756,7 +808,7 @@ async function playPinboardSound(sound = "letter") {
       new (window.AudioContext || window.webkitAudioContext)();
 
     if (pinboardAudioContext.state === "suspended") {
-      await pinboardAudioContext.resume();
+      await keepPinboardAudioReady();
     }
 
     const ctx = pinboardAudioContext;
@@ -16866,23 +16918,34 @@ function ensurePersonalRoutineSentences(){
           : defaultPersonalRoutineSentences[area];
       const existing=Array.isArray(current[area]) ? current[area] : [];
 
-      current[area]=defaults.map(def=>{
-        const found=existing.find(row=>String(row?.step||"")===def.step);
-        return {
-          step:def.step,
-          text:String(found?.text ?? def.text)
-        };
-      });
+      /* V142: vorhandene Reihenfolge erhalten.
+         Fehlende Standardpunkte werden nur ergänzt; eigene Punkte bleiben ebenfalls erhalten. */
+      const byDefaultStep=new Map(defaults.map(def=>[def.step,def]));
+      const normalized=[];
+      const seen=new Set();
 
-      /* Eigene später zusätzlich ergänzte Sätze beibehalten. */
       existing.forEach(row=>{
         const step=String(row?.step||"").trim();
-        if(!step || current[area].some(x=>x.step===step)) return;
-        current[area].push({
+        if(!step || seen.has(step)) return;
+        seen.add(step);
+
+        const def=byDefaultStep.get(step);
+        normalized.push({
           step,
-          text:String(row?.text||"").trim()
+          text:String(row?.text ?? def?.text ?? "").trim()
         });
       });
+
+      defaults.forEach(def=>{
+        if(seen.has(def.step)) return;
+        seen.add(def.step);
+        normalized.push({
+          step:def.step,
+          text:String(def.text)
+        });
+      });
+
+      current[area]=normalized;
     });
   });
 
@@ -16911,6 +16974,102 @@ function applyMamaRoutineSentences(){
       if(textSpan.textContent!==nextText){
         textSpan.textContent=nextText;
       }
+    });
+  });
+}
+
+function personalRoutineDesktopDragEnabled(){
+  return !!window.matchMedia?.("(hover: hover) and (pointer: fine)")?.matches;
+}
+
+function enablePersonalRoutineDesktopDrag(section){
+  if(!section || !personalRoutineDesktopDragEnabled()) return;
+
+  let draggedRow=null;
+
+  const renumber=(body)=>{
+    body?.querySelectorAll(":scope > .personal-routine-sentence-row").forEach((row,index)=>{
+      const number=row.querySelector(".personal-routine-sentence-number");
+      if(number) number.textContent=String(index+1);
+    });
+  };
+
+  const saveOrder=(body)=>{
+    if(!body) return;
+    const panel=body.closest("[data-routine-person-panel]");
+    const areaDetails=body.closest(".personal-routine-area");
+    const firstRow=body.querySelector(":scope > .personal-routine-sentence-row");
+    const id=panel?.dataset.routinePersonPanel;
+    const area=firstRow?.dataset.area ||
+      areaDetails?.querySelector(".personal-routine-sentence-row")?.dataset.area;
+    if(!id || !area) return;
+
+    const current=personalRoutineSentencesFor(id)[area] || [];
+    const byStep=new Map(current.map(row=>[String(row.step),row]));
+    const ordered=[...body.querySelectorAll(":scope > .personal-routine-sentence-row")]
+      .map(row=>byStep.get(String(row.dataset.step||"")))
+      .filter(Boolean);
+
+    if(ordered.length!==current.length) return;
+
+    ensurePersonalRoutineSentences()[id][area]=ordered;
+    persistFamilySettingsImmediately?.();
+    save();
+  };
+
+  section.querySelectorAll(".personal-routine-sentence-row").forEach(row=>{
+    row.draggable=true;
+    row.classList.add("desktop-routine-draggable");
+
+    row.addEventListener("dragstart",event=>{
+      if(event.target.closest("textarea,button,input,select,a")){
+        event.preventDefault();
+        return;
+      }
+      draggedRow=row;
+      row.classList.add("is-dragging");
+      event.dataTransfer.effectAllowed="move";
+      try{ event.dataTransfer.setData("text/plain",row.dataset.step||""); }catch(_){}
+    });
+
+    row.addEventListener("dragend",()=>{
+      if(!draggedRow) return;
+      const body=draggedRow.closest(".personal-routine-area-body");
+      draggedRow.classList.remove("is-dragging");
+      draggedRow=null;
+      renumber(body);
+      saveOrder(body);
+    });
+  });
+
+  section.querySelectorAll(".personal-routine-area-body").forEach(body=>{
+    body.addEventListener("dragover",event=>{
+      if(!draggedRow) return;
+      if(draggedRow.closest(".personal-routine-area-body")!==body) return;
+
+      event.preventDefault();
+      event.dataTransfer.dropEffect="move";
+
+      const rows=[...body.querySelectorAll(":scope > .personal-routine-sentence-row:not(.is-dragging)")];
+      const next=rows.find(row=>{
+        const rect=row.getBoundingClientRect();
+        return event.clientY < rect.top + rect.height/2;
+      });
+
+      if(next) body.insertBefore(draggedRow,next);
+      else{
+        const addButton=body.querySelector(":scope > .personal-routine-add-one");
+        body.insertBefore(draggedRow,addButton || null);
+      }
+      renumber(body);
+    });
+
+    body.addEventListener("drop",event=>{
+      if(!draggedRow) return;
+      if(draggedRow.closest(".personal-routine-area-body")!==body) return;
+      event.preventDefault();
+      renumber(body);
+      saveOrder(body);
     });
   });
 }
@@ -16995,6 +17154,8 @@ function renderPersonalRoutineSentenceSettings(){
       `;
     }).join("")}
   `;
+
+  enablePersonalRoutineDesktopDrag(section);
 
   section.querySelectorAll(".personal-routine-person-tab").forEach(btn=>{
     btn.addEventListener("click",()=>{
@@ -17238,6 +17399,23 @@ function ensurePersonalRoutineSentenceStyle(){
       grid-template-columns:24px minmax(0,1fr) 34px;
       gap:6px;
       align-items:center;
+    }
+    @media (hover:hover) and (pointer:fine){
+      .personal-routine-sentence-row.desktop-routine-draggable{
+        cursor:grab;
+      }
+      .personal-routine-sentence-row.desktop-routine-draggable:active{
+        cursor:grabbing;
+      }
+      .personal-routine-sentence-row.desktop-routine-draggable.is-dragging{
+        opacity:.48;
+      }
+      .personal-routine-sentence-row.desktop-routine-draggable textarea{
+        cursor:text;
+      }
+      .personal-routine-sentence-row.desktop-routine-draggable button{
+        cursor:pointer;
+      }
     }
     .personal-routine-sentence-number{
       display:grid;
