@@ -1,4 +1,24 @@
 /* =========================================================
+   V183 – ARCHIV/WIEDERHERSTELLUNG ATOMARER SYNC-FIX
+   26.08.2026
+
+   Ursache des Fehlers:
+   - Archivieren verwendete denselben deletedClasses-Löschmarker wie echtes Löschen.
+   - Ein noch einlaufender Cloud-Stand konnte diesen Marker nach
+     „Wiederherstellen“ wieder einmischen und die Klasse erneut ausfiltern.
+   - Zusätzlich liefen exakter Firestore-Schreibvorgang und Cloud-Snapshot
+     zeitlich gegeneinander.
+
+   Fix:
+   - Archivieren setzt KEINEN Klassen-Löschmarker mehr.
+   - deletedClasses gilt nur noch für echtes dauerhaftes Klassen-Löschen.
+   - Archivieren und Wiederherstellen halten materialMoney 8 Sekunden lokal
+     autoritativ, während der exakte Firestore-Stand geschrieben wird.
+   - Exakter Firestore-Schreibvorgang wird jetzt abgewartet.
+   - Wiederhergestellte Klassen erhalten einen garantiert neueren Zeitstempel.
+   ========================================================= */
+
+/* =========================================================
    MASTER V182 – 26.08.2026
    STABILER STAND „UNSERE WOCHE IN BALANCE“
 
@@ -8829,7 +8849,7 @@ function renderWorkroomMaterialArchive(){
     : `<div class="workroom-empty">Noch keine Semester archiviert.</div>`;
 
   list.querySelectorAll("[data-material-archive-restore]").forEach(btn=>{
-    btn.addEventListener("click",()=>{
+    btn.addEventListener("click",async ()=>{
       const id=String(btn.dataset.materialArchiveRestore||"");
       const entry=store.archive.find(x=>String(x.id)===id);
       if(!entry) return;
@@ -8865,7 +8885,8 @@ function renderWorkroomMaterialArchive(){
 
       archivedClasses.forEach(item=>{
         const restored=JSON.parse(JSON.stringify(item));
-        restored.updatedAt=now;
+        const staleDeleteAt=Number(store.deletedClasses?.[String(restored.id)]||0);
+        restored.updatedAt=Math.max(now,staleDeleteAt+1000,Number(restored.updatedAt||0)+1);
         store.classes.push(restored);
         if(store.deletedClasses) delete store.deletedClasses[String(restored.id)];
       });
@@ -8905,8 +8926,15 @@ function renderWorkroomMaterialArchive(){
       editingWorkroomMaterialExpenseId="";
       editingWorkroomSharedExpenseId="";
 
-      save();
-      persistMaterialMoneyExactly();
+      /* V183: Wiederherstellung ist für einen kurzen Zeitraum die lokale
+         Wahrheit. So kann ein noch einlaufender Cloud-Snapshot mit dem alten
+         Archiv-/Löschstand die gerade zurückgeholte Klasse nicht wieder entfernen. */
+      holdMaterialMoneyLocalAuthority(8000);
+
+      saveLocal();
+      await persistMaterialMoneyExactly();
+      scheduleCloudSave();
+
       renderWorkroomMaterialMoney();
       renderWorkroomMaterialSharedFund();
       renderWorkroomMaterialArchive();
@@ -9105,8 +9133,11 @@ document.querySelector("#archiveWorkroomMaterialSemesterBtn")?.addEventListener(
       sharedFund:archivedShared
     });
 
+    /* Archivieren ist kein Löschen. Daher KEIN deletedClasses-Tombstone:
+       derselbe Marker hatte die Wiederherstellung später wieder aus der Cloud
+       herausgefiltert. deletedClasses bleibt nur für echtes Klassen-Löschen. */
     selected.forEach(item=>{
-      store.deletedClasses[item.id]=now;
+      delete store.deletedClasses?.[String(item.id)];
     });
     store.classes=store.classes.filter(item=>!selectedIds.includes(String(item.id)));
 
@@ -9136,8 +9167,15 @@ document.querySelector("#archiveWorkroomMaterialSemesterBtn")?.addEventListener(
     editingWorkroomSharedExpenseId="";
 
     close();
-    save();
-    persistMaterialMoneyExactly();
+
+    /* V183: Auch beim Archivieren bleibt der gerade erzeugte lokale Zustand
+       kurz autoritativ, bis Firestore den exakten materialMoney-Stand bestätigt. */
+    holdMaterialMoneyLocalAuthority(8000);
+
+    saveLocal();
+    await persistMaterialMoneyExactly();
+    scheduleCloudSave();
+
     renderWorkroomMaterialMoney();
     renderWorkroomMaterialSharedFund();
     renderWorkroomMaterialArchive();
@@ -10780,6 +10818,15 @@ function mergeWorkroomMaterialMoney(localValue, remoteValue){
 }
 
 
+let materialMoneyLocalAuthorityUntil = 0;
+
+function holdMaterialMoneyLocalAuthority(ms = 8000){
+  materialMoneyLocalAuthorityUntil = Math.max(
+    materialMoneyLocalAuthorityUntil,
+    Date.now() + Math.max(1000, Number(ms || 0))
+  );
+}
+
 async function persistMaterialMoneyExactly(){
   try{
     if(!firebase.auth().currentUser) return false;
@@ -10841,7 +10888,9 @@ function guardedWorkroomMerge(localValue, cloudValue) {
       week: guardedMergeById(local.plans?.week, remote.plans?.week, "Werkraum-Wochenplanung"),
       year: guardedMergeById(local.plans?.year, remote.plans?.year, "Werkraum-Jahresplanung")
     },
-    materialMoney: mergeWorkroomMaterialMoney(local.materialMoney, remote.materialMoney)
+    materialMoney: Date.now() < materialMoneyLocalAuthorityUntil
+      ? local.materialMoney
+      : mergeWorkroomMaterialMoney(local.materialMoney, remote.materialMoney)
   };
 }
 
