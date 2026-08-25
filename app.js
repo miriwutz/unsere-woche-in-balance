@@ -8366,33 +8366,18 @@ document.querySelector("#addWorkroomMaterialClassBtn")?.addEventListener("click"
 });
 
 document.querySelector("#workroomMaterialMoneyDetails")?.addEventListener("toggle",e=>{
-  if(e.currentTarget.open) renderWorkroomMaterialMoney();
+  if(!e.currentTarget.open) return;
+
+  // V157: Die bestehenden großen Werkraum-Bereiche sind keine <details>,
+  // sondern .workroom-fold-card mit der Klasse "open".
+  document.querySelectorAll(".workroom-fold-card.open").forEach(card=>{
+    card.classList.remove("open");
+  });
+
+  renderWorkroomMaterialMoney();
 });
 
-/* V156 – Im Werkraum immer nur einen großen Klappbereich offen lassen. */
-function initWorkroomAccordion(){
-  const material=document.querySelector("#workroomMaterialMoneyDetails");
-  if(!material) return;
-
-  const root=material.closest("section") || material.parentElement?.parentElement || document.body;
-  const details=[...root.querySelectorAll("details")].filter(detail =>
-    detail.closest("section")===material.closest("section") || detail.parentElement===material.parentElement
-  );
-
-  details.forEach(detail=>{
-    if(detail.dataset.workroomAccordionReady==="1") return;
-    detail.dataset.workroomAccordionReady="1";
-
-    detail.addEventListener("toggle",()=>{
-      if(!detail.open) return;
-      details.forEach(other=>{
-        if(other!==detail && other.open) other.open=false;
-      });
-    });
-  });
-}
-
-initWorkroomAccordion();
+/* V157: Werkraum-Akkordeon direkt mit den vorhandenen .workroom-fold-card-Strukturen verbunden. */
 
 // =============================
 // WERKRAUM – LINKSAMMLUNG
@@ -14751,6 +14736,11 @@ document.addEventListener("click", e => {
     otherCard.classList.remove("open");
   });
 
+  // V157: Materialgeld ist technisch ein <details> und gehört ebenfalls
+  // zu diesem Werkraum-Akkordeon.
+  const materialMoneyDetails=document.querySelector("#workroomMaterialMoneyDetails");
+  if(materialMoneyDetails?.open) materialMoneyDetails.open=false;
+
   if (!wasOpen) card.classList.add("open");
 });
 
@@ -20970,6 +20960,13 @@ window.addEventListener("resize", () => {
     }
   });
 })();
+
+/* =========================================================
+   V157 – WERKRAUM AKKORDEON KORRIGIERT
+   - Materialgeld (<details>) und bestehende Werkraum-Faltkarten
+     (.workroom-fold-card.open) schließen sich nun gegenseitig
+   - keine Änderung an Materialgeld-Daten oder Sync
+   ========================================================= */
 
 /* =========================================================
    V156 – WERKRAUM KLAPPBEREICHE
