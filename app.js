@@ -8267,6 +8267,12 @@ function renderWorkroomMaterialMoney(){
   if(!current) return;
 
   const total=Math.round(Number(current.childrenCount||0)*Number(current.contribution||0)*100)/100;
+  current.expenses=Array.isArray(current.expenses)?current.expenses:[];
+  const expensesTotal=Math.round(current.expenses.reduce((sum,x)=>sum+Number(x.amount||0),0)*100)/100;
+  const rest=Math.round((total-expensesTotal)*100)/100;
+  const restPerChild=current.childrenCount
+    ? Math.round((rest/Number(current.childrenCount))*100)/100
+    : 0;
 
   editor.innerHTML=`
     <div class="workroom-material-class-head">
@@ -8309,6 +8315,51 @@ function renderWorkroomMaterialMoney(){
       <span>${Number(current.childrenCount||0)} Kinder × ${moneyEuro(current.contribution||0)}</span>
       <strong>${moneyEuro(total)}</strong>
     </div>
+
+    <div class="workroom-material-balance">
+      <div><span>Ausgaben</span><strong>${moneyEuro(expensesTotal)}</strong></div>
+      <div class="${rest<0?"negative":""}">
+        <span>${rest<0?"Fehlbetrag":"Restbetrag"}</span>
+        <strong>${moneyEuro(rest)}</strong>
+      </div>
+      <div class="${restPerChild<0?"negative":""}">
+        <span>Rest pro Kind</span>
+        <strong>${moneyEuro(restPerChild)}</strong>
+      </div>
+    </div>
+
+    <div class="workroom-material-expenses">
+      <div class="workroom-material-expenses-title">
+        <strong>Ausgaben</strong>
+        <span>Datum, Geschäft / Bezeichnung und Betrag</span>
+      </div>
+
+      <div class="workroom-material-expense-entry">
+        <input type="date" data-material-expense-date>
+        <input type="text" data-material-expense-title placeholder="z. B. Action oder Winkler">
+        <span class="workroom-material-euro-input">
+          <input type="text" inputmode="decimal" data-material-expense-amount placeholder="0,00">
+          <span>€</span>
+        </span>
+        <button type="button" class="secondary-btn" data-material-expense-add>+ Ausgabe</button>
+      </div>
+
+      <div class="workroom-material-expense-list">
+        ${current.expenses.length
+          ? [...current.expenses]
+              .sort((a,b)=>String(b.date||"").localeCompare(String(a.date||"")) || Number(b.createdAt||0)-Number(a.createdAt||0))
+              .map(expense=>`
+                <div class="workroom-material-expense-row">
+                  <span>${escapeHtml(expense.date ? expense.date.split("-").reverse().join(".") : "–")}</span>
+                  <span>${escapeHtml(expense.title||"Ausgabe")}</span>
+                  <strong>${moneyEuro(expense.amount||0)}</strong>
+                  <button type="button" class="workroom-material-expense-delete" data-material-expense-delete="${escapeHtml(expense.id)}" aria-label="Ausgabe löschen">×</button>
+                </div>
+              `).join("")
+          : `<div class="workroom-empty">Noch keine Ausgaben eingetragen.</div>`
+        }
+      </div>
+    </div>
   `;
 
   tabs.querySelectorAll("[data-material-class-tab]").forEach(btn=>{
@@ -8340,6 +8391,47 @@ function renderWorkroomMaterialMoney(){
       renderWorkroomMaterialMoney();
     });
   });
+
+  editor.querySelector("[data-material-expense-add]")?.addEventListener("click",()=>{
+    const date=String(editor.querySelector("[data-material-expense-date]")?.value||"");
+    const title=String(editor.querySelector("[data-material-expense-title]")?.value||"").trim();
+    const amount=moneyNumber(editor.querySelector("[data-material-expense-amount]")?.value);
+
+    if(!date || !title || amount<=0) return;
+
+    const item=workroomMaterialMoneyStore().classes.find(x=>String(x.id)===String(current.id));
+    if(!item) return;
+
+    const now=Date.now();
+    item.expenses=Array.isArray(item.expenses)?item.expenses:[];
+    item.expenses.push({
+      id:`material-expense-${now}-${Math.random().toString(36).slice(2,7)}`,
+      date,
+      title,
+      amount,
+      createdAt:now,
+      updatedAt:now
+    });
+    item.updatedAt=now;
+    save();
+    renderWorkroomMaterialMoney();
+  });
+
+  editor.querySelectorAll("[data-material-expense-delete]").forEach(btn=>{
+    btn.addEventListener("click",()=>{
+      const expenseId=String(btn.dataset.materialExpenseDelete||"");
+      const item=workroomMaterialMoneyStore().classes.find(x=>String(x.id)===String(current.id));
+      if(!item) return;
+      const expense=item.expenses?.find(x=>String(x.id)===expenseId);
+      if(!expense) return;
+      if(!confirm(`${expense.title||"Ausgabe"} wirklich löschen?`)) return;
+
+      item.expenses=(item.expenses||[]).filter(x=>String(x.id)!==expenseId);
+      item.updatedAt=Date.now();
+      save();
+      renderWorkroomMaterialMoney();
+    });
+  });
 }
 
 document.querySelector("#addWorkroomMaterialClassBtn")?.addEventListener("click",()=>{
@@ -8354,6 +8446,7 @@ document.querySelector("#addWorkroomMaterialClassBtn")?.addEventListener("click"
     name,
     childrenCount:0,
     contribution:0,
+    expenses:[],
     createdAt:now,
     updatedAt:now
   };
@@ -13146,6 +13239,16 @@ function normalizeWorkroom(w) {
                 name:String(item?.name || "").trim(),
                 childrenCount:Math.max(0,Math.round(Number(item?.childrenCount || 0))),
                 contribution:moneyNumber(item?.contribution),
+                expenses:Array.isArray(item?.expenses)
+                  ? item.expenses.map((expense,expenseIndex)=>({
+                      id:String(expense?.id || `material-expense-${expenseIndex}`),
+                      date:String(expense?.date || ""),
+                      title:String(expense?.title || "").trim(),
+                      amount:moneyNumber(expense?.amount),
+                      createdAt:Number(expense?.createdAt || 0),
+                      updatedAt:Number(expense?.updatedAt || 0)
+                    }))
+                  : [],
                 createdAt:Number(item?.createdAt || 0),
                 updatedAt:Number(item?.updatedAt || 0)
               }))
@@ -20960,6 +21063,14 @@ window.addEventListener("resize", () => {
     }
   });
 })();
+
+/* =========================================================
+   V161 – WERKRAUM MATERIALGELD 3B
+   - Ausgaben je Klasse: Datum, Geschäft/Bezeichnung, Betrag
+   - Ausgaben gesamt, Restbetrag und Rest pro Kind
+   - negativer Rest wird als Fehlbetrag angezeigt
+   - Ausgaben können gelöscht werden
+   ========================================================= */
 
 /* =========================================================
    V157 – WERKRAUM AKKORDEON KORRIGIERT
