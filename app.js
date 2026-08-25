@@ -1,4 +1,12 @@
 /* =========================================================
+   V145 – MEIN GELD LIVE-ANZEIGE
+   - offenes Lou/Fina-Geldfenster aktualisiert sich bei Cloud-Änderungen sofort
+   - gilt für Taschengeld/Jausengeld, Zahlstatus, Monatsübersicht,
+     Geliehenes, Sparziel/Sparstand und Edelsteine
+   - keine Änderung an Geld-/Edelstein-Daten oder Merge-Logik
+   ========================================================= */
+
+/* =========================================================
    V144 – KINDER-ROUTINEN LIVE-ANZEIGE
    - offene Lou/Fina-Routinen werden bei Cloud-Änderungen sofort neu gerendert
    - keine Änderung an Routine-Daten, Merge-Logik oder Optik
@@ -13818,6 +13826,15 @@ function applyCloudData(data) {
     const openChildRoutineDialog=document.querySelector("#childRoutineDialog");
     if(openChildRoutineDialog?.open && ["1","2"].includes(String(activeChildRoutineId))){
       renderChildRoutineDialog();
+    }
+
+    /* V145 – Mein Geld: bereits geöffnetes Lou/Fina-Geldfenster live aktualisieren.
+       Gilt gemeinsam für Taschengeld/Jausengeld, Zahlstatus, Monatsübersicht,
+       Geliehenes, Sparziel/Sparstand und Edelsteine.
+       Nur Darstellung; Geld-/Edelstein-Daten und Merge-Logik bleiben unverändert. */
+    const openChildMoneyDialog=document.querySelector("#childMoneyDialog");
+    if(openChildMoneyDialog?.open && ["1","2"].includes(String(activeChildMoneyId))){
+      renderChildMoneyDialog();
     }
   } finally {
     cloudApplying = false;
