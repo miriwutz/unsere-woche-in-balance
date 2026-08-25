@@ -7064,6 +7064,12 @@ async function updateVideoPreview() {
 document.querySelectorAll(".tab").forEach(btn => btn.addEventListener("click", () => {
   const targetView = btn.dataset.view;
 
+  // V149: Beim Wechsel eines Hauptbereichs offene Aufklapp-/Bearbeitungsbereiche
+  // schließen. Dadurch ist z. B. "Links bearbeiten" beim Zurückkehren wieder zu.
+  document.querySelectorAll(".view details[open]").forEach(details => {
+    details.open = false;
+  });
+
   // V32: Eine im Wochenplan gewählte alte/zukünftige Woche ist nur dort gültig.
   // Beim Wechsel auf Schule, Einkauf, To-dos, Werkraum oder Überblick wird
   // sofort wieder die echte aktuelle Kalenderwoche zur gemeinsamen Basis.
