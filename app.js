@@ -8369,6 +8369,31 @@ document.querySelector("#workroomMaterialMoneyDetails")?.addEventListener("toggl
   if(e.currentTarget.open) renderWorkroomMaterialMoney();
 });
 
+/* V156 – Im Werkraum immer nur einen großen Klappbereich offen lassen. */
+function initWorkroomAccordion(){
+  const material=document.querySelector("#workroomMaterialMoneyDetails");
+  if(!material) return;
+
+  const root=material.closest("section") || material.parentElement?.parentElement || document.body;
+  const details=[...root.querySelectorAll("details")].filter(detail =>
+    detail.closest("section")===material.closest("section") || detail.parentElement===material.parentElement
+  );
+
+  details.forEach(detail=>{
+    if(detail.dataset.workroomAccordionReady==="1") return;
+    detail.dataset.workroomAccordionReady="1";
+
+    detail.addEventListener("toggle",()=>{
+      if(!detail.open) return;
+      details.forEach(other=>{
+        if(other!==detail && other.open) other.open=false;
+      });
+    });
+  });
+}
+
+initWorkroomAccordion();
+
 // =============================
 // WERKRAUM – LINKSAMMLUNG
 // =============================
@@ -20945,6 +20970,12 @@ window.addEventListener("resize", () => {
     }
   });
 })();
+
+/* =========================================================
+   V156 – WERKRAUM KLAPPBEREICHE
+   - beim Öffnen eines großen Werkraum-Bereichs schließen die anderen
+   - manuelles Auf-/Zuklappen bleibt unverändert
+   ========================================================= */
 
 /* =========================================================
    V155 – WERKRAUM MATERIALGELD 3A
