@@ -33256,3 +33256,52 @@ button.day-meal-list-item:hover,a.day-meal-list-item:hover{background:rgba(164,1
 .workroom-material-shared-balance.is-negative b{
   color:#9a625c;
 }
+
+
+/* =========================================================
+   V168 – Wochenplan: Mehrtagestext nicht mehr auf eine Tageszelle begrenzen
+   Eine späte Altregel (V133) setzte .multiday-center-label auf position:relative
+   und machte damit die frühere Zentrierung über mehrere Tage unwirksam.
+   ========================================================= */
+@media (min-width:701px){
+  #weekGrid .multiday-continuous-segment{
+    overflow:visible !important;
+  }
+
+  #weekGrid .multiday-continuous-segment:has(.multiday-center-label){
+    z-index:40 !important;
+  }
+
+  #weekGrid .multiday-center-label{
+    position:absolute !important;
+    z-index:41 !important;
+    top:50% !important;
+    left:calc(50% + (var(--multi-center-offset,0) * 100%)) !important;
+    transform:translate(-50%,-50%) !important;
+    display:flex !important;
+    align-items:center !important;
+    justify-content:center !important;
+    gap:5px !important;
+    width:max-content !important;
+    max-width:min(calc(var(--multi-span,1) * 100%), 620px) !important;
+    min-width:0 !important;
+    padding:0 8px !important;
+    box-sizing:border-box !important;
+    white-space:nowrap !important;
+    overflow:visible !important;
+    pointer-events:none !important;
+  }
+
+  #weekGrid .multiday-center-label .multiday-person{
+    flex:0 0 auto !important;
+  }
+
+  #weekGrid .multiday-center-label .multiday-title{
+    flex:1 1 auto !important;
+    min-width:0 !important;
+    max-width:none !important;
+    overflow:hidden !important;
+    text-overflow:ellipsis !important;
+    white-space:nowrap !important;
+  }
+}
