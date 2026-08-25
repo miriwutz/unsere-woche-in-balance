@@ -1894,6 +1894,39 @@
       <div class="workroom-empty">Noch keine Klasse angelegt.</div>
     </div>
 
+    <div class="workroom-material-shared-fund">
+      <div class="workroom-material-shared-head">
+        <div>
+          <strong>✧ Gemeinschaftstopf</strong>
+          <span>Für Einkäufe, die allen Klassen zugutekommen – z. B. Stanzer.</span>
+        </div>
+        <span class="workroom-material-shared-balance">Rest: <b id="workroomMaterialSharedBalance">0,00 €</b></span>
+      </div>
+
+      <div class="workroom-material-shared-start">
+        <label>
+          Winkler-Guthaben / Startbetrag
+          <span class="workroom-material-euro-input">
+            <input id="workroomMaterialSharedStart" type="text" inputmode="decimal" placeholder="0,00">
+            <span>€</span>
+          </span>
+        </label>
+      </div>
+
+      <div class="workroom-material-shared-entry">
+        <input type="date" id="workroomMaterialSharedDate">
+        <input type="text" id="workroomMaterialSharedTitle" placeholder="z. B. Stanzer">
+        <input type="text" id="workroomMaterialSharedNote" placeholder="Notiz (optional)">
+        <span class="workroom-material-euro-input">
+          <input type="text" id="workroomMaterialSharedAmount" inputmode="decimal" placeholder="0,00">
+          <span>€</span>
+        </span>
+        <button id="workroomMaterialSharedAddBtn" class="secondary-btn" type="button">+ Ausgabe</button>
+      </div>
+
+      <div id="workroomMaterialSharedList"></div>
+    </div>
+
     <details class="workroom-material-archive">
       <summary>Archiv <span id="workroomMaterialArchiveCount"></span></summary>
       <div id="workroomMaterialArchiveList"></div>
