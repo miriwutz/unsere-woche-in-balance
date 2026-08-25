@@ -8222,6 +8222,7 @@ document.querySelector("#saveSchoolPrintEmailBtn")?.addEventListener("click",()=
 // =============================
 
 let activeWorkroomMaterialClassId = "";
+let editingWorkroomMaterialClassId = "";
 
 function workroomMaterialMoneyStore(){
   state.workroom=normalizeWorkroom(state.workroom);
@@ -8283,7 +8284,8 @@ function renderWorkroomMaterialMoney(){
       <strong>${escapeHtml(current.name||"Klasse")}</strong>
       <div class="workroom-material-class-head-actions">
         <span>Eingenommen gesamt: <b>${moneyEuro(total)}</b></span>
-        <button type="button" class="workroom-material-class-delete" data-material-class-delete="${escapeHtml(current.id)}">× Klasse</button>
+        <button type="button" class="workroom-material-class-edit" data-material-class-edit="${escapeHtml(current.id)}">${editingWorkroomMaterialClassId===String(current.id)?"✓ Speichern":"✎ Bearbeiten"}</button>
+        <button type="button" class="workroom-material-class-delete" data-material-class-delete="${escapeHtml(current.id)}">× Löschen</button>
       </div>
     </div>
 
@@ -8293,7 +8295,8 @@ function renderWorkroomMaterialMoney(){
         <input type="text"
                data-material-class-name="${escapeHtml(current.id)}"
                value="${escapeHtml(current.name||"")}"
-               placeholder="z. B. 3a">
+               placeholder="z. B. 3a"
+               ${editingWorkroomMaterialClassId===String(current.id)?"":"disabled"}>
       </label>
 
       <label>
@@ -8302,7 +8305,8 @@ function renderWorkroomMaterialMoney(){
                min="0"
                step="1"
                data-material-class-children="${escapeHtml(current.id)}"
-               value="${Number(current.childrenCount||0)}">
+               value="${Number(current.childrenCount||0)}"
+               ${editingWorkroomMaterialClassId===String(current.id)?"":"disabled"}>
       </label>
 
       <label>
@@ -8312,7 +8316,8 @@ function renderWorkroomMaterialMoney(){
                  inputmode="decimal"
                  data-material-class-contribution="${escapeHtml(current.id)}"
                  value="${current.contribution?String(current.contribution).replace(".",","):""}"
-                 placeholder="0,00">
+                 placeholder="0,00"
+                 ${editingWorkroomMaterialClassId===String(current.id)?"":"disabled"}>
           <span>€</span>
         </span>
       </label>
@@ -8372,32 +8377,11 @@ function renderWorkroomMaterialMoney(){
   tabs.querySelectorAll("[data-material-class-tab]").forEach(btn=>{
     btn.onclick=()=>{
       activeWorkroomMaterialClassId=String(btn.dataset.materialClassTab||"");
+      editingWorkroomMaterialClassId="";
       renderWorkroomMaterialMoney();
     };
   });
 
-  editor.querySelectorAll("[data-material-class-name],[data-material-class-children],[data-material-class-contribution]").forEach(input=>{
-    input.addEventListener("change",()=>{
-      const id=
-        input.dataset.materialClassName ||
-        input.dataset.materialClassChildren ||
-        input.dataset.materialClassContribution;
-      const item=workroomMaterialMoneyStore().classes.find(x=>String(x.id)===String(id));
-      if(!item) return;
-
-      if(input.dataset.materialClassName!==undefined){
-        item.name=String(input.value||"").trim() || "Klasse";
-      }else if(input.dataset.materialClassChildren!==undefined){
-        item.childrenCount=Math.max(0,Math.round(Number(input.value||0)));
-      }else{
-        item.contribution=moneyNumber(input.value);
-      }
-
-      item.updatedAt=Date.now();
-      save();
-      renderWorkroomMaterialMoney();
-    });
-  });
 
   editor.querySelector("[data-material-expense-add]")?.addEventListener("click",()=>{
     const date=String(editor.querySelector("[data-material-expense-date]")?.value||"");
@@ -8440,6 +8424,31 @@ function renderWorkroomMaterialMoney(){
     });
   });
 
+  editor.querySelector("[data-material-class-edit]")?.addEventListener("click",()=>{
+    const id=String(current.id);
+
+    if(editingWorkroomMaterialClassId!==id){
+      editingWorkroomMaterialClassId=id;
+      renderWorkroomMaterialMoney();
+      requestAnimationFrame(()=>{
+        document.querySelector(`[data-material-class-name="${CSS.escape(id)}"]`)?.focus();
+      });
+      return;
+    }
+
+    const item=workroomMaterialMoneyStore().classes.find(x=>String(x.id)===id);
+    if(!item) return;
+
+    item.name=String(editor.querySelector("[data-material-class-name]")?.value||"").trim() || "Klasse";
+    item.childrenCount=Math.max(0,Math.round(Number(editor.querySelector("[data-material-class-children]")?.value||0)));
+    item.contribution=moneyNumber(editor.querySelector("[data-material-class-contribution]")?.value);
+    item.updatedAt=Date.now();
+
+    editingWorkroomMaterialClassId="";
+    save();
+    renderWorkroomMaterialMoney();
+  });
+
   editor.querySelector("[data-material-class-delete]")?.addEventListener("click",()=>{
     const store=workroomMaterialMoneyStore();
     const item=store.classes.find(x=>String(x.id)===String(current.id));
@@ -8450,6 +8459,7 @@ function renderWorkroomMaterialMoney(){
     store.deletedClasses[item.id]=now;
     store.classes=store.classes.filter(x=>String(x.id)!==String(item.id));
     activeWorkroomMaterialClassId="";
+    editingWorkroomMaterialClassId="";
     save();
     renderWorkroomMaterialMoney();
     renderWorkroomMaterialArchive();
@@ -8565,6 +8575,7 @@ document.querySelector("#archiveWorkroomMaterialSemesterBtn")?.addEventListener(
   store.semester="";
   store.semesterUpdatedAt=now;
   activeWorkroomMaterialClassId="";
+  editingWorkroomMaterialClassId="";
   save();
   renderWorkroomMaterialMoney();
   renderWorkroomMaterialArchive();
@@ -21252,6 +21263,14 @@ window.addEventListener("resize", () => {
     }
   });
 })();
+
+/* =========================================================
+   V163 – MATERIALGELD BEDIENUNG
+   - ✧ als dezentes Bereichssymbol
+   - ✎ Bearbeiten schaltet Klassendaten frei
+   - ✓ Speichern übernimmt Klasse/Lehrkraft, Kinder und Beitrag
+   - × Löschen bleibt separat
+   ========================================================= */
 
 /* =========================================================
    V162 – WERKRAUM MATERIALGELD 3C
