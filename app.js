@@ -1,4 +1,22 @@
 /* =========================================================
+   V184 – MATERIALGELD ARCHIV: STALE-STORE-FIX
+   26.08.2026
+
+   Tatsächliche Ursache des Doppel-Klick-/Wiederherstellungsfehlers:
+   workroomMaterialMoneyStore() normalisiert state.workroom und ersetzt dabei
+   das Objekt. Event-Handler aus einem früheren Render konnten deshalb noch
+   auf ein altes, nicht mehr mit state verbundenes `store`-Objekt zeigen.
+   Dann sah der Klick korrekt aus, änderte aber nicht den aktuellen App-State.
+
+   Fix:
+   - Archivieren holt NACH Bestätigung den aktuellen Live-Store neu.
+   - Wiederherstellen holt NACH Bestätigung den aktuellen Live-Store neu.
+   - Alle eigentlichen Mutationen laufen danach ausschließlich auf liveStore.
+   - Bestätigungsdialog zeigt echte Zeilenumbrüche statt sichtbarem "\\n".
+   - V183 Cloud-/Tombstone-Schutz bleibt erhalten.
+   ========================================================= */
+
+/* =========================================================
    V183 – ARCHIV/WIEDERHERSTELLUNG ATOMARER SYNC-FIX
    26.08.2026
 
@@ -8877,51 +8895,66 @@ function renderWorkroomMaterialArchive(){
       }
 
       if(!confirm(
-        `${entry.semester||"Semester"} wiederherstellen?\\n\\n` +
+        `${entry.semester||"Semester"} wiederherstellen?\n\n` +
         `${archivedClasses.length} ${archivedClasses.length===1?"Klasse wird":"Klassen werden"} wieder in den aktiven Bereich verschoben.`
       )) return;
 
       const now=Date.now();
 
-      archivedClasses.forEach(item=>{
+      /* V184: WICHTIG – der beim Rendern eingefangene `store` kann inzwischen
+         veraltet sein, weil workroomMaterialMoneyStore() beim Normalisieren
+         state.workroom ersetzt. Deshalb unmittelbar VOR der Änderung immer
+         den aktuell gültigen Store neu holen. */
+      const liveStore=workroomMaterialMoneyStore();
+      const liveEntry=liveStore.archive.find(x=>String(x.id)===id);
+      if(!liveEntry){
+        renderWorkroomMaterialMoney();
+        renderWorkroomMaterialSharedFund();
+        renderWorkroomMaterialArchive();
+        return;
+      }
+
+      const liveArchivedClasses=Array.isArray(liveEntry.classes)?liveEntry.classes:[];
+
+      liveArchivedClasses.forEach(item=>{
         const restored=JSON.parse(JSON.stringify(item));
-        const staleDeleteAt=Number(store.deletedClasses?.[String(restored.id)]||0);
+        const staleDeleteAt=Number(liveStore.deletedClasses?.[String(restored.id)]||0);
         restored.updatedAt=Math.max(now,staleDeleteAt+1000,Number(restored.updatedAt||0)+1);
-        store.classes.push(restored);
-        if(store.deletedClasses) delete store.deletedClasses[String(restored.id)];
+        liveStore.classes.push(restored);
+        if(liveStore.deletedClasses) delete liveStore.deletedClasses[String(restored.id)];
       });
 
       /* Falls der Gemeinschaftstopf gemeinsam mit diesem Archiv abgelegt wurde,
          wird er nur zurückgeholt, wenn der laufende Topf leer ist. */
-      if(entry.sharedFund && typeof entry.sharedFund==="object"){
-        const currentFund=store.sharedFund;
+      if(liveEntry.sharedFund && typeof liveEntry.sharedFund==="object"){
+        const currentFund=liveStore.sharedFund;
         const currentHasData=
           moneyNumber(currentFund?.startAmount)!==0 ||
           (Array.isArray(currentFund?.expenses) && currentFund.expenses.length>0);
 
         if(!currentHasData){
-          store.sharedFund=JSON.parse(JSON.stringify(entry.sharedFund));
-          store.sharedFund.updatedAt=now;
-          if(store.sharedFund.deletedExpenses){
-            (store.sharedFund.expenses||[]).forEach(exp=>{
-              delete store.sharedFund.deletedExpenses[String(exp.id)];
+          liveStore.sharedFund=JSON.parse(JSON.stringify(liveEntry.sharedFund));
+          liveStore.sharedFund.updatedAt=now;
+          if(liveStore.sharedFund.deletedExpenses){
+            (liveStore.sharedFund.expenses||[]).forEach(exp=>{
+              delete liveStore.sharedFund.deletedExpenses[String(exp.id)];
             });
           }
         }else{
           alert("Die Klassen wurden wiederhergestellt. Der archivierte Gemeinschaftstopf blieb im Archiv, weil der aktuelle Gemeinschaftstopf bereits Daten enthält.");
-          entry.sharedFund=JSON.parse(JSON.stringify(entry.sharedFund));
+          liveEntry.sharedFund=JSON.parse(JSON.stringify(liveEntry.sharedFund));
         }
       }
 
-      if(!store.semester){
-        store.semester=String(entry.semester||"");
-        store.semesterUpdatedAt=now;
+      if(!liveStore.semester){
+        liveStore.semester=String(liveEntry.semester||"");
+        liveStore.semesterUpdatedAt=now;
       }
 
-      store.deletedArchive[id]=now;
-      store.archive=store.archive.filter(x=>String(x.id)!==id);
+      liveStore.deletedArchive[id]=now;
+      liveStore.archive=liveStore.archive.filter(x=>String(x.id)!==id);
 
-      activeWorkroomMaterialClassId=store.classes[0]?.id||"";
+      activeWorkroomMaterialClassId=liveStore.classes[0]?.id||"";
       editingWorkroomMaterialClassId="";
       editingWorkroomMaterialExpenseId="";
       editingWorkroomSharedExpenseId="";
@@ -9093,16 +9126,30 @@ document.querySelector("#archiveWorkroomMaterialSemesterBtn")?.addEventListener(
       return;
     }
 
-    const selected=store.classes.filter(item=>selectedIds.includes(String(item.id)));
-    if(!selected.length) return;
+    const previewSelected=store.classes.filter(item=>selectedIds.includes(String(item.id)));
+    if(!previewSelected.length) return;
 
     if(!confirm(
-      `${selected.length} ${selected.length===1?"Klasse":"Klassen"} als „${semester}“ archivieren?\\n\\n` +
-      selected.map(x=>`• ${x.name||"Klasse"}`).join("\\n")
+      `${previewSelected.length} ${previewSelected.length===1?"Klasse":"Klassen"} als „${semester}“ archivieren?\n\n` +
+      previewSelected.map(x=>`• ${x.name||"Klasse"}`).join("\n")
     )) return;
 
-    const archivingAll=selected.length===store.classes.length;
-    const fund=store.sharedFund;
+    /* V184: Während das Auswahl-/Bestätigungsfenster offen ist, kann ein
+       Cloud-Render state.workroom normalisieren und damit den zuvor
+       eingefangenen Store veralten lassen. Ab hier ausschließlich den
+       frisch geholten Live-Store verändern. */
+    const liveStore=workroomMaterialMoneyStore();
+    const selected=liveStore.classes.filter(item=>selectedIds.includes(String(item.id)));
+    if(!selected.length){
+      close();
+      renderWorkroomMaterialMoney();
+      renderWorkroomMaterialSharedFund();
+      renderWorkroomMaterialArchive();
+      return;
+    }
+
+    const archivingAll=selected.length===liveStore.classes.length;
+    const fund=liveStore.sharedFund;
     const sharedSpent=(fund.expenses||[]).reduce((sum,x)=>sum+moneyNumber(x.amount),0);
     const sharedRest=moneyNumber(fund.startAmount)-sharedSpent;
     const hasShared=moneyNumber(fund.startAmount)!==0 || (fund.expenses||[]).length>0;
@@ -9125,7 +9172,7 @@ document.querySelector("#archiveWorkroomMaterialSemesterBtn")?.addEventListener(
     const now=Date.now();
     const snapshot=JSON.parse(JSON.stringify(selected));
 
-    store.archive.push({
+    liveStore.archive.push({
       id:`material-archive-${now}-${Math.random().toString(36).slice(2,7)}`,
       semester,
       archivedAt:now,
@@ -9137,14 +9184,14 @@ document.querySelector("#archiveWorkroomMaterialSemesterBtn")?.addEventListener(
        derselbe Marker hatte die Wiederherstellung später wieder aus der Cloud
        herausgefiltert. deletedClasses bleibt nur für echtes Klassen-Löschen. */
     selected.forEach(item=>{
-      delete store.deletedClasses?.[String(item.id)];
+      delete liveStore.deletedClasses?.[String(item.id)];
     });
-    store.classes=store.classes.filter(item=>!selectedIds.includes(String(item.id)));
+    liveStore.classes=liveStore.classes.filter(item=>!selectedIds.includes(String(item.id)));
 
     /* Semestername bleibt stehen, solange noch aktive Klassen vorhanden sind. */
-    if(!store.classes.length){
-      store.semester="";
-      store.semesterUpdatedAt=now;
+    if(!liveStore.classes.length){
+      liveStore.semester="";
+      liveStore.semesterUpdatedAt=now;
     }
 
     if(archivingAll && hasShared){
@@ -9161,7 +9208,7 @@ document.querySelector("#archiveWorkroomMaterialSemesterBtn")?.addEventListener(
       fund.updatedAt=now;
     }
 
-    activeWorkroomMaterialClassId=store.classes[0]?.id||"";
+    activeWorkroomMaterialClassId=liveStore.classes[0]?.id||"";
     editingWorkroomMaterialClassId="";
     editingWorkroomMaterialExpenseId="";
     editingWorkroomSharedExpenseId="";
