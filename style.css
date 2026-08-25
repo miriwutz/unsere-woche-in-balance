@@ -33046,3 +33046,21 @@ button.day-meal-list-item:hover,a.day-meal-list-item:hover{background:rgba(164,1
     flex-direction:column;
   }
 }
+
+
+/* =========================================================
+   V163 – Materialgeld: Bearbeiten / Speichern
+   ========================================================= */
+.workroom-material-class-edit{
+  border:1px solid #d9d2e6;
+  border-radius:999px;
+  background:#faf8fd;
+  color:#6f617e;
+  padding:6px 10px;
+}
+.workroom-material-class-fields input:disabled{
+  opacity:1;
+  cursor:default;
+  background:rgba(249,247,243,.72);
+  color:var(--ink);
+}
