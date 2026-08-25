@@ -1,3 +1,6 @@
+/* V178 – nur optische Korrektur des Gemeinschaftstopf-Archivdialogs.
+   Funktion gegenüber V177 unverändert. */
+
 /* =========================================================
    V177 – GEMEINSCHAFTSTOPF ARCHIV-AUSWAHL
    - klare Schaltflächen „Rest übernehmen“ / „Topf archivieren“
