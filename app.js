@@ -20609,35 +20609,42 @@ function ensureChildMoneyDialog(){
       <div class="v121-save-actions"><input id="savingAmount" inputmode="decimal" placeholder="Betrag"><button type="button" data-save="plus">+ Sparen</button><button type="button" data-save="minus">− Entnehmen</button></div>
     </section>
 
-    <section class="child-money-card v121-gems">
-      <div class="child-money-section-head"><div><strong>Meine Edelsteine 💎</strong><small>Besondere Extras für unser Familienleben.</small></div><strong id="gemCount"></strong></div>
-      <div class="v121-gem-explain v128-gem-explain">
-        <div class="v128-gem-explain-main">
-          <span class="v128-gem-explain-icon" aria-hidden="true">💎</span>
-          <div>
-            <strong>Besondere Beiträge zu unserem Familienleben</strong>
-            <span>Du bekommst Edelsteine, wenn du von dir aus hilfst, jemanden unterstützt oder mithilfst, dass es für uns alle leichter wird.</span>
+    <details class="child-money-card v121-gems v140-gems-collapse">
+      <summary class="v140-gems-summary">
+        <span class="v140-gems-arrow" aria-hidden="true">▸</span>
+        <span class="v140-gems-summary-text">✨ Zusammen geht vieles leichter.</span>
+        <span class="v140-gems-summary-icons" aria-hidden="true">💎🌈</span>
+      </summary>
+      <div class="v140-gems-body">
+        <div class="child-money-section-head"><div><strong>Meine Edelsteine 💎</strong><small>Besondere Extras für unser Familienleben.</small></div><strong id="gemCount"></strong></div>
+        <div class="v121-gem-explain v128-gem-explain">
+          <div class="v128-gem-explain-main">
+            <span class="v128-gem-explain-icon" aria-hidden="true">💎</span>
+            <div>
+              <strong>Besondere Beiträge zu unserem Familienleben</strong>
+              <span>Du bekommst Edelsteine, wenn du von dir aus hilfst, jemanden unterstützt oder mithilfst, dass es für uns alle leichter wird.</span>
+            </div>
+          </div>
+          <div class="v128-gem-explain-note">😉 Nicht für jeden Handgriff – sondern für die kleinen Extras, die richtig guttun.</div>
+        </div>
+        <div id="gemQuote" class="v121-gem-quote"></div>
+        <div class="v124-appreciation-picker">
+          <label>Wertschätzungszeichen
+            <select id="gemPresetSelect" aria-label="Wertschätzungszeichen auswählen"></select>
+          </label>
+          <div id="gemPresetHint" class="v125-appreciation-subtitle"></div>
+        </div>
+        <div class="v121-gem-grid">
+          <div><div id="gemDots" class="v121-gem-dots"></div><div class="v121-gem-bar"><i id="gemFill"></i></div></div>
+          <div class="v121-reward">
+            <label>Titel<input id="gemRewardTitle"></label>
+            <label>Was genau?<input id="gemRewardText"></label>
+            <label>Edelsteine<input id="gemRewardCost" type="number" min="1"></label>
           </div>
         </div>
-        <div class="v128-gem-explain-note">😉 Nicht für jeden Handgriff – sondern für die kleinen Extras, die richtig guttun.</div>
+        <div class="v121-gem-actions"><input id="gemWhy" placeholder="Wofür? (optional)"><button type="button" data-gem="plus">+ 💎</button><button type="button" data-gem="minus">− 💎</button><button type="button" id="gemRedeem">Einlösen</button></div>
       </div>
-      <div id="gemQuote" class="v121-gem-quote"></div>
-      <div class="v124-appreciation-picker">
-        <label>Wertschätzungszeichen
-          <select id="gemPresetSelect" aria-label="Wertschätzungszeichen auswählen"></select>
-        </label>
-        <div id="gemPresetHint" class="v125-appreciation-subtitle"></div>
-      </div>
-      <div class="v121-gem-grid">
-        <div><div id="gemDots" class="v121-gem-dots"></div><div class="v121-gem-bar"><i id="gemFill"></i></div></div>
-        <div class="v121-reward">
-          <label>Titel<input id="gemRewardTitle"></label>
-          <label>Was genau?<input id="gemRewardText"></label>
-          <label>Edelsteine<input id="gemRewardCost" type="number" min="1"></label>
-        </div>
-      </div>
-      <div class="v121-gem-actions"><input id="gemWhy" placeholder="Wofür? (optional)"><button type="button" data-gem="plus">+ 💎</button><button type="button" data-gem="minus">− 💎</button><button type="button" id="gemRedeem">Einlösen</button></div>
-    </section>
+    </details>
 
     <details class="child-money-history"><summary><span>Historie</span><small>Bezahlt, gespart & zurückgegeben</small></summary><div id="childMoneyWeeklyHistory"></div><div id="childMoneyLoanHistory"></div><div id="savingHistory"></div><div id="gemHistory"></div></details>
   </div>`;
