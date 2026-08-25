@@ -32542,3 +32542,105 @@ button.day-meal-list-item:hover,a.day-meal-list-item:hover{background:rgba(164,1
   }
 }
 
+/* =========================================================
+   V150 – Mehrere Sparziele
+   ========================================================= */
+.v150-savings-card .child-money-section-head{
+  align-items:center;
+}
+.v150-add-saving-goal{
+  flex:0 0 auto;
+  border:1px solid #dfd0b7;
+  border-radius:11px;
+  background:#fbf6ed;
+  color:#806b48;
+  padding:9px 12px;
+}
+.v150-saving-goals{
+  display:grid;
+  gap:12px;
+  margin-top:14px;
+}
+.v150-saving-goal{
+  padding:14px;
+  border:1px solid var(--line);
+  border-radius:15px;
+  background:rgba(255,255,255,.48);
+}
+.v150-saving-goal-top{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  margin-bottom:10px;
+}
+.v150-saving-goal-top > strong{
+  font-family:"Playfair Display",serif;
+  font-size:1.08rem;
+  font-weight:500;
+}
+.v150-saving-goal-delete{
+  width:30px;
+  height:30px;
+  flex:0 0 30px;
+  display:grid;
+  place-items:center;
+  padding:0;
+  border:1px solid var(--line);
+  border-radius:50%;
+  background:var(--paper);
+  color:var(--muted);
+}
+.v150-saving-goal-fields{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) 160px;
+  gap:10px;
+}
+.v150-saving-goal-fields label{
+  font-size:.78rem;
+}
+.v150-saving-goal-fields input{
+  margin-top:4px;
+}
+.v150-money-input{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  align-items:center;
+  gap:6px;
+}
+.v150-saving-progress{
+  margin:13px 0;
+}
+.v150-saving-progress-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:baseline;
+  gap:10px;
+  margin-bottom:6px;
+}
+.v150-saving-progress-head span{
+  color:var(--muted);
+  font-size:.82rem;
+}
+.v150-saving-progress small{
+  display:block;
+  margin-top:5px;
+  color:var(--muted);
+}
+.v150-saving-empty{
+  padding-bottom:4px;
+}
+.v122-saving-history-row > span:first-child small{
+  display:block;
+  margin-top:2px;
+  color:var(--muted);
+}
+@media(max-width:650px){
+  .v150-savings-card .child-money-section-head{
+    align-items:flex-start;
+  }
+  .v150-saving-goal-fields{
+    grid-template-columns:1fr;
+  }
+}
+
