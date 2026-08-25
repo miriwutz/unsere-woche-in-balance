@@ -32835,3 +32835,15 @@ button.day-meal-list-item:hover,a.day-meal-list-item:hover{background:rgba(164,1
     align-items:end;
   }
 }
+
+
+/* =========================================================
+   V159 – Materialgeld: Feld zum Anlegen einer Klasse kompakt
+   Nur Optik.
+   ========================================================= */
+@media (min-width:701px){
+  .workroom-material-class-create{
+    grid-template-columns:minmax(250px,300px) auto !important;
+    justify-content:start;
+  }
+}
