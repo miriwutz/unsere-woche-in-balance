@@ -1,4 +1,16 @@
 /* =========================================================
+   V188 – EFFIZIENZRUNDE 4 · 26.08.2026
+   LOCALSTORAGE-SCHREIBEN REDUZIERT – SYNC UNVERÄNDERT
+
+   - save() bleibt unverändert
+   - Cloud-Save-Debounce bleibt unverändert
+   - unmittelbare Lösch-Syncs bleiben absichtlich bestehen
+   - Firestore-/Tombstone-/Merge-Logik NICHT verändert
+   - Sicherheitsbackups NICHT verändert
+   - LocalStorage wird nur noch bei tatsächlicher Änderung geschrieben
+   ========================================================= */
+
+/* =========================================================
    V187 – EFFIZIENZRUNDE 3 · 26.08.2026
    GEZIELTE RENDERS OHNE SYNC-ÄNDERUNG
 
@@ -462,8 +474,8 @@ try {
 function persistFamilyQuestionsNow(){
   try {
     const json = JSON.stringify(state.familyQuestions || []);
-    localStorage.setItem("balanceProd.familyQuestions", json);
-    localStorage.setItem("balanceProd.familyQuestions.backup", json);
+    setLocalStorageIfChanged("balanceProd.familyQuestions", json);
+    setLocalStorageIfChanged("balanceProd.familyQuestions.backup", json);
   } catch (err) {
     console.warn("Familienfragen konnten lokal nicht gespeichert werden:", err);
   }
@@ -14631,37 +14643,51 @@ function makeLocalSafetyBackup() {
     console.warn("Lokales Sicherheitsbackup fehlgeschlagen:", err);
   }
 }
+function setLocalStorageIfChanged(key, value) {
+  const next = String(value ?? "");
+  if (localStorage.getItem(key) !== next) {
+    localStorage.setItem(key, next);
+  }
+}
+
+function setLocalJsonIfChanged(key, value) {
+  setLocalStorageIfChanged(key, JSON.stringify(value));
+}
+
 function saveLocal() {
+  /* Sicherheitskopien bleiben absichtlich VOR dem eigentlichen Speichern. */
   try { makeLocalSafetySnapshot("vor-lokal-speichern"); } catch (_) {}
   try {
     if (typeof makeLocalSafetyBackup === "function") makeLocalSafetyBackup();
   } catch (_) {}
 
-  localStorage.setItem("balanceProd.videos", JSON.stringify(state.videos));
-  localStorage.setItem("balanceProd.todos", JSON.stringify(state.todos));
-  localStorage.setItem("balanceProd.archive", JSON.stringify(state.archive));
-  localStorage.setItem("balanceProd.shopping", JSON.stringify(state.shopping));
-  localStorage.setItem("balanceProd.shoppingPromos", JSON.stringify(state.shoppingPromos || []));
-  localStorage.setItem("balanceProd.recipes", JSON.stringify(state.recipes));
-  localStorage.setItem("balanceProd.meals", JSON.stringify(state.meals));
-  localStorage.setItem("balanceProd.pinboard", JSON.stringify(state.pinboard));
+  /* V188: Nur tatsächlich geänderte Bereiche erneut schreiben. */
+  setLocalJsonIfChanged("balanceProd.videos", state.videos);
+  setLocalJsonIfChanged("balanceProd.todos", state.todos);
+  setLocalJsonIfChanged("balanceProd.archive", state.archive);
+  setLocalJsonIfChanged("balanceProd.shopping", state.shopping);
+  setLocalJsonIfChanged("balanceProd.shoppingPromos", state.shoppingPromos || []);
+  setLocalJsonIfChanged("balanceProd.recipes", state.recipes);
+  setLocalJsonIfChanged("balanceProd.meals", state.meals);
+  setLocalJsonIfChanged("balanceProd.pinboard", state.pinboard);
   persistFamilyQuestionsNow();
-  localStorage.setItem("balanceProd.recipeLinkFeedback", JSON.stringify(state.recipeLinkFeedback));
-  localStorage.setItem("balanceProd.timeTracking", JSON.stringify(state.timeTracking));
-  localStorage.setItem("balanceProd.trash", JSON.stringify(state.trash || []));
-  localStorage.setItem("balanceProd.todoTombstones", JSON.stringify(state.todoTombstones || {}));
-  localStorage.setItem("balanceProd.videoTombstones", JSON.stringify(state.videoTombstones || {}));
-  localStorage.setItem("balanceProd.archiveTombstones", JSON.stringify(state.archiveTombstones || {}));
-  localStorage.setItem("balanceProd.recipeTombstones", JSON.stringify(state.recipeTombstones || {}));
-  localStorage.setItem("balanceProd.pinboardTombstones", JSON.stringify(state.pinboardTombstones || {}));
-  localStorage.setItem("balanceProd.trashTombstones", JSON.stringify(state.trashTombstones || {}));
-  localStorage.setItem("balanceProd.workroom", JSON.stringify(state.workroom));
-  localStorage.setItem("balanceProd.school", JSON.stringify(state.school));
-  localStorage.setItem("balanceProd.familySettings", JSON.stringify(state.familySettings));
-  localStorage.setItem("balanceProd.familyColors", JSON.stringify(state.familyColors || {}));
-  localStorage.setItem("balanceProd.schoolYear", state.settings?.schoolYear || "2026-27");
-  localStorage.setItem("balanceProd.familyBorderWidth", state.settings?.familyBorderWidth || "3");
+  setLocalJsonIfChanged("balanceProd.recipeLinkFeedback", state.recipeLinkFeedback);
+  setLocalJsonIfChanged("balanceProd.timeTracking", state.timeTracking);
+  setLocalJsonIfChanged("balanceProd.trash", state.trash || []);
+  setLocalJsonIfChanged("balanceProd.todoTombstones", state.todoTombstones || {});
+  setLocalJsonIfChanged("balanceProd.videoTombstones", state.videoTombstones || {});
+  setLocalJsonIfChanged("balanceProd.archiveTombstones", state.archiveTombstones || {});
+  setLocalJsonIfChanged("balanceProd.recipeTombstones", state.recipeTombstones || {});
+  setLocalJsonIfChanged("balanceProd.pinboardTombstones", state.pinboardTombstones || {});
+  setLocalJsonIfChanged("balanceProd.trashTombstones", state.trashTombstones || {});
+  setLocalJsonIfChanged("balanceProd.workroom", state.workroom);
+  setLocalJsonIfChanged("balanceProd.school", state.school);
+  setLocalJsonIfChanged("balanceProd.familySettings", state.familySettings);
+  setLocalJsonIfChanged("balanceProd.familyColors", state.familyColors || {});
+  setLocalStorageIfChanged("balanceProd.schoolYear", state.settings?.schoolYear || "2026-27");
+  setLocalStorageIfChanged("balanceProd.familyBorderWidth", state.settings?.familyBorderWidth || "3");
 }
+
 
 function cloudPayload() {
   return JSON.parse(JSON.stringify({
