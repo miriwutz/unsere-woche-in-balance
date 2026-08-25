@@ -33998,3 +33998,110 @@ button.day-meal-list-item:hover,a.day-meal-list-item:hover{background:rgba(164,1
     width:100% !important;
   }
 }
+
+
+/* =========================================================
+   V180 – Archivdialoge fest an helles App-Design binden
+   Keine Funktionsänderung.
+   ========================================================= */
+
+#workroomMaterialArchivePicker .workroom-material-picker,
+#workroomSharedFundArchiveChoice .workroom-material-picker{
+  background:#fffaf6 !important;
+  background-color:#fffaf6 !important;
+  color:#4f4640 !important;
+  opacity:1 !important;
+  backdrop-filter:none !important;
+  -webkit-backdrop-filter:none !important;
+  border:1px solid rgba(126,105,92,.20) !important;
+  box-shadow:0 22px 65px rgba(53,42,35,.22) !important;
+}
+
+#workroomMaterialArchivePicker .workroom-material-picker *,
+#workroomSharedFundArchiveChoice .workroom-material-picker *{
+  text-shadow:none !important;
+}
+
+#workroomMaterialArchivePicker .workroom-material-picker h3,
+#workroomSharedFundArchiveChoice .workroom-material-picker h3{
+  color:#4b433e !important;
+}
+
+#workroomMaterialArchivePicker .workroom-material-picker p,
+#workroomSharedFundArchiveChoice .workroom-material-picker p,
+#workroomMaterialArchivePicker .workroom-material-picker small,
+#workroomSharedFundArchiveChoice .workroom-material-picker small{
+  color:#84766e !important;
+}
+
+/* Klassenauswahl */
+#workroomMaterialArchivePicker .workroom-material-picker-list label{
+  background:#fffdfb !important;
+  color:#574e48 !important;
+  border-color:rgba(126,105,92,.16) !important;
+}
+#workroomMaterialArchivePicker .workroom-material-picker-list label:has(input:checked){
+  background:#edf3e8 !important;
+  color:#53604d !important;
+}
+
+/* Gemeinschaftstopf – zwei Entscheidungen */
+#workroomSharedFundArchiveChoice
+.workroom-shared-archive-choice-buttons button[data-shared-choice="carry"]{
+  background:#edf3e8 !important;
+  color:#4f5d49 !important;
+  border-color:rgba(111,135,100,.30) !important;
+}
+
+#workroomSharedFundArchiveChoice
+.workroom-shared-archive-choice-buttons button[data-shared-choice="archive"]{
+  background:#f5eee8 !important;
+  color:#66564d !important;
+  border-color:rgba(148,120,102,.24) !important;
+}
+
+#workroomSharedFundArchiveChoice
+.workroom-shared-archive-choice-buttons button strong,
+#workroomSharedFundArchiveChoice
+.workroom-shared-archive-choice-buttons button span{
+  color:inherit !important;
+}
+
+/* Moderne kleine Buttons */
+#workroomMaterialArchivePicker .workroom-material-picker-tools button{
+  background:#f7f5f1 !important;
+  color:#6b625c !important;
+  border:1px solid rgba(126,105,92,.20) !important;
+  border-radius:999px !important;
+}
+
+#workroomMaterialArchivePicker .workroom-material-picker-cancel,
+#workroomSharedFundArchiveChoice .workroom-shared-archive-choice-cancel{
+  background:#fffdfb !important;
+  color:#756860 !important;
+  border:1px solid rgba(126,105,92,.22) !important;
+  border-radius:999px !important;
+}
+
+#workroomMaterialArchivePicker .workroom-material-picker-confirm{
+  background:#e7efe2 !important;
+  color:#52644a !important;
+  border:1px solid rgba(104,132,91,.30) !important;
+  border-radius:999px !important;
+}
+
+/* X ebenfalls hell und passend */
+#workroomMaterialArchivePicker .workroom-material-picker-close,
+#workroomSharedFundArchiveChoice .workroom-material-picker-close{
+  background:#fffdfb !important;
+  color:#665d57 !important;
+  border-color:rgba(126,105,92,.22) !important;
+}
+
+/* Nur AUSSERHALB des Fensters abdunkeln */
+#workroomMaterialArchivePicker.workroom-material-picker-overlay,
+#workroomSharedFundArchiveChoice.workroom-material-picker-overlay{
+  background:rgba(61,54,50,.42) !important;
+  backdrop-filter:blur(6px) !important;
+  -webkit-backdrop-filter:blur(6px) !important;
+}
