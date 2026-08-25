@@ -20758,6 +20758,14 @@ window.addEventListener("resize", () => {
 })();
 
 /* =========================================================
+   V154 – SPARZIEL-SYNC ROBUSTER
+   - Sparziele werden geräteübergreifend einzeln nach ID/updatedAt gemergt
+   - ein neuerer Zeitstempel in einem anderen Geld-Unterbereich kann neue
+     Sparziele nicht mehr komplett verdrängen
+   - Löschmarker verhindern Wiederauferstehen gelöschter Sparziele
+   ========================================================= */
+
+/* =========================================================
    V150 – MEHRERE SPARZIELE
    - beliebig viele Sparziele für Lou/Fina
    - eigenes Ziel, Zielbetrag, Guthaben und Fortschrittsbalken je Sparziel
@@ -20828,7 +20836,7 @@ function normalizeChildMoneyStore(raw){
       payments:w.payments&&typeof w.payments==="object"?w.payments:{}
     },
     loans:Array.isArray(raw.loans)?raw.loans:[],
-    savings:{goals:savingGoals},
+    savings:{goals:savingGoals,deletedGoals:savings.deletedGoals&&typeof savings.deletedGoals==="object"?savings.deletedGoals:{}},
     gems:{count:Math.max(0,Number(gems.count||0)),rewardTitle:String(gems.rewardTitle||"Eis geht immer!"),rewardText:String(gems.rewardText||"Gemeinsam Eis essen"),rewardCost:Math.max(1,Number(gems.rewardCost||6)),history:Array.isArray(gems.history)?gems.history:[]},
     updatedAt:Number(raw.updatedAt||0)
   };
@@ -20837,7 +20845,43 @@ function ensureChildMoney(){state.familySettings=state.familySettings||{};state.
 function childMoneyStore(id){return ensureChildMoney()[String(id)];}
 function moneyPersonName(id){return ({mama:"Mama",papa:"Papa","1":"Lou","2":"Fina"})[String(id)]||String(id);}
 function moneyTouch(id){childMoneyStore(id).updatedAt=Date.now();save();}
-function mergeChildMoneyStore(localValue,cloudValue){const a=normalizeChildMoneyStore(localValue),b=normalizeChildMoneyStore(cloudValue);if(!a.updatedAt)return b;if(!b.updatedAt)return a;return b.updatedAt>a.updatedAt?b:a;}
+function mergeChildMoneyStore(localValue,cloudValue){
+  const a=normalizeChildMoneyStore(localValue),b=normalizeChildMoneyStore(cloudValue);
+
+  /* V154: Der restliche Geldbereich bleibt beim bewährten Store-LWW.
+     Sparziele werden zusätzlich einzeln nach ID/updatedAt zusammengeführt.
+     So kann ein auf einem Gerät neuerer anderer Geld-Zeitstempel nicht
+     komplette neue Sparziele eines anderen Geräts verschlucken. */
+  let base;
+  if(!a.updatedAt) base=b;
+  else if(!b.updatedAt) base=a;
+  else base=b.updatedAt>a.updatedAt?b:a;
+
+  const deletedGoals={...(a.savings?.deletedGoals||{}),...(b.savings?.deletedGoals||{})};
+  for(const [id,at] of Object.entries(a.savings?.deletedGoals||{})){
+    deletedGoals[id]=Math.max(Number(deletedGoals[id]||0),Number(at||0));
+  }
+  for(const [id,at] of Object.entries(b.savings?.deletedGoals||{})){
+    deletedGoals[id]=Math.max(Number(deletedGoals[id]||0),Number(at||0));
+  }
+
+  const byId=new Map();
+  [...(a.savings?.goals||[]),...(b.savings?.goals||[])].forEach(goal=>{
+    if(!goal?.id)return;
+    const old=byId.get(goal.id);
+    if(!old || Number(goal.updatedAt||goal.createdAt||0)>=Number(old.updatedAt||old.createdAt||0)){
+      byId.set(goal.id,goal);
+    }
+  });
+
+  const goals=[...byId.values()].filter(goal=>{
+    const changed=Number(goal.updatedAt||goal.createdAt||0);
+    return Number(deletedGoals[goal.id]||0)<changed;
+  });
+
+  base.savings={goals,deletedGoals};
+  return base;
+}
 function moneyMonthKey(d=new Date()){return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`;}
 function moneyMonthLabel(k){const [y,m]=k.split("-").map(Number);return new Date(y,m-1,1).toLocaleDateString("de-AT",{month:"long",year:"numeric"});}
 function moneyPeriodKey(kind,store,date=new Date()){
@@ -20998,8 +21042,11 @@ function ensureChildMoneyDialog(){
   d.querySelector("#addSavingGoalBtn").onclick=()=>{
     const s=childMoneyStore(activeChildMoneyId);
     const now=Date.now();
+    const newGoalId=`saving-goal-${now}-${Math.random().toString(36).slice(2,7)}`;
+    s.savings.deletedGoals=s.savings.deletedGoals||{};
+    delete s.savings.deletedGoals[newGoalId];
     s.savings.goals.push({
-      id:`saving-goal-${now}-${Math.random().toString(36).slice(2,7)}`,
+      id:newGoalId,
       title:"",
       target:0,
       balance:0,
@@ -21069,6 +21116,8 @@ function ensureChildMoneyDialog(){
       if(!goal) return;
       const label=goal.title ? `„${goal.title}“` : "dieses Sparziel";
       if(!confirm(`${label} wirklich löschen?`)) return;
+      s.savings.deletedGoals=s.savings.deletedGoals||{};
+      s.savings.deletedGoals[goal.id]=Date.now();
       s.savings.goals=s.savings.goals.filter(x=>x.id!==goal.id);
       moneyTouch(activeChildMoneyId);
       renderChildMoneyDialog();
