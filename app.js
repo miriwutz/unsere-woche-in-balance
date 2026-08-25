@@ -1,4 +1,12 @@
 /* =========================================================
+   V170 – KLASSENBUDGET-LEISTE
+   - Fortschrittsleiste auch bei den Klassen
+   - zeigt verbleibendes Budget relativ zum eingenommenen Gesamtbetrag
+   - etwas farbenfroher, aber weiterhin gedeckt/elegant
+   - Minusstand mit ruhigem Warnzustand
+   ========================================================= */
+
+/* =========================================================
    V168 – FERIEN + MEHRTAGESTEXT
    - Sommerferien 04.07.–06.09.2026 im Wochenplan sichtbar
    - Ferienblöcke erhalten konkrete Namen (Sommer-, Herbst-, Weihnachts-,
@@ -8349,6 +8357,18 @@ function renderWorkroomMaterialMoney(){
     <div class="workroom-material-income">
       <span>${Number(current.childrenCount||0)} Kinder × ${moneyEuro(current.contribution||0)}</span>
       <strong>${moneyEuro(total)}</strong>
+    </div>
+
+    <div class="workroom-material-class-progress ${rest<0?"is-negative":""}">
+      <div class="workroom-material-class-progress-fill"
+           style="width:${total>0?Math.max(0,Math.min(100,(rest/total)*100)):0}%"></div>
+    </div>
+    <div class="workroom-material-class-progress-caption">
+      ${total>0
+        ? (rest<0
+            ? `${moneyEuro(Math.abs(rest))} über dem Klassenbudget`
+            : `${Math.max(0,Math.round((rest/total)*100))} % des Klassenbudgets übrig`)
+        : "Noch kein Klassenbudget eingetragen."}
     </div>
 
     <div class="workroom-material-balance">
