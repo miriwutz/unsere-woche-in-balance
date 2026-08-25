@@ -20758,6 +20758,15 @@ window.addEventListener("resize", () => {
 })();
 
 /* =========================================================
+   V150 – MEHRERE SPARZIELE
+   - beliebig viele Sparziele für Lou/Fina
+   - eigenes Ziel, Zielbetrag, Guthaben und Fortschrittsbalken je Sparziel
+   - Sparen/Entnehmen eindeutig je Ziel
+   - vorhandenes einzelnes Sparziel wird verlustfrei übernommen
+   - Geld-Sync bleibt im bestehenden childMoney-Store
+   ========================================================= */
+
+/* =========================================================
    V119 – MEIN GELD: Lou & Fina
    ========================================================= */
 let activeChildMoneyId = "1";
@@ -20766,11 +20775,50 @@ function moneyWeekLabel(key){const a=new Date(key+"T12:00:00"),b=new Date(a);b.s
 function moneyNumber(v){const n=Number(String(v??"").replace(",","."));return Number.isFinite(n)&&n>=0?Math.round(n*100)/100:0;}
 function moneyEuro(v){return `${moneyNumber(v).toLocaleString("de-AT",{minimumFractionDigits:2,maximumFractionDigits:2})} €`;}
 
+function normalizeSavingGoal(raw,index=0){
+  raw=raw&&typeof raw==="object"?raw:{};
+  return {
+    id:String(raw.id||`saving-goal-${index}-${Date.now()}`),
+    title:String(raw.title ?? raw.goal ?? "").trim(),
+    target:moneyNumber(raw.target),
+    balance:moneyNumber(raw.balance),
+    history:Array.isArray(raw.history)?raw.history:[],
+    createdAt:Number(raw.createdAt||0),
+    updatedAt:Number(raw.updatedAt||0)
+  };
+}
+
 function normalizeChildMoneyStore(raw){
   raw=raw&&typeof raw==="object"?raw:{};
   const w=raw.weekly&&typeof raw.weekly==="object"?raw.weekly:{};
   const savings=raw.savings&&typeof raw.savings==="object"?raw.savings:{};
   const gems=raw.gems&&typeof raw.gems==="object"?raw.gems:{};
+
+  let savingGoals=[];
+  if(Array.isArray(savings.goals)){
+    savingGoals=savings.goals.map((goal,index)=>normalizeSavingGoal(goal,index));
+  }else{
+    /* V150: vorhandenes einzelnes Sparziel verlustfrei übernehmen. */
+    const legacyHistory=Array.isArray(savings.history)?savings.history:[];
+    const hasLegacySaving=
+      String(savings.goal||"").trim() ||
+      moneyNumber(savings.target)>0 ||
+      moneyNumber(savings.balance)>0 ||
+      legacyHistory.length>0;
+
+    if(hasLegacySaving){
+      savingGoals=[normalizeSavingGoal({
+        id:"saving-goal-legacy",
+        title:String(savings.goal||""),
+        target:savings.target,
+        balance:savings.balance,
+        history:legacyHistory,
+        createdAt:Number(raw.updatedAt||0),
+        updatedAt:Number(raw.updatedAt||0)
+      },0)];
+    }
+  }
+
   return {
     weekly:{
       pocketAmount:moneyNumber(w.pocketAmount),
@@ -20780,7 +20828,7 @@ function normalizeChildMoneyStore(raw){
       payments:w.payments&&typeof w.payments==="object"?w.payments:{}
     },
     loans:Array.isArray(raw.loans)?raw.loans:[],
-    savings:{goal:String(savings.goal||""),target:moneyNumber(savings.target),balance:moneyNumber(savings.balance),history:Array.isArray(savings.history)?savings.history:[]},
+    savings:{goals:savingGoals},
     gems:{count:Math.max(0,Number(gems.count||0)),rewardTitle:String(gems.rewardTitle||"Eis geht immer!"),rewardText:String(gems.rewardText||"Gemeinsam Eis essen"),rewardCost:Math.max(1,Number(gems.rewardCost||6)),history:Array.isArray(gems.history)?gems.history:[]},
     updatedAt:Number(raw.updatedAt||0)
   };
@@ -20877,18 +20925,12 @@ function ensureChildMoneyDialog(){
       <div id="childMoneyOpenLoans"></div>
     </section>
 
-    <section class="child-money-card">
-      <div class="child-money-section-head"><div><strong>Mein Sparziel</strong><small>Ich spare für etwas, das mir wirklich wichtig ist.</small></div><span>🌱</span></div>
-      <div class="v121-save-grid"><label>Ziel<input id="savingGoal" placeholder="z. B. etwas Besonderes"></label><label>Zielbetrag<input id="savingTarget" inputmode="decimal" placeholder="0"> €</label></div>
-      <div class="v121-save-progress">
-        <div class="v122-save-orb" aria-hidden="true"><i id="savingFill"></i><span>✦</span></div>
-        <div class="v122-save-copy">
-          <strong id="savingStatus"></strong>
-          <div class="v122-save-track"><i id="savingTrackFill"></i></div>
-          <small id="savingText"></small>
-        </div>
+    <section class="child-money-card v150-savings-card">
+      <div class="child-money-section-head">
+        <div><strong>Meine Sparziele</strong><small>Jedes Ziel hat seinen eigenen Betrag und Fortschritt.</small></div>
+        <button id="addSavingGoalBtn" class="v150-add-saving-goal" type="button">+ Sparziel</button>
       </div>
-      <div class="v121-save-actions"><input id="savingAmount" inputmode="decimal" placeholder="Betrag"><button type="button" data-save="plus">+ Sparen</button><button type="button" data-save="minus">− Entnehmen</button></div>
+      <div id="savingGoalsList" class="v150-saving-goals"></div>
     </section>
 
     <details class="child-money-card v121-gems v140-gems-collapse">
@@ -20953,8 +20995,37 @@ function ensureChildMoneyDialog(){
   };
   d.querySelectorAll("[data-month]").forEach(b=>b.onclick=()=>{const [y,m]=activeMoneyMonth.split("-").map(Number),x=new Date(y,m-1+Number(b.dataset.month),1);activeMoneyMonth=moneyMonthKey(x);renderChildMoneyDialog();});
   d.querySelector("#childMoneyLoanForm").onsubmit=e=>{e.preventDefault();const f=d.querySelector("#childMoneyFrom").value,t=d.querySelector("#childMoneyTo").value,a=moneyNumber(d.querySelector("#childMoneyLoanAmount").value),n=d.querySelector("#childMoneyLoanNote").value.trim();if(!a||f===t)return;const now=Date.now();childMoneyStore(activeChildMoneyId).loans.unshift({id:`money-${now}-${Math.random().toString(36).slice(2,7)}`,from:f,to:t,amount:a,note:n,createdAt:now,updatedAt:now,done:false,doneAt:0});d.querySelector("#childMoneyLoanAmount").value="";d.querySelector("#childMoneyLoanNote").value="";d.querySelector("#childMoneyLoanForm").classList.add("hidden");moneyTouch(activeChildMoneyId);renderChildMoneyDialog();};
-  ["savingGoal","savingTarget"].forEach(id=>d.querySelector("#"+id).onchange=e=>{const s=childMoneyStore(activeChildMoneyId);if(id==="savingGoal")s.savings.goal=e.target.value.trim();else s.savings.target=moneyNumber(e.target.value);moneyTouch(activeChildMoneyId);renderChildMoneyDialog();});
-  d.querySelectorAll("[data-save]").forEach(b=>b.onclick=()=>{const s=childMoneyStore(activeChildMoneyId),a=moneyNumber(d.querySelector("#savingAmount").value);if(!a)return;const delta=b.dataset.save==="minus"?-a:a;s.savings.balance=Math.max(0,Math.round((s.savings.balance+delta)*100)/100);s.savings.history.unshift({id:`save-${Date.now()}`,amount:delta,at:Date.now()});d.querySelector("#savingAmount").value="";moneyTouch(activeChildMoneyId);renderChildMoneyDialog();});
+  d.querySelector("#addSavingGoalBtn").onclick=()=>{
+    const s=childMoneyStore(activeChildMoneyId);
+    const now=Date.now();
+    s.savings.goals.push({
+      id:`saving-goal-${now}-${Math.random().toString(36).slice(2,7)}`,
+      title:"",
+      target:0,
+      balance:0,
+      history:[],
+      createdAt:now,
+      updatedAt:now
+    });
+    moneyTouch(activeChildMoneyId);
+    renderChildMoneyDialog();
+  };
+
+  d.addEventListener("change",e=>{
+    const titleInput=e.target.closest("[data-saving-goal-title]");
+    const targetInput=e.target.closest("[data-saving-goal-target]");
+    if(!titleInput && !targetInput) return;
+
+    const goalId=(titleInput||targetInput).dataset.savingGoalTitle || (titleInput||targetInput).dataset.savingGoalTarget;
+    const goal=childMoneyStore(activeChildMoneyId).savings.goals.find(x=>x.id===goalId);
+    if(!goal) return;
+
+    if(titleInput) goal.title=titleInput.value.trim();
+    if(targetInput) goal.target=moneyNumber(targetInput.value);
+    goal.updatedAt=Date.now();
+    moneyTouch(activeChildMoneyId);
+    renderChildMoneyDialog();
+  });
   ["gemRewardTitle","gemRewardText","gemRewardCost"].forEach(id=>d.querySelector("#"+id).onchange=e=>{const g=childMoneyStore(activeChildMoneyId).gems;if(id==="gemRewardTitle")g.rewardTitle=e.target.value.trim();if(id==="gemRewardText")g.rewardText=e.target.value.trim();if(id==="gemRewardCost")g.rewardCost=Math.max(1,Number(e.target.value||1));moneyTouch(activeChildMoneyId);renderChildMoneyDialog();});
   d.querySelector("#gemPresetSelect").onchange=e=>{
     const idx=Number(e.target.value);
@@ -20970,6 +21041,40 @@ function ensureChildMoneyDialog(){
   d.querySelectorAll("[data-gem]").forEach(b=>b.onclick=()=>{const g=childMoneyStore(activeChildMoneyId).gems,plus=b.dataset.gem==="plus",why=d.querySelector("#gemWhy").value.trim();if(!plus&&g.count<=0)return;g.count+=plus?1:-1;g.history.unshift({id:`gem-${Date.now()}`,delta:plus?1:-1,why:why||(plus?"Besonderes Extra":"zurückgenommen"),at:Date.now()});d.querySelector("#gemWhy").value="";moneyTouch(activeChildMoneyId);renderChildMoneyDialog();});
   d.querySelector("#gemRedeem").onclick=()=>{const g=childMoneyStore(activeChildMoneyId).gems;if(g.count<g.rewardCost)return;g.count-=g.rewardCost;g.history.unshift({id:`gem-${Date.now()}`,delta:-g.rewardCost,why:`Wertschätzungszeichen eingelöst: ${g.rewardTitle}`,at:Date.now()});moneyTouch(activeChildMoneyId);renderChildMoneyDialog();};
   d.addEventListener("click",e=>{
+    const savingAction=e.target.closest("[data-saving-action]");
+    if(savingAction){
+      const goalId=savingAction.dataset.savingGoal;
+      const goal=childMoneyStore(activeChildMoneyId).savings.goals.find(x=>x.id===goalId);
+      const card=savingAction.closest(".v150-saving-goal");
+      const amount=moneyNumber(card?.querySelector("[data-saving-amount]")?.value);
+      if(!goal || !amount) return;
+
+      const delta=savingAction.dataset.savingAction==="minus"?-amount:amount;
+      goal.balance=Math.max(0,Math.round((goal.balance+delta)*100)/100);
+      goal.history.unshift({
+        id:`save-${Date.now()}-${Math.random().toString(36).slice(2,6)}`,
+        amount:delta,
+        at:Date.now()
+      });
+      goal.updatedAt=Date.now();
+      moneyTouch(activeChildMoneyId);
+      renderChildMoneyDialog();
+      return;
+    }
+
+    const savingGoalDelete=e.target.closest("[data-saving-goal-delete]");
+    if(savingGoalDelete){
+      const s=childMoneyStore(activeChildMoneyId);
+      const goal=s.savings.goals.find(x=>x.id===savingGoalDelete.dataset.savingGoalDelete);
+      if(!goal) return;
+      const label=goal.title ? `„${goal.title}“` : "dieses Sparziel";
+      if(!confirm(`${label} wirklich löschen?`)) return;
+      s.savings.goals=s.savings.goals.filter(x=>x.id!==goal.id);
+      moneyTouch(activeChildMoneyId);
+      renderChildMoneyDialog();
+      return;
+    }
+
     const b=e.target.closest("[data-money-loan-done]");
     if(b){
       const x=childMoneyStore(activeChildMoneyId).loans.find(v=>v.id===b.dataset.moneyLoanDone);
@@ -20980,11 +21085,13 @@ function ensureChildMoneyDialog(){
     const del=e.target.closest("[data-saving-delete]");
     if(del){
       const s=childMoneyStore(activeChildMoneyId);
-      const x=s.savings.history.find(v=>v.id===del.dataset.savingDelete);
-      if(!x)return;
+      const goal=s.savings.goals.find(g=>g.id===del.dataset.savingGoal);
+      const x=goal?.history.find(v=>v.id===del.dataset.savingDelete);
+      if(!goal || !x)return;
       if(!confirm("Diese Sparbewegung wirklich löschen?")) return;
-      s.savings.balance=Math.max(0,Math.round((s.savings.balance-Number(x.amount||0))*100)/100);
-      s.savings.history=s.savings.history.filter(v=>v.id!==x.id);
+      goal.balance=Math.max(0,Math.round((goal.balance-Number(x.amount||0))*100)/100);
+      goal.history=goal.history.filter(v=>v.id!==x.id);
+      goal.updatedAt=Date.now();
       moneyTouch(activeChildMoneyId);renderChildMoneyDialog();return;
     }
 
@@ -21081,12 +21188,40 @@ function renderChildMoneyDialog(){
 
   const open=s.loans.filter(x=>!x.done); d.querySelector("#childMoneyOpenLoans").innerHTML=open.length?open.map(x=>`<div class="child-money-loan-row"><span><strong>${escapeHtml(moneyPersonName(x.from))}</strong> → <strong>${escapeHtml(moneyPersonName(x.to))}</strong>${x.note?`<small>${escapeHtml(x.note)}</small>`:""}</span><b>${moneyEuro(x.amount)}</b><button data-money-loan-done="${escapeHtml(x.id)}">✓ zurück</button></div>`).join(""):`<div class="child-money-empty">Alles ausgeglichen. ✦</div>`;
 
-  d.querySelector("#savingGoal").value=s.savings.goal||"";d.querySelector("#savingTarget").value=s.savings.target||"";
-  const sp=s.savings.target?Math.min(100,Math.round(s.savings.balance/s.savings.target*100)):0;
-  d.querySelector("#savingFill").style.height=sp+"%";
-  d.querySelector("#savingTrackFill").style.width=sp+"%";
-  d.querySelector("#savingStatus").textContent=s.savings.target?`${moneyEuro(s.savings.balance)} von ${moneyEuro(s.savings.target)} · ${sp}%`:`${moneyEuro(s.savings.balance)} gespart`;
-  d.querySelector("#savingText").textContent=sp>=100?"Geschafft! ✨ Du hast für etwas gespart, das dir wirklich wichtig war.":sp>=50?"Mehr als die Hälfte geschafft – dein Ziel kommt näher. ✨":"Jeder gesparte Euro bringt dich deinem Wunsch ein Stück näher.";
+  const savingGoals=Array.isArray(s.savings.goals)?s.savings.goals:[];
+  const savingHost=d.querySelector("#savingGoalsList");
+  savingHost.innerHTML=savingGoals.length?savingGoals.map((goal,index)=>{
+    const progress=goal.target?Math.min(100,Math.round(goal.balance/goal.target*100)):0;
+    const progressText=progress>=100
+      ?"Geschafft! ✨"
+      :progress>=50
+        ?"Mehr als die Hälfte geschafft. ✨"
+        :"Jeder Euro bringt dich deinem Ziel näher.";
+    const title=goal.title||`Sparziel ${index+1}`;
+    return `<article class="v150-saving-goal" data-saving-goal-card="${escapeHtml(goal.id)}">
+      <div class="v150-saving-goal-top">
+        <strong>${escapeHtml(title)}</strong>
+        <button type="button" class="v150-saving-goal-delete" data-saving-goal-delete="${escapeHtml(goal.id)}" title="Sparziel löschen">×</button>
+      </div>
+      <div class="v150-saving-goal-fields">
+        <label>Sparziel<input data-saving-goal-title="${escapeHtml(goal.id)}" value="${escapeHtml(goal.title)}" placeholder="z. B. Kopfhörer"></label>
+        <label>Zielbetrag<span class="v150-money-input"><input data-saving-goal-target="${escapeHtml(goal.id)}" inputmode="decimal" value="${goal.target||""}" placeholder="0"><span>€</span></span></label>
+      </div>
+      <div class="v150-saving-progress">
+        <div class="v150-saving-progress-head">
+          <strong>${moneyEuro(goal.balance)}${goal.target?` von ${moneyEuro(goal.target)}`:" gespart"}</strong>
+          <span>${goal.target?`${progress}%`:""}</span>
+        </div>
+        <div class="v122-save-track"><i style="width:${progress}%"></i></div>
+        <small>${progressText}</small>
+      </div>
+      <div class="v121-save-actions">
+        <input data-saving-amount inputmode="decimal" placeholder="Betrag">
+        <button type="button" data-saving-action="plus" data-saving-goal="${escapeHtml(goal.id)}">+ Sparen</button>
+        <button type="button" data-saving-action="minus" data-saving-goal="${escapeHtml(goal.id)}">− Entnehmen</button>
+      </div>
+    </article>`;
+  }).join(""):`<div class="child-money-empty v150-saving-empty">Noch kein Sparziel. Mit „+ Sparziel“ kannst du eines anlegen.</div>`;
 
   const g=s.gems,cost=Math.max(1,g.rewardCost),gp=Math.min(100,Math.round(g.count/cost*100));
   d.querySelector("#gemCount").textContent=`${g.count} 💎`;
@@ -21142,9 +21277,22 @@ function renderChildMoneyDialog(){
     d.querySelector("#childMoneyLoanHistory").innerHTML=`<h4>Zurückbezahlt</h4>${visibleDone.length?visibleDone.map(row).join(""):`<div class="child-money-empty">Noch keine erledigten Einträge.</div>`}${olderDone.length?`<details class="v126-older-history"><summary>${olderDone.length} ältere Einträge anzeigen</summary>${olderDone.map(row).join("")}</details>`:""}`;
   }
   {
-    const savingRow=x=>`<div class="child-money-history-row v122-saving-history-row"><span>${x.amount>=0?"+":"−"} ${moneyEuro(Math.abs(x.amount))}</span><small>${new Date(x.at).toLocaleDateString("de-AT")}</small><button type="button" data-saving-delete="${escapeHtml(x.id)}" title="Sparbewegung löschen">×</button></div>`;
-    const visibleSaving=s.savings.history.slice(0,20);
-    const olderSaving=s.savings.history.slice(20);
+    const allSaving=(s.savings.goals||[])
+      .flatMap((goal,index)=>(goal.history||[]).map(x=>({
+        ...x,
+        goalId:goal.id,
+        goalTitle:goal.title||`Sparziel ${index+1}`
+      })))
+      .sort((a,b)=>Number(b.at||0)-Number(a.at||0));
+
+    const savingRow=x=>`<div class="child-money-history-row v122-saving-history-row">
+      <span><strong>${escapeHtml(x.goalTitle)}</strong><small>${x.amount>=0?"+":"−"} ${moneyEuro(Math.abs(x.amount))}</small></span>
+      <small>${new Date(x.at).toLocaleDateString("de-AT")}</small>
+      <button type="button" data-saving-delete="${escapeHtml(x.id)}" data-saving-goal="${escapeHtml(x.goalId)}" title="Sparbewegung löschen">×</button>
+    </div>`;
+
+    const visibleSaving=allSaving.slice(0,20);
+    const olderSaving=allSaving.slice(20);
     d.querySelector("#savingHistory").innerHTML=`<h4>Sparen</h4>${visibleSaving.length?visibleSaving.map(savingRow).join(""):`<div class="child-money-empty">Noch keine Sparbewegung.</div>`}${olderSaving.length?`<details class="v126-older-history"><summary>${olderSaving.length} ältere Einträge anzeigen</summary>${olderSaving.map(savingRow).join("")}</details>`:""}`;
   }
   const gemHistoryHost=d.querySelector("#gemHistory");
