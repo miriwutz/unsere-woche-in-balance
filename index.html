@@ -1869,14 +1869,22 @@
   <summary>
     <span class="workroom-material-money-arrow">▸</span>
     <span>
-      <strong>💶 Materialgeld & Ausgaben</strong>
+      <strong>Materialgeld & Ausgaben</strong>
       <small>Klassen, Beiträge und Einnahmen im Blick behalten.</small>
     </span>
   </summary>
 
   <div class="workroom-material-money-body">
+    <div class="workroom-material-semester-row">
+      <label>
+        Semester
+        <input id="workroomMaterialSemester" type="text" placeholder="z. B. WS 26/27">
+      </label>
+      <button id="archiveWorkroomMaterialSemesterBtn" class="secondary-btn" type="button">Semester archivieren</button>
+    </div>
+
     <div class="workroom-material-class-create">
-      <input id="workroomMaterialClassName" type="text" placeholder="Klasse, z. B. 3a">
+      <input id="workroomMaterialClassName" type="text" placeholder="Klasse / Lehrkraft, z. B. 4a – Frau Müller">
       <button id="addWorkroomMaterialClassBtn" class="secondary-btn" type="button">+ Klasse</button>
     </div>
 
@@ -1885,6 +1893,11 @@
     <div id="workroomMaterialClassEditor" class="workroom-material-class-editor">
       <div class="workroom-empty">Noch keine Klasse angelegt.</div>
     </div>
+
+    <details class="workroom-material-archive">
+      <summary>Archiv <span id="workroomMaterialArchiveCount"></span></summary>
+      <div id="workroomMaterialArchiveList"></div>
+    </details>
   </div>
 </details>
 
