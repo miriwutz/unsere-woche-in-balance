@@ -1,3 +1,10 @@
+/* V189 – SYNC-HÄRTUNG 27.08.2026
+   - Familienfragen ID-weise revisionssicher
+   - offline keine veralteten Firestore-Gesamtschreibvorgänge
+   - reconnect: Server lesen -> mergen -> erst dann speichern
+   - Materialgeld V184 unverändert
+*/
+
 /* =========================================================
    V188 – EFFIZIENZRUNDE 4 · 26.08.2026
    LOCALSTORAGE-SCHREIBEN REDUZIERT – SYNC UNVERÄNDERT
@@ -701,18 +708,48 @@ function updateSyncStatus(stateName) {
     "Cloud-Synchronisierung ist noch nicht bereit.";
 }
 
-window.addEventListener("online", () => {
+/* V189 – Offline/Online-Schutz.
+   Solange das Gerät offline ist, bleibt alles lokal gespeichert, aber es wird
+   KEIN alter Gesamtstand als Firestore-Schreibvorgang vorgemerkt. Beim
+   Wiederverbinden wird zuerst der echte Serverstand eingelesen und gemergt. */
+let reconnectMergeRunning = false;
+
+async function reconcileCloudBeforeReconnectSave() {
+  if (reconnectMergeRunning || !firebase.auth().currentUser) return;
+  reconnectMergeRunning = true;
+  cloudReady = false;
   updateSyncStatus("syncing");
-  scheduleCloudSave();
+
+  try {
+    const ref = firebase.firestore().collection("families").doc("shared");
+    const snap = await ref.get({ source: "server" });
+    if (snap.exists) applyCloudData(snap.data() || {});
+    cloudReady = true;
+    scheduleCloudSave();
+  } catch (err) {
+    console.warn("V189 Reconnect-Merge fehlgeschlagen:", err);
+    cloudReady = false;
+    updateSyncStatus(navigator.onLine ? "error" : "offline");
+  } finally {
+    reconnectMergeRunning = false;
+  }
+}
+
+window.addEventListener("online", () => {
+  reconcileCloudBeforeReconnectSave();
 });
-window.addEventListener("offline", () => updateSyncStatus("offline"));
+window.addEventListener("offline", () => {
+  cloudReady = false;
+  clearTimeout(cloudSaveTimer);
+  updateSyncStatus("offline");
+});
 
 document.addEventListener("DOMContentLoaded", () => {
   updateSyncStatus(navigator.onLine ? "waiting" : "offline");
 });
 
 function scheduleCloudSave() {
-  if (!cloudReady || cloudApplying || !firebase.auth().currentUser) {
+  if (!navigator.onLine || !cloudReady || cloudApplying || !firebase.auth().currentUser) {
     updateSyncStatus(navigator.onLine ? "waiting" : "offline");
     return;
   }
@@ -10585,6 +10622,38 @@ function guardedMergeById(localValue, cloudValue, sectionName = "Daten") {
   return result;
 }
 
+/* =========================================================
+   V189 – SYNC-HÄRTUNG: Familienfragen
+   Jede Frage ist ein eigener revisionsfähiger Datensatz.
+   Bei gleicher ID gewinnt updatedAt/createdAt; fehlende IDs werden ergänzt.
+   done/deleted bleiben als Soft-Delete erhalten und synchronisieren deshalb
+   ebenfalls zuverlässig auf andere Geräte.
+   ========================================================= */
+function mergeFamilyQuestionsByRevision(localValue, cloudValue) {
+  const local = Array.isArray(localValue) ? localValue : [];
+  const remote = Array.isArray(cloudValue) ? cloudValue : [];
+  const byId = new Map();
+  const withoutId = [];
+
+  function ts(item) {
+    return Number(item?.updatedAt || item?.createdAt || 0) || 0;
+  }
+
+  function take(item) {
+    if (!item || typeof item !== "object") return;
+    if (!item.id) {
+      withoutId.push(item);
+      return;
+    }
+    const old = byId.get(item.id);
+    if (!old || ts(item) >= ts(old)) byId.set(item.id, item);
+  }
+
+  local.forEach(take);
+  remote.forEach(take);
+  return [...byId.values(), ...withoutId];
+}
+
 function mergeWorkroomTodoTombstones(localValue, remoteValue) {
   const local = localValue && typeof localValue === "object" ? localValue : {};
   const remote = remoteValue && typeof remoteValue === "object" ? remoteValue : {};
@@ -14879,10 +14948,9 @@ function applyCloudData(data) {
     }
 
     if (Array.isArray(data.familyQuestions)) {
-      state.familyQuestions = guardedMergeById(
+      state.familyQuestions = mergeFamilyQuestionsByRevision(
         state.familyQuestions,
-        data.familyQuestions,
-        "Familienfragen"
+        data.familyQuestions
       );
       persistFamilyQuestionsNow();
     }
