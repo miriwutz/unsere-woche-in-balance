@@ -1,4 +1,13 @@
 /* =========================================================
+   V193 – BEREICHSSPEZIFISCHE SYNC-HÄRTUNG · 27.08.2026
+   - V192 Mobile-Reconnect bleibt erhalten
+   - Familienfragen-ID-Merge bleibt erhalten
+   - guardedMergeById entscheidet jetzt pro ID statt pro Gesamtliste
+   - Materialgeld V184 bleibt unverändert
+   - bestehende Tombstone-/Spezialsyncs bleiben unverändert
+   ========================================================= */
+
+/* =========================================================
    V192 – SYNC-HÄRTUNG · 27.08.2026
    MOBILE RECONNECT-WATCHDOG
 
@@ -10731,40 +10740,37 @@ function itemTimestamp(item) {
   return Number(item.updatedAt || item.completedAt || item.createdAt || 0) || 0;
 }
 
-function guardedMergeById(localValue, cloudValue, sectionName = "Daten") {
+function guardedMergeById(localValue, remoteValue, label = "Liste") {
   const local = Array.isArray(localValue) ? localValue : [];
-  const remote = Array.isArray(cloudValue) ? cloudValue : [];
+  const remote = Array.isArray(remoteValue) ? remoteValue : [];
+  const map = new Map();
+  const extras = [];
+  const stamp = item => Number(item?.updatedAt || item?.createdAt || 0) || 0;
 
-  if (!local.length) return remote;
-  if (!remote.length) {
-    console.warn(`Cloud-Sicherheitsblock: ${sectionName} wäre von ${local.length} auf 0 gefallen – lokale Daten bleiben erhalten.`);
-    return local;
-  }
+  local.forEach(item => {
+    if (item?.id) map.set(item.id, item);
+    else if (item != null) extras.push(item);
+  });
 
-  const result = [...local];
-  const localById = new Map(local.filter(x => x?.id).map(x => [x.id, x]));
-  const newestLocalTs = local.reduce((m, x) => Math.max(m, itemTimestamp(x)), 0);
-
-  for (const remoteItem of remote) {
-    if (!remoteItem?.id) continue;
-    const localItem = localById.get(remoteItem.id);
-
-    if (localItem) {
-      const newer = itemTimestamp(remoteItem) > itemTimestamp(localItem) ? remoteItem : localItem;
-      const index = result.findIndex(x => x?.id === remoteItem.id);
-      if (index >= 0) result[index] = newer;
-      continue;
+  remote.forEach(item => {
+    if (!item?.id) {
+      if (item != null && !extras.some(x => JSON.stringify(x) === JSON.stringify(item))) extras.push(item);
+      return;
     }
 
-    const remoteTs = itemTimestamp(remoteItem);
-    if (remoteTs && remoteTs > newestLocalTs) {
-      result.push(remoteItem);
-    } else {
-      console.warn(`Cloud-Sicherheitsblock: älterer/nicht datierbarer Cloud-Eintrag in ${sectionName} nicht automatisch zurückgeholt:`, remoteItem);
+    const current = map.get(item.id);
+    if (!current) {
+      map.set(item.id, item);
+      return;
     }
-  }
 
-  return result;
+    const lt = stamp(current);
+    const rt = stamp(item);
+    if (rt > lt) map.set(item.id, item);
+    else if (!lt && !rt) map.set(item.id, current);
+  });
+
+  return [...map.values(), ...extras];
 }
 
 /* =========================================================
