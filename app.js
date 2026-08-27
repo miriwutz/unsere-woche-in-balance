@@ -1,4 +1,22 @@
 /* =========================================================
+   V192 – SYNC-HÄRTUNG · 27.08.2026
+   MOBILE RECONNECT-WATCHDOG
+
+   Beobachtung:
+   - nach WLAN-Rückkehr war der zusammengeführte Stand am Tablet vorhanden
+   - erst nach Seiten-Aktualisierung wurde er zum PC zurückgesendet
+   -> Datenmerge ist korrekt, aber der automatische Reconnect-Trigger des
+      mobilen Browsers ist nicht zuverlässig genug.
+
+   Fix:
+   - zusätzlicher Reconnect-Check alle 3 Sekunden im Vordergrund
+   - zusätzlicher Check bei focus, visibilitychange und pageshow
+   - nur aktiv, wenn Internet da ist und Dirty-State/Cloud-Readiness es erfordert
+   - vorhandene V191 Dirty-Flag-Logik bleibt bestehen
+   - Materialgeld V184 bleibt unverändert
+   ========================================================= */
+
+/* =========================================================
    V191 – SYNC-HÄRTUNG · 27.08.2026
    OFFLINE-RÜCKSYNC ROBUST
 
@@ -816,6 +834,50 @@ window.addEventListener("offline", () => {
   clearTimeout(cloudSaveTimer);
   updateSyncStatus("offline");
 });
+
+/* V192 – Mobile Reconnect-Watchdog.
+   Manche Android-Browser liefern das "online"-Event erst verspätet oder erst
+   nach einer Nutzeraktion/Seitenaktualisierung. Deshalb prüfen wir zusätzlich
+   regelmäßig sowie bei Fokus/Sichtbarkeit, ob ein lokal ungesendeter Stand
+   wieder sicher mit der Cloud abgeglichen werden kann. */
+let reconnectWatchdogBusy = false;
+
+async function checkReconnectIfNeeded(){
+  if (
+    reconnectWatchdogBusy ||
+    !navigator.onLine ||
+    !firebase.auth().currentUser ||
+    (!hasCloudDirty() && cloudReady)
+  ) return;
+
+  reconnectWatchdogBusy = true;
+  try {
+    await reconcileCloudBeforeReconnectSave();
+  } finally {
+    reconnectWatchdogBusy = false;
+  }
+}
+
+window.addEventListener("focus", () => {
+  checkReconnectIfNeeded();
+});
+
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "visible") {
+    checkReconnectIfNeeded();
+  }
+});
+
+window.addEventListener("pageshow", () => {
+  checkReconnectIfNeeded();
+});
+
+/* Vordergrund: alle 3 s; im Hintergrund dürfen Browser den Timer drosseln.
+   Sobald die Seite wieder aktiv wird, greifen focus/visibility/pageshow. */
+setInterval(() => {
+  if (!document.hidden) checkReconnectIfNeeded();
+}, 3000);
+
 
 document.addEventListener("DOMContentLoaded", () => {
   updateSyncStatus(navigator.onLine ? "waiting" : "offline");
