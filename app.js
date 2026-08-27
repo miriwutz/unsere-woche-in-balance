@@ -1,7 +1,7 @@
-/* V189 – SYNC-HÄRTUNG 27.08.2026
+/* V190 – SYNC-HÄRTUNG 27.08.2026
    - Familienfragen ID-weise revisionssicher
    - offline keine veralteten Firestore-Gesamtschreibvorgänge
-   - reconnect: Server lesen -> mergen -> erst dann speichern
+   - reconnect: Server lesen -> mergen -> sofort bestätigt zurückschreiben
    - Materialgeld V184 unverändert
 */
 
@@ -724,8 +724,17 @@ async function reconcileCloudBeforeReconnectSave() {
     const ref = firebase.firestore().collection("families").doc("shared");
     const snap = await ref.get({ source: "server" });
     if (snap.exists) applyCloudData(snap.data() || {});
+
+    /* V190 – den eben zusammengeführten Offline+Cloud-Stand sofort und
+       nachweisbar veröffentlichen. Nicht nur über den 300-ms-Debounce gehen:
+       sonst kann der Reconnect lokal korrekt aussehen, ohne dass das andere
+       Gerät den Merge sicher zurückbekommt. */
     cloudReady = true;
-    scheduleCloudSave();
+    const payload = cloudPayload();
+    payload.syncToken = `${Date.now()}-${getDeviceId()}-${Math.random().toString(36).slice(2,8)}`;
+    payload.updatedAt = firebase.firestore.FieldValue.serverTimestamp();
+    await ref.set(payload, { merge: true });
+    updateSyncStatus("synced");
   } catch (err) {
     console.warn("V189 Reconnect-Merge fehlgeschlagen:", err);
     cloudReady = false;
