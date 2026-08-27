@@ -1,3 +1,24 @@
+/* =========================================================
+   V191 – SYNC-HÄRTUNG · 27.08.2026
+   OFFLINE-RÜCKSYNC ROBUST
+
+   Ursache des V190-Restfehlers:
+   - Tablet konnte nach Reconnect Cloud + Offline-Daten lokal korrekt mergen.
+   - Es gab aber kein dauerhaftes Merkmal, dass noch eine lokale Offline-
+     Änderung zurück in die Cloud veröffentlicht werden musste.
+   - Damit konnte Tablet alles anzeigen, während der PC den Offline-Eintrag
+     nie erhielt.
+
+   Fix:
+   - echte Offline-/pre-sync-Änderungen bekommen einen persistenten Dirty-Flag
+   - erfolgreicher Cloud-Save löscht diesen Flag
+   - nach JEDEM echten Firestore-Snapshot wird nach dem Merge geprüft:
+     gibt es noch Offline-Änderungen -> vereinigten Stand sofort publizieren
+   - funktioniert damit auch dann, wenn das Browser-online-Event ausbleibt
+   - Familienfragen-ID-Merge aus V189 bleibt erhalten
+   - Materialgeld V184 bleibt unverändert
+   ========================================================= */
+
 /* V190 – SYNC-HÄRTUNG 27.08.2026
    - Familienfragen ID-weise revisionssicher
    - offline keine veralteten Firestore-Gesamtschreibvorgänge
@@ -496,6 +517,50 @@ let cloudApplying = false;
 let cloudSaveTimer = null;
 let cloudUnsubscribe = null;
 
+const CLOUD_DIRTY_KEY = "balanceProd.cloudDirty";
+let cloudDirtyPublishRunning = false;
+
+function markCloudDirty(){
+  try { localStorage.setItem(CLOUD_DIRTY_KEY, "1"); } catch (_) {}
+}
+
+function hasCloudDirty(){
+  try { return localStorage.getItem(CLOUD_DIRTY_KEY) === "1"; }
+  catch (_) { return false; }
+}
+
+function clearCloudDirty(){
+  try { localStorage.removeItem(CLOUD_DIRTY_KEY); } catch (_) {}
+}
+
+async function publishMergedDirtyStateNow(){
+  if (
+    cloudDirtyPublishRunning ||
+    !hasCloudDirty() ||
+    !navigator.onLine ||
+    !firebase.auth().currentUser
+  ) return false;
+
+  cloudDirtyPublishRunning = true;
+  try {
+    const ref = firebase.firestore().collection("families").doc("shared");
+    const payload = cloudPayload();
+    payload.syncToken = `${Date.now()}-${getDeviceId()}-${Math.random().toString(36).slice(2,8)}`;
+    payload.updatedAt = firebase.firestore.FieldValue.serverTimestamp();
+
+    await ref.set(payload, { merge: true });
+    clearCloudDirty();
+    updateSyncStatus("synced");
+    return true;
+  } catch (err) {
+    console.warn("V191 zusammengeführter Offline-Stand konnte nicht veröffentlicht werden:", err);
+    updateSyncStatus(navigator.onLine ? "error" : "offline");
+    return false;
+  } finally {
+    cloudDirtyPublishRunning = false;
+  }
+}
+
 /* CODE-AUDIT: frühere, überschriebene Definition von saveLocal entfernt. */
 /* CODE-AUDIT: frühere, überschriebene Definition von cloudPayload entfernt. */
 // ===== EINKAUF – eigener Firestore-Bereich =====
@@ -725,16 +790,15 @@ async function reconcileCloudBeforeReconnectSave() {
     const snap = await ref.get({ source: "server" });
     if (snap.exists) applyCloudData(snap.data() || {});
 
-    /* V190 – den eben zusammengeführten Offline+Cloud-Stand sofort und
-       nachweisbar veröffentlichen. Nicht nur über den 300-ms-Debounce gehen:
-       sonst kann der Reconnect lokal korrekt aussehen, ohne dass das andere
-       Gerät den Merge sicher zurückbekommt. */
     cloudReady = true;
-    const payload = cloudPayload();
-    payload.syncToken = `${Date.now()}-${getDeviceId()}-${Math.random().toString(36).slice(2,8)}`;
-    payload.updatedAt = firebase.firestore.FieldValue.serverTimestamp();
-    await ref.set(payload, { merge: true });
-    updateSyncStatus("synced");
+
+    /* V191: Nur wenn dieses Gerät tatsächlich ungesendete lokale Änderungen
+       besitzt, den NACH dem Server-Merge entstandenen Gesamtstand veröffentlichen. */
+    if (hasCloudDirty()) {
+      await publishMergedDirtyStateNow();
+    } else {
+      updateSyncStatus("synced");
+    }
   } catch (err) {
     console.warn("V189 Reconnect-Merge fehlgeschlagen:", err);
     cloudReady = false;
@@ -771,6 +835,7 @@ function scheduleCloudSave() {
       payload.syncToken = syncToken;
       payload.updatedAt = firebase.firestore.FieldValue.serverTimestamp();
       await firebase.firestore().collection("families").doc("shared").set(payload, { merge: true });
+      clearCloudDirty();
       updateSyncStatus("synced");
     } catch (err) {
       console.error("Firestore save failed:", err);
@@ -856,6 +921,15 @@ refreshTodoSyncFingerprints();
 function save() {
   touchChangedTodosBeforeSave();
   saveLocal();
+
+  /* V191: Jede echte lokale Änderung, die offline oder vor fertigem
+     Cloud-Abgleich entsteht, wird dauerhaft als "noch zu veröffentlichen"
+     markiert. So geht sie beim späteren Reconnect nicht nur lokal in den
+     Merge ein, sondern wird anschließend wieder in die Cloud zurückgeschrieben. */
+  if (!navigator.onLine || !cloudReady || cloudApplying) {
+    markCloudDirty();
+  }
+
   scheduleCloudSave();
 }
 
@@ -11124,6 +11198,19 @@ function startCloudSync() {
     updateSyncStatus(navigator.onLine ? "synced" : "offline");
     renderDeviceAcks(cloudData);
     acknowledgeCloudSnapshot(cloudData, snap.metadata);
+
+    /* V191 – entscheidender Reconnect-Rückweg:
+       Firestore kann nach WLAN-Rückkehr wieder Snapshots liefern, auch wenn
+       das Browser-"online"-Event nicht zuverlässig unseren Reconnect-Handler
+       ausgelöst hat. Wurde offline lokal geändert, ist der Snapshot jetzt
+       bereits in state gemergt. Genau diesen vereinigten Stand veröffentlichen. */
+    if (
+      hasCloudDirty() &&
+      navigator.onLine &&
+      !snap.metadata?.hasPendingWrites
+    ) {
+      publishMergedDirtyStateNow();
+    }
 
     if (firstSnapshot) {
       firstSnapshot = false;
