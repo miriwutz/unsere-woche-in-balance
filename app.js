@@ -1,4 +1,12 @@
 /* =========================================================
+   V194 – SCHUL-TO-DOS + DRUCKLISTE · 01.09.2026
+   - Schul-To-dos: nach 10 Sekunden aus Hauptliste ins Archiv
+   - Druckaufträge: nach 10 Sekunden vollständig erledigt/entfernt
+   - beide zeigen beim Abhaken die To-do-Motivationsmeldung
+   - basiert auf dem aktuell verwendeten V193; Familienfragen-Sync NICHT umgebaut
+   ========================================================= */
+
+/* =========================================================
    V193 – BEREICHSSPEZIFISCHE SYNC-HÄRTUNG · 27.08.2026
    - V192 Mobile-Reconnect bleibt erhalten
    - Familienfragen-ID-Merge bleibt erhalten
@@ -7386,14 +7394,14 @@ function renderSchoolWorkTodos() {
    const list = document.querySelector("#schoolWorkTodoList");
   if (!list) return;
 
-const oneMinuteAgo = Date.now() - 60000;
+const schoolTodoDoneCutoff = Date.now() - 10000;
 
 const todos = [...state.workroom.todos]
   .filter(t => {
     if (!t.done) return true;
     if (!t.completedAt) return true;
 
-    return t.completedAt > oneMinuteAgo;
+    return t.completedAt > schoolTodoDoneCutoff;
   })
   
   .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
@@ -7409,7 +7417,7 @@ if (archive) {
     .filter(t =>
       t.done &&
       t.completedAt &&
-      t.completedAt <= oneMinuteAgo
+      t.completedAt <= schoolTodoDoneCutoff
     )
     .sort((a, b) => (b.completedAt ?? 0) - (a.completedAt ?? 0));
 
@@ -7583,9 +7591,10 @@ document.querySelectorAll(".workroom-todo-check").forEach(box => {
     save();
     renderSchoolWorkTodos();
     if (item.done) {
+      showMotivation(todoMotivationalMessage());
   setTimeout(() => {
     renderSchoolWorkTodos();
-  }, 61000);
+  }, 10100);
 }
   });
 });
@@ -7614,9 +7623,10 @@ if (window.matchMedia("(max-width: 700px)").matches) {
       renderSchoolWorkTodos();
 
       if (item.done) {
+        showMotivation(todoMotivationalMessage());
         setTimeout(() => {
           renderSchoolWorkTodos();
-        }, 61000);
+        }, 10100);
       }
     };
 
@@ -8180,7 +8190,7 @@ function renderSchoolPrints() {
 
   state.workroom.prints = state.workroom.prints.filter(p => {
     if (!p.done || !p.completedAt) return true;
-    return now - p.completedAt < 60000;
+    return now - p.completedAt < 10000;
   });
 
   const prints = [...state.workroom.prints]
@@ -8278,6 +8288,7 @@ function renderSchoolPrints() {
       renderSchoolPrints();
 
       if (item.done) {
+        showMotivation(todoMotivationalMessage());
         setTimeout(() => {
           const currentItem = state.workroom.prints.find(p => p.id === id);
           if (!currentItem || !currentItem.done) return;
@@ -8290,7 +8301,7 @@ function renderSchoolPrints() {
           save();
           persistWorkroomListDeletionImmediately("prints", id);
           renderSchoolPrints();
-        }, 60000);
+        }, 10000);
       }
     });
   });
