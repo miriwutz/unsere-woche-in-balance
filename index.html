@@ -5,6 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#f6f1ee">
   <title>Unsere Woche in Balance</title>
+  <link rel="icon" href="favicon.ico" sizes="any">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <link rel="manifest" href="manifest.webmanifest">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -2629,7 +2632,7 @@
       await loadScript("https://cdn.jsdelivr.net/npm/sortablejs@1.15.6/Sortable.min.js");
     }
 
-    await loadScript("./app.js");
+    await loadScript("./app.js?v=196");
   })().catch(err => {
     console.error("App-Start fehlgeschlagen:", err);
   });
