@@ -1,4 +1,12 @@
 /* =========================================================
+   V196 – TERMINGRUPPIERUNG + APP-ICON · 01.09.2026
+   - Termine einer einzelnen Person am selben Tag sicher nach Personen-ID gruppiert
+   - Uhrzeit chronologisch, Termine ohne Uhrzeit im Rahmen ganz unten
+   - Cache-Busting über index.html, damit Mobilgeräte wirklich die neue app.js laden
+   - Familienfragen-/Materialgeld-/Einkaufs-Sync unverändert
+   ========================================================= */
+
+/* =========================================================
    V195 – TERMINE PRO PERSON GRUPPIERT · 01.09.2026
    - mehrere eintägige Termine derselben einzelnen Person am selben Tag
      stehen gemeinsam in EINER Personen-Umrandung
@@ -3005,11 +3013,11 @@ const otherSingleEvents = [];
 
 singleDayEvents.forEach(t => {
   const groupKey = todoGroupKey(t);
-  const members = Array.isArray(t.family)
-    ? [...new Set(t.family.filter(member => state.familySettings?.[member]))]
-    : [];
 
-  if (members.length === 1 && groupKey !== "general" && !isSharedGroupKey(groupKey)) {
+  // V196: Die bereits normalisierte Gruppen-ID ist die verlässliche Quelle.
+  // a/b/c/d = genau eine Person. Damit werden mehrere Termine derselben
+  // Person am selben Tag garantiert in EINEM gemeinsamen Rahmen gesammelt.
+  if (["a","b","c","d"].includes(groupKey)) {
     if (!singlePersonEventGroups.has(groupKey)) singlePersonEventGroups.set(groupKey, []);
     singlePersonEventGroups.get(groupKey).push(t);
   } else {
