@@ -1,4 +1,15 @@
 /* =========================================================
+   V195 – TERMINE PRO PERSON GRUPPIERT · 01.09.2026
+   - mehrere eintägige Termine derselben einzelnen Person am selben Tag
+     stehen gemeinsam in EINER Personen-Umrandung
+   - innerhalb des Rahmens chronologisch nach Uhrzeit
+   - Termine ohne Uhrzeit stehen innerhalb dieses Rahmens ganz unten
+   - gemeinsame Termine mehrerer Personen bleiben separat dargestellt
+   - vorhandene einstellbare Personenfarbe und Rahmenstärke werden weiterverwendet
+   - basiert auf V194 SCHULTODO_DRUCK_10SEK
+   ========================================================= */
+
+/* =========================================================
    V194 – SCHUL-TO-DOS + DRUCKLISTE · 01.09.2026
    - Schul-To-dos: nach 10 Sekunden aus Hauptliste ins Archiv
    - Druckaufträge: nach 10 Sekunden vollständig erledigt/entfernt
@@ -2814,7 +2825,7 @@ function renderWeek() {
 
 const weekplanHtml=weekplanTodos.length?`<div class="weekplan-quiet-list">${weekplanTodos.map(t=>`<button type="button" class="weekplan-quiet-item" data-id="${t.id}" data-date="${dateKey(date)}">${escapeHtml(t.text)}</button>`).join("")}</div>`:"";
 
-const renderEventCard = (t) => {
+const renderEventRow = (t) => {
   const eventCategory = t.eventCategory || "normal";
   const eventMeta = {
     normal:      { icon: "✦", label: "" },
@@ -2836,30 +2847,41 @@ const renderEventCard = (t) => {
     displayTime = t.time || "";
   } else if (currentKey === endKey) {
     displayTime = t.endTime ? "bis " + t.endTime : "";
-  } else {
-    displayTime = "";
   }
 
+  return `<div class="event-mini event-display grouped-todo-row ${t.superImportant ? "super-important" : ""}">
+    <span class="event-symbol">${eventMeta.icon}</span>
+    <span class="event-copy">
+      ${displayTime ? `<strong class="event-time">${escapeHtml(displayTime)}</strong>` : ""}
+      ${eventMeta.label ? `<span class="event-kind">${eventMeta.label}</span>` : ""}
+      ${t.superImportant ? `<span class="tiny-star">★</span>` : ""}
+      <span class="event-title">${escapeHtml(t.text)}</span>
+    </span>
+  </div>`;
+};
+
+const renderSinglePersonEventGroup = (groupKey, groupItems) => `
+  <div class="person-todo-group grouped-family-block event-person-block ${groupAccentClass(groupKey)}"
+       style="--group-border:${familyColor(groupKey) || "#c8c0ba"}">
+    <div class="person-todo-group-title">
+      <span>${todoGroupLabel(groupKey)}</span>
+      ${groupItems.some(isNewEntry) ? `<span class="new-entry-badge group-new-badge">NEU</span>` : ""}
+    </div>
+    ${groupItems.map(renderEventRow).join("")}
+  </div>`;
+
+const renderOtherEventCard = (t) => {
   const groupKey = todoGroupKey(t);
-  return `
-    <div class="person-todo-group grouped-family-block event-person-block ${groupAccentClass(groupKey)}"
-         style="${isSharedGroupKey(groupKey)
-           ? `--group-border:${sharedGroupGradient([t])}`
-           : `--group-border:${groupKey === "general" ? generalColor() : (familyColor(groupKey) || "#c8c0ba")}`}">
-      <div class="person-todo-group-title">
-        <span>${familySelectionLabel(t)}</span>
-        ${isNewEntry(t) ? `<span class="new-entry-badge group-new-badge">NEU</span>` : ""}
-      </div>
-      <div class="event-mini event-display grouped-todo-row ${t.superImportant ? "super-important" : ""}">
-        <span class="event-symbol">${eventMeta.icon}</span>
-        <span class="event-copy">
-          ${displayTime ? `<strong class="event-time">${escapeHtml(displayTime)}</strong>` : ""}
-          ${eventMeta.label ? `<span class="event-kind">${eventMeta.label}</span>` : ""}
-          ${t.superImportant ? `<span class="tiny-star">★</span>` : ""}
-          <span class="event-title">${escapeHtml(t.text)}</span>
-        </span>
-      </div>
-    </div>`;
+  return `<div class="person-todo-group grouped-family-block event-person-block ${groupAccentClass(groupKey)}"
+       style="${isSharedGroupKey(groupKey)
+         ? `--group-border:${sharedGroupGradient([t])}`
+         : `--group-border:${groupKey === "general" ? generalColor() : (familyColor(groupKey) || "#c8c0ba")}`}">
+    <div class="person-todo-group-title">
+      <span>${familySelectionLabel(t)}</span>
+      ${isNewEntry(t) ? `<span class="new-entry-badge group-new-badge">NEU</span>` : ""}
+    </div>
+    ${renderEventRow(t)}
+  </div>`;
 };
 
 const quietBottomCategories = new Set(["birthday","nameday","anniversary"]);
@@ -2978,9 +3000,53 @@ const multiDayLaneHtml = multiDayTrackCount
     </div>`
   : "";
 
-const singleEventHtml = singleDayEvents
-  .map(t => `<div class="single-event-lane">${renderEventCard(t)}</div>`)
-  .join("");
+const singlePersonEventGroups = new Map();
+const otherSingleEvents = [];
+
+singleDayEvents.forEach(t => {
+  const groupKey = todoGroupKey(t);
+  const members = Array.isArray(t.family)
+    ? [...new Set(t.family.filter(member => state.familySettings?.[member]))]
+    : [];
+
+  if (members.length === 1 && groupKey !== "general" && !isSharedGroupKey(groupKey)) {
+    if (!singlePersonEventGroups.has(groupKey)) singlePersonEventGroups.set(groupKey, []);
+    singlePersonEventGroups.get(groupKey).push(t);
+  } else {
+    otherSingleEvents.push(t);
+  }
+});
+
+singlePersonEventGroups.forEach(items => {
+  items.sort((a,b) =>
+    Number(!a.time) - Number(!b.time) ||
+    String(a.time || "").localeCompare(String(b.time || "")) ||
+    Number(a.createdAt || 0) - Number(b.createdAt || 0)
+  );
+});
+
+const groupedSingleEntries = [
+  ...[...singlePersonEventGroups.entries()].map(([groupKey, items]) => ({
+    kind: "person",
+    groupKey,
+    items,
+    firstTime: items.find(x => x.time)?.time || "99:99"
+  })),
+  ...otherSingleEvents.map(item => ({
+    kind: "other",
+    item,
+    firstTime: item.time || "99:99"
+  }))
+].sort((a,b) =>
+  String(a.firstTime).localeCompare(String(b.firstTime)) ||
+  String(a.groupKey || a.item?.id || "").localeCompare(String(b.groupKey || b.item?.id || ""))
+);
+
+const singleEventHtml = groupedSingleEntries.map(entry =>
+  entry.kind === "person"
+    ? `<div class="single-event-lane">${renderSinglePersonEventGroup(entry.groupKey, entry.items)}</div>`
+    : `<div class="single-event-lane">${renderOtherEventCard(entry.item)}</div>`
+).join("");
 
 const eventHtml = (multiDayLaneHtml || singleEventHtml) ? `
   <div class="day-events">
