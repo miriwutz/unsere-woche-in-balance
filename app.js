@@ -4605,72 +4605,11 @@ document.querySelectorAll(".add-tt-row").forEach(btn => {
     const c = timetablePerson(id);
     const t = ensureManualTimetable(c);
 
-    // Aktuell sichtbare Uhrzeiten zuerst sichern
-    document
-      .querySelectorAll(`.tt-time-text[data-child="${id}"]`)
-      .forEach(x => {
-        const row = +x.dataset.row;
-        const part = x.dataset.part;
-
-        if (!t.times[row]) {
-          t.times[row] = { from: "", to: "" };
-        }
-
-        t.times[row][part] = x.value.trim();
-      });
-
-    // Aktuell eingetragene Fächer zuerst sichern
-    document
-      .querySelectorAll(`.tt-subject-cell[data-child="${id}"]`)
-      .forEach(select => {
-        const day = select.dataset.day;
-        const row = +select.dataset.row;
-
-        if (!Array.isArray(t.subjects[day])) {
-          t.subjects[day] = [];
-        }
-
-        let value = select.value;
-
-        if (value === "Anderes") {
-          const customInput =
-            select.closest("td")?.querySelector(".tt-custom-subject");
-
-          value = (customInput?.value || "").trim();
-        }
-
-        t.subjects[day][row] = value;
-      });
-
-    // "Zu Hause bis" ebenfalls sichern
-    document
-      .querySelectorAll(`.tt-home-input[data-child="${id}"]`)
-      .forEach(x => {
-        t.homeBy[x.dataset.day] = x.value.trim();
-      });
-
-    // Erst JETZT eine neue Stunde hinzufügen
     const last = t.times[t.times.length - 1];
-
     t.times.push({
       from: last ? last.to : "",
       to: ""
     });
-
-    manualTimetableDayKeys.forEach(day => {
-      if (!Array.isArray(t.subjects[day])) {
-        t.subjects[day] = [];
-      }
-
-      t.subjects[day].push("");
-    });
-
-    t.updatedAt = Date.now();
-
-    save();
-    renderTTMatrix(id);
-  });
-});
 
     manualTimetableDayKeys.forEach(day => {
       t.subjects[day].push("");
