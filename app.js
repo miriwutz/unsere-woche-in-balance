@@ -1,4 +1,16 @@
 /* =========================================================
+   V198 – STUNDENPLAN FACH-SYNC ZELLWEISE · 06.09.2026
+   - korrigiert V197: Stundenplan wird nicht mehr als ein einziger
+     Last-Write-Wins-Block behandelt
+   - Fächer werden pro Tag + Stunde mit eigenem updatedAt geführt
+   - neue Fächer von PC oder Handy werden dadurch unabhängig übernommen
+   - alte Daten ohne Zell-Zeitstempel: nichtleere Werte werden ergänzt
+   - Uhrzeiten und „Zu Hause bis“ erhalten ebenfalls eigene Zeitstempel
+   - Darstellung bleibt unverändert
+   - Familienfragen, Einkauf und Materialgeld unverändert
+   ========================================================= */
+
+/* =========================================================
    V197 – STUNDENPLAN-SYNC MOBILE KORRIGIERT · 06.09.2026
    - behebt den Geräte-Konflikt bei timetableByYear
    - alte Pläne ohne Zeitstempel: bei unterschiedlicher Stundenanzahl
@@ -4443,33 +4455,48 @@ function saveTTMatrix(id) {
   const c = timetablePerson(id);
   const t = ensureManualTimetable(c);
 
+  t.timeUpdatedAt = t.timeUpdatedAt || {};
   document
     .querySelectorAll(`.tt-time-text[data-child="${id}"]`)
     .forEach(x => {
-      t.times[+x.dataset.row][x.dataset.part] = x.value.trim();
+      const row = +x.dataset.row;
+      const part = x.dataset.part;
+      t.timeUpdatedAt[`${row}.${part}`] = t.timeUpdatedAt[`${row}.${part}`] || 0;
+      const value = x.value.trim();
+      const oldValue = t.times[row][part] || "";
+      t.times[row][part] = value;
+      if (value !== oldValue) t.timeUpdatedAt[`${row}.${part}`] = Date.now();
     });
 
+  t.subjectUpdatedAt = t.subjectUpdatedAt || {};
   document
     .querySelectorAll(`.tt-subject-cell[data-child="${id}"]`)
     .forEach(select => {
       const day = select.dataset.day;
       const row = +select.dataset.row;
+      t.subjectUpdatedAt[day] = t.subjectUpdatedAt[day] || [];
 
+      let value = select.value;
       if (select.value === "Anderes") {
         const customInput =
           select.closest("td")?.querySelector(".tt-custom-subject");
-
-        t.subjects[day][row] =
-          (customInput?.value || "").trim();
-      } else {
-        t.subjects[day][row] = select.value;
+        value = (customInput?.value || "").trim();
       }
+
+      const oldValue = t.subjects[day][row] || "";
+      t.subjects[day][row] = value;
+      if (value !== oldValue) t.subjectUpdatedAt[day][row] = Date.now();
     });
 
+  t.homeUpdatedAt = t.homeUpdatedAt || {};
   document
     .querySelectorAll(`.tt-home-input[data-child="${id}"]`)
     .forEach(x => {
-      t.homeBy[x.dataset.day] = x.value.trim();
+      const day = x.dataset.day;
+      const value = x.value.trim();
+      const oldValue = t.homeBy[day] || "";
+      t.homeBy[day] = value;
+      if (value !== oldValue) t.homeUpdatedAt[day] = Date.now();
     });
 
   t.updatedAt = Date.now();
@@ -14282,33 +14309,82 @@ function mergeTimetableByYear(localValue, cloudValue) {
   const result = {};
   const years = new Set([...Object.keys(local), ...Object.keys(remote)]);
 
+  const ts = (obj, group, key) => Number(obj?.[group]?.[key] || 0) || 0;
+  const choose = (lv, rv, lt, rt) => {
+    if (lt || rt) return rt > lt ? rv : lv;
+    if (!lv && rv) return rv;
+    return lv;
+  };
+
   years.forEach(year => {
     const l = local[year], c = remote[year];
-    if (!l) { result[year] = c; return; }
-    if (!c) { result[year] = l; return; }
+    if (!l) { result[year] = structuredClone(c); return; }
+    if (!c) { result[year] = structuredClone(l); return; }
 
-    const lTs = Number(l.updatedAt || 0);
-    const cTs = Number(c.updatedAt || 0);
+    const merged = structuredClone(l);
+    const maxRows = Math.max(
+      Array.isArray(l.times) ? l.times.length : 0,
+      Array.isArray(c.times) ? c.times.length : 0
+    );
 
-    if (lTs || cTs) {
-      result[year] = cTs > lTs ? c : l;
-      return;
+    merged.times = [];
+    for (let i = 0; i < maxRows; i++) {
+      const lt = Array.isArray(l.times) ? (l.times[i] || {}) : {};
+      const rt = Array.isArray(c.times) ? (c.times[i] || {}) : {};
+      const row = {
+        from: choose(lt.from || "", rt.from || "", ts(l,"timeUpdatedAt",`${i}.from`), ts(c,"timeUpdatedAt",`${i}.from`)),
+        to: choose(lt.to || "", rt.to || "", ts(l,"timeUpdatedAt",`${i}.to`), ts(c,"timeUpdatedAt",`${i}.to`))
+      };
+      // Für alte Pläne ohne Zell-Zeitstempel: fehlende Zeilen werden ergänzt,
+      // vorhandene lokale Werte bleiben erhalten.
+      if (!row.from && rt.from) row.from = rt.from;
+      if (!row.to && rt.to) row.to = rt.to;
+      merged.times.push(row);
     }
 
-    const lLen = Array.isArray(l.times) ? l.times.length : 0;
-    const cLen = Array.isArray(c.times) ? c.times.length : 0;
+    const days = new Set([
+      ...Object.keys(l.subjects || {}),
+      ...Object.keys(c.subjects || {})
+    ]);
+    merged.subjects = {};
+    merged.subjectUpdatedAt = {};
 
-    if (cLen !== lLen) {
-      result[year] = cLen > lLen ? c : l;
-      return;
-    }
+    days.forEach(day => {
+      const la = Array.isArray(l.subjects?.[day]) ? l.subjects[day] : [];
+      const ca = Array.isArray(c.subjects?.[day]) ? c.subjects[day] : [];
+      const n = Math.max(la.length, ca.length, maxRows);
+      merged.subjects[day] = [];
+      merged.subjectUpdatedAt[day] = [];
 
-    result[year] = l;
+      for (let i = 0; i < n; i++) {
+        const lv = la[i] || "";
+        const rv = ca[i] || "";
+        const lt = Number(l.subjectUpdatedAt?.[day]?.[i] || 0) || 0;
+        const rt = Number(c.subjectUpdatedAt?.[day]?.[i] || 0) || 0;
+        merged.subjects[day][i] = choose(lv, rv, lt, rt);
+        merged.subjectUpdatedAt[day][i] = Math.max(lt, rt);
+      }
+    });
+
+    const homeDays = new Set([
+      ...Object.keys(l.homeBy || {}),
+      ...Object.keys(c.homeBy || {})
+    ]);
+    merged.homeBy = {};
+    merged.homeUpdatedAt = {};
+    homeDays.forEach(day => {
+      const lt = Number(l.homeUpdatedAt?.[day] || 0) || 0;
+      const rt = Number(c.homeUpdatedAt?.[day] || 0) || 0;
+      merged.homeBy[day] = choose(l.homeBy?.[day] || "", c.homeBy?.[day] || "", lt, rt);
+      merged.homeUpdatedAt[day] = Math.max(lt, rt);
+    });
+
+    merged.updatedAt = Math.max(Number(l.updatedAt || 0), Number(c.updatedAt || 0));
+    result[year] = merged;
   });
 
   return result;
 }
-
 function mergeSchool(localSchool, cloudSchool) {
   if (!localSchool?.children) return cloudSchool?.children ? cloudSchool : localSchool;
   if (!cloudSchool?.children) return localSchool;
