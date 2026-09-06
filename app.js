@@ -1,4 +1,14 @@
 /* =========================================================
+   V197 – STUNDENPLAN-SYNC MOBILE KORRIGIERT · 06.09.2026
+   - behebt den Geräte-Konflikt bei timetableByYear
+   - alte Pläne ohne Zeitstempel: bei unterschiedlicher Stundenanzahl
+     gewinnt der vollständigere Stand
+   - neue Änderungen erhalten updatedAt
+   - Darstellung bleibt unverändert
+   - Familienfragen, Einkauf und Materialgeld unverändert
+   ========================================================= */
+
+/* =========================================================
    V196 – TERMINGRUPPIERUNG + APP-ICON · 01.09.2026
    - Termine einer einzelnen Person am selben Tag sicher nach Personen-ID gruppiert
    - Uhrzeit chronologisch, Termine ohne Uhrzeit im Rahmen ganz unten
@@ -4462,6 +4472,8 @@ function saveTTMatrix(id) {
       t.homeBy[x.dataset.day] = x.value.trim();
     });
 
+  t.updatedAt = Date.now();
+
   save();
   renderWeek();
   closeManualTimetableEditor(id);
@@ -4576,6 +4588,8 @@ document.querySelectorAll(".add-tt-row").forEach(btn => {
       t.subjects[day].push("");
     });
 
+    t.updatedAt = Date.now();
+
     save();
     renderTTMatrix(id);
   });
@@ -4594,6 +4608,8 @@ document.querySelectorAll(".remove-tt-row").forEach(btn => {
     manualTimetableDayKeys.forEach(day => {
       t.subjects[day].pop();
     });
+
+    t.updatedAt = Date.now();
 
     save();
     renderTTMatrix(id);
@@ -14260,6 +14276,39 @@ function generatedNoeSchoolYear(startYear) {
 
 /* CODE-AUDIT: frühere, überschriebene Definition von makeLocalSafetyBackup entfernt. */
 
+function mergeTimetableByYear(localValue, cloudValue) {
+  const local = localValue && typeof localValue === "object" ? localValue : {};
+  const remote = cloudValue && typeof cloudValue === "object" ? cloudValue : {};
+  const result = {};
+  const years = new Set([...Object.keys(local), ...Object.keys(remote)]);
+
+  years.forEach(year => {
+    const l = local[year], c = remote[year];
+    if (!l) { result[year] = c; return; }
+    if (!c) { result[year] = l; return; }
+
+    const lTs = Number(l.updatedAt || 0);
+    const cTs = Number(c.updatedAt || 0);
+
+    if (lTs || cTs) {
+      result[year] = cTs > lTs ? c : l;
+      return;
+    }
+
+    const lLen = Array.isArray(l.times) ? l.times.length : 0;
+    const cLen = Array.isArray(c.times) ? c.times.length : 0;
+
+    if (cLen !== lLen) {
+      result[year] = cLen > lLen ? c : l;
+      return;
+    }
+
+    result[year] = l;
+  });
+
+  return result;
+}
+
 function mergeSchool(localSchool, cloudSchool) {
   if (!localSchool?.children) return cloudSchool?.children ? cloudSchool : localSchool;
   if (!cloudSchool?.children) return localSchool;
@@ -14293,10 +14342,10 @@ function mergeSchool(localSchool, cloudSchool) {
       interestLinks: mergeByIdPreferNewer(l.interestLinks, c.interestLinks),
       timetableUrl: l.timetableUrl || c.timetableUrl || "",
       manualTimetable: l.manualTimetable || c.manualTimetable || null,
-      timetableByYear: {
-        ...(c.timetableByYear || {}),
-        ...(l.timetableByYear || {})
-      }
+      timetableByYear: mergeTimetableByYear(
+        l.timetableByYear,
+        c.timetableByYear
+      )
     };
   });
 
