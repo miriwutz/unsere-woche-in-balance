@@ -14436,12 +14436,36 @@ function mergeTimetableByYear(localValue, cloudValue) {
   return result;
 }
 function mergeSchool(localSchool, cloudSchool) {
-  if (!localSchool?.children) return cloudSchool?.children ? cloudSchool : localSchool;
-  if (!cloudSchool?.children) return localSchool;
+  if (!localSchool?.children) {
+    return cloudSchool?.children ? cloudSchool : localSchool;
+  }
+
+  if (!cloudSchool?.children) {
+    return localSchool;
+  }
 
   const merged = structuredClone(localSchool);
 
-  ["1","2"].forEach(id => {
+  // Mama: eigener Stundenplan außerhalb von children
+  merged.mama = {
+    ...(cloudSchool.mama || {}),
+    ...(localSchool.mama || {}),
+    timetableUrl:
+      localSchool.mama?.timetableUrl ||
+      cloudSchool.mama?.timetableUrl ||
+      "",
+    manualTimetable:
+      localSchool.mama?.manualTimetable ||
+      cloudSchool.mama?.manualTimetable ||
+      null,
+    timetableByYear: mergeTimetableByYear(
+      localSchool.mama?.timetableByYear,
+      cloudSchool.mama?.timetableByYear
+    )
+  };
+
+  // Lou + Fina
+  ["1", "2"].forEach(id => {
     const l = localSchool.children[id] || {};
     const c = cloudSchool.children[id] || {};
 
@@ -14458,16 +14482,36 @@ function mergeSchool(localSchool, cloudSchool) {
     merged.children[id] = {
       ...c,
       ...l,
-      name: l.name || c.name || (id === "1" ? "Lou" : "Fina"),
+
+      name:
+        l.name ||
+        c.name ||
+        (id === "1" ? "Lou" : "Fina"),
+
       deletedTaskIds,
       deletedLinkIds,
+
       tasks: mergeByIdPreferNewer(l.tasks, c.tasks)
         .filter(task => !deletedTaskIds.includes(task.id)),
+
       links: mergeByIdPreferNewer(l.links, c.links)
         .filter(link => !deletedLinkIds.includes(link.id)),
-      interestLinks: mergeByIdPreferNewer(l.interestLinks, c.interestLinks),
-      timetableUrl: l.timetableUrl || c.timetableUrl || "",
-      manualTimetable: l.manualTimetable || c.manualTimetable || null,
+
+      interestLinks:
+        mergeByIdPreferNewer(l.interestLinks, c.interestLinks),
+
+      timetableUrl:
+        l.timetableUrl ||
+        c.timetableUrl ||
+        "",
+
+      manualTimetable:
+        l.manualTimetable ||
+        c.manualTimetable ||
+        null,
+
+      // Wichtig: Stundenpläne werden zeilenweise gemergt.
+      // Die größere Anzahl an Stunden bleibt erhalten.
       timetableByYear: mergeTimetableByYear(
         l.timetableByYear,
         c.timetableByYear
@@ -14477,7 +14521,6 @@ function mergeSchool(localSchool, cloudSchool) {
 
   return merged;
 }
-
 
 function nonEmptyWorkroomScore(w) {
   if (!w || typeof w !== "object") return 0;
