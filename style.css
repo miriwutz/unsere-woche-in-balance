@@ -23867,34 +23867,42 @@ button.day-meal-list-item:hover,a.day-meal-list-item:hover{background:rgba(164,1
     box-sizing:border-box !important;
   }
 
-  /* Alle fünf Tage bleiben vollständig erreichbar.
-     Nicht auf Handybreite zusammenquetschen – lieber sauber
-     innerhalb der Tabelle seitlich wischen. */
+  /* -------------------------------------------------------
+     3a. Stundenplan am Handy:
+         Zeitspalte schmaler, aber Start- und Endzeit
+         vollständig lesbar. Die fünf Tage bleiben
+         horizontal scrollbar.
+     ------------------------------------------------------- */
   #manualTimetableDisplay .tt-view-table{
     width:max-content !important;
-    min-width:690px !important;
+    min-width:620px !important;
     max-width:none !important;
     table-layout:fixed !important;
-    border-spacing:4px 5px !important;
+    border-spacing:3px 5px !important;
     margin:0 !important;
   }
 
   #manualTimetableDisplay .tt-view-table th,
   #manualTimetableDisplay .tt-view-table td{
-    width:104px !important;
-    min-width:104px !important;
-    max-width:104px !important;
+    width:92px !important;
+    min-width:92px !important;
+    max-width:92px !important;
     height:40px !important;
-    padding:5px 6px !important;
-    font-size:.78rem !important;
+    padding:5px 4px !important;
+    font-size:.76rem !important;
     box-sizing:border-box !important;
   }
 
+  /* Zeitspalte: deutlich schmaler als die Fächer,
+     aber breit genug für z.B. 07:45–08:35 */
   #manualTimetableDisplay .tt-view-table th:first-child,
   #manualTimetableDisplay .tt-view-table td:first-child{
-    width:70px !important;
-    min-width:70px !important;
-    max-width:70px !important;
+    width:62px !important;
+    min-width:62px !important;
+    max-width:62px !important;
+    padding-left:2px !important;
+    padding-right:2px !important;
+    white-space:nowrap !important;
   }
 
   /* Eingabefelder dürfen ihre Zelle nicht verbreitern */
