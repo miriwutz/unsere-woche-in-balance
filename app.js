@@ -4680,11 +4680,35 @@ document.querySelectorAll(".remove-tt-row").forEach(btn => {
 
     if (t.times.length <= 1) return;
 
+    /*
+     * Vor dem Löschen die aktuelle Anzahl der Stunden merken.
+     * Dadurch kann der kleinere Stand beim nächsten Merge
+     * nicht wieder automatisch durch einen älteren größeren
+     * Stundenplan ersetzt werden.
+     */
+    const oldLength = t.times.length;
+
     t.times.pop();
 
     manualTimetableDayKeys.forEach(day => {
-      t.subjects[day].pop();
+      if (Array.isArray(t.subjects?.[day])) {
+        t.subjects[day].pop();
+      }
     });
+
+    /*
+     * Auch Hausaufgaben-/sonstige Zeileninformationen
+     * auf dieselbe Länge bringen, falls vorhanden.
+     */
+    if (Array.isArray(t.homeRows)) {
+      t.homeRows.pop();
+    }
+
+    /*
+     * Anzahl der aktuell gewünschten Stunden speichern.
+     */
+    t.rowCount = t.times.length;
+    t.rowCountUpdatedAt = Date.now();
 
     t.updatedAt = Date.now();
 
