@@ -14357,79 +14357,182 @@ function mergeTimetableByYear(localValue, cloudValue) {
   const local = localValue && typeof localValue === "object" ? localValue : {};
   const remote = cloudValue && typeof cloudValue === "object" ? cloudValue : {};
   const result = {};
-  const years = new Set([...Object.keys(local), ...Object.keys(remote)]);
 
-  const ts = (obj, group, key) => Number(obj?.[group]?.[key] || 0) || 0;
-  const choose = (lv, rv, lt, rt) => {
-    if (lt || rt) return rt > lt ? rv : lv;
-    if (!lv && rv) return rv;
+  const years = new Set([
+    ...Object.keys(local),
+    ...Object.keys(remote)
+  ]);
+
+  const num = value => Number(value || 0) || 0;
+
+  const chooseValue = (localValue, cloudValue, localTs, cloudTs) => {
+    const lv = localValue ?? "";
+    const rv = cloudValue ?? "";
+
+    // Wenn einer der Werte neuer ist, gewinnt der neuere.
+    if (localTs || cloudTs) {
+      return cloudTs > localTs ? rv : lv;
+    }
+
+    // Alte Daten ohne Zeitstempel:
+    // vorhandene Werte niemals durch leere Werte überschreiben.
+    if (lv !== "" && rv === "") return lv;
+    if (rv !== "" && lv === "") return rv;
+
+    // Wenn beide vorhanden sind, bleibt der lokale Wert erhalten.
     return lv;
   };
 
   years.forEach(year => {
-    const l = local[year], c = remote[year];
-    if (!l) { result[year] = structuredClone(c); return; }
-    if (!c) { result[year] = structuredClone(l); return; }
+    const l = local[year];
+    const c = remote[year];
+
+    if (!l) {
+      result[year] = structuredClone(c);
+      return;
+    }
+
+    if (!c) {
+      result[year] = structuredClone(l);
+      return;
+    }
 
     const merged = structuredClone(l);
+
+    /*
+     * STUNDEN
+     * Die größere Anzahl an Stunden bleibt immer erhalten.
+     */
+    const localTimes = Array.isArray(l.times) ? l.times : [];
+    const remoteTimes = Array.isArray(c.times) ? c.times : [];
+
     const maxRows = Math.max(
-      Array.isArray(l.times) ? l.times.length : 0,
-      Array.isArray(c.times) ? c.times.length : 0
+      localTimes.length,
+      remoteTimes.length
     );
 
     merged.times = [];
+
     for (let i = 0; i < maxRows; i++) {
-      const lt = Array.isArray(l.times) ? (l.times[i] || {}) : {};
-      const rt = Array.isArray(c.times) ? (c.times[i] || {}) : {};
-      const row = {
-        from: choose(lt.from || "", rt.from || "", ts(l,"timeUpdatedAt",`${i}.from`), ts(c,"timeUpdatedAt",`${i}.from`)),
-        to: choose(lt.to || "", rt.to || "", ts(l,"timeUpdatedAt",`${i}.to`), ts(c,"timeUpdatedAt",`${i}.to`))
-      };
-      // Für alte Pläne ohne Zell-Zeitstempel: fehlende Zeilen werden ergänzt,
-      // vorhandene lokale Werte bleiben erhalten.
-      if (!row.from && rt.from) row.from = rt.from;
-      if (!row.to && rt.to) row.to = rt.to;
-      merged.times.push(row);
+      const lt = localTimes[i] || {};
+      const rt = remoteTimes[i] || {};
+
+      const localFromTs =
+        num(l.timeUpdatedAt?.[i]?.from);
+
+      const remoteFromTs =
+        num(c.timeUpdatedAt?.[i]?.from);
+
+      const localToTs =
+        num(l.timeUpdatedAt?.[i]?.to);
+
+      const remoteToTs =
+        num(c.timeUpdatedAt?.[i]?.to);
+
+      merged.times.push({
+        from: chooseValue(
+          lt.from || "",
+          rt.from || "",
+          localFromTs,
+          remoteFromTs
+        ),
+
+        to: chooseValue(
+          lt.to || "",
+          rt.to || "",
+          localToTs,
+          remoteToTs
+        )
+      });
     }
 
+    /*
+     * FÄCHER
+     */
     const days = new Set([
       ...Object.keys(l.subjects || {}),
       ...Object.keys(c.subjects || {})
     ]);
+
     merged.subjects = {};
     merged.subjectUpdatedAt = {};
 
     days.forEach(day => {
-      const la = Array.isArray(l.subjects?.[day]) ? l.subjects[day] : [];
-      const ca = Array.isArray(c.subjects?.[day]) ? c.subjects[day] : [];
-      const n = Math.max(la.length, ca.length, maxRows);
+      const localSubjects =
+        Array.isArray(l.subjects?.[day])
+          ? l.subjects[day]
+          : [];
+
+      const remoteSubjects =
+        Array.isArray(c.subjects?.[day])
+          ? c.subjects[day]
+          : [];
+
+      const n = Math.max(
+        localSubjects.length,
+        remoteSubjects.length,
+        maxRows
+      );
+
       merged.subjects[day] = [];
       merged.subjectUpdatedAt[day] = [];
 
       for (let i = 0; i < n; i++) {
-        const lv = la[i] || "";
-        const rv = ca[i] || "";
-        const lt = Number(l.subjectUpdatedAt?.[day]?.[i] || 0) || 0;
-        const rt = Number(c.subjectUpdatedAt?.[day]?.[i] || 0) || 0;
-        merged.subjects[day][i] = choose(lv, rv, lt, rt);
-        merged.subjectUpdatedAt[day][i] = Math.max(lt, rt);
+        const lv = localSubjects[i] || "";
+        const rv = remoteSubjects[i] || "";
+
+        const lt =
+          num(l.subjectUpdatedAt?.[day]?.[i]);
+
+        const rt =
+          num(c.subjectUpdatedAt?.[day]?.[i]);
+
+        merged.subjects[day][i] = chooseValue(
+          lv,
+          rv,
+          lt,
+          rt
+        );
+
+        merged.subjectUpdatedAt[day][i] =
+          Math.max(lt, rt);
       }
     });
 
+    /*
+     * HAUSAUFGABEN
+     */
     const homeDays = new Set([
       ...Object.keys(l.homeBy || {}),
       ...Object.keys(c.homeBy || {})
     ]);
+
     merged.homeBy = {};
     merged.homeUpdatedAt = {};
+
     homeDays.forEach(day => {
-      const lt = Number(l.homeUpdatedAt?.[day] || 0) || 0;
-      const rt = Number(c.homeUpdatedAt?.[day] || 0) || 0;
-      merged.homeBy[day] = choose(l.homeBy?.[day] || "", c.homeBy?.[day] || "", lt, rt);
-      merged.homeUpdatedAt[day] = Math.max(lt, rt);
+      const lt =
+        num(l.homeUpdatedAt?.[day]);
+
+      const rt =
+        num(c.homeUpdatedAt?.[day]);
+
+      merged.homeBy[day] = chooseValue(
+        l.homeBy?.[day] || "",
+        c.homeBy?.[day] || "",
+        lt,
+        rt
+      );
+
+      merged.homeUpdatedAt[day] =
+        Math.max(lt, rt);
     });
 
-    merged.updatedAt = Math.max(Number(l.updatedAt || 0), Number(c.updatedAt || 0));
+    merged.updatedAt = Math.max(
+      num(l.updatedAt),
+      num(c.updatedAt)
+    );
+
     result[year] = merged;
   });
 
