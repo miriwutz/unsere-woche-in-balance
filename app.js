@@ -14393,17 +14393,13 @@ function mergeTimetableByYear(localValue, cloudValue) {
     const lv = localValue ?? "";
     const rv = cloudValue ?? "";
 
-    // Wenn einer der Werte neuer ist, gewinnt der neuere.
     if (localTs || cloudTs) {
       return cloudTs > localTs ? rv : lv;
     }
 
-    // Alte Daten ohne Zeitstempel:
-    // vorhandene Werte niemals durch leere Werte überschreiben.
     if (lv !== "" && rv === "") return lv;
     if (rv !== "" && lv === "") return rv;
 
-    // Wenn beide vorhanden sind, bleibt der lokale Wert erhalten.
     return lv;
   };
 
@@ -14424,20 +14420,55 @@ function mergeTimetableByYear(localValue, cloudValue) {
     const merged = structuredClone(l);
 
     /*
-     * STUNDEN
-     * Die größere Anzahl an Stunden bleibt immer erhalten.
+     * WICHTIG:
+     * rowCount beschreibt die bewusst gewünschte Anzahl
+     * an Stunden. Eine bewusste Löschung darf dadurch
+     * nicht wieder durch einen älteren Stand rückgängig
+     * gemacht werden.
+     */
+    const localRowCount = Number.isFinite(Number(l.rowCount))
+      ? Number(l.rowCount)
+      : null;
+
+    const remoteRowCount = Number.isFinite(Number(c.rowCount))
+      ? Number(c.rowCount)
+      : null;
+
+    let rowCount;
+
+    if (localRowCount !== null || remoteRowCount !== null) {
+      const localRowTs = num(l.rowCountUpdatedAt);
+      const remoteRowTs = num(c.rowCountUpdatedAt);
+
+      if (remoteRowTs > localRowTs) {
+        rowCount = remoteRowCount;
+      } else {
+        rowCount = localRowCount !== null
+          ? localRowCount
+          : remoteRowCount;
+      }
+    } else {
+      /*
+       * Alte Daten ohne rowCount:
+       * weiterhin die größere vorhandene Anzahl verwenden.
+       */
+      rowCount = Math.max(
+        Array.isArray(l.times) ? l.times.length : 0,
+        Array.isArray(c.times) ? c.times.length : 0
+      );
+    }
+
+    rowCount = Math.max(1, Number(rowCount) || 1);
+
+    /*
+     * STUNDENZEITEN
      */
     const localTimes = Array.isArray(l.times) ? l.times : [];
     const remoteTimes = Array.isArray(c.times) ? c.times : [];
 
-    const maxRows = Math.max(
-      localTimes.length,
-      remoteTimes.length
-    );
-
     merged.times = [];
 
-    for (let i = 0; i < maxRows; i++) {
+    for (let i = 0; i < rowCount; i++) {
       const lt = localTimes[i] || {};
       const rt = remoteTimes[i] || {};
 
@@ -14470,6 +14501,13 @@ function mergeTimetableByYear(localValue, cloudValue) {
       });
     }
 
+    merged.rowCount = rowCount;
+
+    merged.rowCountUpdatedAt = Math.max(
+      num(l.rowCountUpdatedAt),
+      num(c.rowCountUpdatedAt)
+    );
+
     /*
      * FÄCHER
      */
@@ -14495,7 +14533,7 @@ function mergeTimetableByYear(localValue, cloudValue) {
       const n = Math.max(
         localSubjects.length,
         remoteSubjects.length,
-        maxRows
+        rowCount
       );
 
       merged.subjects[day] = [];
@@ -14521,6 +14559,16 @@ function mergeTimetableByYear(localValue, cloudValue) {
         merged.subjectUpdatedAt[day][i] =
           Math.max(lt, rt);
       }
+
+      /*
+       * Auch die Fachliste darf nicht länger sein
+       * als der aktuell gewünschte Stundenplan.
+       */
+      merged.subjects[day] =
+        merged.subjects[day].slice(0, rowCount);
+
+      merged.subjectUpdatedAt[day] =
+        merged.subjectUpdatedAt[day].slice(0, rowCount);
     });
 
     /*
