@@ -3003,17 +3003,31 @@ const multiDayLaneHtml = multiDayTrackCount
         const centerOffset = visibleCenter - visibleCenterIndex;
         const showLabel = index === visibleCenterIndex;
 
-        // Uhrzeit nur dort zeigen, wo der echte Start in dieser Woche liegt.
-        // Bei Sa–Di steht 16:00 also in der Sa–So-Woche, nicht nochmals am Montag.
-        const startTime = item.date >= weekStartKey && item.date <= weekEndKey && item.time
-          ? `${escapeHtml(item.time)} `
-          : "";
-        const endTime = (item.endDate || item.date) >= weekStartKey &&
-                        (item.endDate || item.date) <= weekEndKey &&
-                        item.endTime
-          ? ` · bis ${escapeHtml(item.endTime)}`
-          : "";
+    // PC bleibt unverändert.
+// Die bisherige Start-/Endzeit für die normale Ansicht bleibt bestehen.
+const startTime = item.date >= weekStartKey && item.date <= weekEndKey && item.time
+  ? `${escapeHtml(item.time)} `
+  : "";
 
+const endTime = (item.endDate || item.date) >= weekStartKey &&
+                (item.endDate || item.date) <= weekEndKey &&
+                item.endTime
+  ? ` · bis ${escapeHtml(item.endTime)}`
+  : "";
+
+// Nur für die Handyansicht: eine kompakte Von-/Bis-Zeit.
+let mobileMultiDayTime = "";
+
+if (item.time && item.endTime) {
+  mobileMultiDayTime =
+    `<span class="mobile-multiday-time">${escapeHtml(item.time)}–${escapeHtml(item.endTime)}</span>`;
+} else if (item.time) {
+  mobileMultiDayTime =
+    `<span class="mobile-multiday-time">von ${escapeHtml(item.time)}</span>`;
+} else if (item.endTime) {
+  mobileMultiDayTime =
+    `<span class="mobile-multiday-time">bis ${escapeHtml(item.endTime)}</span>`;
+}
         return `<div class="multiday-event-lane" data-track="${track}">
           <div
             class="multiday-continuous-segment ${isStart ? "is-start" : ""} ${isEnd ? "is-end" : ""}"
