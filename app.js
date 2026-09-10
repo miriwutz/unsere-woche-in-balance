@@ -4685,26 +4685,35 @@ document.querySelectorAll(".add-tt-row").forEach(btn => {
         t.homeBy[x.dataset.day] = x.value.trim();
       });
 
-    // Erst JETZT eine neue Stunde hinzufügen
-    const last = t.times[t.times.length - 1];
+ // Erst JETZT eine neue Stunde hinzufügen
+const last = t.times[t.times.length - 1];
 
-    t.times.push({
-      from: last ? last.to : "",
-      to: ""
-    });
+t.times.push({
+  from: last ? last.to : "",
+  to: ""
+});
 
-    manualTimetableDayKeys.forEach(day => {
-      if (!Array.isArray(t.subjects[day])) {
-        t.subjects[day] = [];
-      }
+manualTimetableDayKeys.forEach(day => {
+  if (!Array.isArray(t.subjects[day])) {
+    t.subjects[day] = [];
+  }
 
-      t.subjects[day].push("");
-    });
+  t.subjects[day].push("");
+});
 
-    t.updatedAt = Date.now();
+// Anzahl der tatsächlich gewünschten Stunden speichern.
+// Wichtig für die Synchronisation zwischen PC und Tablet.
+t.rowCount = t.times.length;
+t.rowCountUpdatedAt = Date.now();
 
-    save();
-    renderTTMatrix(id);
+t.updatedAt = Date.now();
+
+save();
+
+// Sofort sichtbar machen, dass der neue Stundenplan gespeichert wurde.
+showMotivation("Stundenplan gespeichert ✓");
+
+renderTTMatrix(id);
   });
 });
 
