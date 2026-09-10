@@ -3162,15 +3162,37 @@ const eventHtml = (multiDayLaneHtml || singleEventHtml) ? `
 
         return `<div class="mobile-day-multiday-notes">
           ${items.map(item => {
-            const end = item.endDate || item.date;
-            const person = todoGroupKey(item) === "general" ? "" : familySelectionLabel(item);
+            const start = item.date || "";
+            const end = item.endDate || start;
+
+            const person = todoGroupKey(item) === "general"
+              ? ""
+              : familySelectionLabel(item);
+
             const endDate = parseLocalDate(end);
             const endLabel = endDate
               ? `${["So","Mo","Di","Mi","Do","Fr","Sa"][endDate.getDay()]} ${String(endDate.getDate()).padStart(2,"0")}.${String(endDate.getMonth()+1).padStart(2,"0")}.`
               : "";
+
+            // NUR HANDY: passende Zeit am jeweiligen Tag
+            let mobileTime = "";
+
+            if (currentKey === start && item.time) {
+              mobileTime = item.time;
+            }
+
+            if (currentKey === end && item.endTime) {
+              mobileTime = `bis ${item.endTime}`;
+            }
+
+            const timeHtml = mobileTime
+              ? `<span class="mobile-day-multiday-time">${escapeHtml(mobileTime)}</span>`
+              : "";
+
             return `<div class="mobile-day-multiday-note">
               <span aria-hidden="true">↔</span>
               ${person ? `<span class="mobile-day-multiday-person">${escapeHtml(person)}</span><span>·</span>` : ""}
+              ${timeHtml}
               <span class="mobile-day-multiday-text">${item.superImportant ? "★ " : ""}${escapeHtml(item.text || "")}</span>
               ${endLabel ? `<span class="mobile-day-multiday-until">· bis ${escapeHtml(endLabel)}</span>` : ""}
             </div>`;
