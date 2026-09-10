@@ -29744,3 +29744,15 @@ button.day-meal-list-item:hover,a.day-meal-list-item:hover{background:rgba(164,1
         color:#a7ad79 !important;
       }
     }
+/* Mehrtägige Terminzeit: nur am Handy sichtbar */
+.mobile-multiday-time {
+  display: none;
+}
+
+@media (max-width: 700px) {
+  .mobile-multiday-time {
+    display: inline;
+    font-weight: 600;
+    margin-right: 4px;
+  }
+}
