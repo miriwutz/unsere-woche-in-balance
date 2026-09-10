@@ -3035,7 +3035,7 @@ if (item.time && item.endTime) {
             ${showLabel
               ? `<span class="multiday-continuous-label multiday-center-label">
                    ${personLabel ? `<span class="multiday-person"><i></i>${escapeHtml(personLabel)}</span><span class="multiday-sep">·</span>` : ""}
-                   <span class="multiday-title">${startTime}${item.superImportant ? "★ " : ""}${escapeHtml(item.text)}${endTime}</span>
+                 <span class="multiday-title">${startTime}${item.superImportant ? "★ " : ""}${escapeHtml(item.text)}${endTime}${mobileMultiDayTime}</span>
                  </span>`
               : `<span class="multiday-continuous-fill" aria-hidden="true"></span>`}
           </div>
