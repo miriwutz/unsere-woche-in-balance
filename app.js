@@ -21,6 +21,16 @@
    ========================================================= */
 
 /* =========================================================
+   V199 – SYNC-/DARSTELLUNGS-FIX · 10.09.2026
+   - bestehende Termin-Synchronisation NICHT verändert
+   - Stundenplan: größere vorhandene Zeilenzahl wird bei fehlenden/gleichen
+     rowCount-Zeitstempeln nicht mehr von einem kleineren Stand abgeschnitten
+   - Personenauswahl im Terminformular bekommt einen zuverlässigen is-selected-Zustand
+   - Mehrtages-Termine wenden ihre berechnete Personenfarbe direkt auf das Segment an
+   - Materialgeld V184 unverändert
+   ========================================================= */
+
+/* =========================================================
    V196 – TERMINGRUPPIERUNG + APP-ICON · 01.09.2026
    - Termine einer einzelnen Person am selben Tag sicher nach Personen-ID gruppiert
    - Uhrzeit chronologisch, Termine ohne Uhrzeit im Rahmen ganz unten
@@ -1879,11 +1889,26 @@ function selectedFamilyMembers() {
   return [...document.querySelectorAll('#familyOptions input[type="checkbox"]:checked')].map(x => x.value);
 }
 
+function updateFamilyChipVisualState() {
+  document.querySelectorAll('#familyOptions .family-chip').forEach(chip => {
+    const input = chip.querySelector('input[type="checkbox"]');
+    chip.classList.toggle('is-selected', !!input?.checked);
+    chip.setAttribute('aria-pressed', String(!!input?.checked));
+  });
+}
+
 function setSelectedFamilyMembers(members = []) {
   document.querySelectorAll('#familyOptions input[type="checkbox"]').forEach(input => {
     input.checked = members.includes(input.value);
   });
+  updateFamilyChipVisualState();
 }
+
+document.addEventListener('change', event => {
+  if (event.target?.closest?.('#familyOptions')) {
+    updateFamilyChipVisualState();
+  }
+});
 
 function familyBorderStyle(members = []) {
 const borderWidth =
@@ -12327,6 +12352,16 @@ renderAll();
 // Werkraum-Faltlogik: der ältere doppelte Handler wurde entfernt.
 
 /* --- Multi-day event horizontal alignment --- */
+function enforceMultiDayEventColors() {
+  document.querySelectorAll('.multiday-continuous-segment').forEach(segment => {
+    const bg = getComputedStyle(segment).getPropertyValue('--multi-bg').trim();
+    if (bg) {
+      segment.style.background = bg;
+      segment.style.backgroundImage = bg;
+    }
+  });
+}
+
 function alignMultiDayEventRows() {
   const week = document.querySelector(".week-grid, #weekGrid, .weekGrid, .weekly-grid");
   if (!week) return;
@@ -12374,7 +12409,10 @@ function alignMultiDayEventRows() {
 }
 
 function scheduleMultiDayAlignment() {
-  requestAnimationFrame(() => requestAnimationFrame(alignMultiDayEventRows));
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    enforceMultiDayEventColors();
+    alignMultiDayEventRows();
+  }));
 }
 window.addEventListener("load", scheduleMultiDayAlignment);
 window.addEventListener("resize", scheduleMultiDayAlignment);
@@ -14485,12 +14523,27 @@ function mergeTimetableByYear(localValue, cloudValue) {
       const localRowTs = num(l.rowCountUpdatedAt);
       const remoteRowTs = num(c.rowCountUpdatedAt);
 
-      if (remoteRowTs > localRowTs) {
-        rowCount = remoteRowCount;
+      /*
+       * Wenn beide Geräte eine echte, zeitgestempelte Änderung der
+       * Zeilenanzahl haben, gewinnt die jüngere Änderung.
+       *
+       * Wenn aber nur eines der Geräte einen Zeitstempel besitzt oder
+       * beide Zeitstempel gleich/leer sind, darf ein kleinerer Stand
+       * NICHT einen vorhandenen größeren Stundenplan abschneiden.
+       * Genau das konnte bei alten bzw. bereits gespeicherten Geräten
+       * die 8./9. Stunde verschwinden lassen.
+       */
+      if (localRowTs && remoteRowTs && localRowTs !== remoteRowTs) {
+        rowCount = remoteRowTs > localRowTs
+          ? remoteRowCount
+          : localRowCount;
       } else {
-        rowCount = localRowCount !== null
-          ? localRowCount
-          : remoteRowCount;
+        rowCount = Math.max(
+          localRowCount !== null ? localRowCount : 0,
+          remoteRowCount !== null ? remoteRowCount : 0,
+          Array.isArray(l.times) ? l.times.length : 0,
+          Array.isArray(c.times) ? c.times.length : 0
+        );
       }
     } else {
       /*
