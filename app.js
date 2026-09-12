@@ -21,6 +21,21 @@
    ========================================================= */
 
 /* =========================================================
+   V200 – SYNC-HÄRTUNG START + STUNDENPLAN · 12.09.2026
+   - beim Start nach Anmeldung wird der echte Firestore-Serverstand einmal
+     ausdrücklich gelesen, bevor der normale Cloud-Sync als bereit gilt
+   - ein möglicher lokaler Offline-Stand wird danach mit dem Serverstand
+     zusammengeführt und nur bei echtem Dirty-Stand zurückgeschrieben
+   - ein zwischengespeicherter erster Firestore-Snapshot darf den Start-
+     Serverabgleich nicht mehr vorwegnehmen
+   - Stundenplan-Zeitstempel werden einheitlich pro Zeile/Feld gelesen und
+     neu gespeichert; alte flache Zeitstempel bleiben lesbar
+   - Lou/Fina/Mama-Stundenpläne behalten dadurch auch viele Stunden zuverlässig
+   - Termin-Synchronisation wird NICHT verändert
+   - Materialgeld V184 bleibt unverändert
+   ========================================================= */
+
+/* =========================================================
    V199 – SYNC-/DARSTELLUNGS-FIX · 10.09.2026
    - bestehende Termin-Synchronisation NICHT verändert
    - Stundenplan: größere vorhandene Zeilenzahl wird bei fehlenden/gleichen
@@ -4385,6 +4400,17 @@ function ensureManualTimetable(c){
 
   const t = c.timetableByYear[y];
 
+  /* V200: Zeitstempel für Stundenzeiten auf die einheitliche Form
+     timeUpdatedAt[row][from|to] normalisieren. Alte flache Schlüssel bleiben
+     erhalten und werden beim Merge weiterhin gelesen. */
+  if (!t.timeUpdatedAt || typeof t.timeUpdatedAt !== "object") t.timeUpdatedAt = {};
+  Object.keys(t.timeUpdatedAt).forEach(key => {
+    if (!/^\d+$/.test(String(key))) return;
+    const row = Number(key);
+    const value = t.timeUpdatedAt[key];
+    if (!value || typeof value !== "object") t.timeUpdatedAt[key] = {};
+  });
+
   // Falls später Stunden hinzugefügt oder entfernt werden,
   // die Fächerlisten automatisch auf dieselbe Länge bringen.
   manualTimetableDayKeys.forEach(day => {
@@ -4522,11 +4548,11 @@ function saveTTMatrix(id) {
     .forEach(x => {
       const row = +x.dataset.row;
       const part = x.dataset.part;
-      t.timeUpdatedAt[`${row}.${part}`] = t.timeUpdatedAt[`${row}.${part}`] || 0;
+      t.timeUpdatedAt[row] = t.timeUpdatedAt[row] || {};
       const value = x.value.trim();
       const oldValue = t.times[row][part] || "";
       t.times[row][part] = value;
-      if (value !== oldValue) t.timeUpdatedAt[`${row}.${part}`] = Date.now();
+      if (value !== oldValue) t.timeUpdatedAt[row][part] = Date.now();
     });
 
   t.subjectUpdatedAt = t.subjectUpdatedAt || {};
@@ -11500,30 +11526,40 @@ async function migrateShoppingToCollection() {
   localStorage.setItem(SHOPPING_COLLECTION_MIGRATION_KEY, "1");
 }
 
-function startCloudSync() {
+async function startCloudSync() {
   if (cloudUnsubscribe) cloudUnsubscribe();
 
   const ref = firebase.firestore().collection("families").doc("shared");
   let firstSnapshot = true;
   let lastAppliedSyncToken = "";
+  let initialServerSyncFinished = false;
+  let initialSnapshot = null;
+
+  cloudReady = false;
+  updateSyncStatus(navigator.onLine ? "syncing" : "offline");
 
   cloudUnsubscribe = ref.onSnapshot(async snap => {
+    /*
+     * Firestore kann beim Start zuerst einen lokalen Cache-Snapshot liefern.
+     * Dieser ist NICHT automatisch der aktuelle Serverstand.
+     * Solange der ausdrückliche Server-Startabgleich läuft, wird dieser erste
+     * Snapshot deshalb nur gemerkt und noch nicht auf den App-State angewendet.
+     */
+    if (!initialServerSyncFinished && firstSnapshot) {
+      initialSnapshot = snap;
+      return;
+    }
+
     if (!snap.exists) {
-      if (firstSnapshot) {
-        cloudReady = true;
-        updateSyncStatus(navigator.onLine ? "synced" : "offline");
-        firstSnapshot = false;
-        scheduleCloudSave();
-      }
+      cloudReady = true;
+      updateSyncStatus(navigator.onLine ? "synced" : "offline");
+      firstSnapshot = false;
       return;
     }
 
     const cloudData = snap.data();
     const token = String(cloudData?.syncToken || "");
 
-    // Gerätebestätigungen werden in dasselbe Firestore-Dokument geschrieben.
-    // Sie verändern den syncToken NICHT. Solche ACK-Snapshots dürfen deshalb
-    // NICHT die ganze App neu rendern – sonst verschwinden Klicks unter der Maus.
     const isAckOnlySnapshot =
       !firstSnapshot &&
       token &&
@@ -11539,11 +11575,6 @@ function startCloudSync() {
     renderDeviceAcks(cloudData);
     acknowledgeCloudSnapshot(cloudData, snap.metadata);
 
-    /* V191 – entscheidender Reconnect-Rückweg:
-       Firestore kann nach WLAN-Rückkehr wieder Snapshots liefern, auch wenn
-       das Browser-"online"-Event nicht zuverlässig unseren Reconnect-Handler
-       ausgelöst hat. Wurde offline lokal geändert, ist der Snapshot jetzt
-       bereits in state gemergt. Genau diesen vereinigten Stand veröffentlichen. */
     if (
       hasCloudDirty() &&
       navigator.onLine &&
@@ -11552,14 +11583,82 @@ function startCloudSync() {
       publishMergedDirtyStateNow();
     }
 
-    if (firstSnapshot) {
-      firstSnapshot = false;
-    }
+    firstSnapshot = false;
   }, err => {
     console.error("Firestore listener failed:", err);
+    cloudReady = false;
     updateSyncStatus(navigator.onLine ? "error" : "offline");
   });
+
+  /*
+   * V200: Einmaliger, expliziter Server-Read direkt nach der Anmeldung.
+   * Dadurch kann ein Xiaomi/Android-Gerät nicht dauerhaft mit einem alten
+   * Firestore-Cache starten, obwohl online bereits ein neuer Serverstand
+   * vorhanden ist.
+   */
+  if (navigator.onLine && firebase.auth().currentUser) {
+    try {
+      const snap = await ref.get({ source: "server" });
+
+      if (snap.exists) {
+        applyCloudData(snap.data() || {});
+        lastAppliedSyncToken = String(snap.data()?.syncToken || "");
+      } else if (initialSnapshot && initialSnapshot.exists) {
+        /* Nur wenn der echte Server tatsächlich leer ist, darf ein vorhandener
+           lokaler Firestore-Cache als Fallback eingelesen werden. */
+        applyCloudData(initialSnapshot.data() || {});
+        lastAppliedSyncToken = String(initialSnapshot.data()?.syncToken || "");
+      }
+
+      initialServerSyncFinished = true;
+      firstSnapshot = false;
+      cloudReady = true;
+      updateSyncStatus("synced");
+
+      /* Wenn dieses Gerät während eines früheren Offline-Zustands geändert
+         wurde, ist der gerade gemergte Gesamtstand der einzige Stand, der
+         wieder veröffentlicht werden darf. */
+      if (hasCloudDirty()) {
+        await publishMergedDirtyStateNow();
+      }
+
+      /* Falls zwischen dem Server-Read und dem Listener-Snapshot eine echte
+         Cloud-Änderung eingetroffen ist, verarbeitet der Listener sie normal. */
+      if (initialSnapshot) {
+        renderDeviceAcks(initialSnapshot.exists ? initialSnapshot.data() : {});
+      }
+    } catch (err) {
+      console.warn("V200 Start-Serverabgleich fehlgeschlagen:", err);
+
+      /* Online-Server nicht erreichbar: den vorhandenen ersten Cache-Snapshot
+         als Fallback verwenden, aber NICHT behaupten, dass er frisch ist. */
+      if (initialSnapshot && initialSnapshot.exists) {
+        applyCloudData(initialSnapshot.data() || {});
+        lastAppliedSyncToken = String(initialSnapshot.data()?.syncToken || "");
+        initialServerSyncFinished = true;
+        firstSnapshot = false;
+        cloudReady = true;
+        updateSyncStatus("waiting");
+      } else {
+        cloudReady = false;
+        updateSyncStatus("error");
+      }
+    }
+  } else {
+    /* Offline: Cache darf als lokaler Ausgangsstand dienen. */
+    if (initialSnapshot) {
+      if (initialSnapshot.exists) {
+        applyCloudData(initialSnapshot.data() || {});
+        lastAppliedSyncToken = String(initialSnapshot.data()?.syncToken || "");
+      }
+      initialServerSyncFinished = true;
+      firstSnapshot = false;
+    }
+    cloudReady = false;
+    updateSyncStatus("offline");
+  }
 }
+
 
 document.querySelector("#familyLoginForm")?.addEventListener("submit", async e => {
   e.preventDefault();
@@ -11605,7 +11704,7 @@ firebase.auth().onAuthStateChanged(async user => {
   if (user) {
     setLoginMessage("");
     showLoginGate(false);
-    startCloudSync();
+    await startCloudSync();
     await startTimeTrackingSync();
     
     await migrateShoppingToCollection();
@@ -14460,6 +14559,19 @@ function generatedNoeSchoolYear(startYear) {
 
 /* CODE-AUDIT: frühere, überschriebene Definition von makeLocalSafetyBackup entfernt. */
 
+function timetableTimeStamp(t, row, part) {
+  const nested = t?.timeUpdatedAt?.[row];
+  if (nested && typeof nested === "object") {
+    const value = Number(nested?.[part] || 0);
+    if (value) return value;
+  }
+
+  /* Alte V198/V199-Daten wurden teilweise als "7.from" gespeichert.
+     Diese Form bleibt ausdrücklich lesbar, damit vorhandene Pläne nicht
+     durch den Versionswechsel ihren Zeitstempel verlieren. */
+  return Number(t?.timeUpdatedAt?.[`${row}.${part}`] || 0) || 0;
+}
+
 function mergeTimetableByYear(localValue, cloudValue) {
   const local = localValue && typeof localValue === "object" ? localValue : {};
   const remote = cloudValue && typeof cloudValue === "object" ? cloudValue : {};
@@ -14571,16 +14683,16 @@ function mergeTimetableByYear(localValue, cloudValue) {
       const rt = remoteTimes[i] || {};
 
       const localFromTs =
-        num(l.timeUpdatedAt?.[i]?.from);
+        timetableTimeStamp(l, i, "from");
 
       const remoteFromTs =
-        num(c.timeUpdatedAt?.[i]?.from);
+        timetableTimeStamp(c, i, "from");
 
       const localToTs =
-        num(l.timeUpdatedAt?.[i]?.to);
+        timetableTimeStamp(l, i, "to");
 
       const remoteToTs =
-        num(c.timeUpdatedAt?.[i]?.to);
+        timetableTimeStamp(c, i, "to");
 
       merged.times.push({
         from: chooseValue(
