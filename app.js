@@ -32,7 +32,7 @@
    ========================================================= */
 
 /* =========================================================
-   V200 – SYNC-HÄRTUNG START + STUNDENPLAN · 12.09.2026
+   V202 – SYNC-HÄRTUNG START + CACHE-SNAPSHOT + FAMILIENFRAGEN · 19.09.2026
    - beim Start nach Anmeldung wird der echte Firestore-Serverstand einmal
      ausdrücklich gelesen, bevor der normale Cloud-Sync als bereit gilt
    - ein möglicher lokaler Offline-Stand wird danach mit dem Serverstand
@@ -533,6 +533,7 @@ const state = {
   meals: safeLocalJson("balanceProd.meals", {}),
   pinboard: safeLocalJson("balanceProd.pinboard", []),
   familyQuestions: safeLocalJson("balanceProd.familyQuestions", []),
+  familyQuestionTombstones: safeLocalJson("balanceProd.familyQuestionTombstones", {}),
   recipeLinkFeedback: safeLocalJson("balanceProd.recipeLinkFeedback", {}),
   timeTracking: safeLocalJson(
     "balanceProd.timeTracking",
@@ -588,6 +589,12 @@ state.recipes = Array.isArray(state.recipes) ? state.recipes : [];
 state.meals = state.meals && typeof state.meals === "object" ? state.meals : {};
 state.pinboard = Array.isArray(state.pinboard) ? state.pinboard : [];
 state.familyQuestions = Array.isArray(state.familyQuestions) ? state.familyQuestions : [];
+state.familyQuestionTombstones = state.familyQuestionTombstones && typeof state.familyQuestionTombstones === "object"
+  ? state.familyQuestionTombstones : {};
+
+/* V202 – Familienfragen zusätzlich mit echten Löschmarkern sichern.
+   So kann ein älterer Tablet-/Firestore-Cache eine längst gelöschte Frage
+   nicht wieder als offen erscheinen lassen. */
 
 /* V29 – Familienfragen robust lokal sichern.
    Der zweite Key verhindert, dass ein älterer Cloud-/App-Stand die Fragen
@@ -614,8 +621,10 @@ try {
 function persistFamilyQuestionsNow(){
   try {
     const json = JSON.stringify(state.familyQuestions || []);
+    const tombstones = JSON.stringify(state.familyQuestionTombstones || {});
     setLocalStorageIfChanged("balanceProd.familyQuestions", json);
     setLocalStorageIfChanged("balanceProd.familyQuestions.backup", json);
+    setLocalStorageIfChanged("balanceProd.familyQuestionTombstones", tombstones);
   } catch (err) {
     console.warn("Familienfragen konnten lokal nicht gespeichert werden:", err);
   }
@@ -7521,6 +7530,8 @@ function renderFamilyQuestions(){
       if(!q) return;
       q.deleted = true;
       q.updatedAt = Date.now();
+      state.familyQuestionTombstones = state.familyQuestionTombstones || {};
+      state.familyQuestionTombstones[q.id] = q.updatedAt;
       persistFamilyQuestionsNow();
       save();
       renderFamilyQuestions();
@@ -11545,6 +11556,8 @@ async function startCloudSync() {
   let lastAppliedSyncToken = "";
   let initialServerSyncFinished = false;
   let initialSnapshot = null;
+  let startupServerReadCompleted = false;
+  let ignoredStartupCacheSnapshot = false;
 
   cloudReady = false;
   updateSyncStatus(navigator.onLine ? "syncing" : "offline");
@@ -11558,6 +11571,14 @@ async function startCloudSync() {
      */
     if (!initialServerSyncFinished && firstSnapshot) {
       initialSnapshot = snap;
+      return;
+    }
+
+    /* V202: Nach dem expliziten Server-Read darf der zuvor gemerkte erste
+       Offline-/Cache-Snapshot nicht nachträglich den frischen Serverstand
+       überlagern. Der erste Cache-Snapshot wird genau einmal verworfen. */
+    if (startupServerReadCompleted && snap.metadata?.fromCache && !ignoredStartupCacheSnapshot) {
+      ignoredStartupCacheSnapshot = true;
       return;
     }
 
@@ -11610,6 +11631,7 @@ async function startCloudSync() {
   if (navigator.onLine && firebase.auth().currentUser) {
     try {
       const snap = await ref.get({ source: "server" });
+      startupServerReadCompleted = true;
 
       if (snap.exists) {
         applyCloudData(snap.data() || {});
@@ -11639,7 +11661,8 @@ async function startCloudSync() {
         renderDeviceAcks(initialSnapshot.exists ? initialSnapshot.data() : {});
       }
     } catch (err) {
-      console.warn("V200 Start-Serverabgleich fehlgeschlagen:", err);
+      startupServerReadCompleted = false;
+      console.warn("V202 Start-Serverabgleich fehlgeschlagen:", err);
 
       /* Online-Server nicht erreichbar: den vorhandenen ersten Cache-Snapshot
          als Fallback verwenden, aber NICHT behaupten, dass er frisch ist. */
@@ -15639,6 +15662,7 @@ function cloudPayload() {
     meals: state.meals,
     pinboard: state.pinboard,
     familyQuestions: state.familyQuestions || [],
+    familyQuestionTombstones: state.familyQuestionTombstones || {},
     recipeLinkFeedback: state.recipeLinkFeedback,
     workroom: state.workroom,
     school: state.school,
@@ -15810,11 +15834,23 @@ function applyCloudData(data) {
       state.pinboard = mergedPinboard;
     }
 
+    state.familyQuestionTombstones = mergeSimpleTombstones(
+      state.familyQuestionTombstones,
+      data.familyQuestionTombstones
+    );
+
     if (Array.isArray(data.familyQuestions)) {
-      state.familyQuestions = mergeFamilyQuestionsByRevision(
+      const mergedQuestions = mergeFamilyQuestionsByRevision(
         state.familyQuestions,
         data.familyQuestions
       );
+      state.familyQuestions = mergedQuestions.map(q => {
+        const deletedAt = Number(state.familyQuestionTombstones?.[q?.id] || 0);
+        const questionTs = Number(q?.updatedAt || q?.createdAt || 0);
+        return deletedAt > questionTs
+          ? {...q, deleted:true, updatedAt:deletedAt}
+          : q;
+      });
       persistFamilyQuestionsNow();
     }
 
