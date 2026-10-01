@@ -21,6 +21,15 @@
    ========================================================= */
 
 /* =========================================================
+   V203 – GELDZAHLUNGEN DEM AUSGEWÄHLTEN MONAT ZUORDNEN · 01.10.2026
+   - Taschengeld/Jausengeld werden beim Abhaken dem ausgewählten Zeitraum zugeordnet
+   - Monatsübersicht erlaubt Nachtragen und Zurücksetzen für vergangene Monate/Wochen
+   - Zahlungsbetrag wird beim Erhalt gespeichert, damit spätere Betragsänderungen
+     alte Monatsbeträge nicht verändern
+   - Sync-Härtung V202 und Termin-Sync bleiben erhalten
+   ========================================================= */
+
+/* =========================================================
    V201 – MEIN GELD MONATSÜBERSICHT · 12.09.2026
    - Monatsübersicht zeigt die tatsächlich erhaltenen Beträge getrennt
      nach Taschengeld und Jausengeld sowie als Gesamtsumme.
@@ -22155,9 +22164,29 @@ function moneyPaymentAt(store,kind,date=new Date()){
   if(legacy.startsWith("W:")) return store.weekly.payments[legacy.slice(2)] || null;
   return null;
 }
+function moneyPaymentControlDate(kind,store){
+  /* Monatlich: immer den im Monatsfenster ausgewählten Monat bearbeiten.
+     Wöchentlich: der obere Schnellschalter bleibt bei der aktuellen Woche;
+     vergangene Wochen werden direkt in der Monatsübersicht bearbeitet. */
+  if((kind==="pocket"?store.weekly.pocketFrequency:store.weekly.snackFrequency)==="monthly"){
+    const [y,m]=activeMoneyMonth.split("-").map(Number);
+    return new Date(y,m-1,15,12);
+  }
+  return new Date();
+}
+function moneyPaymentAmount(store,kind,payment){
+  /* Bei offenen Zahlungen den aktuell eingestellten Betrag zeigen.
+     Bei bereits erhaltenen Zahlungen den damals gespeicherten Betrag behalten. */
+  if(payment?.paid && Object.prototype.hasOwnProperty.call(payment,"amount")){
+    const saved=Number(payment.amount);
+    if(Number.isFinite(saved)) return saved;
+  }
+  return Number(kind==="pocket"?store.weekly.pocketAmount:store.weekly.snackAmount)||0;
+}
 function setMoneyPayment(store,kind,paid,date=new Date()){
   const key=moneyPeriodKey(kind,store,date);
-  store.weekly.payments[key]={paid:!!paid,paidAt:paid?Date.now():0,updatedAt:Date.now()};
+  const amount=Number(kind==="pocket"?store.weekly.pocketAmount:store.weekly.snackAmount)||0;
+  store.weekly.payments[key]={paid:!!paid,amount:paid?amount:0,paidAt:paid?Date.now():0,updatedAt:Date.now()};
 }
 function clearMoneyPayment(store,kind,date=new Date()){
   const key=moneyPeriodKey(kind,store,date);
@@ -22275,8 +22304,9 @@ function ensureChildMoneyDialog(){
   d.querySelector("#childMoneyAddLoan").onclick=()=>d.querySelector("#childMoneyLoanForm").classList.toggle("hidden");
   d.querySelectorAll("[data-money-pay]").forEach(b=>b.onclick=()=>{
     const s=childMoneyStore(activeChildMoneyId),k=b.dataset.moneyPay;
-    const old=moneyPaymentAt(s,k,new Date());
-    setMoneyPayment(s,k,!old?.paid,new Date());
+    const when=moneyPaymentControlDate(k,s);
+    const old=moneyPaymentAt(s,k,when);
+    setMoneyPayment(s,k,!old?.paid,when);
     moneyTouch(activeChildMoneyId);renderChildMoneyDialog();
   });
   d.querySelector("#childPocketAmount").onchange=e=>{childMoneyStore(activeChildMoneyId).weekly.pocketAmount=moneyNumber(e.target.value);moneyTouch(activeChildMoneyId);renderChildMoneyDialog();};
@@ -22428,6 +22458,15 @@ function ensureChildMoneyDialog(){
       moneyTouch(activeChildMoneyId);renderChildMoneyDialog();return;
     }
 
+    const paymentToggle=e.target.closest("[data-money-payment-toggle-kind]");
+    if(paymentToggle){
+      const s=childMoneyStore(activeChildMoneyId);
+      const kind=paymentToggle.dataset.moneyPaymentToggleKind;
+      const when=new Date(paymentToggle.dataset.moneyPaymentToggleDate+"T12:00:00");
+      const old=moneyPaymentAt(s,kind,when);
+      setMoneyPayment(s,kind,!old?.paid,when);
+      moneyTouch(activeChildMoneyId);renderChildMoneyDialog();return;
+    }
     const paymentDel=e.target.closest("[data-payment-delete-kind]");
     if(paymentDel){
       const s=childMoneyStore(activeChildMoneyId);
@@ -22450,11 +22489,12 @@ function renderChildMoneyDialog(){
   d.querySelector("#childSnackFrequency").value=s.weekly.snackFrequency||"weekly";
   ["pocket","snack"].forEach(k=>{
     const b=d.querySelector(`[data-money-pay="${k}"]`);
-    const pay=moneyPaymentAt(s,k,new Date());
+    const when=moneyPaymentControlDate(k,s);
+    const pay=moneyPaymentAt(s,k,when);
     const ok=!!pay?.paid;
     b.classList.toggle("is-paid",ok);
     b.textContent=ok?"✓ erhalten":"○ noch offen";
-    b.title=moneyPeriodLabel(k,s,new Date());
+    b.title=moneyPeriodLabel(k,s,when);
   });
   d.querySelector("#moneyQuote").textContent="✦ "+MONEY_QUOTES[(new Date().getDate()+Number(activeChildMoneyId))%MONEY_QUOTES.length];
 
@@ -22469,14 +22509,16 @@ function renderChildMoneyDialog(){
 
   if(monthlyPocket){
     const p=moneyPaymentAt(s,"pocket",monthDate);
-    if(p?.paid) pocketReceived+=Number(s.weekly.pocketAmount||0);
-    monthRows.push(`<div class="child-money-history-row v147-month-payment"><span>${moneyMonthLabel(activeMoneyMonth)}</span><span class="${p?.paid?"is-paid":""}">${p?.paid?"✓":"○"} Taschengeld · ${moneyEuro(Number(s.weekly.pocketAmount||0))}${p?.paid?` <button class="v123-history-x" type="button" data-payment-delete-kind="pocket" data-payment-delete-date="${dateKey(monthDate)}" title="Zahlung wieder auf offen setzen">×</button>`:""}</span></div>`);
+    const amount=moneyPaymentAmount(s,"pocket",p);
+    if(p?.paid) pocketReceived+=amount;
+    monthRows.push(`<div class="child-money-history-row v147-month-payment"><span>${moneyMonthLabel(activeMoneyMonth)}</span><span class="${p?.paid?"is-paid":""}">${p?.paid?"✓":"○"} Taschengeld · ${moneyEuro(amount)} <button class="money-payment-toggle" type="button" data-money-payment-toggle-kind="pocket" data-money-payment-toggle-date="${dateKey(monthDate)}" title="Zahlung für diesen Monat umschalten">${p?.paid?"↩ offen":"✓ erhalten"}</button></span></div>`);
   }
 
   if(monthlySnack){
     const q=moneyPaymentAt(s,"snack",monthDate);
-    if(q?.paid) snackReceived+=Number(s.weekly.snackAmount||0);
-    monthRows.push(`<div class="child-money-history-row v147-month-payment"><span>${moneyMonthLabel(activeMoneyMonth)}</span><span class="${q?.paid?"is-paid":""}">${q?.paid?"✓":"○"} Jausengeld · ${moneyEuro(Number(s.weekly.snackAmount||0))}${q?.paid?` <button class="v123-history-x" type="button" data-payment-delete-kind="snack" data-payment-delete-date="${dateKey(monthDate)}" title="Zahlung wieder auf offen setzen">×</button>`:""}</span></div>`);
+    const amount=moneyPaymentAmount(s,"snack",q);
+    if(q?.paid) snackReceived+=amount;
+    monthRows.push(`<div class="child-money-history-row v147-month-payment"><span>${moneyMonthLabel(activeMoneyMonth)}</span><span class="${q?.paid?"is-paid":""}">${q?.paid?"✓":"○"} Jausengeld · ${moneyEuro(amount)} <button class="money-payment-toggle" type="button" data-money-payment-toggle-kind="snack" data-money-payment-toggle-date="${dateKey(monthDate)}" title="Zahlung für diesen Monat umschalten">${q?.paid?"↩ offen":"✓ erhalten"}</button></span></div>`);
   }
 
   if(!monthlyPocket && !monthlySnack){
@@ -22486,14 +22528,11 @@ function renderChildMoneyDialog(){
       if(dt.getDay()!==1) continue;
       const p=moneyPaymentAt(s,"pocket",dt), q=moneyPaymentAt(s,"snack",dt);
       const dk=dateKey(dt);
-      if(p?.paid){
-        pocketReceived+=Number(s.weekly.pocketAmount||0);
-      }
-      if(q?.paid){
-        snackReceived+=Number(s.weekly.snackAmount||0);
-      }
-      if(!p?.paid && !q?.paid) continue;
-      monthRows.push(`<div class="child-money-history-row"><span>${moneyWeekLabel(moneyWeekKey(dt))}</span><span class="${p?.paid?"is-paid":""}">${p?.paid?"✓":"○"} Taschengeld · ${moneyEuro(Number(s.weekly.pocketAmount||0))}${p?.paid?` <button class="v123-history-x" type="button" data-payment-delete-kind="pocket" data-payment-delete-date="${dk}" title="Zahlung wieder auf offen setzen">×</button>`:""}</span><span class="${q?.paid?"is-paid":""}">${q?.paid?"✓":"○"} Jausengeld · ${moneyEuro(Number(s.weekly.snackAmount||0))}${q?.paid?` <button class="v123-history-x" type="button" data-payment-delete-kind="snack" data-payment-delete-date="${dk}" title="Zahlung wieder auf offen setzen">×</button>`:""}</span></div>`);
+      const pocketAmount=moneyPaymentAmount(s,"pocket",p);
+      const snackAmount=moneyPaymentAmount(s,"snack",q);
+      if(p?.paid) pocketReceived+=pocketAmount;
+      if(q?.paid) snackReceived+=snackAmount;
+      monthRows.push(`<div class="child-money-history-row"><span>${moneyWeekLabel(moneyWeekKey(dt))}</span><span class="${p?.paid?"is-paid":""}">${p?.paid?"✓":"○"} Taschengeld · ${moneyEuro(pocketAmount)} <button class="money-payment-toggle" type="button" data-money-payment-toggle-kind="pocket" data-money-payment-toggle-date="${dk}" title="Taschengeld für diese Woche umschalten">${p?.paid?"↩ offen":"✓ erhalten"}</button></span><span class="${q?.paid?"is-paid":""}">${q?.paid?"✓":"○"} Jausengeld · ${moneyEuro(snackAmount)} <button class="money-payment-toggle" type="button" data-money-payment-toggle-kind="snack" data-money-payment-toggle-date="${dk}" title="Jausengeld für diese Woche umschalten">${q?.paid?"↩ offen":"✓ erhalten"}</button></span></div>`);
     }
   }else{
     /* Auch wenn nur eine Geldart monatlich geführt wird, wird die andere
@@ -22504,10 +22543,10 @@ function renderChildMoneyDialog(){
         if(dt.getMonth()!==mm-1) break;
         if(dt.getDay()!==1) continue;
         const p=moneyPaymentAt(s,"pocket",dt);
-        if(!p?.paid) continue;
-        pocketReceived+=Number(s.weekly.pocketAmount||0);
+        const amount=moneyPaymentAmount(s,"pocket",p);
+        if(p?.paid) pocketReceived+=amount;
         const dk=dateKey(dt);
-        monthRows.push(`<div class="child-money-history-row"><span>${moneyWeekLabel(moneyWeekKey(dt))}</span><span class="is-paid">✓ Taschengeld · ${moneyEuro(Number(s.weekly.pocketAmount||0))} <button class="v123-history-x" type="button" data-payment-delete-kind="pocket" data-payment-delete-date="${dk}" title="Zahlung wieder auf offen setzen">×</button></span></div>`);
+        monthRows.push(`<div class="child-money-history-row"><span>${moneyWeekLabel(moneyWeekKey(dt))}</span><span class="${p?.paid?"is-paid":""}">${p?.paid?"✓":"○"} Taschengeld · ${moneyEuro(amount)} <button class="money-payment-toggle" type="button" data-money-payment-toggle-kind="pocket" data-money-payment-toggle-date="${dk}" title="Taschengeld für diese Woche umschalten">${p?.paid?"↩ offen":"✓ erhalten"}</button></span></div>`);
       }
     }
     if(!monthlySnack){
@@ -22516,10 +22555,10 @@ function renderChildMoneyDialog(){
         if(dt.getMonth()!==mm-1) break;
         if(dt.getDay()!==1) continue;
         const q=moneyPaymentAt(s,"snack",dt);
-        if(!q?.paid) continue;
-        snackReceived+=Number(s.weekly.snackAmount||0);
+        const amount=moneyPaymentAmount(s,"snack",q);
+        if(q?.paid) snackReceived+=amount;
         const dk=dateKey(dt);
-        monthRows.push(`<div class="child-money-history-row"><span>${moneyWeekLabel(moneyWeekKey(dt))}</span><span class="is-paid">✓ Jausengeld · ${moneyEuro(Number(s.weekly.snackAmount||0))} <button class="v123-history-x" type="button" data-payment-delete-kind="snack" data-payment-delete-date="${dk}" title="Zahlung wieder auf offen setzen">×</button></span></div>`);
+        monthRows.push(`<div class="child-money-history-row"><span>${moneyWeekLabel(moneyWeekKey(dt))}</span><span class="${q?.paid?"is-paid":""}">${q?.paid?"✓":"○"} Jausengeld · ${moneyEuro(amount)} <button class="money-payment-toggle" type="button" data-money-payment-toggle-kind="snack" data-money-payment-toggle-date="${dk}" title="Jausengeld für diese Woche umschalten">${q?.paid?"↩ offen":"✓ erhalten"}</button></span></div>`);
       }
     }
   }
