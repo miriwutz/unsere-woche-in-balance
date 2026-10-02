@@ -21,6 +21,16 @@
    ========================================================= */
 
 /* =========================================================
+   V204 – GELD-OPTIK + STUNDENPLAN-ZEITEN · 02.10.2026
+   - bereits erhaltene Geldbeträge erhalten eine ruhige, eigene Hervorhebung
+   - die Geld-Schaltflächen werden auf dem Kinderbereich einheitlich gestaltet
+   - Stundenplan-Uhrzeiten werden beim Cloud-Merge vom aktuellen Serverstand übernommen,
+     wenn dort eine Uhrzeit vorhanden ist; dadurch bleiben PC und Handy/Tablet gleich
+   - Fächer, Zu-Hause-bis und übrige Sync-Logik bleiben unverändert
+   - Termin-Synchronisation und V202-Sync-Härtung bleiben erhalten
+   ========================================================= */
+
+/* =========================================================
    V203 – GELDZAHLUNGEN DEM AUSGEWÄHLTEN MONAT ZUORDNEN · 01.10.2026
    - Taschengeld/Jausengeld werden beim Abhaken dem ausgewählten Zeitraum zugeordnet
    - Monatsübersicht erlaubt Nachtragen und Zurücksetzen für vergangene Monate/Wochen
@@ -14737,20 +14747,22 @@ function mergeTimetableByYear(localValue, cloudValue) {
       const remoteToTs =
         timetableTimeStamp(c, i, "to");
 
+      /*
+       * V204: Die Uhrzeiten des Stundenplans kommen aus dem gemeinsamen
+       * Familienstand. Wenn Firestore für diese Zeile eine Uhrzeit kennt,
+       * wird genau diese verwendet. So kann ein alter mobiler Local-Cache
+       * nicht mehr eine andere Uhrzeit als der PC anzeigen.
+       *
+       * Leere Cloud-Felder lassen weiterhin einen vorhandenen lokalen Wert zu.
+       */
       merged.times.push({
-        from: chooseValue(
-          lt.from || "",
-          rt.from || "",
-          localFromTs,
-          remoteFromTs
-        ),
+        from: (rt.from || "") !== ""
+          ? rt.from
+          : chooseValue(lt.from || "", rt.from || "", localFromTs, remoteFromTs),
 
-        to: chooseValue(
-          lt.to || "",
-          rt.to || "",
-          localToTs,
-          remoteToTs
-        )
+        to: (rt.to || "") !== ""
+          ? rt.to
+          : chooseValue(lt.to || "", rt.to || "", localToTs, remoteToTs)
       });
     }
 
@@ -22692,4 +22704,45 @@ document.addEventListener("click",e=>{const b=e.target.closest("[data-school-ope
   };
   setMobileTerminPlaceholder();
   window.addEventListener("resize", setMobileTerminPlaceholder);
+})();
+
+
+/* =========================================================
+   V204 – MEIN GELD: BEZAHLT RUHIG HERVORHEBEN
+   ========================================================= */
+(function(){
+  const style=document.createElement("style");
+  style.textContent=`
+    .child-money-history-row .is-paid{
+      display:inline-flex !important;
+      align-items:center !important;
+      gap:6px !important;
+      padding:6px 10px !important;
+      border-radius:12px !important;
+      background:linear-gradient(135deg,#e6f1e7 0%,#f3f0df 100%) !important;
+      border:1px solid #cddfcf !important;
+      color:#49664f !important;
+      box-shadow:0 1px 3px rgba(70,90,70,.08) !important;
+    }
+    .money-payment-toggle{
+      border:1px solid #dbcfe2 !important;
+      border-radius:10px !important;
+      padding:4px 9px !important;
+      background:linear-gradient(135deg,#f0e5f7,#fff0e7) !important;
+      color:#66506f !important;
+      font:inherit !important;
+      cursor:pointer !important;
+      box-shadow:none !important;
+    }
+    .money-payment-toggle.is-paid{
+      background:linear-gradient(135deg,#e3f0e5,#eef3df) !important;
+      border-color:#c6d9c8 !important;
+      color:#49664f !important;
+    }
+    .v201-money-summary span{
+      border-radius:10px !important;
+      padding:5px 9px !important;
+    }
+  `;
+  document.head.appendChild(style);
 })();
