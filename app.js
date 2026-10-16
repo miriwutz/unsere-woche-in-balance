@@ -4891,7 +4891,7 @@ function renderSchool(){
     te.innerHTML=tasks.length?tasks.map(t=>`<div class="school-task ${t.done?"done":""}">
       <button class="school-check child-symbol-check ${t.done?"done":""}" data-child="${id}" data-id="${t.id}" type="button" aria-label="${t.done ? "Erledigt" : "Als erledigt markieren"}"><span class="child-symbol-glyph">${schoolTaskIcon(t,id)}</span>${t.done ? `<span class="child-symbol-done">✓</span>` : ""}</button>
       <div><div class="school-task-text">${escapeHtml(t.text)}</div><div class="school-meta"><span>${{homework:"☀ Hausübung",test:"✎ Test",bring:"♥ Mitbringen",appointment:"○ Termin",other:"✦ Schule"}[t.type] || "✦ Schule"}</span>${t.subject?`<span>${escapeHtml(t.subject)}</span>`:""}${t.due?`<span>bis ${parseLocalDate(t.due).toLocaleDateString("de-AT",{day:"2-digit",month:"2-digit"})}</span>`:""}</div></div>
-      <button class="school-del" data-kind="task" data-child="${id}" data-id="${t.id}">×</button></div>`).join(""):'<div class="school-empty">Gerade ist hier nichts offen. 🌿</div>';
+      <div class="school-task-actions"><button type="button" class="secondary-btn school-task-edit" data-child="${id}" data-id="${t.id}" aria-label="Schulaufgabe bearbeiten" title="Bearbeiten">✎</button><button class="school-del" data-kind="task" data-child="${id}" data-id="${t.id}" type="button" aria-label="Schulaufgabe löschen">×</button></div></div>`).join(""):'<div class="school-empty">Gerade ist hier nichts offen. 🌿</div>';
     le.innerHTML=c.links.length?c.links.map(x=>`<div class="school-link"><a href="${escapeHtml(x.url)}" target="_blank" rel="noopener">${escapeHtml(x.name)}</a><button class="school-del" data-kind="link" data-child="${id}" data-id="${x.id}">×</button></div>`).join(""):'<span class="school-empty-inline">Noch keine Lernlinks hinterlegt.</span>';
     if(fe){
       const categoryMeta={
@@ -5036,6 +5036,43 @@ function renderSchool(){
     renderSchool();
   }));
 }
+let editingSchoolTask = null;
+function beginEditSchoolTask(childId, taskId){
+  const child=state.school.children[String(childId)];
+  const task=child?.tasks?.find(item=>item.id===taskId);
+  if(!task) return;
+  editingSchoolTask={childId:String(childId),taskId:String(taskId)};
+  const t=document.querySelector(`#schoolTask${childId}`);
+  const s=document.querySelector(`#schoolSubject${childId}`);
+  const so=document.querySelector(`#schoolSubjectOther${childId}`);
+  const d=document.querySelector(`#schoolDue${childId}`);
+  const y=document.querySelector(`#schoolType${childId}`);
+  const icon=document.querySelector(`#schoolTaskIcon${childId}`);
+  if(t)t.value=task.text||"";
+  if(d)d.value=task.due||"";
+  if(y)y.value=task.type||"homework";
+  if(s){
+    const options=Array.from(s.options).map(o=>o.value);
+    if(options.includes(task.subject||"")){s.value=task.subject||""; if(so){so.value="";so.classList.add("hidden");}}
+    else {s.value="other";if(so){so.value=task.subject||"";so.classList.remove("hidden");}}
+  }
+  if(icon){icon.value=task.icon||schoolTaskDefaultIcon(childId);}
+  const addBtn=document.querySelector(`.add-school-task[data-child="${childId}"]`);
+  if(addBtn)addBtn.textContent="✓ Änderungen speichern";
+  t?.focus();
+}
+function cancelEditSchoolTask(childId){
+  editingSchoolTask=null;
+  const t=document.querySelector(`#schoolTask${childId}`),s=document.querySelector(`#schoolSubject${childId}`),so=document.querySelector(`#schoolSubjectOther${childId}`),d=document.querySelector(`#schoolDue${childId}`),y=document.querySelector(`#schoolType${childId}`),icon=document.querySelector(`#schoolTaskIcon${childId}`),btn=document.querySelector(`.add-school-task[data-child="${childId}"]`);
+  if(t)t.value="";if(s)s.value="";if(so){so.value="";so.classList.add("hidden");}if(d)d.value="";if(y)y.value="homework";
+  if(icon){const def=schoolTaskDefaultIcon(childId);icon.innerHTML=schoolTaskIconOptions(def);icon.value=def;delete icon.dataset.userChanged;}
+  if(btn)btn.textContent="✨ Fertig";
+}
+document.addEventListener("click",e=>{
+  const edit=e.target.closest(".school-task-edit");
+  if(edit){beginEditSchoolTask(edit.dataset.child,edit.dataset.id);return;}
+});
+
 function addSchoolTask(id){
   const t=document.querySelector(`#schoolTask${id}`);
   const s=document.querySelector(`#schoolSubject${id}`);
@@ -5048,18 +5085,24 @@ function addSchoolTask(id){
   const subject = s.value === "other" ? so.value.trim() : s.value;
   const taskIcon = iconSelect?.value || schoolTaskDefaultIcon(id);
 
-  state.school.children[id].tasks.push({
-    id:uid(),
-    text:t.value.trim(),
-    subject,
-    due:d.value,
-    type:y.value,
-    icon:taskIcon,
-    done:false,
-    createdAt:Date.now(),
-    updatedAt:Date.now()
-  });
-
+  const now=Date.now();
+  const child=state.school.children[id];
+  if(editingSchoolTask && editingSchoolTask.childId===String(id)){
+    const existing=child.tasks.find(item=>item.id===editingSchoolTask.taskId);
+    if(existing){
+      existing.text=t.value.trim();
+      existing.subject=subject;
+      existing.due=d.value;
+      existing.type=y.value;
+      existing.icon=taskIcon;
+      existing.updatedAt=now;
+    }
+  }else{
+    child.tasks.push({id:uid(),text:t.value.trim(),subject,due:d.value,type:y.value,icon:taskIcon,done:false,createdAt:now,updatedAt:now});
+  }
+  editingSchoolTask=null;
+  const addBtn=document.querySelector(`.add-school-task[data-child="${id}"]`);
+  if(addBtn)addBtn.textContent="✨ Fertig";
   t.value="";
   s.value="";
   so.value="";
@@ -15459,12 +15502,16 @@ function renderSubstitutions() {
               ${item.forWhom ? `<small>für ${escapeHtml(item.forWhom)}</small>` : ""}
               ${item.note ? `<small>${escapeHtml(item.note)}</small>` : ""}
             </div>
-            <button type="button" class="substitution-delete" data-id="${item.id}" title="Löschen" aria-label="Supplierung löschen">×</button>
+            <div class="substitution-actions"><button type="button" class="secondary-btn substitution-edit" data-id="${item.id}" title="Bearbeiten" aria-label="Supplierung bearbeiten">✎</button><button type="button" class="substitution-delete" data-id="${item.id}" title="Löschen" aria-label="Supplierung löschen">×</button></div>
           </div>
         `;
       }).join("")}
     </div>
   `;
+
+  host.querySelectorAll(".substitution-edit").forEach(btn=>{
+    btn.addEventListener("click",()=>beginEditSubstitution(btn.dataset.id));
+  });
 
   host.querySelectorAll(".substitution-delete").forEach(btn => {
     btn.addEventListener("click", () => {
@@ -16016,8 +16063,21 @@ function applyCloudData(data) {
   }
 }
 
+let editingSubstitutionId = null;
+function setSubstitutionForm(item=null){
+  const values={substitutionDate:item?.date||dateKey(new Date()),substitutionClass:item?.className||"",substitutionSubject:item?.subject||"",substitutionForWhom:item?.forWhom||"",substitutionNote:item?.note||"",substitutionHours:String(item?.hours??1)};
+  Object.entries(values).forEach(([id,value])=>{const el=document.getElementById(id);if(el)el.value=value;});
+  const title=document.querySelector("#substitutionDialog h2");if(title)title.textContent=item?"Supplierung bearbeiten":"Supplierstunde eintragen";
+  const saveBtn=document.querySelector("#saveSubstitutionBtn");if(saveBtn)saveBtn.textContent=item?"Änderungen speichern":"Speichern";
+}
+function beginEditSubstitution(id){
+  const item=(state.workroom.substitutions||[]).find(x=>String(x.id)===String(id));if(!item)return;
+  editingSubstitutionId=String(id);setSubstitutionForm(item);substitutionDialogRestored?.showModal();
+}
 const substitutionDialogRestored = document.querySelector("#substitutionDialog");
 document.querySelector("#openSubstitutionBtn")?.addEventListener("click", () => {
+  editingSubstitutionId=null;
+  setSubstitutionForm(null);
   const dateInput = document.querySelector("#substitutionDate");
   if (dateInput && !dateInput.value) dateInput.value = dateKey(new Date());
   substitutionDialogRestored?.showModal();
@@ -16036,7 +16096,14 @@ document.querySelector("#saveSubstitutionBtn")?.addEventListener("click", () => 
   if (!date) return;
 
   state.workroom.substitutions = Array.isArray(state.workroom.substitutions) ? state.workroom.substitutions : [];
-  state.workroom.substitutions.push({id:uid(), date, className, subject, forWhom, note, hours, createdAt:Date.now(), updatedAt:Date.now()});
+  const now=Date.now();
+  if(editingSubstitutionId){
+    const item=state.workroom.substitutions.find(x=>String(x.id)===editingSubstitutionId);
+    if(item){Object.assign(item,{date,className,subject,forWhom,note,hours,updatedAt:now});}
+  }else{
+    state.workroom.substitutions.push({id:uid(),date,className,subject,forWhom,note,hours,createdAt:now,updatedAt:now});
+  }
+  editingSubstitutionId=null;
   save();
   renderSubstitutions();
   substitutionDialogRestored?.close();
