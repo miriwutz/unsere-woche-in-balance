@@ -573,6 +573,8 @@ const state = {
       prints:[],
       links:[],
       substitutions:[],
+      headacheEntries:[],
+      headacheTombstones:{},
       routines:{items:[],completions:{}},
       plans:{week:[],year:[]}
     }
@@ -11279,6 +11281,7 @@ async function persistWorkroomListDeletionImmediately(kind, id) {
     prints: { listKey: "prints", tombstoneKey: "printTombstones" },
     links: { listKey: "links", tombstoneKey: "linkTombstones" },
     substitutions: { listKey: "substitutions", tombstoneKey: "substitutionTombstones" },
+    headacheEntries: { listKey: "headacheEntries", tombstoneKey: "headacheTombstones" },
     shopping: { listKey: "shopping", tombstoneKey: "shoppingTombstones" }
   };
   const cfg = configs[kind];
@@ -11463,6 +11466,10 @@ function guardedWorkroomMerge(localValue, cloudValue) {
     local.shoppingTombstones,
     remote.shoppingTombstones
   );
+  const headacheTombstones = mergeWorkroomTodoTombstones(
+    local.headacheTombstones,
+    remote.headacheTombstones
+  );
 
   return {
     ...local,
@@ -11472,10 +11479,12 @@ function guardedWorkroomMerge(localValue, cloudValue) {
     linkTombstones,
     substitutionTombstones,
     shoppingTombstones,
+    headacheTombstones,
     todos: mergeWorkroomTodosSafely(local.todos, remote.todos, todoTombstones),
     prints: mergeWorkroomListWithTombstones(local.prints, remote.prints, printTombstones),
     links: mergeWorkroomListWithTombstones(local.links, remote.links, linkTombstones),
     substitutions: mergeWorkroomListWithTombstones(local.substitutions, remote.substitutions, substitutionTombstones),
+    headacheEntries: mergeWorkroomListWithTombstones(local.headacheEntries, remote.headacheEntries, headacheTombstones),
     shopping: mergeWorkroomListWithTombstones(local.shopping, remote.shopping, shoppingTombstones),
     routines: mergeWorkroomRoutinesSafely(local.routines, remote.routines),
     plans: {
@@ -15038,6 +15047,8 @@ function normalizeWorkroom(w) {
     interestLinks: Array.isArray(src.interestLinks) ? src.interestLinks : [],
     shopping: Array.isArray(src.shopping) ? src.shopping : [],
     substitutions: Array.isArray(src.substitutions) ? src.substitutions : [],
+    headacheEntries: Array.isArray(src.headacheEntries) ? src.headacheEntries : [],
+    headacheTombstones: src.headacheTombstones && typeof src.headacheTombstones === "object" ? src.headacheTombstones : {},
     routines: src.routines && typeof src.routines === "object"
       ? {
           items: Array.isArray(src.routines.items) ? src.routines.items : [],
@@ -16062,6 +16073,60 @@ function applyCloudData(data) {
     cloudApplying = false;
   }
 }
+
+let editingHeadacheId = null;
+const headacheTrackerDialog = document.querySelector("#headacheTrackerDialog");
+function resetHeadacheForm(){
+  const form=document.querySelector("#headacheTrackerForm");
+  form?.reset();
+  const id=document.querySelector("#headacheEntryId"); if(id) id.value="";
+  const date=document.querySelector("#headacheDate"); if(date) date.value=dateKey(new Date());
+  const cancel=document.querySelector("#cancelHeadacheEditBtn"); cancel?.classList.add("hidden");
+  const submit=form?.querySelector('button[type="submit"]'); if(submit) submit.textContent="Eintrag speichern";
+  editingHeadacheId=null;
+}
+function renderHeadacheTracker(){
+  const host=document.querySelector("#headacheTrackerList"); if(!host)return;
+  state.workroom=normalizeWorkroom(state.workroom);
+  const items=[...state.workroom.headacheEntries].sort((a,b)=>String(b.date||"").localeCompare(String(a.date||"")));
+  if(!items.length){host.innerHTML='<div class="headache-empty">Noch keine Einträge. Du kannst auch vergangene Tage nachtragen.</div>';return;}
+  const tone={leicht:"leicht",mittel:"mittel",stark:"stark"};
+  host.innerHTML=items.map(item=>{
+    const dateLabel=item.date ? (parseLocalDate(item.date)?.toLocaleDateString("de-AT",{weekday:"short",day:"2-digit",month:"2-digit",year:"numeric"})||item.date) : "";
+    const triggers=Array.isArray(item.triggers)?item.triggers:[];
+    return `<article class="headache-entry headache-${tone[item.severity]||"leicht"}"><div class="headache-entry-top"><strong>${escapeHtml(dateLabel)}</strong><span class="headache-severity-pill">${escapeHtml(item.severity||"")}</span><div class="headache-entry-actions"><button type="button" class="headache-edit-btn" data-id="${escapeHtml(item.id)}" aria-label="Eintrag bearbeiten" title="Bearbeiten">✎</button><button type="button" class="headache-delete-btn" data-id="${escapeHtml(item.id)}" aria-label="Eintrag löschen" title="Löschen">×</button></div></div>${triggers.length?`<div class="headache-trigger-tags">${triggers.map(x=>`<span>${escapeHtml(x)}</span>`).join("")}</div>`:""}${item.notes?`<p>${escapeHtml(item.notes)}</p>`:""}</article>`;
+  }).join("");
+  host.querySelectorAll(".headache-edit-btn").forEach(btn=>btn.addEventListener("click",()=>{
+    const item=state.workroom.headacheEntries.find(x=>String(x.id)===String(btn.dataset.id));if(!item)return;
+    editingHeadacheId=String(item.id);document.querySelector("#headacheEntryId").value=editingHeadacheId;document.querySelector("#headacheDate").value=item.date||dateKey(new Date());
+    document.querySelectorAll('input[name="headacheSeverity"]').forEach(x=>x.checked=x.value===item.severity);
+    document.querySelectorAll('input[name="headacheTrigger"]').forEach(x=>x.checked=(item.triggers||[]).includes(x.value));
+    document.querySelector("#headacheNotes").value=item.notes||"";document.querySelector("#cancelHeadacheEditBtn").classList.remove("hidden");
+    document.querySelector('#headacheTrackerForm button[type="submit"]').textContent="Änderungen speichern";
+    document.querySelector("#headacheTrackerForm").scrollIntoView({behavior:"smooth",block:"start"});
+  }));
+  host.querySelectorAll(".headache-delete-btn").forEach(btn=>btn.addEventListener("click",()=>{
+    const id=String(btn.dataset.id||"");if(!id)return;
+    state.workroom.headacheTombstones=state.workroom.headacheTombstones||{};state.workroom.headacheTombstones[id]=Date.now();
+    state.workroom.headacheEntries=state.workroom.headacheEntries.filter(x=>String(x.id)!==id);save();
+    persistWorkroomListDeletionImmediately("headacheEntries",id);renderHeadacheTracker();
+  }));
+}
+document.querySelector("#openHeadacheTrackerBtn")?.addEventListener("click",()=>{
+  resetHeadacheForm();renderHeadacheTracker();headacheTrackerDialog?.showModal();
+});
+document.querySelector("#closeHeadacheTrackerBtn")?.addEventListener("click",()=>headacheTrackerDialog?.close());
+document.querySelector("#cancelHeadacheEditBtn")?.addEventListener("click",resetHeadacheForm);
+document.querySelector("#headacheTrackerForm")?.addEventListener("submit",e=>{
+  e.preventDefault();const date=document.querySelector("#headacheDate").value;
+  const severity=document.querySelector('input[name="headacheSeverity"]:checked')?.value||"";
+  const triggers=[...document.querySelectorAll('input[name="headacheTrigger"]:checked')].map(x=>x.value);
+  const notes=document.querySelector("#headacheNotes").value.trim();if(!date||!severity)return;
+  state.workroom=normalizeWorkroom(state.workroom);const now=Date.now();
+  if(editingHeadacheId){const item=state.workroom.headacheEntries.find(x=>String(x.id)===editingHeadacheId);if(item)Object.assign(item,{date,severity,triggers,notes,updatedAt:now});}
+  else state.workroom.headacheEntries.push({id:uid(),date,severity,triggers,notes,createdAt:now,updatedAt:now});
+  save();resetHeadacheForm();renderHeadacheTracker();
+});
 
 let editingSubstitutionId = null;
 function setSubstitutionForm(item=null){
@@ -22812,4 +22877,14 @@ document.addEventListener("click",e=>{const b=e.target.closest("[data-school-ope
     }
   `;
   document.head.appendChild(style);
+})();
+
+
+(function addHeadacheTrackerStyles(){
+ if(document.getElementById("headacheTrackerStyles"))return;
+ const style=document.createElement("style");style.id="headacheTrackerStyles";style.textContent=`
+ .headache-tracker-dialog{border:1px solid #e8dcd4;border-radius:24px;padding:0;width:min(760px,calc(100vw - 24px));max-width:760px;max-height:90vh;background:#fffdfa;color:#4e4b57;box-shadow:0 20px 70px #4e3d3226}
+ .headache-tracker-dialog::backdrop{background:#4c4547a6;backdrop-filter:blur(4px)}.headache-tracker-shell{padding:clamp(16px,3vw,28px);overflow:auto;max-height:90vh}.headache-tracker-head{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;margin-bottom:20px}.headache-tracker-head h2{margin:4px 0 6px;font-family:Georgia,serif;font-size:clamp(26px,4vw,34px);font-weight:500}.headache-tracker-head p:not(.small-label){margin:0;color:#8b7e7c}.headache-tracker-head .small-label{letter-spacing:.16em;font-size:11px;margin:0;color:#a17d70}.headache-tracker-head .icon-btn{flex:0 0 auto}.headache-form-grid{display:grid;grid-template-columns:minmax(140px,.7fr) minmax(0,1.3fr);gap:14px;align-items:start}.headache-tracker-dialog label{display:flex;flex-direction:column;gap:7px;font-size:14px;color:#635963}.headache-tracker-dialog input[type=date],.headache-tracker-dialog textarea{box-sizing:border-box;width:100%;border:1px solid #e7dcd6;border-radius:12px;padding:10px 12px;background:#fffefd;color:#4e4b57;font:inherit}.headache-severity-field,.headache-triggers{border:1px solid #eadfe7;border-radius:15px;padding:12px;margin:0;min-width:0}.headache-severity-field legend,.headache-triggers legend{padding:0 6px;color:#786a7d;font-size:13px}.headache-severity-field{display:flex;gap:8px;flex-wrap:wrap}.headache-severity-field label{flex:1;min-width:70px;display:flex;flex-direction:row;align-items:center;justify-content:center;gap:7px;border-radius:11px;padding:9px 7px;background:#f7f3f8;cursor:pointer}.headache-severity-field label:has(input:checked){background:#e9f2e9;outline:1px solid #bfd4bf}.headache-triggers{margin-top:14px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 14px}.headache-triggers label{display:flex;flex-direction:row;align-items:center;gap:8px}.headache-triggers input,.headache-severity-field input{accent-color:#8b9e88}.headache-notes-label{margin-top:14px}.headache-form-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:14px}.headache-history-head{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-top:24px;padding-top:16px;border-top:1px solid #eee3dc}.headache-history-head h3{margin:0;font-size:17px}.headache-history-head span,.headache-tracker-note{font-size:12px;color:#94878a}.headache-tracker-list{display:grid;gap:9px;margin-top:12px}.headache-entry{border:1px solid #e9e1db;border-radius:14px;padding:12px 14px;background:#fffefd}.headache-entry.headache-leicht{background:#f3f7f0;border-color:#dce8d7}.headache-entry.headache-mittel{background:#fff5e8;border-color:#f0dfc3}.headache-entry.headache-stark{background:#fff0f1;border-color:#f0d1d5}.headache-entry-top{display:flex;align-items:center;gap:10px}.headache-severity-pill{border-radius:99px;padding:4px 9px;background:#ffffffa8;font-size:12px;text-transform:capitalize}.headache-entry-actions{margin-left:auto;display:flex;gap:6px}.headache-entry-actions button{width:30px;height:30px;border:1px solid #e5d8d1;border-radius:9px;background:#fffdfb;color:#796a72;cursor:pointer}.headache-trigger-tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px}.headache-trigger-tags span{font-size:12px;padding:4px 8px;border-radius:99px;background:#ffffffb8;border:1px solid #e7dfd9}.headache-entry p{margin:9px 0 0;font-size:13px;white-space:pre-wrap}.headache-empty{padding:16px;border-radius:12px;background:#f8f5f2;color:#94878a;font-size:14px}.headache-tracker-note{margin:14px 0 0}.headache-open-btn{margin-top:8px}
+ @media(max-width:560px){.headache-form-grid{grid-template-columns:1fr}.headache-triggers{grid-template-columns:1fr 1fr}.headache-severity-field label{min-width:0}.headache-tracker-dialog{max-height:94vh}.headache-tracker-shell{max-height:94vh}}
+ `;document.head.appendChild(style);
 })();
