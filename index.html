@@ -1956,8 +1956,8 @@
     </article>
 
     <article class="card workroom-small-card">
-      <h3>▣ Mein Stundenplan</h3>
-      <p>Unterrichtszeiten und Fächer bearbeiten.</p>
+      <h3>✦ Sonstiges</h3>
+      <p>Stundenplan und persönliche Beobachtungen.</p>
       <button id="openWorkTimetableBtn"
               class="secondary-btn"
               type="button">Stundenplan bearbeiten</button>
@@ -2457,7 +2457,10 @@
       <label class="headache-notes-label">Notiz / weitere Beobachtung<textarea id="headacheNotes" rows="3" placeholder="z. B. viele Besprechungen, wenig Pausen …"></textarea></label>
       <div class="headache-form-actions"><button id="cancelHeadacheEditBtn" class="secondary-btn hidden" type="button">Abbrechen</button><button class="primary-btn" type="submit">Eintrag speichern</button></div>
     </form>
-    <div class="headache-history-head"><h3>Deine Einträge</h3><span>Nach Datum sortiert</span></div>
+    <div class="headache-history-head"><h3>Jahresübersicht</h3><label class="headache-year-picker">Jahr <select id="headacheYearSelect" aria-label="Jahr für Kopfweh-Jahresübersicht"></select></label></div>
+    <p class="headache-year-hint">Jeder markierte Tag zeigt die Stärke. Wähle einen Tag, um die möglichen Auslöser und Notizen zu sehen.</p>
+    <div id="headacheYearOverview" class="headache-year-overview"></div>
+    <div class="headache-history-head"><h3>Alle Einträge</h3><span>Nach Datum sortiert</span></div>
     <div id="headacheTrackerList" class="headache-tracker-list"></div>
     <p class="headache-tracker-note">Der Tracker hilft, Muster zu beobachten; er stellt keine Diagnose.</p>
   </div>
@@ -2670,7 +2673,7 @@
       await loadScript("https://cdn.jsdelivr.net/npm/sortablejs@1.15.6/Sortable.min.js");
     }
 
-    await loadScript("./app.js?v=206");
+    await loadScript("./app.js?v=207");
   })().catch(err => {
     console.error("App-Start fehlgeschlagen:", err);
   });
