@@ -16091,6 +16091,7 @@ function renderHeadacheTracker(){
   const items=[...state.workroom.headacheEntries].sort((a,b)=>String(b.date||"").localeCompare(String(a.date||"")));
   if(!items.length){host.innerHTML='<div class="headache-empty">Noch keine Einträge. Du kannst auch vergangene Tage nachtragen.</div>';return;}
   const tone={leicht:"leicht",mittel:"mittel",stark:"stark"};
+  renderHeadacheYearOverview(items);
   host.innerHTML=items.map(item=>{
     const dateLabel=item.date ? (parseLocalDate(item.date)?.toLocaleDateString("de-AT",{weekday:"short",day:"2-digit",month:"2-digit",year:"numeric"})||item.date) : "";
     const triggers=Array.isArray(item.triggers)?item.triggers:[];
@@ -16112,6 +16113,42 @@ function renderHeadacheTracker(){
     persistWorkroomListDeletionImmediately("headacheEntries",id);renderHeadacheTracker();
   }));
 }
+
+function renderHeadacheYearOverview(items){
+  const host=document.querySelector("#headacheYearOverview");
+  const yearSelect=document.querySelector("#headacheYearSelect");
+  if(!host||!yearSelect)return;
+  const years=[...new Set([String(new Date().getFullYear()),...(items||[]).map(x=>String(x.date||"").slice(0,4)).filter(x=>/^\d{4}$/.test(x))])].sort((a,b)=>Number(b)-Number(a));
+  const previous=yearSelect.value;
+  yearSelect.innerHTML=years.map(y=>`<option value="${y}">${y}</option>`).join("");
+  yearSelect.value=years.includes(previous)?previous:String(new Date().getFullYear());
+  const year=Number(yearSelect.value)||new Date().getFullYear();
+  const yearItems=(items||[]).filter(x=>String(x.date||"").startsWith(String(year)));
+  const byDate=new Map();yearItems.forEach(x=>{const arr=byDate.get(x.date)||[];arr.push(x);byDate.set(x.date,arr);});
+  const months=["Jänner","Februar","März","April","Mai","Juni","Juli","August","September","Oktober","November","Dezember"];
+  const level={leicht:1,mittel:2,stark:3};
+  const detailsForDate=(date,entries)=>entries.map(x=>`${x.severity||""}${x.triggers?.length?" · "+x.triggers.join(", "):""}${x.notes?" · "+x.notes:""}`).join("\n");
+  host.innerHTML=`<div class="headache-year-legend"><span><i class="h-level-1"></i> Leicht</span><span><i class="h-level-2"></i> Mittel</span><span><i class="h-level-3"></i> Stark</span></div><div class="headache-month-grid">${months.map((month,mi)=>{
+    const first=new Date(year,mi,1);const count=new Date(year,mi+1,0).getDate();
+    const offset=(first.getDay()+6)%7;
+    const cells=Array(offset).fill('<span class="headache-day-empty" aria-hidden="true"></span>');
+    for(let d=1;d<=count;d++){
+      const date=`${year}-${String(mi+1).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
+      const entries=byDate.get(date)||[];
+      const strongest=entries.reduce((best,x)=>Math.max(best,level[x.severity]||0),0);
+      const title=entries.length?`${date}: ${detailsForDate(date,entries)}`:`${d}. ${month} – kein Eintrag`;
+      cells.push(`<button type="button" class="headache-day-cell ${strongest?`h-level-${strongest}`:""} ${entries.length?"has-entry":""}" data-date="${date}" title="${escapeHtml(title)}" aria-label="${escapeHtml(title)}">${d}</button>`);
+    }
+    const monthCount=[...byDate.keys()].filter(d=>d.startsWith(`${year}-${String(mi+1).padStart(2,"0")}-`)).length;
+    return `<section class="headache-month-card"><div class="headache-month-title"><strong>${month}</strong><span>${monthCount?`${monthCount} Tage`:"—"}</span></div><div class="headache-weekdays"><span>Mo</span><span>Di</span><span>Mi</span><span>Do</span><span>Fr</span><span>Sa</span><span>So</span></div><div class="headache-month-days">${cells.join("")}</div></section>`;
+  }).join("")}</div><div id="headacheYearDayDetails" class="headache-year-day-details">Wähle einen markierten Tag, um Stärke, mögliche Auslöser und Notizen zu sehen.</div>`;
+  host.querySelectorAll(".headache-day-cell.has-entry").forEach(btn=>btn.addEventListener("click",()=>{
+    const entries=byDate.get(btn.dataset.date)||[];const detail=host.querySelector("#headacheYearDayDetails");if(!detail)return;
+    detail.innerHTML=`<strong>${escapeHtml(parseLocalDate(btn.dataset.date)?.toLocaleDateString("de-AT",{weekday:"long",day:"numeric",month:"long",year:"numeric"})||btn.dataset.date)}</strong>${entries.map(x=>`<div class="headache-year-detail-entry"><span class="headache-severity-pill headache-pill-${escapeHtml(x.severity||"leicht")}">${escapeHtml(x.severity||"")}</span>${(x.triggers||[]).length?`<div class="headache-trigger-tags">${x.triggers.map(t=>`<span>${escapeHtml(t)}</span>`).join("")}</div>`:""}${x.notes?`<p>${escapeHtml(x.notes)}</p>`:""}</div>`).join("")}`;
+  }));
+}
+document.querySelector("#headacheYearSelect")?.addEventListener("change",()=>renderHeadacheYearOverview(state.workroom?.headacheEntries||[]));
+
 document.querySelector("#openHeadacheTrackerBtn")?.addEventListener("click",()=>{
   resetHeadacheForm();renderHeadacheTracker();headacheTrackerDialog?.showModal();
 });
@@ -22885,6 +22922,9 @@ document.addEventListener("click",e=>{const b=e.target.closest("[data-school-ope
  const style=document.createElement("style");style.id="headacheTrackerStyles";style.textContent=`
  .headache-tracker-dialog{border:1px solid #e8dcd4;border-radius:24px;padding:0;width:min(760px,calc(100vw - 24px));max-width:760px;max-height:90vh;background:#fffdfa;color:#4e4b57;box-shadow:0 20px 70px #4e3d3226}
  .headache-tracker-dialog::backdrop{background:#4c4547a6;backdrop-filter:blur(4px)}.headache-tracker-shell{padding:clamp(16px,3vw,28px);overflow:auto;max-height:90vh}.headache-tracker-head{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;margin-bottom:20px}.headache-tracker-head h2{margin:4px 0 6px;font-family:Georgia,serif;font-size:clamp(26px,4vw,34px);font-weight:500}.headache-tracker-head p:not(.small-label){margin:0;color:#8b7e7c}.headache-tracker-head .small-label{letter-spacing:.16em;font-size:11px;margin:0;color:#a17d70}.headache-tracker-head .icon-btn{flex:0 0 auto}.headache-form-grid{display:grid;grid-template-columns:minmax(140px,.7fr) minmax(0,1.3fr);gap:14px;align-items:start}.headache-tracker-dialog label{display:flex;flex-direction:column;gap:7px;font-size:14px;color:#635963}.headache-tracker-dialog input[type=date],.headache-tracker-dialog textarea{box-sizing:border-box;width:100%;border:1px solid #e7dcd6;border-radius:12px;padding:10px 12px;background:#fffefd;color:#4e4b57;font:inherit}.headache-severity-field,.headache-triggers{border:1px solid #eadfe7;border-radius:15px;padding:12px;margin:0;min-width:0}.headache-severity-field legend,.headache-triggers legend{padding:0 6px;color:#786a7d;font-size:13px}.headache-severity-field{display:flex;gap:8px;flex-wrap:wrap}.headache-severity-field label{flex:1;min-width:70px;display:flex;flex-direction:row;align-items:center;justify-content:center;gap:7px;border-radius:11px;padding:9px 7px;background:#f7f3f8;cursor:pointer}.headache-severity-field label:has(input:checked){background:#e9f2e9;outline:1px solid #bfd4bf}.headache-triggers{margin-top:14px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 14px}.headache-triggers label{display:flex;flex-direction:row;align-items:center;gap:8px}.headache-triggers input,.headache-severity-field input{accent-color:#8b9e88}.headache-notes-label{margin-top:14px}.headache-form-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:14px}.headache-history-head{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-top:24px;padding-top:16px;border-top:1px solid #eee3dc}.headache-history-head h3{margin:0;font-size:17px}.headache-history-head span,.headache-tracker-note{font-size:12px;color:#94878a}.headache-tracker-list{display:grid;gap:9px;margin-top:12px}.headache-entry{border:1px solid #e9e1db;border-radius:14px;padding:12px 14px;background:#fffefd}.headache-entry.headache-leicht{background:#f3f7f0;border-color:#dce8d7}.headache-entry.headache-mittel{background:#fff5e8;border-color:#f0dfc3}.headache-entry.headache-stark{background:#fff0f1;border-color:#f0d1d5}.headache-entry-top{display:flex;align-items:center;gap:10px}.headache-severity-pill{border-radius:99px;padding:4px 9px;background:#ffffffa8;font-size:12px;text-transform:capitalize}.headache-entry-actions{margin-left:auto;display:flex;gap:6px}.headache-entry-actions button{width:30px;height:30px;border:1px solid #e5d8d1;border-radius:9px;background:#fffdfb;color:#796a72;cursor:pointer}.headache-trigger-tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px}.headache-trigger-tags span{font-size:12px;padding:4px 8px;border-radius:99px;background:#ffffffb8;border:1px solid #e7dfd9}.headache-entry p{margin:9px 0 0;font-size:13px;white-space:pre-wrap}.headache-empty{padding:16px;border-radius:12px;background:#f8f5f2;color:#94878a;font-size:14px}.headache-tracker-note{margin:14px 0 0}.headache-open-btn{margin-top:8px}
+ .headache-year-picker{display:flex;align-items:center;gap:7px;font-size:13px}.headache-year-picker select{border:1px solid #e7dcd6;border-radius:10px;padding:7px 9px;background:#fffdfa;color:#4e4b57;font:inherit}.headache-year-hint{margin:8px 0;color:#94878a;font-size:12px}.headache-year-legend{display:flex;flex-wrap:wrap;gap:12px;margin:10px 0 14px;font-size:12px;color:#796f77}.headache-year-legend span{display:flex;align-items:center;gap:5px}.headache-year-legend i{display:inline-block;width:12px;height:12px;border-radius:4px;border:1px solid #ded8d2}.headache-month-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.headache-month-card{border:1px solid #ece2dc;border-radius:13px;padding:10px;background:#fffefd;min-width:0}.headache-month-title{display:flex;justify-content:space-between;gap:4px;font-size:13px;margin-bottom:8px}.headache-month-title span{font-size:11px;color:#9b8e91}.headache-weekdays,.headache-month-days{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:3px;text-align:center}.headache-weekdays{font-size:9px;color:#a19497;margin-bottom:4px}.headache-day-cell,.headache-day-empty{aspect-ratio:1;min-width:0;border-radius:5px;display:flex;align-items:center;justify-content:center}.headache-day-cell{border:1px solid transparent;background:#f7f4f2;color:#7c7478;font-size:10px;padding:0;cursor:pointer}.headache-day-cell.has-entry{font-weight:700;border-color:#d8d0c9}.headache-day-cell.h-level-1,.headache-year-legend .h-level-1{background:#e7f0e3;border-color:#c9ddc2}.headache-day-cell.h-level-2,.headache-year-legend .h-level-2{background:#ffedcf;border-color:#f0d59f}.headache-day-cell.h-level-3,.headache-year-legend .h-level-3{background:#f8dfe2;border-color:#e9b9c0}.headache-day-cell:focus-visible{outline:2px solid #9783b2;outline-offset:1px}.headache-year-day-details{margin-top:12px;padding:12px;border:1px solid #e9e1db;border-radius:12px;background:#faf7f4;font-size:13px}.headache-year-detail-entry{margin-top:8px;padding-top:8px;border-top:1px solid #e8ded8}.headache-year-detail-entry p{margin:7px 0 0;white-space:pre-wrap}.headache-pill-leicht{background:#e7f0e3}.headache-pill-mittel{background:#ffedcf}.headache-pill-stark{background:#f8dfe2}
+ @media(max-width:700px){.headache-month-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+ @media(max-width:420px){.headache-month-grid{grid-template-columns:1fr 1fr;gap:6px}.headache-month-card{padding:7px}.headache-day-cell{font-size:9px}}
  @media(max-width:560px){.headache-form-grid{grid-template-columns:1fr}.headache-triggers{grid-template-columns:1fr 1fr}.headache-severity-field label{min-width:0}.headache-tracker-dialog{max-height:94vh}.headache-tracker-shell{max-height:94vh}}
  `;document.head.appendChild(style);
 })();
